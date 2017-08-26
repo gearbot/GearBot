@@ -20,12 +20,15 @@ async def on_message(message):
                 counter += 1
 
         await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    elif message.content.startswith('!id'):
+        print(message.author.id)
     elif message.content.startswith('!sleep'):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
     elif message.content.startswith('!stop'):
-        print("Test")
-        await client.close()
+        if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
+            await client.send_message(message.channel, 'Access')
+            await client.close()
 
 token = input("Please enter your Discord token: ")
 client.run(token)
