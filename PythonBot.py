@@ -23,5 +23,9 @@ async def on_message(message):
     elif message.content.startswith('!sleep'):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
+    elif message.content.startswith('!stop'):
+        print("Test")
+        await client.close()
 
-client.run('MzQ4MDMzMjY4OTk1NTg4MDk2.DIMTew.DJpmVS1j5kboblvziWa4HGZYKiI')
+token = input("Please enter your Discord token: ")
+client.run(token)
