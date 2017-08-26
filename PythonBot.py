@@ -1,5 +1,6 @@
 import discord
 import asyncio
+import os
 
 client = discord.Client()
 
@@ -30,5 +31,8 @@ async def on_message(message):
             await client.send_message(message.channel, 'Access')
             await client.close()
 
-token = input("Please enter your Discord token: ")
+#token = input("Please enter your Discord token: ")
+os.environ['gearbotlogin'] = '1'
+
+token = os.environ['gearbotlogin']
 client.run(token)
