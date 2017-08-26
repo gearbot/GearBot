@@ -32,7 +32,7 @@ async def on_message(message):
             await client.close()
 
 #token = input("Please enter your Discord token: ")
-os.environ['gearbotlogin'] = '1'
+#os.environ['gearbotlogin'] = '1'
 
 token = os.environ['gearbotlogin']
 client.run(token)
