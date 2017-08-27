@@ -41,7 +41,7 @@ async def on_message(message):
                 count+=1
 
     #REMOVES MESSAGES WHEN SPAM IS DETECTED DEVELOPER ONLY!
-    if not checkBot:
+    if checkBot:
         if (count > 3):
             for msg in repeatedMessages:
                 await client.delete_message(msg)
