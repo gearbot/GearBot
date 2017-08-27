@@ -28,7 +28,7 @@ async def on_message(message):
         await client.send_message(message.channel, 'Done sleeping')
     elif message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
-            await client.send_message(message.channel, 'Access')
+            await client.send_message(message.channel, 'Shutting down')
             await client.close()
 
 #token = input("Please enter your Discord token: ")
