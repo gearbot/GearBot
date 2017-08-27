@@ -36,7 +36,8 @@ async def on_message(message):
             file = open("upgradeRequest", "w")
             file.write("upgrade requested")
             file.close()
-            client.close()
+            await client.logout()
+            await client.close()
         else:
             client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
