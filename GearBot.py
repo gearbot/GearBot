@@ -30,6 +30,15 @@ async def on_message(message):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
             await client.send_message(message.channel, 'Shutting down')
             await client.close()
+    elif message.content.startswith("!upgrade"):
+        if message.author.id == '106354106196570112':
+            await client.send_message(message.channel, "I'll be right back with new gears!")
+            file = open("upgradeRequest", "w")
+            file.write("upgrade requested")
+            file.close()
+            client.close()
+        else:
+            client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
 #token = input("Please enter your Discord token: ")
 #os.environ['gearbotlogin'] = '1'
