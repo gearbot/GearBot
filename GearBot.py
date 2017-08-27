@@ -11,6 +11,19 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
+async def send_protected_message(channel, text):
+    try:
+        await client.send_message(channel, '{}'.format(text))
+    except discord.Forbidden:
+        print("Exception: Bot is not allowed to send messages")
+        pass
+    except discord.InvalidArgument:
+        print("Exception: Invalid message arguments")
+        pass
+    except Exception as e:
+        print("Exception: {}".format(str(e)))
+        pass
+
 async def check_for_spam(message, checkBot):
     text = message.content
     text = text.replace(" ","")
@@ -31,7 +44,10 @@ async def check_for_spam(message, checkBot):
     if checkBot:
         if (count > 3):
             for msg in repeatedMessages:
-                await client.delete_message(msg)
+                try:
+                    await client.delete_message(msg)
+                except Exception as e:
+                    print("Exception: {} while trying to delete the messages".format(str(e)))
 
     #LOG SPAMMED MESSAGE IN LOGGING CHANNEL
     if (count > 3):
@@ -49,9 +65,14 @@ async def check_for_spam(message, checkBot):
                        check = channel
         #BC
         else:
-            check = client.get_channel('349517224320565258')
+            try:
+                check = client.get_channel('349517224320565258')
+            except Exception as e:
+                print("Exception: {} while trying to get a certain channel id: ISSUE FIXED AUTOMATICALLY".format(str(e)))
+                checkBot = True
+                pass
             
-        await client.send_message(check, "The player {} is spamming the message ```{}```".format(message.author.mention, message.content))
+        await send_protected_message(check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))
 
 @client.event
 async def on_message(message):
@@ -67,18 +88,18 @@ async def on_message(message):
     #Basic Commands
     if message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
-            await client.send_message(message.channel, 'Shutting down')
+            await send_protected_message(message.channel, 'Shutting down')
             await client.close()
     elif message.content.startswith("!upgrade"):
         if message.author.id == '106354106196570112':
-            await client.send_message(message.channel, "I'll be right back with new gears!")
+            await send_protected_message(message.channel, "I'll be right back with new gears!")
             file = open("upgradeRequest", "w")
             file.write("upgrade requested")
             file.close()
             await client.logout()
             await client.close()
         else:
-            await client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
+            await send_protected_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
 #token = input("Please enter your Discord token: ")
 token = os.environ['gearbotlogin']
