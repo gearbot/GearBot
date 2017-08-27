@@ -40,10 +40,11 @@ async def on_message(message):
                 repeatedMessages.append(log)
                 count+=1
 
-    #REMOVES MESSAGES WHEN SPAM IS DETECTED
-    if (count > 3):
-        for msg in repeatedMessages:
-            await client.delete_message(msg)
+    #REMOVES MESSAGES WHEN SPAM IS DETECTED DEVELOPER ONLY!
+    if not checkBot:
+        if (count > 3):
+            for msg in repeatedMessages:
+                await client.delete_message(msg)
 
     #LOG SPAMMED MESSAGE IN LOGGING CHANNEL
     if (count > 3):
