@@ -83,5 +83,5 @@ async def on_message(message):
             client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
 #token = input("Please enter your Discord token: ")
-#token = os.environ['gearbotlogin']
-client.run('MzQ4MDMzMjY4OTk1NTg4MDk2.DIRbmg.O1rIdlzoYz-vuKb4m94K-WeHlQo')
+token = os.environ['gearbotlogin']
+client.run(token)
