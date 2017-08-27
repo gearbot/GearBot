@@ -11,20 +11,7 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-@client.event
-async def on_message(message):
-
-    #if message.content.startswith('!test'):
-    #    counter = 0
-    #    tmp = await client.send_message(message.channel, 'Calculating messages...')
-    #    async for log in client.logs_from(message.channel, limit=100):
-    #        if log.author == message.author:
-    #            counter += 1
-    #
-    #    await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-    info = await client.application_info()
-    checkBot = (info.name == 'SlakBotTest')
-
+async def check_for_spam(message, checkBot):
     text = message.content
     text = text.replace(" ","")
     text = text.lower()
@@ -53,9 +40,8 @@ async def on_message(message):
         #DEV
         if checkBot:
             for channel in message.server.channels:
-                if channel.server == message.server:
-                    if channel.name == 'logging':
-                        check = channel
+                if (channel.server == message.server) & (channel.name == 'logging'):
+                    check = channel
             if check is None:
                await client.create_channel(message.server, 'logging')
                for channel in message.server.channels:
@@ -67,21 +53,32 @@ async def on_message(message):
             
         await client.send_message(check, "The player {} is spamming the message ```{}```".format(message.author.mention, message.content))
 
-    
+@client.event
+async def on_message(message):
+
+    #Bot Information
+    info = await client.application_info()
+    checkBot = (info.name == 'SlakBotTest')
+
+    #Check Spam
+    if not message.content.startswith('!'):
+        await check_for_spam(message, checkBot)
+
+    #Basic Commands
     if message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
-            client.send_message(message.channel, 'Shutting down')
+            await client.send_message(message.channel, 'Shutting down')
             await client.close()
     elif message.content.startswith("!upgrade"):
         if message.author.id == '106354106196570112':
-            client.send_message(message.channel, "I'll be right back with new gears!")
+            await client.send_message(message.channel, "I'll be right back with new gears!")
             file = open("upgradeRequest", "w")
             file.write("upgrade requested")
             file.close()
             await client.logout()
             await client.close()
         else:
-            client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
+            await client.send_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
 #token = input("Please enter your Discord token: ")
 token = os.environ['gearbotlogin']
