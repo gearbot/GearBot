@@ -63,18 +63,18 @@ async def on_message(message):
                        check = channel
         #BC
         else:
-            check = await client.get_channel('349517224320565258')
+            check = client.get_channel('349517224320565258')
             
         await client.send_message(check, "The player {} is spamming the message ```{}```".format(message.author.mention, message.content))
 
     
     if message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
-            await client.send_message(message.channel, 'Shutting down')
+            client.send_message(message.channel, 'Shutting down')
             await client.close()
     elif message.content.startswith("!upgrade"):
         if message.author.id == '106354106196570112':
-            await client.send_message(message.channel, "I'll be right back with new gears!")
+            client.send_message(message.channel, "I'll be right back with new gears!")
             file = open("upgradeRequest", "w")
             file.write("upgrade requested")
             file.close()
