@@ -1,6 +1,7 @@
 import discord
 import asyncio
 import os
+import message.protectedmessage as pmsg
 
 client = discord.Client()
 
@@ -10,19 +11,6 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
-
-async def send_protected_message(channel, text):
-    try:
-        await client.send_message(channel, '{}'.format(text))
-    except discord.Forbidden:
-        print("Exception: Bot is not allowed to send messages")
-        pass
-    except discord.InvalidArgument:
-        print("Exception: Invalid message arguments")
-        pass
-    except Exception as e:
-        print("Exception: {}".format(str(e)))
-        pass
 
 async def check_for_spam(message, checkBot):
     text = message.content
@@ -72,7 +60,7 @@ async def check_for_spam(message, checkBot):
                 checkBot = True
                 pass
             
-        await send_protected_message(check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))
+        await pmsg.send_protected_message(client, check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))
 
 @client.event
 async def on_message(message):
@@ -88,19 +76,20 @@ async def on_message(message):
     #Basic Commands
     if message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
-            await send_protected_message(message.channel, 'Shutting down')
+            await pmsg.send_protected_message(client, message.channel, 'Shutting down')
             await client.close()
     elif message.content.startswith("!upgrade"):
         if message.author.id == '106354106196570112':
-            await send_protected_message(message.channel, "I'll be right back with new gears!")
+            await pmsg.send_protected_message(client, message.channel, "I'll be right back with new gears!")
             file = open("upgradeRequest", "w")
             file.write("upgrade requested")
             file.close()
             await client.logout()
             await client.close()
         else:
-            await send_protected_message(message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
+            await pmsg.send_protected_message(client, message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
 #token = input("Please enter your Discord token: ")
-token = os.environ['gearbotlogin']
-client.run(token)
+#token = os.environ['gearbotlogin']
+#client.run(token)
+client.run('MzQ4MDMzMjY4OTk1NTg4MDk2.DIVQvA.2wpz-Np6DORXkjJ8Hyi_T89WkKs')
