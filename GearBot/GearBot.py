@@ -89,6 +89,8 @@ async def on_message(message):
         else:
             await pmsg.send_protected_message(client, message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
-#token = input("Please enter your Discord token: ")
-token = os.environ['gearbotlogin']
+try:
+    token = os.environ['gearbotlogin']
+except KeyError:
+    token = input("Please enter your Discord token: ")
 client.run(token)
