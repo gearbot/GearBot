@@ -47,6 +47,22 @@ async def writeconfig(message, client, jsondata):
         jsonfile.write((simplejson.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)))
         jsonfile.close()
 
+async def isloggingenabled(message, client):
+    try:
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            for i in jsondata:
+                if (i==message.channel.server.id):
+                    return jsondata[i]['Enable Logging']
+    except FileNotFoundError:
+        print('Config file not found...creating')
+        await createconfig(message, client)
+        pass
+    except Exception as e:
+        print(e)
+        
+    return False
+
 async def resetconfig(message, client):
     jsonfile = None
     check = False
@@ -58,7 +74,7 @@ async def resetconfig(message, client):
             for i in jsondata:
                 if (i==message.channel.server.id):
                     check = True
-                    jsondata[i]['Enable Logging'] = False
+                    jsondata[i]['Enable Logging'] = True
                     jsondata[i]['Logging Channel ID'] = '0'
             jsonfile.close()
 
