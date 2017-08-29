@@ -1,8 +1,7 @@
 import discord
 import asyncio
 import os
-import json
-from functions import spam, protectedmessage
+from functions import spam, protectedmessage, configuration
 
 client = discord.Client()
 
@@ -13,19 +12,16 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-    #Configuration WIP
-    try:
-        jsonfile = open('config.json', 'r')
-        jsonfile.close()
-    except FileNotFoundError:
-            json.dump({'Enable Logging':True, 'Logging Channel id':'0'}, outfile)
-
 @client.event
 async def on_message(message):
 
     #Bot Information
     info = await client.application_info()
     checkBot = (info.name == 'SlakBotTest')
+
+    #Config Command
+    if message.content.startswith('!createconfig'):
+        await configuration.createconfig(message, client)
     
     #Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
