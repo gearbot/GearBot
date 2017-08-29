@@ -21,7 +21,13 @@ async def on_message(message):
 
     #Config Command
     if message.content.startswith('!createconfig'):
-        await configuration.createconfig(message, client)
+        await configuration.resetconfig(message, client)
+
+    if message.content.startswith('!readconfig'):
+        await configuration.readconfig(message, client)
+
+    if message.content.startswith('!resetconfig'):
+        await configuration.resetconfig(message, client)
     
     #Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
