@@ -22,6 +22,20 @@ def haspermission(server, permission):
         raise e
     return False
 
+def getpermissions(server):
+    try:
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            for i in jsondata:
+                if i==server.id:
+                    for x in jsondata[i]:
+                        if x == 'Permissions':
+                            return jsondata[i][x]
+    except Exception as e:
+        print(e)
+        raise e
+    return []
+
 def addpermission(server, permission):
     try:
         with open('config.json', 'r') as jsonfile:

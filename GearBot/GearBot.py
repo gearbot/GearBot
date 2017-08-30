@@ -26,6 +26,16 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    permission = False
+    if not message.author.bot:
+        li = list(permissions.getpermissions(message.channel.server))
+        for permissionrole in li:
+            for role in message.author.roles:
+                if permissionrole == role.name.lower():
+                    permission = True
+
+    if message.author == message.channel.server.owner:
+        permission = True
 
     #Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
@@ -42,7 +52,10 @@ async def on_message(message):
             await protectedmessage.send_protected_message(client, message.channel, 'Only the owner is allowed to add a permission role')
 
     if message.content.startswith('!resetconfig'):
-        await configuration.resetconfig(message, client)
+        if(permission):
+            await configuration.resetconfig(message, client)
+        else:
+            await protectedmessage.send_protected_message(client, message.channel, 'You don\'t have enough permissions to execute this command')
 
     if (message.content.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
         await configuration.setloggingchannelid(message, client, (message.content.split()[1]))
