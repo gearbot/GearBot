@@ -4,12 +4,27 @@ import json
 import simplejson
 from . import protectedmessage
 
+def hasconfig(server):
+    try:
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            for i in jsondata:
+                if (i == server.id):
+                    print('{} registered in config'.format(server.id))
+                    return True
+    except FileNotFoundError:
+        print('Exception in hasConfig(): Server not registered in config')
+        return False
+    except Exception as e:
+        print(e)
+        raise e
+    print('Server not registered in config...adding')
+    return False
+
 async def createconfig(message, client):
     jsonfile = None
     try:
-        jsonfile = open('config.json', 'a')
-
-        if not (jsonfile is None):
+        with open('config.json', 'a') as jsonfile:
             x = message.channel.server.id
             formattedjson = simplejson.dumps(
                                                 {
@@ -21,11 +36,8 @@ async def createconfig(message, client):
             print (formattedjson)
             jsonfile.write(formattedjson)
             await protectedmessage.send_protected_message(client, message.channel, 'Succeeded')
-            jsonfile.close()
     except FileNotFoundError:
-        jsonfile = open('config.json', 'r')
-
-        if not (jsonfile is None):
+        with open('config.json', 'w') as jsonfile:
             x = message.channel.server.id
             formattedjson = simplejson.dumps(
                                                 {
@@ -37,7 +49,35 @@ async def createconfig(message, client):
             print (formattedjson)
             jsonfile.write(formattedjson)
             await protectedmessage.send_protected_message(client, message.channel, 'Succeeded')
-            jsonfile.close()
+    except Exception as e:
+        print(e)
+        raise e
+
+async def createconfigserver(server):
+    try:
+        with open('config.json', 'a') as jsonfile:
+            x = server.id
+            formattedjson = simplejson.dumps(
+                                                {
+                                                    x:{
+                                                        "Enable Logging":True,
+                                                        "Logging Channel ID":'0'
+                                                    }
+                                                }, indent=4, skipkeys=True, sort_keys=True)
+            print (formattedjson)
+            jsonfile.write(formattedjson)
+    except FileNotFoundError:
+        with open('config.json', 'w') as jsonfile:
+            x = server.id
+            formattedjson = simplejson.dumps(
+                                                {
+                                                    x:{
+                                                        "Enable Logging":True,
+                                                        "Logging Channel ID":'0'
+                                                    }
+                                                }, indent=4, skipkeys=True, sort_keys=True)
+            print (formattedjson)
+            jsonfile.write(formattedjson)
     except Exception as e:
         print(e)
         raise e
@@ -61,15 +101,12 @@ async def isloggingenabled(message, client):
     except Exception as e:
         print(e)
         
-    return False
+    return True
 
 async def resetconfig(message, client):
-    jsonfile = None
     check = False
     try:
-        jsonfile = open('config.json', 'r')
-        
-        if not (jsonfile is None):
+        with open('config.json', 'r') as jsonfile:
             jsondata = json.load(jsonfile)
             for i in jsondata:
                 if (i==message.channel.server.id):
@@ -90,23 +127,79 @@ async def resetconfig(message, client):
         print(e)
         raise e
 
-async def readconfig(message, client):
-    jsonfile = None
+async def getconfigvalues(message, client):
     try:
-        jsonfile = open('config.json', 'r')
+        with open('config.json') as jsonfile:
+            jsondata = json.load(jsonfile)
+
+            for i in jsondata:
+                if (i==message.channel.server.id):
+                    configvalues = simplejson.dumps(jsondata[i], indent=4, skipkeys=True, sort_keys=True)
+                    await protectedmessage.send_protected_message(client, message.channel, '```' + configvalues + '```')
+    except FileNotFoundError:
+        print('Config file not found...creating')
+        try:
+            await createconfig(message, client)
+            await getconfigvalues(message, client)
+        except Exception as e:
+            print(e)
+            raise e
+        pass
+    except Exception as e:
+        print(e)
+        raise e
+
+async def setloggingchannelid(message, client, channelid):
+    check = False
+    jsondata = None
+    foundchannel = False
+    for server in client.servers:
+        for channel in server.channels:
+            if channel.id == channelid:
+                foundchannel = True
+                try:
+                    with open('config.json', 'r') as jsonfile:
+                        jsondata = json.load(jsonfile)
+
+                        for i in jsondata:
+                            if (i==message.channel.server.id):
+                                for x in jsondata[i]:
+                                    if x == 'Logging Channel ID':
+                                        jsondata[i][x] = channelid
+                                        check = True
+                    if check:
+                        await writeconfig(message, client, jsondata)
+                except FileNotFoundError:
+                    print('Config file not found...creating')
+                    try:
+                        await createconfig(message, client)
+                        await setloggingchannelid(message, client, channelid)
+                    except Exception as e:
+                        print(e)
+                        raise e
+                    pass
+                except Exception as e:
+                    print(e)
+                    raise e
+        if not foundchannel:
+            await protectedmessage.send_protected_message(client, message.channel, 'Invalid channel ID')
+
+#DEV ONLY COMMAND
+async def readconfig(message, client):
+    try:
+        with open('config.json', 'r') as jsonfile:
         
-        if not (jsonfile is None):
             jsondata = json.load(jsonfile)
             print(jsondata)
             for i in jsondata:
                 print (i)
                 for e in jsondata[i]:
                     print (e)
-            jsonfile.close()
     except FileNotFoundError:
         print("Config file not found")
         pass
     except Exception as e:
         print(e)
         raise e
+            
         

@@ -12,6 +12,11 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
+    for server in client.servers:
+        if not configuration.hasconfig(server):
+            await configuration.createconfigserver(server)
+        
+
 @client.event
 async def on_message(message):
 
@@ -20,20 +25,23 @@ async def on_message(message):
     checkBot = (info.name == 'SlakBotTest')
 
     #Config Command
-    if message.content.startswith('!createconfig'):
-        await configuration.resetconfig(message, client)
-
-    if message.content.startswith('!readconfig'):
-        await configuration.readconfig(message, client)
+    if message.content.startswith('!getconfig'):
+        await configuration.getconfigvalues(message, client)
 
     if message.content.startswith('!resetconfig'):
         await configuration.resetconfig(message, client)
+
+    if (message.content.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
+        await configuration.setloggingchannelid(message, client, (message.content.split()[1]))
     
     #Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
         await spam.check_for_spam(client, message, checkBot)
 
     #Basic Commands
+    if message.content.startswith('!help'):
+        text = """```!help: Display all the commands\n!upgrade: Update the bot to the latest version\n!stop: Disconnect the bot\n!resetconfig: Reset the server's custom config to the basic config\n!setloggingchannelid (id): Change the logging channel to a channel of your choice```"""
+        await protectedmessage.send_protected_message(client, message.channel, text)
     if message.content.startswith('!stop'):
         if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')):
             await protectedmessage.send_protected_message(client, message.channel, 'Shutting down')
