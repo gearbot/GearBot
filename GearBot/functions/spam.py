@@ -52,5 +52,4 @@ async def check_for_spam(client, message, checkBot):
                     print("Exception: {} while trying to get a certain channel id: ISSUE FIXED AUTOMATICALLY".format(str(e)))
                     checkBot = True
                     pass
-
             await protectedmessage.send_protected_message(client, check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))

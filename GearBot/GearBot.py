@@ -4,6 +4,8 @@ import os
 from functions import spam, protectedmessage, configuration
 
 client = discord.Client()
+checkBot = None
+info = None
 
 @client.event
 async def on_ready():
@@ -15,15 +17,20 @@ async def on_ready():
     for server in client.servers:
         if not configuration.hasconfig(server):
             await configuration.createconfigserver(server)
+
+    global info
+    info = await client.application_info()
+    global checkBot
+    checkBot = (info.name == 'SlakBotTest')
         
 
 @client.event
 async def on_message(message):
 
-    #Bot Information
-    info = await client.application_info()
-    checkBot = (info.name == 'SlakBotTest')
-
+    #Check Spam
+    if (not message.content.startswith('!')) & (not message.channel.is_private):
+        await spam.check_for_spam(client, message, checkBot)
+        
     #Config Command
     if message.content.startswith('!getconfig'):
         await configuration.getconfigvalues(message, client)
@@ -33,10 +40,6 @@ async def on_message(message):
 
     if (message.content.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
         await configuration.setloggingchannelid(message, client, (message.content.split()[1]))
-    
-    #Check Spam
-    if (not message.content.startswith('!')) & (not message.channel.is_private):
-        await spam.check_for_spam(client, message, checkBot)
 
     #Basic Commands
     if message.content.startswith('!help'):
