@@ -35,9 +35,9 @@ async def on_message(message):
     if message.content.startswith('!getconfig'):
         await configuration.getconfigvalues(message, client)
 
-    if ((message.content.startswith('!addpermission')) & (len(message.content.split()) == 2)):
+    if ((message.content.startswith('!addpermission')) & (len(message.content.split()) >= 2)):
         if message.author == message.channel.server.owner:
-            permissions.addpermission(message.channel.server, (message.content.split()[1]))
+            permissions.addpermission(message.channel.server, (message.content.split(' ', 1)[1]))
         else:
             await protectedmessage.send_protected_message(client, message.channel, 'Only the owner is allowed to add a permission role')
 
