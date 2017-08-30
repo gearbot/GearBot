@@ -36,14 +36,18 @@ async def check_for_spam(client, message, checkBot):
         
             #DEV
             if checkBot:
-                for channel in message.server.channels:
-                    if (channel.server == message.server) & (channel.name == 'logging'):
-                        check = channel
-                if check is None:
-                   await client.create_channel(message.server, 'logging')
-                   for channel in message.server.channels:
-                       if channel.name == 'logging':
-                           check = channel
+            #    for channel in message.server.channels:
+            #        if (channel.server == message.server) & (channel.name == 'logging'):
+            #            check = channel
+            #    if check is None:
+            #       await client.create_channel(message.server, 'logging')
+            #       for channel in message.server.channels:
+            #           if channel.name == 'logging':
+            #               check = channel
+                check = client.get_channel(configuration.getloggingchannelid(message.channel.server))
+                if (check=='0'):
+                    check = None
+                
             #BC
             else:
                 try:
@@ -52,4 +56,5 @@ async def check_for_spam(client, message, checkBot):
                     print("Exception: {} while trying to get a certain channel id: ISSUE FIXED AUTOMATICALLY".format(str(e)))
                     checkBot = True
                     pass
-            await protectedmessage.send_protected_message(client, check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))
+            if not (check is None):
+                await protectedmessage.send_protected_message(client, check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))

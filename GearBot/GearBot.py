@@ -1,7 +1,7 @@
 import discord
 import asyncio
 import os
-from functions import spam, protectedmessage, configuration
+from functions import spam, protectedmessage, configuration, permissions
 
 client = discord.Client()
 checkBot = None
@@ -34,6 +34,12 @@ async def on_message(message):
     #Config Command
     if message.content.startswith('!getconfig'):
         await configuration.getconfigvalues(message, client)
+
+    if ((message.content.startswith('!addpermission')) & (len(message.content.split()) == 2)):
+        if message.author == message.channel.server.owner:
+            permissions.addpermission(message.channel.server, (message.content.split()[1]))
+        else:
+            await protectedmessage.send_protected_message(client, message.channel, 'Only the owner is allowed to add a permission role')
 
     if message.content.startswith('!resetconfig'):
         await configuration.resetconfig(message, client)

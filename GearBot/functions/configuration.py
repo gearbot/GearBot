@@ -21,6 +21,20 @@ def hasconfig(server):
     print('Server not registered in config...adding')
     return False
 
+def getloggingchannelid(server):
+    try:
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            for i in jsondata:
+                if (i==server.id):
+                    return jsondata[i]['Logging Channel ID']
+    except FileNotFoundError:
+        print('Config file not found')
+        pass
+    except Exception as e:
+        print(e)
+    return False
+
 async def createconfig(message, client):
     jsonfile = None
     try:
@@ -30,7 +44,8 @@ async def createconfig(message, client):
                                                 {
                                                     x:{
                                                         "Enable Logging":True,
-                                                        "Logging Channel ID":'0'
+                                                        "Logging Channel ID":'0',
+                                                        "Permissions":([])
                                                     }
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
@@ -43,7 +58,8 @@ async def createconfig(message, client):
                                                 {
                                                     x:{
                                                         "Enable Logging":True,
-                                                        "Logging Channel ID":'0'
+                                                        "Logging Channel ID":'0',
+                                                        "Permissions":([])
                                                     }
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
@@ -61,7 +77,8 @@ async def createconfigserver(server):
                                                 {
                                                     x:{
                                                         "Enable Logging":True,
-                                                        "Logging Channel ID":'0'
+                                                        "Logging Channel ID":'0',
+                                                        "Permissions":([])
                                                     }
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
@@ -73,7 +90,8 @@ async def createconfigserver(server):
                                                 {
                                                     x:{
                                                         "Enable Logging":True,
-                                                        "Logging Channel ID":'0'
+                                                        "Logging Channel ID":'0',
+                                                        "Permissions":([])
                                                     }
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
@@ -82,7 +100,7 @@ async def createconfigserver(server):
         print(e)
         raise e
 
-async def writeconfig(message, client, jsondata):
+def writeconfig(jsondata):
     with open('config.json', 'w') as jsonfile:
         jsonfile.write((simplejson.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)))
         jsonfile.close()
@@ -113,10 +131,11 @@ async def resetconfig(message, client):
                     check = True
                     jsondata[i]['Enable Logging'] = True
                     jsondata[i]['Logging Channel ID'] = '0'
+                    jsondata[i]['Permissions'] = ([])
             jsonfile.close()
 
             if check:
-                await writeconfig(message, client, jsondata)
+                writeconfig(jsondata)
             else:
                 await createconfig(message, client)
     except FileNotFoundError:
@@ -168,7 +187,7 @@ async def setloggingchannelid(message, client, channelid):
                                         jsondata[i][x] = channelid
                                         check = True
                     if check:
-                        await writeconfig(message, client, jsondata)
+                        writeconfig(jsondata)
                 except FileNotFoundError:
                     print('Config file not found...creating')
                     try:
