@@ -16,7 +16,7 @@ async def on_ready():
 
     for server in client.servers:
         if not configuration.hasconfig(server):
-            await configuration.createconfigserver(server)
+            configuration.createconfigserver(server)
 
     global info
     info = await client.application_info()

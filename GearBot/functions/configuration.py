@@ -35,7 +35,7 @@ def getloggingchannelid(server):
         print(e)
     return False
 
-async def createconfig(message, client):
+def createconfig(message, client):
     jsonfile = None
     try:
         with open('config.json', 'a') as jsonfile:
@@ -50,7 +50,6 @@ async def createconfig(message, client):
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
             jsonfile.write(formattedjson)
-            await protectedmessage.send_protected_message(client, message.channel, 'Succeeded')
     except FileNotFoundError:
         with open('config.json', 'w') as jsonfile:
             x = message.channel.server.id
@@ -64,7 +63,6 @@ async def createconfig(message, client):
                                                 }, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
             jsonfile.write(formattedjson)
-            await protectedmessage.send_protected_message(client, message.channel, 'Succeeded')
     except Exception as e:
         print(e)
         raise e
@@ -114,7 +112,7 @@ async def isloggingenabled(message, client):
                     return jsondata[i]['Enable Logging']
     except FileNotFoundError:
         print('Config file not found...creating')
-        await createconfig(message, client)
+        createconfig(message, client)
         pass
     except Exception as e:
         print(e)
@@ -137,10 +135,10 @@ async def resetconfig(message, client):
             if check:
                 writeconfig(jsondata)
             else:
-                await createconfig(message, client)
+                createconfig(message, client)
     except FileNotFoundError:
         print("Config file not found, creating a new 1")
-        await createconfig(message, client)
+        createconfig(message, client)
         pass
     except Exception as e:
         print(e)
@@ -158,7 +156,7 @@ async def getconfigvalues(message, client):
     except FileNotFoundError:
         print('Config file not found...creating')
         try:
-            await createconfig(message, client)
+            createconfig(message, client)
             await getconfigvalues(message, client)
         except Exception as e:
             print(e)
@@ -191,7 +189,7 @@ async def setloggingchannelid(message, client, channelid):
                 except FileNotFoundError:
                     print('Config file not found...creating')
                     try:
-                        await createconfig(message, client)
+                        createconfig(message, client)
                         await setloggingchannelid(message, client, channelid)
                     except Exception as e:
                         print(e)
