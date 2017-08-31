@@ -38,17 +38,26 @@ def getloggingchannelid(server):
 def createconfig(message, client):
     jsonfile = None
     try:
-        with open('config.json', 'a') as jsonfile:
+        with open('config.json', 'r+') as jsonfile:
             x = message.channel.server.id
-            formattedjson = simplejson.dumps(
-                                                {
-                                                    x:{
+            jsondata = json.load(jsonfile)
+            jsondata.update(                        {x:{
                                                         "Enable Logging":True,
                                                         "Logging Channel ID":'0',
                                                         "Permissions":([])
-                                                    }
-                                                }, indent=4, skipkeys=True, sort_keys=True)
+                                                    }}
+                            )
+            #formattedjson = simplejson.dumps(
+            #                                    {
+            #                                        x:{
+            #                                            "Enable Logging":True,
+            #                                            "Logging Channel ID":'0',
+            #                                            "Permissions":([])
+            #                                        }
+            #                                    }, indent=4, skipkeys=True, sort_keys=True)
+            formattedjson = simplejson.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
+            jsonfile.seek(0)
             jsonfile.write(formattedjson)
     except FileNotFoundError:
         with open('config.json', 'w') as jsonfile:
@@ -69,17 +78,26 @@ def createconfig(message, client):
 
 async def createconfigserver(server):
     try:
-        with open('config.json', 'a') as jsonfile:
+        with open('config.json', 'r+') as jsonfile:
             x = server.id
-            formattedjson = simplejson.dumps(
-                                                {
-                                                    x:{
+            #formattedjson = simplejson.dumps(
+            #                                    {
+            #                                        x:{
+            #                                            "Enable Logging":True,
+            #                                            "Logging Channel ID":'0',
+            #                                            "Permissions":([])
+            #                                        }
+            #                                    }, indent=4, skipkeys=True, sort_keys=True)
+            jsondata = json.load(jsonfile)
+            jsondata.update(                        {x:{
                                                         "Enable Logging":True,
                                                         "Logging Channel ID":'0',
                                                         "Permissions":([])
-                                                    }
-                                                }, indent=4, skipkeys=True, sort_keys=True)
+                                                    }}
+                            )
+            formattedjson = simplejson.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)
             print (formattedjson)
+            jsonfile.seek(0)
             jsonfile.write(formattedjson)
     except FileNotFoundError:
         with open('config.json', 'w') as jsonfile:
@@ -130,9 +148,8 @@ async def resetconfig(message, client):
                     jsondata[i]['Enable Logging'] = True
                     jsondata[i]['Logging Channel ID'] = '0'
                     jsondata[i]['Permissions'] = ([])
-            jsonfile.close()
-
             if check:
+                print(jsondata)
                 writeconfig(jsondata)
             else:
                 createconfig(message, client)
@@ -198,8 +215,8 @@ async def setloggingchannelid(message, client, channelid):
                 except Exception as e:
                     print(e)
                     raise e
-        if not foundchannel:
-            await protectedmessage.send_protected_message(client, message.channel, 'Invalid channel ID')
+    if not foundchannel:
+        await protectedmessage.send_protected_message(client, message.channel, 'Invalid channel ID')
 
 #DEV ONLY COMMAND
 async def readconfig(message, client):
