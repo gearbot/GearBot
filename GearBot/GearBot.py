@@ -1,7 +1,7 @@
 import discord
 import asyncio
 import os
-from functions import spam, protectedmessage, configuration, permissions, customcommands
+from .functions import spam, protectedmessage, configuration, permissions, customcommands
 
 client = discord.Client()
 checkBot = None
