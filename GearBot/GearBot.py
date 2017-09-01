@@ -20,7 +20,7 @@ async def on_ready():
 
     for server in client.servers:
         if not configuration.hasconfig(server):
-            await configuration.createconfigserver(server)
+            configuration.createconfigserver(server)
 
     global info
     info = await client.application_info()
@@ -77,14 +77,14 @@ async def on_message(message):
 
         #Config -------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!getconfig'):
-            await configuration.getconfigvalues(message, client)
+            await protectedmessage.send_protected_message(client, message.channel, (configuration.getconfigvalues(message.channel.server)))
         
         elif receivedmessage.startswith('!resetconfig'):
-            await configuration.resetconfig(message, client)
+            configuration.resetconfig(message.channel.server)
 
         #Logging ------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif (receivedmessage.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
-            if (await configuration.setloggingchannelid(message, client, (message.content.split()[1]))):
+            if (configuration.setloggingchannelid(message.channel.server, client, (message.content.split()[1]))):
                 await protectedmessage.send_protected_message(client, message.channel, 'Logging channel changed')
 
         elif receivedmessage.startswith('!togglelogging'):

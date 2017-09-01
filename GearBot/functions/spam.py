@@ -29,7 +29,7 @@ async def check_for_spam(client, message, checkBot):
 
     #LOG SPAMMED MESSAGE IN LOGGING CHANNEL
     if (count > 3):
-        if((await configuration.isloggingenabled(message, client))):
+        if(configuration.isloggingenabled(message.channel.server)):
             check = client.get_channel(configuration.getloggingchannelid(message.channel.server))
             if (check=='0'):
                 check = None
