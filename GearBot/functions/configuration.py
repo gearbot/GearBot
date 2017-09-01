@@ -203,6 +203,7 @@ async def setloggingchannelid(message, client, channelid):
                                         check = True
                     if check:
                         writeconfig(jsondata)
+                        return True
                 except FileNotFoundError:
                     print('Config file not found...creating')
                     try:
@@ -217,6 +218,30 @@ async def setloggingchannelid(message, client, channelid):
                     raise e
     if not foundchannel:
         await protectedmessage.send_protected_message(client, message.channel, 'Invalid channel ID')
+    return False
+
+def togglelogging(server):
+    try:
+        currentstate = False
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            for i in jsondata:
+                if i==server.id:
+                    currentstate = jsondata[i]['Enable Logging']
+                    if currentstate:
+                        jsondata[i]['Enable Logging'] = False
+                    else:
+                        jsondata[i]['Enable Logging'] = True
+                    writeconfig(jsondata)
+                    if currentstate:
+                        return False
+                    else:
+                        return True
+    except Exception as e:
+        print(e)
+        raise e
+    return False
+            
 
 #DEV ONLY COMMAND
 async def readconfig(message, client):

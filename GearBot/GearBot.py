@@ -1,7 +1,7 @@
 import discord
 import asyncio
 import os
-from functions import spam, protectedmessage, configuration, permissions
+from functions import spam, protectedmessage, configuration, permissions, customcommands
 
 client = discord.Client()
 checkBot = None
@@ -12,6 +12,10 @@ async def on_ready():
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
+    print('------')
+    print('Do not create custom commands that might interfere with the commands of other bots')
+    print('You can report an Issue/Bug on the GearBot repository of AEnterprise on GitHub')
+    print('This bot is made by Slak#9006 & AEnterprise#4693')
     print('------')
 
     for server in client.servers:
@@ -41,38 +45,61 @@ async def on_message(message):
     if (not message.content.startswith('!')) & (not message.channel.is_private):
         await spam.check_for_spam(client, message, checkBot)
         
-    #Permission required commands
+    #Commands that require permissions
     if (permission | (message.author == message.channel.server.owner)) & (message.content.startswith('!') & (not message.channel.is_private)):
-        if message.content.startswith('!getconfig'):
-            await configuration.getconfigvalues(message, client)
-            
-        elif ((message.content.startswith('!addpermission')) & (len(message.content.split()) >= 2)):
+        receivedmessage = message.content.lower()
+
+        #Custom commands ----------------------------------------------------------------------------------------------------------------------------------------------------------
+        if (receivedmessage.startswith('!add') & ((len(message.content.split()) >= 3))):
+            if (customcommands.addcommand(message.channel.server, message.content.split()[1].lower(), message.content.split(' ', 2)[2])):
+                await protectedmessage.send_protected_message(client, message.channel, "Added the command: `{}` succesfully".format(message.content.split()[1].lower()))
+            else:
+                await protectedmessage.send_protected_message(client, message.channel, "Command wasn't added because the command is already registered or invalid")
+
+        elif (receivedmessage.startswith('!remove') & ((len(message.content.split()) == 2))):
+            if (customcommands.removecommand(message.channel.server, message.content.split()[1].lower())):
+                await protectedmessage.send_protected_message(client, message.channel, "Removed the command: `{}` succesfully".format(message.content.split()[1].lower()))
+            else:
+                await protectedmessage.send_protected_message(client, message.channel, "This custom command does not exist or is equal to a similar config value") 
+
+        #Permission commands -----------------------------------------------------------------------------------------------------------------------------------------------------
+        elif ((receivedmessage.startswith('!addpermission')) & (len(message.content.split()) >= 2)):
             if message.author == message.channel.server.owner:
                 permissions.addpermission(message.channel.server, (message.content.split(' ', 1)[1]))
             else:
                 await protectedmessage.send_protected_message(client, message.channel, 'Only the owner is allowed to add a permission role')
 
-        elif ((message.content.startswith('!removepermission')) & (len(message.content.split()) >= 2)):
+        elif ((receivedmessage.startswith('!removepermission')) & (len(message.content.split()) >= 2)):
             if message.author == message.channel.server.owner:
                 permissions.removepermission(message.channel.server, (message.content.split(' ', 1)[1]))
             else:
                 await protectedmessage.send_protected_message(client, message.channel, 'Only the owner is allowed to remove a permission role')
 
-        elif message.content.startswith('!resetconfig'):
-            if(permission):
-                await configuration.resetconfig(message, client)
+        #Config -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        elif receivedmessage.startswith('!getconfig'):
+            await configuration.getconfigvalues(message, client)
+        
+        elif receivedmessage.startswith('!resetconfig'):
+            await configuration.resetconfig(message, client)
+
+        #Logging ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        elif (receivedmessage.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
+            if (await configuration.setloggingchannelid(message, client, (message.content.split()[1]))):
+                await protectedmessage.send_protected_message(client, message.channel, 'Logging channel changed')
+
+        elif receivedmessage.startswith('!togglelogging'):
+            if (configuration.togglelogging(message.channel.server)):
+                await protectedmessage.send_protected_message(client, message.channel, 'Logging enabled')
             else:
-                await protectedmessage.send_protected_message(client, message.channel, 'You don\'t have enough permissions to execute this command')
+                await protectedmessage.send_protected_message(client, message.channel, 'Logging disabled')
 
-        elif (message.content.startswith('!setloggingchannelid')) & (len( (message.content.split()) ) == 2):
-            await configuration.setloggingchannelid(message, client, (message.content.split()[1]))
-
-        elif message.content.startswith('!stop'):
+        #Updating & Stop ----------------------------------------------------------------------------------------------------------------------------------------------------------
+        elif receivedmessage.startswith('!stop'):
             if((message.author.id == '140130139605434369')|(message.author.id == '106354106196570112')|(message.author == message.channel.server.owner)):
                 await protectedmessage.send_protected_message(client, message.channel, 'Shutting down')
                 await client.close()
 
-        elif message.content.startswith("!upgrade"):
+        elif receivedmessage.startswith("!upgrade"):
             if message.author.id == '106354106196570112':
                 await protectedmessage.send_protected_message(client, message.channel, "I'll be right back with new gears!")
                 file = open("upgradeRequest", "w")
@@ -83,14 +110,35 @@ async def on_message(message):
             else:
                 await protectedmessage.send_protected_message(client, message.channel, "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
-    #Basic Commands
-    if message.content.startswith('!help'):
-        text = '```!help: Display all the commands\n' \
-               '!upgrade: Update the bot to the latest version\n' \
-               '!stop: Disconnect the bot\n' \
-               '!resetconfig: Reset the server\'s custom config to the basic config\n' \
-               '!setloggingchannelid (id): Change the logging channel to a channel of your choice```'
-        await protectedmessage.send_protected_message(client, message.channel, text)
+        #Custom commands ----------------------------------------------------------------------------------------------------------------------------------------------------------
+        else:
+            customcmd = customcommands.getcommands(message.channel.server)
+            formattedmsg = message.content.lower()
+            formattedmsg = (formattedmsg[1::])
+            if formattedmsg in customcmd:
+                await protectedmessage.send_protected_message(client, message.channel, customcmd[formattedmsg])
+
+    #Basic Command
+    if message.content.lower().startswith('!help'):
+        text = None
+        if permission:
+            text = '```!help: Display all the commands\n' \
+                   '!upgrade: Update the bot to the latest version\n' \
+                   '!stop: Disconnect the bot\n' \
+                   '!add (command) (text): Add a new custom command\n' \
+                   '!remove (command): Remove a custom command\n' \
+                   '!getconfig: Look at the current configuration\n' \
+                   '!resetconfig: Reset the configuration to it\'s defaults\n' \
+                   '!setloggingchannelid (id): Change the logging channel to a channel of your choice\n' \
+                   '!togglelogging: Enable/Disable logging\n' \
+                   '!getcustomcommands: Retreive all the custom commands\n' \
+                   '!(custom command): Execute a custom command```'
+        else:
+            text = '```!help: Display all the commands\n' \
+                   '!getcustomcommands: Retreive all the custom commands\n' \
+                   '!(custom command): Execute a custom command```'
+        if not (text is None):
+            await protectedmessage.send_protected_message(client, message.channel, text)
 
 try:
     token = os.environ['gearbotlogin']
