@@ -1,6 +1,5 @@
 import discord
-import asyncio
-import os
+
 
 async def send_protected_message(client, channel, text):
     try:

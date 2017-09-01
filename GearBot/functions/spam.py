@@ -1,7 +1,5 @@
-import discord
-import asyncio
-from . import protectedmessage
-from . import configuration
+from GearBot.functions import configuration, protectedmessage
+
 
 async def check_for_spam(client, message, checkBot):
     text = message.content

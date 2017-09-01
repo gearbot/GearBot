@@ -1,7 +1,7 @@
-import discord
-import asyncio
 import json
-from . import configuration
+
+from GearBot.functions import configuration
+
 
 def haspermission(server, permission):
     try:

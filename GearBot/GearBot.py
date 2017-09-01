@@ -1,7 +1,7 @@
 import discord
-import asyncio
 import os
-from .functions import spam, protectedmessage, configuration, permissions, customcommands
+
+from GearBot.functions import configuration, customcommands, protectedmessage, spam, permissions
 
 client = discord.Client()
 checkBot = None
@@ -23,7 +23,7 @@ async def on_ready():
             configuration.createconfigserver(server)
 
     global info
-    info = await client.application_info()
+    info = client.application_info()
     global checkBot
     checkBot = (info.name == 'SlakBotTest')
         

@@ -1,8 +1,7 @@
-import discord
-import asyncio
 import json
+
 import simplejson
-from . import protectedmessage
+
 
 def getconfig(server):
     try:

@@ -1,8 +1,7 @@
-import discord
-import asyncio
 import json
-from . import protectedmessage
-from . import configuration
+
+from GearBot.functions import configuration
+
 
 def addcommand(server, command, text):
     try:
