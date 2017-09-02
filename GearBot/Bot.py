@@ -3,6 +3,7 @@ import asyncio
 import os
 
 from functions import configuration, protectedmessage, permissions, spam, customcommands
+from tabulate import tabulate
 
 client = discord.Client()
 checkBot = None
@@ -49,7 +50,7 @@ async def on_message(message):
 
     # Commands that require permissions
     if (permission | (message.author == message.channel.server.owner)) & (
-        message.content.startswith('!') & (not message.channel.is_private)):
+                message.content.startswith('!') & (not message.channel.is_private)):
         receivedmessage = message.content.lower()
 
         # Custom commands ----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,7 +91,8 @@ async def on_message(message):
         # Config -------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!getconfig'):
             await protectedmessage.send_protected_message(client, message.channel,
-                                                          ('```'+configuration.getconfigvalues(message.channel.server)+'```'))
+                                                          ('```' + configuration.getconfigvalues(
+                                                              message.channel.server) + '```'))
 
         elif receivedmessage.startswith('!resetconfig'):
             configuration.resetconfig(message.channel.server)
@@ -109,7 +111,7 @@ async def on_message(message):
         # Updating & Stop ----------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!stop'):
             if (message.author.id == '140130139605434369') | (message.author.id == '106354106196570112') | (
-                message.author == message.channel.server.owner):
+                        message.author == message.channel.server.owner):
                 await protectedmessage.send_protected_message(client, message.channel, 'Shutting down')
                 await client.close()
 
@@ -155,6 +157,13 @@ async def on_message(message):
                    '!(custom command): Execute a custom command```'
         if not (text is None):
             await protectedmessage.send_protected_message(client, message.channel, text)
+    elif message.content.lower().startswith('!getcustomcommands'):
+        customcmd = dict(customcommands.getcommands(message.channel.server))
+        li = []
+        for key, value in customcmd.items():
+            li.append([key.title(), value])
+        await protectedmessage.send_protected_message(client, message.channel,
+                                                      '**Custom Commands:**\n```' + tabulate(li) + '```')
 
 
 try:
