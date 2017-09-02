@@ -163,7 +163,7 @@ async def on_message(message):
         for key, value in customcmd.items():
             li.append([key.title(), value])
         await protectedmessage.send_protected_message(client, message.channel,
-                                                      '**Custom Commands:**\n```' + tabulate(li) + '```')
+                                                      '**Custom Commands:**\n' + tabulate(li))
 
 
 try:
