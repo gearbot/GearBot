@@ -2,7 +2,7 @@ import discord
 import asyncio
 import os
 
-from GearBot.functions import configuration, customcommands, protectedmessage, spam, permissions
+from functions import configuration, protectedmessage, permissions, spam, customcommands
 
 client = discord.Client()
 checkBot = None

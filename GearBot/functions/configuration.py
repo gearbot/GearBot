@@ -2,7 +2,6 @@ import json
 
 import simplejson
 
-
 def getconfig(server):
     try:
         with open('config.json', 'r') as jsonfile:

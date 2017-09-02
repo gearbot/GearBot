@@ -1,6 +1,6 @@
 import json
 
-from . import configuration
+from . import *
 
 
 def addcommand(server, command, text):
@@ -15,7 +15,6 @@ def addcommand(server, command, text):
             configuration.writeconfig(jsondata)
             return True
     return False
-    try:
 
 def removecommand(server, command):
     if not (command=='permissions'):
