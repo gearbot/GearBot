@@ -1,70 +1,30 @@
 import json
 
-from GearBot.functions import configuration
+from . import configuration
 
 
 def haspermission(server, permission):
-    try:
-        with open('config.json', 'r') as jsonfile:
-            jsondata = json.load(jsonfile)
-            for i in jsondata:
-                if i==server.id:
-                    for x in jsondata[i]:
-                        if x == 'Permissions':
-                            li = jsondata[i][x]
-                            if (permission.lower()) in li:
-                                return True
-                            return False
-    except Exception as e:
-        print(e)
-        raise e
+    jsondata = configuration.getconfig(server)
+    if (permission.lower()) in jsondata[server.id]['Permissions']:
+        return True
     return False
 
 def removepermission(server, permission):
-    try:
-        with open('config.json', 'r+') as jsonfile:
-            jsondata = json.load(jsonfile)
-            for i in jsondata:
-                if i==server.id:
-                    for x in jsondata[i]:
-                        if x == 'Permissions':
-                            li = jsondata[i][x]
-                            if (permission.lower()) in li:
-                                li = [x for x in li if not (x==permission.lower())]
-                                jsondata[i][x] = li
-                                configuration.writeconfig(jsondata)
-    except Exception as e:
-        print(e)
-        raise e
+    jsondata = configuration.getconfig(server)
+    if (permission.lower()) in jsondata[server.id]['Permissions']:
+        jsondata = [x for x in jsondata[server.id]['Permissions'] if not (x==permission.lower())]
+        configuration.writeconfig(jsondata)
+        return True
+    return False
 
 def getpermissions(server):
-    try:
-        with open('config.json', 'r') as jsonfile:
-            jsondata = json.load(jsonfile)
-            for i in jsondata:
-                if i==server.id:
-                    for x in jsondata[i]:
-                        if x == 'Permissions':
-                            return jsondata[i][x]
-    except Exception as e:
-        print(e)
-        raise e
-    return []
+    jsondata = configuration.getconfig(server)
+    return jsondata[server.id]['Permissions']
 
 def addpermission(server, permission):
-    try:
-        with open('config.json', 'r') as jsonfile:
-            jsondata = json.load(jsonfile)
-            for i in jsondata:
-                if i==server.id:
-                    for x in jsondata[i]:
-                        if x == 'Permissions':
-                            li = jsondata[i][x]
-                            if not (permission.lower() in li):
-                                li.append(permission.lower())
-                                jsondata[i][x] = li
-                                configuration.writeconfig(jsondata)
-    except Exception as e:
-        print(e)
-        raise e
+    jsondata = configuration.getconfig(server)
+    if not (permission.lower() in jsondata[server.id]['Permissions']):
+        jsondata[server.id]['Permissions'].append(permission.lower())
+        configuration.writeconfig(jsondata)
+        return True
     return False

@@ -1,4 +1,4 @@
-from GearBot.functions import configuration, protectedmessage
+from . import configuration, protectedmessage
 
 
 async def check_for_spam(client, message, checkBot):
