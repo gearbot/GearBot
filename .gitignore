@@ -104,4 +104,4 @@ ENV/
 *.json
 
 # idea
-.idea
+.idea/
