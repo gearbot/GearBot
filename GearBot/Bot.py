@@ -90,7 +90,7 @@ async def on_message(message):
         # Config -------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!getconfig'):
             await protectedmessage.send_protected_message(client, message.channel,
-                                                          (configuration.getconfigvalues(message.channel.server)))
+                                                          ('```'+configuration.getconfigvalues(message.channel.server)+'```'))
 
         elif receivedmessage.startswith('!resetconfig'):
             configuration.resetconfig(message.channel.server)
