@@ -1,5 +1,5 @@
-from GearBot.util import debugMode
-from .command import Command
+from commands.util import debugMode
+from commands.command import Command
 
 
 class OwnerCommand(Command):

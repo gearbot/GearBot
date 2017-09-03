@@ -1,5 +1,5 @@
 import asyncio
-from .command import Command
+from commands.command import Command
 
 
 class Ping(Command):

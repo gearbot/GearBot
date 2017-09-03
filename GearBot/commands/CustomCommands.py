@@ -1,5 +1,5 @@
-from GearBot.commands.RoleCommands import RoleCommand
-from GearBot.util import prefix
+from commands.RoleCommands import RoleCommand
+from . import *
 
 customCommands = dict()
 

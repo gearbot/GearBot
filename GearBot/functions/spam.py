@@ -32,4 +32,4 @@ async def check_for_spam(client, message, checkBot):
                 check = None
                 
             if not (check is None):
-                await protectedmessage.send_protected_message(client, check, "The player {} is spamming a message similar to: ```{}```".format(message.author.mention, message.content))
+                await protectedmessage.send_protected_message(client, check, "The player {} is spamming (in {}) a message similar to: ```{}```".format(message.author.mention, message.channel, message.content))

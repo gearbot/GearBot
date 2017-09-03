@@ -1,19 +1,15 @@
+import os
 import traceback
 
 import discord
-import asyncio
-import os
+from commands import CustomCommands
+from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
+from commands.OwnerCommands import Stop, Upgrade
+from commands.ping import Ping
+from functions import configuration, spam
 
-from GearBot.commands import CustomCommands
-from GearBot.commands.CustomCommands import AddCustomCommand, RemoveCustomCommand, customCommands
-from GearBot.commands.OwnerCommands import Stop, Upgrade
-from GearBot.commands.ping import Ping
-from GearBot.functions import configuration, protectedmessage, permissions, spam
-from tabulate import tabulate
-
-
-from GearBot.commands.command import Command
-from GearBot.util import prefix
+from commands.command import Command
+from commands.util import prefix
 
 
 class Help(Command):
@@ -40,8 +36,8 @@ commands = {
     "stop": Stop(),
     "upgrade": Upgrade(),
     "help": Help(),
-    "add": AddCustomCommand(),
-    "remove": RemoveCustomCommand()
+    #"add": AddCustomCommand(),
+    #"remove": RemoveCustomCommand()
 }
 
 @client.event
@@ -67,6 +63,8 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    if (not message.content.startswith('!')) & (not message.channel.is_private):
+        await        spam.check_for_spam(client, message)
     info = []
     try:
         if (message.content.startswith(prefix)):
