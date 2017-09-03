@@ -1,6 +1,6 @@
 import json
 
-from . import *
+from . import configuration
 
 def haspermission(server, permission):
     jsondata = configuration.getconfig(server)

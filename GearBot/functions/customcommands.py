@@ -1,6 +1,6 @@
 import json
 
-from . import *
+from . import configuration
 
 
 def addcommand(server, command, text):
