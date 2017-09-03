@@ -33,6 +33,10 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+
+    if (message.content is None) | (message.content == ''):
+        return
+
     permission = False
     if not message.author.bot:
         li = list(permissions.getpermissions(message.channel.server))
