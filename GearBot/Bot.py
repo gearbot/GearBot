@@ -63,6 +63,8 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    if (message.content is None) | (message.content == ''):
+        return
     if (not message.content.startswith('!')) & (not message.channel.is_private):
         await        spam.check_for_spam(client, message)
     info = []
