@@ -45,7 +45,9 @@ def createconfigserver(server, create):
                         }
                     )
     else:
-        jsondata = getconfig(server)
+        with open('config.json', 'r') as jsonfile:
+            jsondata = json.load(jsonfile)
+            jsonfile.close()
         jsondata.update(    {
                                 server.id:{
                                     "Enable Logging":True,
