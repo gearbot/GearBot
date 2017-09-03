@@ -1,20 +1,48 @@
+import traceback
+
 import discord
 import asyncio
 import os
 
+from GearBot.commands import CustomCommands
+from GearBot.commands.CustomCommands import AddCustomCommand, RemoveCustomCommand, customCommands
+from GearBot.commands.OwnerCommands import Stop, Upgrade
 from GearBot.commands.ping import Ping
-from GearBot.functions import configuration, protectedmessage, permissions, spam, customcommands
+from GearBot.functions import configuration, protectedmessage, permissions, spam
 from tabulate import tabulate
 
+
+from GearBot.commands.command import Command
+from GearBot.util import prefix
+
+
+class Help(Command):
+    def __init__(self):
+        super().__init__("Shows help")
+
+    async def execute(self, client, channel, user, params):
+        info = "**Available commands:**\n------------------------------------\n"
+        for key in commands:
+            if (commands[key].canExecute(user)):
+                info += "{} : {}\n".format(key, commands[key].help)
+        cCommands = CustomCommands.getCommands(channel.server)
+        if (len(cCommands.keys())):
+            info += "\n**Other commands:**\n------------------------------------\n"
+            for key in cCommands:
+                info += "{}\n".format(key)
+
+        await client.send_message(channel, info)
+
 client = discord.Client()
-debugMode = None
-info = None
-prefix = "!" #TODO: move to config
 
 commands = {
-    "ping": Ping()
+    "ping": Ping(),
+    "stop": Stop(),
+    "upgrade": Upgrade(),
+    "help": Help(),
+    "add": AddCustomCommand(),
+    "remove": RemoveCustomCommand()
 }
-
 
 @client.event
 async def on_ready():
@@ -39,20 +67,20 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    global prefix
-    global client
     info = []
     try:
         if (message.content.startswith(prefix)):
             info = message.content[1:].split()
-            command = commands[info[0]]
-            if (command is not None):
+            if (commands.keys().__contains__(info[0])):
+                command = commands[info[0]]
                 if (command.canExecute(message.author)):
                     await command.execute(client, message.channel, message.author, info[1:])
                 else:
                     await client.send_message(message.channel, "You do not have permission to execute this command")
             else:
-                #custom commands check
+                cCommands = CustomCommands.getCommands(message.channel.server)
+                if (cCommands.keys().__contains__(info[0])):
+                    await client.send_message(message.channel, cCommands[info[0]])
     except discord.Forbidden as e:
         print("Exception: Bot is not allowed to send messages")
         onCommandError(message.channel, info[0], info[1:], e)
@@ -62,8 +90,8 @@ async def on_message(message):
         print("Exception: Invalid message arguments")
         pass
     except Exception as e:
-        onCommandError(message.channel, info[0], info[1:], e)
-        print("Exception: {}".format(str(e)))
+        await onCommandError(message.channel, info[0], info[1:], e)
+        traceback.print_exc()
         pass
 
 async def onCommandError(channel, name, info, exception):
@@ -74,7 +102,7 @@ async def onCommandError(channel, name, info, exception):
         print("    Arguments: {}".format(info))
         print("    Channel: {}".format(channel.name))
         print("    Server: {}".format(channel.server))
-        print(exception)
+        print("    Exception: {}".format(str(exception)))
         await client.send_message(channel, "Execution of the {} command failed, please try again later".format(name))
     except Exception as e:
         print("Failed to notify caller:")
