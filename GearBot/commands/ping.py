@@ -1,4 +1,3 @@
-import asyncio
 from commands.command import Command
 
 

@@ -2,14 +2,13 @@ import os
 import traceback
 
 import discord
-from commands import CustomCommands
-from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
-from commands.OwnerCommands import Stop, Upgrade
-from commands.ping import Ping
-from functions import configuration, spam
 
+from commands.OwnerCommands import Stop, Upgrade
 from commands.command import Command
+from commands import CustomCommands
+from commands.ping import Ping
 from commands.util import prefix
+from functions import configuration, spam
 
 
 class Help(Command):
@@ -109,9 +108,9 @@ async def onCommandError(channel, name, info, exception):
         print(e)
 
 
-
-try:
-    token = os.environ['gearbotlogin']
-except KeyError:
-    token = input("Please enter your Discord token: ")
-client.run(token)
+if __name__ == '__main__':
+    try:
+        token = os.environ['gearbotlogin']
+    except KeyError:
+        token = input("Please enter your Discord token: ")
+    client.run(token)

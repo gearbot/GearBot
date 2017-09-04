@@ -2,8 +2,8 @@ import discord
 import asyncio
 import os
 
-from GearBot.commands.ping import Ping
-from GearBot.functions import configuration, protectedmessage, permissions, spam, customcommands
+from commands.ping import Ping
+from functions import configuration, protectedmessage, permissions, spam, customcommands
 from tabulate import tabulate
 
 client = discord.Client()
@@ -26,7 +26,7 @@ async def on_message(message):
 
     # Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
-        await        spam.check_for_spam(client, message, checkBot)
+        await        spam.check_for_spam(client, message)
 
     # Commands that require permissions
     if (permission | (message.author == message.channel.server.owner)) & (

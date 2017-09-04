@@ -1,5 +1,4 @@
 from commands.RoleCommands import RoleCommand
-from . import *
 
 customCommands = dict()
 
