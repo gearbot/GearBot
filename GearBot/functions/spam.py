@@ -1,6 +1,6 @@
 from . import configuration, protectedmessage
 
-async def check_for_spam(client, message, checkBot):
+async def check_for_spam(client, message):
     text = message.content
     text = text.replace(" ","")
     text = text.lower()
