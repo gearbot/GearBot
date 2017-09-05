@@ -1,8 +1,11 @@
 import os
 import traceback
+import sys
+from argparse import ArgumentParser
+import logging
+from logging import DEBUG, INFO, WARNING, ERROR
 
 import discord
-import sys
 
 from commands.OwnerCommands import Stop, Upgrade
 from commands.command import Command
@@ -10,6 +13,13 @@ from commands import CustomCommands
 from commands.ping import Ping
 from commands.util import prefix
 from functions import configuration, spam
+
+parser = ArgumentParser()
+parser.add_argument("--debug", help="Set debug logging level")
+parser.add_argument("--token", help="Specify your Discord token")
+args = parser.parse_args()
+logging.basicConfig(level=DEBUG if args.debug else INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 class Help(Command):
@@ -67,12 +77,12 @@ async def on_ready():
 async def on_message(message):
     if (message.content is None) or (message.content == ''):
         return
-    elif not (message.content.startswith(prefix) and message.channel.is_private):
+    elif not (message.content.startswith(prefix) or message.channel.is_private):
         await spam.check_for_spam(client, message)
 
     if message.content.startswith(prefix):
         cmd, *args = message.content[1:].split()
-        print(f"command '{cmd}' with arguments {args} issued")
+        logging.debug(f"command '{cmd}' with arguments {args} issued")
     else:
         return
 
@@ -88,13 +98,13 @@ async def on_message(message):
             if cmd in custom_commands.keys():
                 await client.send_message(message.channel, custom_commands[cmd])
                 return
-            print(f"command '{cmd}' not recognized")
+            logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
-        print("Exception: Bot is not allowed to send messages")
+        logging.info("Bot is not allowed to send messages")
         on_command_error(message.channel, cmd, args, e)
     except discord.InvalidArgument as e:
         on_command_error(message.channel, cmd, args, e)
-        print("Exception: Invalid message arguments")
+        logging.info("Exception: Invalid message arguments")
     except Exception as e:
         await on_command_error(message.channel, cmd, args, e)
         traceback.print_exc()
@@ -103,21 +113,22 @@ async def on_message(message):
 async def on_command_error(channel, cmd, args, exception):
     global client
     try:
-        print("Command execution failed:"
-              f"    Command: {cmd}"
-              f"    Arguments: {args}"
-              f"    Channel: {channel.name}"
-              f"    Server: {channel.server}"
-              f"    Exception: {exception}")
+        logging.WARNING("Command execution failed:"
+                        f"    Command: {cmd}"
+                        f"    Arguments: {args}"
+                        f"    Channel: {channel.name}"
+                        f"    Server: {channel.server}"
+                        f"    Exception: {exception}")
         await client.send_message(channel, f"Execution of the {cmd} command failed, please try again later")
     except Exception as e:
-        print("Failed to notify caller:")
-        print(e)
+        logging.warning(f"Failed to notify caller:\n{e}")
 
 
 if __name__ == '__main__':
-    try:
+    if 'gearbotlogin' in os.environ:
         token = os.environ['gearbotlogin']
-    except KeyError:
+    elif args.token:
+        token = args.token
+    else:
         token = input("Please enter your Discord token: ")
     client.run(token)
