@@ -2,6 +2,7 @@ import os
 import traceback
 
 import discord
+import sys
 
 from commands.OwnerCommands import Stop, Upgrade
 from commands.command import Command
@@ -109,6 +110,8 @@ async def onCommandError(channel, name, info, exception):
 
 
 if __name__ == '__main__':
+    sys.stdout = open("log.txt", "w")
+    sys.stderr = open("error.txt", "w")
     try:
         token = os.environ['gearbotlogin']
     except KeyError:
