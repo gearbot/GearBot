@@ -17,17 +17,18 @@ class Help(Command):
         super().__init__("Shows help")
 
     async def execute(self, client, channel, user, params):
-        info = "**Available commands:**\n------------------------------------\n"
+        inf = "**Available commands:**\n------------------------------------\n"
         for key in commands:
-            if (commands[key].canExecute(user)):
-                info += "{} : {}\n".format(key, commands[key].help)
+            if commands[key].canExecute(user):
+                inf += f"{key} : {commands[key].help}\n"
         cCommands = CustomCommands.getCommands(channel.server)
-        if (len(cCommands.keys())):
-            info += "\n**Other commands:**\n------------------------------------\n"
+        if len(cCommands.keys()):
+            inf += "\n**Other commands:**\n------------------------------------\n"
             for key in cCommands:
-                info += "{}\n".format(key)
+                inf += f"{key}\n"
 
-        await client.send_message(channel, info)
+        await client.send_message(channel, inf)
+
 
 client = discord.Client()
 
@@ -36,9 +37,10 @@ commands = {
     "stop": Stop(),
     "upgrade": Upgrade(),
     "help": Help(),
-    #"add": AddCustomCommand(),
-    #"remove": RemoveCustomCommand()
+    # "add": AddCustomCommand(),
+    # "remove": RemoveCustomCommand()
 }
+
 
 @client.event
 async def on_ready():
@@ -63,55 +65,57 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if (message.content is None) | (message.content == ''):
+    if (message.content is None) or (message.content == ''):
         return
-    if (not message.content.startswith('!')) & (not message.channel.is_private):
-        await        spam.check_for_spam(client, message)
-    info = []
+    elif not (message.content.startswith(prefix) and message.channel.is_private):
+        await spam.check_for_spam(client, message)
+
+    if message.content.startswith(prefix):
+        cmd, *args = message.content[1:].split()
+        print(f"command '{cmd}' with arguments {args} issued")
+    else:
+        return
+
     try:
-        if (message.content.startswith(prefix)):
-            info = message.content[1:].split()
-            if (commands.keys().__contains__(info[0])):
-                command = commands[info[0]]
-                if (command.canExecute(message.author)):
-                    await command.execute(client, message.channel, message.author, info[1:])
-                else:
-                    await client.send_message(message.channel, "You do not have permission to execute this command")
+        if cmd in commands.keys():
+            command = commands[cmd]
+            if command.canExecute(message.author):
+                await command.execute(client, message.channel, message.author, cmd)
             else:
-                cCommands = CustomCommands.getCommands(message.channel.server)
-                if (cCommands.keys().__contains__(info[0])):
-                    await client.send_message(message.channel, cCommands[info[0]])
+                await client.send_message(message.channel, "You do not have permission to execute this command")
+        else:
+            custom_commands = CustomCommands.getCommands(message.channel.server)
+            if cmd in custom_commands.keys():
+                await client.send_message(message.channel, custom_commands[cmd])
+                return
+            print(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
         print("Exception: Bot is not allowed to send messages")
-        onCommandError(message.channel, info[0], info[1:], e)
-        pass
+        on_command_error(message.channel, cmd, args, e)
     except discord.InvalidArgument as e:
-        onCommandError(message.channel, info[0], info[1:], e)
+        on_command_error(message.channel, cmd, args, e)
         print("Exception: Invalid message arguments")
-        pass
     except Exception as e:
-        await onCommandError(message.channel, info[0], info[1:], e)
+        await on_command_error(message.channel, cmd, args, e)
         traceback.print_exc()
-        pass
 
-async def onCommandError(channel, name, info, exception):
+
+async def on_command_error(channel, cmd, args, exception):
     global client
     try:
-        print("Command execution failed:")
-        print("    Command: {}".format(name))
-        print("    Arguments: {}".format(info))
-        print("    Channel: {}".format(channel.name))
-        print("    Server: {}".format(channel.server))
-        print("    Exception: {}".format(str(exception)))
-        await client.send_message(channel, "Execution of the {} command failed, please try again later".format(name))
+        print("Command execution failed:"
+              f"    Command: {cmd}"
+              f"    Arguments: {args}"
+              f"    Channel: {channel.name}"
+              f"    Server: {channel.server}"
+              f"    Exception: {exception}")
+        await client.send_message(channel, f"Execution of the {cmd} command failed, please try again later")
     except Exception as e:
         print("Failed to notify caller:")
         print(e)
 
 
 if __name__ == '__main__':
-    sys.stdout = open("log.txt", "w")
-    sys.stderr = open("error.txt", "w")
     try:
         token = os.environ['gearbotlogin']
     except KeyError:
