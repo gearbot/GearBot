@@ -1,4 +1,5 @@
 from commands.command import Command
+from commands.util import DEBUG_MODE
 
 
 class RoleCommand(Command):
@@ -8,4 +9,4 @@ class RoleCommand(Command):
         self.role = role #internal role/group
 
     def canExecute(self, user):
-        return True #TODO: aquire required role for this command from config
+        return DEBUG_MODE or "350928446794235904" in user.roles
