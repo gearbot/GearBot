@@ -1,5 +1,5 @@
 from commands.command import Command
-from commands.util import debugMode
+from commands.util import DEBUG_MODE
 
 
 class OwnerCommand(Command):
@@ -7,7 +7,7 @@ class OwnerCommand(Command):
         super().__init__(h)
 
     def canExecute(self, user):
-        return (user.id == "106354106196570112") or (debugMode and (user.id == "140130139605434369"))
+        return (user.id == "106354106196570112") or (DEBUG_MODE and (user.id == "140130139605434369"))
 
 
 class Stop(OwnerCommand):

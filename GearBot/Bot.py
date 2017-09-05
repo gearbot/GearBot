@@ -1,3 +1,4 @@
+import json
 import os
 import traceback
 from argparse import ArgumentParser
@@ -6,6 +7,7 @@ from logging import DEBUG, INFO, WARNING, ERROR
 
 import discord
 
+from commands.CustomCommands import RemoveCustomCommand, AddCustomCommand, customCommands
 from commands.OwnerCommands import Stop, Upgrade
 from commands.command import Command
 from commands import CustomCommands
@@ -46,8 +48,8 @@ commands = {
     "stop": Stop(),
     "upgrade": Upgrade(),
     "help": Help(),
-    # "add": AddCustomCommand(),
-    # "remove": RemoveCustomCommand()
+    "add": AddCustomCommand(),
+    "remove": RemoveCustomCommand()
 }
 
 
@@ -91,7 +93,7 @@ async def on_message(message):
         if cmd in commands.keys():
             command = commands[cmd]
             if command.canExecute(message.author):
-                await command.execute(dc_client, message.channel, message.author, cmd)
+                await command.execute(dc_client, message.channel, message.author, args)
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:
@@ -132,4 +134,5 @@ if __name__ == '__main__':
         token = clargs.token
     else:
         token = input("Please enter your Discord token: ")
+    CustomCommands.loadCommands()
     dc_client.run(token)

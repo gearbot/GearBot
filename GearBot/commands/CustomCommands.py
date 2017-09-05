@@ -1,4 +1,10 @@
+import json
+import logging
+
+import simplejson
+
 from commands.RoleCommands import RoleCommand
+from commands.util import prefix
 
 customCommands = dict()
 
@@ -17,6 +23,9 @@ class AddCustomCommand(RoleCommand):
             else:
                 commands[params[0]] = " ".join(params[1::])
                 await client.send_message(channel, "Command added")
+                with open('commands.json', 'w') as jsonfile:
+                    jsonfile.write((simplejson.dumps(customCommands, indent=4, skipkeys=True, sort_keys=True)))
+                    jsonfile.close()
 
 
 class RemoveCustomCommand(RoleCommand):
@@ -35,3 +44,12 @@ def getCommands(server):
     if not customCommands.keys().__contains__(server.id):
         customCommands[server.id] = dict()
     return customCommands[server.id]
+
+def loadCommands():
+    try:
+        jsonfile = open('commands.json', 'r')
+        global customCommands
+        customCommands = json.load(jsonfile)
+        jsonfile.close()
+    except FileNotFoundError:
+        logging.warning("Unable to load custom commands, file not found")
