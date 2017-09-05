@@ -6,7 +6,7 @@ from commands.ping import Ping
 from functions import configuration, protectedmessage, permissions, spam, customcommands
 from tabulate import tabulate
 
-client = discord.Client()
+dc_client = discord.Client()
 
 @discord.client.event
 async def on_message(message):
@@ -26,7 +26,7 @@ async def on_message(message):
 
     # Check Spam
     if (not message.content.startswith('!')) & (not message.channel.is_private):
-        await        spam.check_for_spam(client, message)
+        await        spam.check_for_spam(dc_client, message)
 
     # Commands that require permissions
     if (permission | (message.author == message.channel.server.owner)) & (
@@ -37,20 +37,20 @@ async def on_message(message):
         if receivedmessage.startswith('!add') & (len(message.content.split()) >= 3):
             if customcommands.addcommand(message.channel.server, message.content.split()[1].lower(),
                                          message.content.split(' ', 2)[2]):
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "Added the command: `{}` succesfully".format(
                                                             message.content.split()[1].lower()))
             else:
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "Command wasn't added because the command is already registered or invalid")
 
         elif receivedmessage.startswith('!remove') & (len(message.content.split()) == 2):
             if customcommands.removecommand(message.channel.server, message.content.split()[1].lower()):
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "Removed the command: `{}` succesfully".format(
                                                             message.content.split()[1].lower()))
             else:
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "This custom command does not exist or is equal to a similar config value")
 
                 # Permission commands -----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,20 +58,20 @@ async def on_message(message):
             if message.author == message.channel.server.owner:
                 permissions.addpermission(message.channel.server, (message.content.split(' ', 1)[1]))
             else:
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         'Only the owner is allowed to add a permission role')
 
         elif (receivedmessage.startswith('!removepermission')) & (len(message.content.split()) >= 2):
             if message.author == message.channel.server.owner:
                 permissions.removepermission(message.channel.server, (message.content.split(' ', 1)[1]))
             else:
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         'Only the owner is allowed to remove a permission role')
 
         # Config -------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!getconfig'):
-            await            protectedmessage.send_protected_message(client, message.channel,
-                                                    ('```' + configuration.getconfigvalues(
+            await            protectedmessage.send_protected_message(dc_client, message.channel,
+                                                                     ('```' + configuration.getconfigvalues(
                                                         message.channel.server) + '```'))
 
         elif receivedmessage.startswith('!resetconfig'):
@@ -79,33 +79,33 @@ async def on_message(message):
 
         # Logging ------------------------------------------------------------------------------------------------------------------------------------------------------------------
         elif (receivedmessage.startswith('!setloggingchannelid')) & (len((message.content.split())) == 2):
-            if configuration.setloggingchannelid(message.channel.server, client, (message.content.split()[1])):
-                await                protectedmessage.send_protected_message(client, message.channel, 'Logging channel changed')
+            if configuration.setloggingchannelid(message.channel.server, dc_client, (message.content.split()[1])):
+                await                protectedmessage.send_protected_message(dc_client, message.channel, 'Logging channel changed')
 
         elif receivedmessage.startswith('!togglelogging'):
             if configuration.togglelogging(message.channel.server):
-                await                protectedmessage.send_protected_message(client, message.channel, 'Logging enabled')
+                await                protectedmessage.send_protected_message(dc_client, message.channel, 'Logging enabled')
             else:
-                await                protectedmessage.send_protected_message(client, message.channel, 'Logging disabled')
+                await                protectedmessage.send_protected_message(dc_client, message.channel, 'Logging disabled')
 
         # Updating & Stop ----------------------------------------------------------------------------------------------------------------------------------------------------------
         elif receivedmessage.startswith('!stop'):
             if (message.author.id == '140130139605434369') | (message.author.id == '106354106196570112') | (
                         message.author == message.channel.server.owner):
-                await                protectedmessage.send_protected_message(client, message.channel, 'Shutting down')
-                await                client.close()
+                await                protectedmessage.send_protected_message(dc_client, message.channel, 'Shutting down')
+                await                dc_client.close()
 
         elif receivedmessage.startswith("!upgrade"):
             if message.author.id == '106354106196570112':
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "I'll be right back with new gears!")
                 file = open("upgradeRequest", "w")
                 file.write("upgrade requested")
                 file.close()
-                await                client.logout()
-                await                client.close()
+                await                dc_client.logout()
+                await                dc_client.close()
             else:
-                await                protectedmessage.send_protected_message(client, message.channel,
+                await                protectedmessage.send_protected_message(dc_client, message.channel,
                                                         "While I like being upgraded i'm gona have to go with **ACCESS DENIED**")
 
         # Custom commands ----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ async def on_message(message):
             formattedmsg = message.content.lower()
             formattedmsg = (formattedmsg[1::])
             if formattedmsg in customcmd:
-                await                protectedmessage.send_protected_message(client, message.channel, customcmd[formattedmsg])
+                await                protectedmessage.send_protected_message(dc_client, message.channel, customcmd[formattedmsg])
 
     # Basic Command
     if message.content.lower().startswith('!help'):
@@ -136,11 +136,11 @@ async def on_message(message):
                    '!getcustomcommands: Retreive all the custom commands\n' \
                    '!(custom command): Execute a custom command```'
         if not (text is None):
-            await            protectedmessage.send_protected_message(client, message.channel, text)
+            await            protectedmessage.send_protected_message(dc_client, message.channel, text)
     elif message.content.lower().startswith('!getcustomcommands'):
         customcmd = dict(customcommands.getcommands(message.channel.server))
         li = []
         for key, value in customcmd.items():
             li.append([key.title(), value])
-        await protectedmessage.send_protected_message(client, message.channel,
+        await protectedmessage.send_protected_message(dc_client, message.channel,
                                                 '**Custom Commands:**\n' + tabulate(li))
