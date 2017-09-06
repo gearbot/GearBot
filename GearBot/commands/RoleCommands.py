@@ -13,5 +13,5 @@ class RoleCommand(Command):
         if DEBUG_MODE:
             return True
         for role in user.roles:
-            if role.id == "350928446794235904":
+            if role.id == '346629002561060864':
                 return True
