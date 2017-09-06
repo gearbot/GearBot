@@ -9,4 +9,9 @@ class RoleCommand(Command):
         self.role = role #internal role/group
 
     def canExecute(self, user):
-        return DEBUG_MODE or "350928446794235904" in user.roles
+        global DEBUG_MODE
+        if DEBUG_MODE:
+            return True
+        for role in user.roles:
+            if role.id == "350928446794235904":
+                return True
