@@ -85,6 +85,7 @@ async def on_message(message):
 
     if message.content.startswith(prefix):
         cmd, *args = message.content[1:].split()
+        cmd = cmd.lower()
         logging.debug(f"command '{cmd}' with arguments {args} issued")
     else:
         return
