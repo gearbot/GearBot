@@ -21,7 +21,7 @@ class AddCustomCommand(RoleCommand):
             if (commands.keys().__contains__(params[0])):
                 await client.send_message(channel, "I already know this command, please remove it first if you want to replace it")
             else:
-                commands[params[0]] = " ".join(params[1::])
+                commands[params[0].lower()] = " ".join(params[1::])
                 await client.send_message(channel, "Command added")
                 with open('commands.json', 'w') as jsonfile:
                     jsonfile.write((simplejson.dumps(customCommands, indent=4, skipkeys=True, sort_keys=True)))
