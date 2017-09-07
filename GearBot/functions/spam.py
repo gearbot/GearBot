@@ -8,7 +8,7 @@ async def check_for_spam(client, message):
     repeatedMessages = []
     count = 0
 
-    async for log in client.logs_from(message.channel, limit=30):
+    async for log in client.logs_from(message.channel, limit=8):
         if not (log.author.bot):
             text2 = log.content
             text2 = text2.replace(" ","")
@@ -26,7 +26,6 @@ async def check_for_spam(client, message):
                 print("Exception: {} while trying to delete the messages".format(str(e)))
 
     #LOG SPAMMED MESSAGE IN LOGGING CHANNEL
-    if (count > 3):
         if(configuration.isloggingenabled(message.channel.server)):
             check = client.get_channel(configuration.getloggingchannelid(message.channel.server))
             if (check=='0'):
