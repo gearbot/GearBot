@@ -9,6 +9,7 @@ import discord
 
 from commands.CustomCommands import RemoveCustomCommand, AddCustomCommand, customCommands
 from commands.OwnerCommands import Stop, Upgrade
+from commands.Latest import Latest
 from commands.command import Command
 from commands import CustomCommands
 from commands.ping import Ping
@@ -49,7 +50,8 @@ commands = {
     "upgrade": Upgrade(),
     "help": Help(),
     "add": AddCustomCommand(),
-    "remove": RemoveCustomCommand()
+    "remove": RemoveCustomCommand(),
+    "latest": Latest()
 }
 
 
