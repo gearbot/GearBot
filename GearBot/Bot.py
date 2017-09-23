@@ -36,8 +36,7 @@ async def on_ready():
     global APP_INFO
     APP_INFO = await dc_client.application_info()
     global DEBUG_MODE
-    global DEBUG_MODE_HACK
-    DEBUG_MODE_HACK = DEBUG_MODE = (APP_INFO.name == 'SlakBotTest') | (APP_INFO.name == 'Parrot test')
+    DEBUG_MODE = (APP_INFO.name == 'SlakBotTest') | (APP_INFO.name == 'Parrot test')
 
     await dc_client.change_presence(game=discord.Game(name='gears'))
 
