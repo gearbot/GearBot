@@ -1,4 +1,3 @@
-
-DEBUG_MODE = None
+DEBUG_MODE = False
 APP_INFO = None
 prefix = "!" #TODO: move to config

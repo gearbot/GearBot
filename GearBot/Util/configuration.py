@@ -1,7 +1,5 @@
 import json
 
-import simplejson
-
 def getconfig(server):
     try:
         with open('config.json', 'r') as jsonfile:
@@ -30,7 +28,7 @@ def getloggingchannelid(server):
 
 def writeconfig(jsondata):
     with open('config.json', 'w') as jsonfile:
-        jsonfile.write((simplejson.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)))
+        jsonfile.write((json.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)))
         jsonfile.close()
 
 def createconfigserver(server, create):
@@ -74,7 +72,7 @@ def resetconfig(server):
 
 def getconfigvalues(server):
     jsondata = getconfig(server)
-    return simplejson.dumps(jsondata[server.id], indent=4, skipkeys=True, sort_keys=True)
+    return json.dumps(jsondata[server.id], indent=4, skipkeys=True, sort_keys=True)
 
 def setloggingchannelid(server, client, channelid):
     if client.get_channel(channelid) in server.channels:

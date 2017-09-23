@@ -1,4 +1,4 @@
-from functions import protectedmessage, configuration
+from Util import protectedmessage, configuration
 
 
 async def check_for_spam(client, message):

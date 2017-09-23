@@ -1,20 +1,16 @@
-import json
+import logging
 import os
 import traceback
 from argparse import ArgumentParser
-import logging
-from logging import DEBUG, INFO, WARNING, ERROR
+from logging import DEBUG, INFO
 
 import discord
 
-from commands.CustomCommands import RemoveCustomCommand, AddCustomCommand, customCommands
-from commands.OwnerCommands import Stop, Upgrade
-from commands.Latest import Latest
-from commands.command import Command
+from Util import configuration, spam
+from Util.Commands import COMMANDS
+from Variables import prefix
 from commands import CustomCommands
-from commands.ping import Ping
-from commands.util import prefix
-from functions import configuration, spam
+from versions.VersionInfo import initVersionInfo
 
 parser = ArgumentParser()
 parser.add_argument("--debug", help="Set debug logging level")
@@ -24,48 +20,14 @@ logging.basicConfig(level=DEBUG if clargs.debug else INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
-class Help(Command):
-    def __init__(self):
-        super().__init__("Shows help")
-
-    async def execute(self, clnt, channel, user, params):
-        inf = "**Available commands:**\n------------------------------------\n"
-        for key in commands:
-            if commands[key].canExecute(user):
-                inf += f"{key} : {commands[key].help}\n"
-        custom_commands = CustomCommands.getCommands(channel.server)
-        if len(custom_commands.keys()):
-            inf += "\n**Other commands:**\n------------------------------------\n"
-            for key in custom_commands:
-                inf += f"{key}\n"
-
-        await clnt.send_message(channel, inf)
-
-
 dc_client = discord.Client()
 
-commands = {
-    "ping": Ping(),
-    "stop": Stop(),
-    "upgrade": Upgrade(),
-    "help": Help(),
-    "add": AddCustomCommand(),
-    "remove": RemoveCustomCommand(),
-    "latest": Latest()
-}
+
 
 
 @dc_client.event
 async def on_ready():
     global dc_client
-    logging.info("Logged in as"
-                 f"{dc_client.user.name}"
-                 f"{dc_client.user.id}"
-                 "------"
-                 "Do not create custom commands that might interfere with the commands of other bots"
-                 "You can report an Issue/Bug on the GearBot repository (https://github.com/AEnterprise/Gearbot)"
-                 "This bot is made by Slak#9006 & AEnterprise#4693"
-                 "------")
 
     for server in dc_client.servers:
         if not configuration.hasconfig(server):
@@ -74,7 +36,14 @@ async def on_ready():
     global APP_INFO
     APP_INFO = await dc_client.application_info()
     global DEBUG_MODE
-    DEBUG_MODE = (APP_INFO.name == 'SlakBotTest') | (APP_INFO.name == 'Parrot test')
+    global DEBUG_MODE_HACK
+    DEBUG_MODE_HACK = DEBUG_MODE = (APP_INFO.name == 'SlakBotTest') | (APP_INFO.name == 'Parrot test')
+
+    await dc_client.change_presence(game=discord.Game(name='gears'))
+
+    initVersionInfo()
+
+    logging.info(DEBUG_MODE)
 
 
 @dc_client.event
@@ -93,8 +62,8 @@ async def on_message(message):
         return
 
     try:
-        if cmd in commands.keys():
-            command = commands[cmd]
+        if cmd in COMMANDS.keys():
+            command = COMMANDS[cmd]
             if command.canExecute(message.author):
                 await command.execute(dc_client, message.channel, message.author, args)
             else:

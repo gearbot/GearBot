@@ -4,19 +4,18 @@ import logging
 import simplejson
 
 from commands.RoleCommands import RoleCommand
-from commands.util import prefix
 
 customCommands = dict()
 
 
 class AddCustomCommand(RoleCommand):
     def __init__(self):
-        super().__init__("Adds a command", "manage_commands")
+        super().__init__("Adds a command", extrahelp="Adds a custom command\nUsage: !add <name> <text>")
 
     async def execute(self, client, channel, user, params):
         commands = getCommands(channel.server)
         if len(params) < 2:
-            await client.send_message(channel, "Not enough params\nUsage: {}add <name> <text>".format(prefix))
+            await self.sendHelp(client, channel)
         else:
             if (commands.keys().__contains__(params[0])):
                 await client.send_message(channel, "I already know this command, please remove it first if you want to replace it")
@@ -30,7 +29,7 @@ class AddCustomCommand(RoleCommand):
 
 class RemoveCustomCommand(RoleCommand):
     def __init__(self):
-        super().__init__("Removes a command", "manage_commands")
+        super().__init__("Removes a command", extrahelp="Usage: !remove <name>")
 
     async def execute(self, client, channel, user, params):
         commands = getCommands(channel.server)

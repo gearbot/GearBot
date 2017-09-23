@@ -1,5 +1,5 @@
+from Variables import DEBUG_MODE
 from commands.command import Command
-from commands.util import DEBUG_MODE
 
 
 class OwnerCommand(Command):
