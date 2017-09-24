@@ -8,9 +8,10 @@ import discord
 
 from Util import configuration, spam
 from Util.Commands import COMMANDS
-from Variables import prefix
 from commands import CustomCommands
 from versions.VersionInfo import initVersionInfo
+
+import Variables
 
 parser = ArgumentParser()
 parser.add_argument("--debug", help="Set debug logging level")
@@ -33,16 +34,14 @@ async def on_ready():
         if not configuration.hasconfig(server):
             configuration.createconfigserver(server, True)
 
-    global APP_INFO
-    APP_INFO = await dc_client.application_info()
-    global DEBUG_MODE
-    DEBUG_MODE = (APP_INFO.name == 'SlakBotTest') | (APP_INFO.name == 'Parrot test')
+    Variables.APP_INFO = await dc_client.application_info()
+    Variables.DEBUG_MODE = (Variables.APP_INFO.name == 'SlakBotTest') | (Variables.APP_INFO.name == 'Parrot test')
 
     await dc_client.change_presence(game=discord.Game(name='gears'))
 
     initVersionInfo()
 
-    logging.info(DEBUG_MODE)
+    logging.info(Variables.DEBUG_MODE)
 
 
 @dc_client.event
@@ -50,10 +49,10 @@ async def on_message(message):
     global dc_client
     if (message.content is None) or (message.content == ''):
         return
-    elif not (message.content.startswith(prefix) or message.channel.is_private):
+    elif not (message.content.startswith(Variables.prefix) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
 
-    if message.content.startswith(prefix):
+    if message.content.startswith(Variables.prefix):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
         logging.debug(f"command '{cmd}' with arguments {args} issued")

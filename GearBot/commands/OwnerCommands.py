@@ -1,4 +1,4 @@
-from Variables import DEBUG_MODE
+import Variables
 from commands.command import Command
 
 
@@ -7,7 +7,7 @@ class OwnerCommand(Command):
         super().__init__(h)
 
     def canExecute(self, user):
-        return (user.id == "106354106196570112") or (DEBUG_MODE and (user.id == "140130139605434369"))
+        return (user.id == "106354106196570112") or (Variables.DEBUG_MODE and (user.id == "140130139605434369"))
 
 
 class Stop(OwnerCommand):

@@ -1,6 +1,5 @@
-from Variables import DEBUG_MODE
 from commands.command import Command
-
+import Variables
 
 class RoleCommand(Command):
 
@@ -9,8 +8,7 @@ class RoleCommand(Command):
         self.role = role
 
     def canExecute(self, user):
-        global DEBUG_MODE
-        if DEBUG_MODE:
+        if Variables.DEBUG_MODE:
             return True
         for role in user.roles:
             if role.id == self.role:
