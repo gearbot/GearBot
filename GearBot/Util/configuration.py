@@ -1,96 +1,31 @@
 import json
+import Variables
+from logging import DEBUG, INFO
+import logging
 
-def getconfig(server):
+def loadconfig():
     try:
         with open('config.json', 'r') as jsonfile:
             jsondata = json.load(jsonfile)
-            if not (server.id in jsondata):
-                createconfigserver(server, False)
-                return getconfig(server)
-            return jsondata
+            Variables.CONFIG_SETTINGS = jsondata
+            Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(jsondata["MOD_LOG_CHANNEL"])
+            Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(jsondata["BOT_LOG_CHANNEL"])
+            Variables.PREFIX = jsondata["PREFIX"]
     except FileNotFoundError:
-        createconfigserver(server, True)
-        return getconfig(server)
+        logging.error("Unable to load config, creating a fresh one and running on defaults. This will almost surely crash when trying to connect to the database")
+        Variables.CONFIG_SETTINGS["PREFIX"] = "!"
+        Variables.CONFIG_SETTINGS["BOT_LOG_CHANNEL"] = None
+        Variables.CONFIG_SETTINGS["MOD_LOG_CHANNEL"] = None
+        Variables.CONFIG_SETTINGS["DATABASE_USER"] = "username"
+        Variables.CONFIG_SETTINGS["DATABASE_PASS"] = "password"
+        Variables.CONFIG_SETTINGS["DATABASE_NAME"] = "database"
+        saveConfig()
+        pass
     except Exception as e:
+        logging.error("Failed to parse configuration")
         print(e)
         raise e
 
-def hasconfig(server):
-    jsondata = getconfig(server)
-    if server.id in list(jsondata):
-        print('{} registered in config'.format(server.id))
-        return True
-    return False
-
-def getloggingchannelid(server):
-    jsondata = getconfig(server)
-    return jsondata[server.id]['Logging Channel ID']
-
-def writeconfig(jsondata):
+def saveConfig():
     with open('config.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(jsondata, indent=4, skipkeys=True, sort_keys=True)))
-        jsonfile.close()
-
-def createconfigserver(server, create):
-    if create:
-        writeconfig(
-                        {
-                            server.id:{
-                                "Enable Logging":True,
-                                "Logging Channel ID":'0',
-                                "Permissions":([])
-                            }
-                        }
-                    )
-    else:
-        with open('config.json', 'r') as jsonfile:
-            jsondata = json.load(jsonfile)
-            jsonfile.close()
-        jsondata.update(    {
-                                server.id:{
-                                    "Enable Logging":True,
-                                    "Logging Channel ID":'0',
-                                    "Permissions":([])
-                                }
-                            }
-                        )
-        writeconfig(jsondata)
-
-def isloggingenabled(server):
-    jsondata = getconfig(server)
-    if server.id in jsondata:
-        return jsondata[server.id]['Enable Logging']
-    return False
-
-def resetconfig(server):
-    jsondata = getconfig(server)
-    if server.id in jsondata:
-        jsondata[server.id]['Enable Logging'] = True
-        jsondata[server.id]['Logging Channel ID'] = '0'
-        jsondata[server.id]['Permissions'] = ([])
-        writeconfig(jsondata)
-
-def getconfigvalues(server):
-    jsondata = getconfig(server)
-    return json.dumps(jsondata[server.id], indent=4, skipkeys=True, sort_keys=True)
-
-def setloggingchannelid(server, client, channelid):
-    if client.get_channel(channelid) in server.channels:
-        jsondata = getconfig(server)
-        jsondata[server.id]['Logging Channel ID'] = channelid
-        writeconfig(jsondata)
-        return True
-    return False
-
-def togglelogging(server):
-    jsondata = getconfig(server)
-    currentstate = jsondata[server.id]['Enable Logging']
-    if currentstate:
-        jsondata[server.id]['Enable Logging'] = False
-    else:
-        jsondata[server.id]['Enable Logging'] = True
-    writeconfig(jsondata)
-    return (not currentstate)
-            
-            
-        
+        jsonfile.write((json.dumps(Variables.CONFIG_SETTINGS, indent=4, skipkeys=True, sort_keys=True)))

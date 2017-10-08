@@ -4,9 +4,10 @@ import traceback
 from argparse import ArgumentParser
 from logging import DEBUG, INFO
 
+
 import discord
 
-from Util import configuration, spam
+from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
 from versions.VersionInfo import initVersionInfo
@@ -14,10 +15,12 @@ from versions.VersionInfo import initVersionInfo
 import Variables
 
 parser = ArgumentParser()
-parser.add_argument("--debug", help="Set debug logging level")
+parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
+parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
 parser.add_argument("--token", help="Specify your Discord token")
 clargs = parser.parse_args()
-logging.basicConfig(level=DEBUG if clargs.debug else INFO,
+Variables.DEBUG_MODE = clargs.debug
+logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
@@ -29,30 +32,26 @@ dc_client = discord.Client()
 @dc_client.event
 async def on_ready():
     global dc_client
-
-    for server in dc_client.servers:
-        if not configuration.hasconfig(server):
-            configuration.createconfigserver(server, True)
+    Variables.DISCORD_CLIENT = dc_client
 
     Variables.APP_INFO = await dc_client.application_info()
-    Variables.DEBUG_MODE = (Variables.APP_INFO.name == 'SlakBotTest') | (Variables.APP_INFO.name == 'Parrot test')
 
     await dc_client.change_presence(game=discord.Game(name='gears'))
 
     initVersionInfo()
+    configuration.loadconfig()
 
-    logging.info(Variables.DEBUG_MODE)
-
+    await GearbotLogging.logToLogChannel("Gearbot is now online")
 
 @dc_client.event
 async def on_message(message):
     global dc_client
     if (message.content is None) or (message.content == ''):
         return
-    elif not (message.content.startswith(Variables.prefix) or message.channel.is_private):
+    elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
 
-    if message.content.startswith(Variables.prefix):
+    if message.content.startswith(Variables.PREFIX):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
         logging.debug(f"command '{cmd}' with arguments {args} issued")
@@ -67,34 +66,20 @@ async def on_message(message):
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:
-            custom_commands = CustomCommands.getCommands(message.channel.server)
-            if cmd in custom_commands.keys():
-                await dc_client.send_message(message.channel, custom_commands[cmd])
+            if cmd in Variables.CUSTOM_COMMANDS.keys():
+                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
                 return
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
         logging.info("Bot is not allowed to send messages")
-        on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
     except discord.InvalidArgument as e:
-        on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
         logging.info("Exception: Invalid message arguments")
     except Exception as e:
-        await on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
         traceback.print_exc()
 
-
-async def on_command_error(channel, cmd, args, exception):
-    global dc_client
-    try:
-        logging.WARNING("Command execution failed:"
-                        f"    Command: {cmd}"
-                        f"    Arguments: {args}"
-                        f"    Channel: {channel.name}"
-                        f"    Server: {channel.server}"
-                        f"    Exception: {exception}")
-        await dc_client.send_message(channel, f"Execution of the {cmd} command failed, please try again later")
-    except Exception as e:
-        logging.warning(f"Failed to notify caller:\n{e}")
 
 
 if __name__ == '__main__':
