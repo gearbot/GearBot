@@ -38,7 +38,6 @@ async def on_ready():
 
     await dc_client.change_presence(game=discord.Game(name='gears'))
 
-    initVersionInfo()
     configuration.loadconfig()
 
     await GearbotLogging.logToLogChannel("Gearbot is now online")
