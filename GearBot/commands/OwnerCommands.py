@@ -4,7 +4,7 @@ from commands.command import Command
 
 class OwnerCommand(Command):
     def canExecute(self, user):
-        return (user.id == "106354106196570112") or (Variables.DEBUG_MODE and (user.id == "140130139605434369"))
+        return user.id == Variables.APP_INFO.owner.id
 
 
 class Stop(OwnerCommand):
