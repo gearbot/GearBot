@@ -32,7 +32,7 @@ configuration.loadconfig()
 async def on_ready():
     global dc_client
     Variables.DISCORD_CLIENT = dc_client
-
+    configuration.onReady()
     Variables.APP_INFO = await dc_client.application_info()
 
     await dc_client.change_presence(game=discord.Game(name='gears'))

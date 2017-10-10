@@ -6,11 +6,8 @@ import logging
 def loadconfig():
     try:
         with open('config.json', 'r') as jsonfile:
-            jsondata = json.load(jsonfile)
-            Variables.CONFIG_SETTINGS = jsondata
-            Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(jsondata["MOD_LOG_CHANNEL"])
-            Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(jsondata["BOT_LOG_CHANNEL"])
-            Variables.PREFIX = jsondata["PREFIX"]
+            Variables.CONFIG_SETTINGS = json.load(jsonfile)
+
     except FileNotFoundError:
         logging.error("Unable to load config, creating a fresh one and running on defaults. This will almost surely crash when trying to connect to the database")
         Variables.CONFIG_SETTINGS["PREFIX"] = "!"
@@ -24,6 +21,11 @@ def loadconfig():
         logging.error("Failed to parse configuration")
         print(e)
         raise e
+
+def onReady():
+    Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(Variables.CONFIG_SETTINGS["MOD_LOG_CHANNEL"])
+    Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(Variables.CONFIG_SETTINGS["BOT_LOG_CHANNEL"])
+    Variables.PREFIX = Variables.CONFIG_SETTINGS["PREFIX"]
 
 
 def saveConfig():
