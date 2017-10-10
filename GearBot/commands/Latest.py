@@ -7,8 +7,7 @@ from commands.command import Command
 
 
 class Latest(Command):
-    def __init__(self):
-        super().__init__("Test command, please ignore")
+    """Info about the latest releases"""
 
     async def execute(self, client, channel, user, params):
         # {

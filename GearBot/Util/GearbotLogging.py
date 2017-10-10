@@ -13,26 +13,21 @@ async def logToLogChannel(text):
         await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, '{}'.format(text))
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
-        pass
     except discord.InvalidArgument:
         logging.warning("Exception: Invalid message arguments")
-        pass
     except Exception as e:
         logging.error("Exception: {}".format(str(e)))
-        pass
+
 
 async def logToModChannel(text):
     try:
         await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, '{}'.format(text))
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
-        pass
     except discord.InvalidArgument:
         logging.warning("Exception: Invalid message arguments")
-        pass
     except Exception as e:
         logging.error("Exception: {}".format(str(e)))
-        pass
 
 
 async def on_command_error(channel, cmd, args, exception):
@@ -42,7 +37,8 @@ async def on_command_error(channel, cmd, args, exception):
                         f"    Arguments: {args}"
                         f"    Channel: {channel.name}"
                         f"    Exception: {exception}")
-        await Variables.DISCORD_CLIENT.send_message(channel, f"Execution of the {cmd} command failed, please try again later")
+        await Variables.DISCORD_CLIENT.send_message(channel,
+            f"Execution of the {cmd} command failed, please try again later")
     except Exception as e:
         logging.warning(f"Failed to notify caller:\n{e}")
 

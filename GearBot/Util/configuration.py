@@ -20,11 +20,11 @@ def loadconfig():
         Variables.CONFIG_SETTINGS["DATABASE_PASS"] = "password"
         Variables.CONFIG_SETTINGS["DATABASE_NAME"] = "database"
         saveConfig()
-        pass
     except Exception as e:
         logging.error("Failed to parse configuration")
         print(e)
         raise e
+
 
 def saveConfig():
     with open('config.json', 'w') as jsonfile:

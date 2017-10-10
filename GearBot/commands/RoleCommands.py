@@ -3,8 +3,8 @@ import Variables
 
 class RoleCommand(Command):
 
-    def __init__(self, help, role='346629002561060864', extrahelp=None):
-        super().__init__(help, extrahelp=extrahelp)
+
+    def __init__(self, role='346629002561060864'):
         self.role = role
 
     def canExecute(self, user):
@@ -15,3 +15,4 @@ class RoleCommand(Command):
         for role in user.roles:
             if role.id == self.role:
                 return True
+        return False

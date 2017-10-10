@@ -10,7 +10,6 @@ import discord
 from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
-from versions.VersionInfo import initVersionInfo
 
 import Variables
 
