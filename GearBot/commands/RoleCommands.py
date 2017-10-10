@@ -8,7 +8,7 @@ class RoleCommand(Command):
         self.role = role
 
     def canExecute(self, user):
-        if Variables.DEBUG_MODE:
+        if Variables.DEBUG_MODE or user.id == Variables.APP_INFO.owner.id:
             return True
         if user.roles is None:
             return False
