@@ -24,7 +24,7 @@ logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
 
 
 dc_client = discord.Client()
-
+configuration.loadconfig()
 
 
 
@@ -36,8 +36,6 @@ async def on_ready():
     Variables.APP_INFO = await dc_client.application_info()
 
     await dc_client.change_presence(game=discord.Game(name='gears'))
-
-    configuration.loadconfig()
 
     await GearbotLogging.logToLogChannel("Gearbot is now online")
 
@@ -85,6 +83,8 @@ if __name__ == '__main__':
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
+    elif not Variables.CONFIG_SETTINGS["login_token"] is None:
+        token = Variables.CONFIG_SETTINGS["login_token"]
     else:
         token = input("Please enter your Discord token: ")
     CustomCommands.loadCommands()
