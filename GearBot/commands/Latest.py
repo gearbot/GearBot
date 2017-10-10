@@ -9,6 +9,10 @@ from commands.command import Command
 class Latest(Command):
     """Info about the latest releases"""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.extraHelp["info"] = "Displays the latest versions for the latest MC versions and their blog/download links"
+
     async def execute(self, client, channel, user, params):
         # {
         #     "content": "The latest version of BuildCraft is 7.99.7 and can be found at <https://mod-buildcraft.com/buildcraft-7997-alpha.html>",

@@ -12,31 +12,39 @@ from commands.ping import Ping
 class Help(Command):
     """Shows help"""
 
-    Command.extraHelp["info"] = "Shows a list of available commands or help for a specific command"
-    Command.extraHelp["Example usage"] = "!help\n!help <command>"
+    def __init__(self) -> None:
+        super().__init__()
+        self.extraHelp["info"] = "Shows a list of available commands or help for a specific command"
+        self.extraHelp["Example usage"] = "!help\n!help <command>"
 
 
     async def execute(self, client, channel, user, params):
-        if len(params) > 0 and params[0] is not None and params[0] in COMMANDS.keys():
-            await COMMANDS[params[0]].sendHelp(client, channel)
+        if len(params) > 0 and params[0] is not None:
+            if params[0] in COMMANDS.keys():
+                await COMMANDS[params[0]].sendHelp(client, channel)
+            else :
+                embed = discord.Embed(color=0x663399)
+                embed.set_author(name="No info available")
+                embed.description = "I'm sorry but i don't have any information available to display on that topic"
+                await client.send_message(channel, embed=embed)
         else:
             embed = discord.Embed(colour=discord.Colour(0x663399))
 
             embed.set_author(name="Gearbot commands info")
-            info = ""
+            names = ""
+            explanations = ""
             for key in COMMANDS:
                 if COMMANDS[key].canExecute(user):
-                    info += f"{key}"
-                    for i in range(0, (20 - key.__len__())):
-                        info += " "
-                    info += f"{COMMANDS[key].__doc__}\n"
-            embed.add_field(name="Basic commands", value=info)
+                    names += f"{key}\n"
+                    explanations += f"{COMMANDS[key].__doc__}\n"
+            embed.add_field(name="Basic commands", value=names)
+            embed.add_field(name="\u200b", value=explanations)
 
             info = ""
 
             for key in Variables.CUSTOM_COMMANDS:
                 info += f"{key}\n"
-            embed.add_field(name="custom commands", value=info, inline=False)
+            embed.add_field(name="Custom commands", value=info, inline=False)
 
             await client.send_message(channel, embed=embed)
 

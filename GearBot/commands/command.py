@@ -3,7 +3,10 @@ import discord
 
 class Command:
     """Base command class"""
-    extraHelp: dict = dict()
+
+    def __init__(self) -> None:
+        self.extraHelp = dict()
+        self.extraHelp["info"] = "I'm sorry but i don't have any more info for this command"
 
     def canExecute(self, user:discord.user.User)->bool:
         return True

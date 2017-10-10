@@ -10,6 +10,10 @@ class OwnerCommand(Command):
 class Stop(OwnerCommand):
     """Stops the bot"""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.extraHelp["info"] = "Stop turning the gears"
+
     async def execute(self, client, channel, user, params):
         await client.send_message(channel, 'Shutting down')
         await client.close()
@@ -17,6 +21,10 @@ class Stop(OwnerCommand):
 
 class Upgrade(OwnerCommand):
     """Perform an upgrade to the latest version"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.extraHelp["info"] = "Upgrade to the next tier"
 
     async def execute(self, client, channel, user, params):
         await client.send_message(channel, "I'll be right back with new gears!")
