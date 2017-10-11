@@ -11,7 +11,7 @@ class Command:
     def canExecute(self, user:discord.user.User)->bool:
         return True
 
-    async def execute(self, client:discord.Client, channel:discord.Channel, user:discord.user.User, params):
+    async def execute(self, client:discord.Client, channel:discord.Channel, user:discord.user.User, params)-> None:
         await client.send_message(channel, "This command doesn't seem to be implemented")
 
     async def sendHelp(self, client, channel):
