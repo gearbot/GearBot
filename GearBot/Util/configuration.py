@@ -3,7 +3,7 @@ import Variables
 from logging import DEBUG, INFO
 import logging
 import MySQLdb
-from GearBot.Util import Database
+from Util import Database
 
 
 def loadconfig():
