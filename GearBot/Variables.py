@@ -2,9 +2,7 @@ import discord
 
 DEBUG_MODE = False
 APP_INFO = None
-
 DISCORD_CLIENT: discord.Client = None
-
 CONFIG_SETTINGS = dict()
 
 #Config vars for easy using

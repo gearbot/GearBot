@@ -2,6 +2,9 @@ import json
 import Variables
 from logging import DEBUG, INFO
 import logging
+import MySQLdb
+from GearBot.Util import Database
+
 
 def loadconfig():
     try:
@@ -21,6 +24,7 @@ def loadconfig():
         logging.error("Failed to parse configuration")
         print(e)
         raise e
+    Database.initialize()
 
 def onReady():
     Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(Variables.CONFIG_SETTINGS["MOD_LOG_CHANNEL"])
@@ -31,3 +35,4 @@ def onReady():
 def saveConfig():
     with open('config.json', 'w') as jsonfile:
         jsonfile.write((json.dumps(Variables.CONFIG_SETTINGS, indent=4, skipkeys=True, sort_keys=True)))
+

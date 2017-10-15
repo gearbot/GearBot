@@ -18,8 +18,7 @@ class Help(Command):
         self.extraHelp["info"] = "Shows a list of available commands or help for a specific command"
         self.extraHelp["Example usage"] = "!help\n!help <command>"
 
-
-    async def execute(self, client, channel, user, params):
+    async def execute(self, client: discord.Client, channel: discord.Channel, user: discord.user.User, params) -> None:
         if len(params) > 0 and params[0] is not None:
             if params[0] in COMMANDS.keys():
                 await COMMANDS[params[0]].sendHelp(client, channel)
@@ -42,10 +41,10 @@ class Help(Command):
             embed.add_field(name="\u200b", value=explanations)
 
             info = ""
-
-            for key in Variables.CUSTOM_COMMANDS:
-                info += f"{key}\n"
-            embed.add_field(name="Custom commands", value=info, inline=False)
+            if len(Variables.CUSTOM_COMMANDS[channel.server.id]) > 0:
+                for key in Variables.CUSTOM_COMMANDS[channel.server.id]:
+                    info += f"{key}\n"
+                embed.add_field(name="Custom commands", value=info, inline=False)
 
             await client.send_message(channel, embed=embed)
 

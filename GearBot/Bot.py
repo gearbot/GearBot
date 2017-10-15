@@ -13,20 +13,7 @@ from commands import CustomCommands
 
 import Variables
 
-parser = ArgumentParser()
-parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
-parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
-parser.add_argument("--token", help="Specify your Discord token")
-clargs = parser.parse_args()
-Variables.DEBUG_MODE = clargs.debug
-logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")
-
-
 dc_client = discord.Client()
-configuration.loadconfig()
-
-
 
 @dc_client.event
 async def on_ready():
@@ -40,7 +27,7 @@ async def on_ready():
     await GearbotLogging.logToLogChannel("Gearbot is now online")
 
 @dc_client.event
-async def on_message(message):
+async def on_message(message:discord.Message):
     global dc_client
     if (message.content is None) or (message.content == ''):
         return
@@ -62,8 +49,8 @@ async def on_message(message):
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:
-            if cmd in Variables.CUSTOM_COMMANDS.keys():
-                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
+            if cmd in Variables.CUSTOM_COMMANDS[message.server.id].keys():
+                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[message.server.id][cmd])
                 return
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
@@ -76,6 +63,27 @@ async def on_message(message):
         await GearbotLogging.on_command_error(message.channel, cmd, args, e)
         traceback.print_exc()
 
+@dc_client.event
+async def on_server_available(server:discord.Server):
+    logging.info(f"Loading commands for {server.name} ({server.id})")
+    CustomCommands.loadCommands(server.id)
+
+@dc_client.event
+async def on_server_unavailable(server:discord.Server):
+    logging.info(f"Unloading commands for {server.name} ({server.id})")
+    CustomCommands.unloadCommands(server.id)
+
+
+
+parser = ArgumentParser()
+parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
+parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
+parser.add_argument("--token", help="Specify your Discord token")
+
+clargs = parser.parse_args()
+Variables.DEBUG_MODE = clargs.debug
+logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 if __name__ == '__main__':
@@ -87,5 +95,5 @@ if __name__ == '__main__':
         token = Variables.CONFIG_SETTINGS["login_token"]
     else:
         token = input("Please enter your Discord token: ")
-    CustomCommands.loadCommands()
+    configuration.loadconfig()
     dc_client.run(token)
