@@ -8,6 +8,7 @@ from commands.Roles import Roles
 from commands.Test import Test
 from commands.command import Command
 from commands.ping import Ping
+from commands import CustomCommands
 
 
 class Help(Command):
@@ -41,8 +42,9 @@ class Help(Command):
             embed.add_field(name="\u200b", value=explanations)
 
             info = ""
-            if len(Variables.CUSTOM_COMMANDS[channel.server.id]) > 0:
-                for key in Variables.CUSTOM_COMMANDS[channel.server.id]:
+            customCommands = CustomCommands.getCommands(channel.server.id)
+            if len(customCommands) > 0:
+                for key in customCommands:
                     info += f"{key}\n"
                 embed.add_field(name="Custom commands", value=info, inline=False)
 

@@ -49,8 +49,9 @@ async def on_message(message:discord.Message):
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:
-            if cmd in Variables.CUSTOM_COMMANDS[message.server.id].keys():
-                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[message.server.id][cmd])
+            customCommands = CustomCommands.getCommands(message.server.id)
+            if cmd in customCommands.keys():
+                await dc_client.send_message(message.channel, customCommands[cmd])
                 return
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
