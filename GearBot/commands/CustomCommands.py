@@ -1,14 +1,8 @@
-import json
-import logging
-
-import MySQLdb
 import discord
-from Util import Database
 
 import Variables
-
+from Util import Database
 from commands.RoleCommands import RoleCommand
-
 
 
 class AddCustomCommand(RoleCommand):
@@ -59,6 +53,3 @@ def loadCommands(serverID):
         text = row[1]
         Variables.CUSTOM_COMMANDS[serverID][name] = text
     db.close()
-
-def unloadCommands(serverID):
-    del Variables.CUSTOM_COMMANDS[serverID]

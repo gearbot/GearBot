@@ -4,27 +4,30 @@ import traceback
 from argparse import ArgumentParser
 from logging import DEBUG, INFO
 
-
 import discord
 
+import Variables
 from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
-
-import Variables
 
 dc_client = discord.Client()
 
 @dc_client.event
 async def on_ready():
-    global dc_client
-    Variables.DISCORD_CLIENT = dc_client
-    configuration.onReady()
-    Variables.APP_INFO = await dc_client.application_info()
+    if not Variables.HAS_STARTED:
+        global dc_client
+        Variables.DISCORD_CLIENT = dc_client
+        configuration.onReady()
+        Variables.APP_INFO = await dc_client.application_info()
 
-    await dc_client.change_presence(game=discord.Game(name='gears'))
+        for server in dc_client.servers:
+            logging.info(f"Loading commands for {server.name} ({server.id})")
+            CustomCommands.loadCommands(server.id)
 
-    await GearbotLogging.logToLogChannel("Gearbot is now online")
+        await dc_client.change_presence(game=discord.Game(name='gears'))
+        await GearbotLogging.logToLogChannel("Gearbot is now online")
+        Variables.HAS_STARTED = True
 
 @dc_client.event
 async def on_message(message:discord.Message):
@@ -63,16 +66,6 @@ async def on_message(message:discord.Message):
     except Exception as e:
         await GearbotLogging.on_command_error(message.channel, cmd, args, e)
         traceback.print_exc()
-
-@dc_client.event
-async def on_server_available(server:discord.Server):
-    logging.info(f"Loading commands for {server.name} ({server.id})")
-    CustomCommands.loadCommands(server.id)
-
-@dc_client.event
-async def on_server_unavailable(server:discord.Server):
-    logging.info(f"Unloading commands for {server.name} ({server.id})")
-    CustomCommands.unloadCommands(server.id)
 
 
 
