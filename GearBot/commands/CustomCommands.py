@@ -3,7 +3,7 @@ import logging
 
 import MySQLdb
 import discord
-from GearBot.Util import Database
+from Util import Database
 
 import Variables
 
