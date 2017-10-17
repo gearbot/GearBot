@@ -26,7 +26,7 @@ async def on_ready():
             CustomCommands.loadCommands(server.id)
 
         await dc_client.change_presence(game=discord.Game(name='gears'))
-        await GearbotLogging.logToLogChannel("Gearbot is now online")
+        await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
         Variables.HAS_STARTED = True
 
 @dc_client.event

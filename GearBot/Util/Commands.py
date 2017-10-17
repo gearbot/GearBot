@@ -9,6 +9,7 @@ from commands.Test import Test
 from commands.command import Command
 from commands.ping import Ping
 from commands import CustomCommands
+from commands import Mute
 
 
 class Help(Command):
@@ -60,5 +61,6 @@ COMMANDS = {
     "remove": RemoveCustomCommand(),
     "latest": Latest(),
     "test": Test(),
-    "roles": Roles()
+    "roles": Roles(),
+    "mute": Mute()
 }
