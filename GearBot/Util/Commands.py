@@ -9,7 +9,7 @@ from commands.Test import Test
 from commands.command import Command
 from commands.ping import Ping
 from commands import CustomCommands
-from commands import Mute
+from commands.Mute import Mute
 
 
 class Help(Command):
