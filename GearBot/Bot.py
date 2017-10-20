@@ -81,7 +81,6 @@ logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
 
 
 if __name__ == '__main__':
-    configuration.loadconfig()
     if 'gearbotlogin' in os.environ:
         token = os.environ['gearbotlogin']
     elif clargs.token:

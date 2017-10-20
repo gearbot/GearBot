@@ -1,15 +1,14 @@
 import discord
 from commands.command import Command 
+from Util import configuration
 import Variables
 import json
 
+#Loads config options
 
 usertomute = '105076359188979712'
-
-# Loads the config
-
-mutedID = Variables.CONFIG_SETTINGS.get('MUTE_ROLE_ID')
-modID = Variables.CONFIG_SETTINGS.get('MODERATOR_ID')
+mutedID = configuration.getConfigVar('MUTE_ROLE_ID')
+modID = configuration.getConfigVar('MODERATOR_ID')
 
 
 class Mute(Command):
