@@ -2,11 +2,15 @@ import logging
 
 import MySQLdb
 
-import Variables
+from Util import configuration
 
 
 def getConnection():
-    return MySQLdb.connect("localhost", Variables.CONFIG_SETTINGS["DATABASE_USER"], Variables.CONFIG_SETTINGS["DATABASE_PASS"], Variables.CONFIG_SETTINGS["DATABASE_NAME"])
+    return MySQLdb.connect(configuration.getConfigVar("DATABASE_HOST", "localhost"),
+                           configuration.getConfigVar("DATABASE_USER", "gearbot"),
+                           configuration.getConfigVar("DATABASE_PASS", "password"),
+                           configuration.getConfigVar("DATABASE_NAME", "gearbot"),
+                           configuration.getConfigVar("DATABASE_PORT", 3306))
 
 def initialize():
     db = getConnection()
