@@ -86,9 +86,8 @@ if __name__ == '__main__':
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
-    elif not Variables.CONFIG_SETTINGS["login_token"] is None:
-        token = Variables.CONFIG_SETTINGS["login_token"]
+    elif not configuration.getConfigVar("LOGIN_TOKEN", "0") is "0":
+        token = configuration.getConfigVar("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
-    configuration.loadconfig()
     dc_client.run(token)

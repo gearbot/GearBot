@@ -1,9 +1,9 @@
-from commands.command import Command
 import Variables
+from commands.command import Command
 
 
 class RoleCommand(Command):
-    def __init__(self, role='346629002561060864'):
+    def __init__(self, role=346629002561060864):
         super().__init__()
         self.role = role
 
