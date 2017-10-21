@@ -14,7 +14,7 @@ class Command:
     async def execute(self, client:discord.Client, channel:discord.Channel, user:discord.user.User, params)-> None:
         await client.send_message(channel, "This command doesn't seem to be implemented")
 
-    async def sendHelp(self, client, channel):
+    async def sendHelp(self, client:discord.Client, channel:discord.Channel):
         embed = discord.Embed(colour=discord.Colour(0x663399))
         embed.description = self.extraHelp["info"]
 
@@ -25,3 +25,7 @@ class Command:
                 embed.add_field(name=key , value=self.extraHelp[key])
 
         await client.send_message(channel, embed=embed)
+
+
+    def onReady(self, client:discord.Client):
+        pass

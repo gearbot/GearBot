@@ -21,10 +21,14 @@ async def on_ready():
         configuration.onReady()
         Variables.APP_INFO = await dc_client.application_info()
 
+        await GearbotLogging.logToLogChannel("Loading custom commands")
         for server in dc_client.servers:
             logging.info(f"Loading commands for {server.name} ({server.id})")
             CustomCommands.loadCommands(server.id)
 
+        await GearbotLogging.logToLogChannel("Readying commands")
+        for command in COMMANDS.values():
+            command.onReady(dc_client)
         await dc_client.change_presence(game=discord.Game(name='gears'))
         await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
         Variables.HAS_STARTED = True
@@ -32,7 +36,7 @@ async def on_ready():
 @dc_client.event
 async def on_message(message:discord.Message):
     global dc_client
-    if (message.content is None) or (message.content == ''):
+    if (message.content is None) or (message.content == '') or message.author.bot:
         return
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
