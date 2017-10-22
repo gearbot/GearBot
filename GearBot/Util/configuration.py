@@ -21,10 +21,12 @@ def loadconfig():
     Variables.PREFIX = getConfigVar("PREFIX", "!")
     Database.initialize()
 
+
 def onReady():
     global CONFIG_VARIABLES
     Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MOD_LOG_CHANNEL", "0"))
     Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("BOT_LOG_CHANNEL", "0"))
+
 
 def getConfigVar(key, default=None) :
     global CONFIG_VARIABLES
@@ -32,6 +34,7 @@ def getConfigVar(key, default=None) :
         CONFIG_VARIABLES[key] = default
         saveConfig()
     return CONFIG_VARIABLES[key]
+
 
 def saveConfig():
     global CONFIG_VARIABLES

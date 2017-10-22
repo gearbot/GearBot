@@ -18,7 +18,7 @@ class AddCustomCommand(RoleCommand):
             else:
                 text = " ".join(params[1::])
                 Variables.CUSTOM_COMMANDS[channel.server.id][params[0].lower()] = text
-                Database.executeStatement("INSERT INTO gearbot.command (name, text, server) VALUES (%s, %s, %s)", (params[0], text, channel.server.id,))
+                Database.executeStatement("INSERT INTO command (name, text, server) VALUES (%s, %s, %s)", (params[0], text, channel.server.id,))
                 await client.send_message(channel, "Command added")
 
 
@@ -30,7 +30,7 @@ class RemoveCustomCommand(RoleCommand):
         customCommands = getCommands(channel.server.id)
         if (customCommands.keys().__contains__(params[0])):
             del Variables.CUSTOM_COMMANDS[channel.server.id][params[0]]
-            Database.executeStatement("DELETE FROM gearbot.command WHERE name=%s AND server=%s", (params[0], channel.server.id))
+            Database.executeStatement("DELETE FROM command WHERE name=%s AND server=%s", (params[0], channel.server.id))
             await client.send_message(channel, "Command removed")
         else:
             await client.send_message(channel, "I don't know that command so was unable to remove it")
@@ -46,7 +46,7 @@ def loadCommands(serverID):
 
     db = Database.getConnection()
     cursor = db.cursor()
-    cursor.execute(f"SELECT name, text FROM gearbot.command WHERE server='{serverID}'")
+    cursor.execute(f"SELECT name, text FROM command WHERE server='{serverID}'")
     results = cursor.fetchall()
     for row in results:
         name = row[0]
