@@ -1,6 +1,6 @@
 import discord
-import math
-import Variables
+
+from commands import CustomCommands
 from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
 from commands.Latest import Latest
 from commands.OwnerCommands import Stop, Upgrade
@@ -8,8 +8,6 @@ from commands.Roles import Roles
 from commands.Test import Test
 from commands.command import Command
 from commands.ping import Ping
-from commands import CustomCommands
-from commands.Mute import Mute
 
 
 class Help(Command):
@@ -61,6 +59,6 @@ COMMANDS = {
     "remove": RemoveCustomCommand(),
     "latest": Latest(),
     "test": Test(),
-    "roles": Roles(),
-    "mute": Mute()
+    "roles": Roles()
+    #"mute": Mute()
 }

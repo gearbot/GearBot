@@ -30,7 +30,10 @@ async def on_ready():
         for command in COMMANDS.values():
             command.onReady(dc_client)
         await dc_client.change_presence(game=discord.Game(name='gears'))
-        await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
+        if (Variables.DEBUG_MODE):
+            await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
+        else:
+            await GearbotLogging.logToLogChannel("Gearbot is now online")
         Variables.HAS_STARTED = True
 
 @dc_client.event
