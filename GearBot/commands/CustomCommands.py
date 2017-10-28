@@ -13,7 +13,7 @@ class AddCustomCommand(RoleCommand):
             await self.sendHelp(client, channel)
         else:
             customCommands = getCommands(channel.server.id)
-            if (Variables.CUSTOM_COMMANDS[channel.server.id].keys().__contains__(params[0])):
+            if Variables.CUSTOM_COMMANDS[channel.server.id].keys().__contains__(params[0]):
                 await client.send_message(channel, "I already know this command, please remove it first if you want to replace it")
             else:
                 text = " ".join(params[1::])
