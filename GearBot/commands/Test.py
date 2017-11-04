@@ -1,7 +1,9 @@
+import threading
+import time
+
 import discord
 
-import Variables
-from commands.OwnerCommands import OwnerCommand
+from Util import GearbotLogging
 from commands.command import Command
 
 
@@ -13,7 +15,22 @@ class Test(Command):
         self.extraHelp["info"] = "Used for testing, only available in debug mode"
 
     def canExecute(self, user: discord.user.User) -> bool:
+        import Variables
         return Variables.DEBUG_MODE
 
     async def execute(self, client, channel, user, params):
-        raise Exception("just making sure this works")
+        await GearbotLogging.logToLogChannel("Initiating command")
+
+        def otherThread():
+            global MINECRAFT_TERMINATED, MINECRAFT_RUNNING
+            # p = Popen(["D:\Minecraft\workspaces\modtester\gradlew.bat", "runClient"], cwd="D:\Minecraft\workspaces\modtester\\")
+            # p = Popen(["~dev/modtester/gradlew.bat", "runClient"], cwd="~dev/modtester/")
+            MINECRAFT_RUNNING = True
+            # p.wait()
+            time.sleep(10)
+            MINECRAFT_TERMINATED = True
+            print("minecraft terminated")
+
+        thread = threading.Thread(target=otherThread)
+        thread.start()
+        return

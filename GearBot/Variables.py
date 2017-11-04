@@ -10,3 +10,7 @@ BOT_LOG_CHANNEL:discord.Channel = None
 MOD_LOG_CHANNEL:discord.Channel = None
 PREFIX = None
 CUSTOM_COMMANDS = dict()
+
+#Minecraft
+MINECRAFT_RUNNING = False
+MINECRAFT_TERMINATED = False

@@ -1,8 +1,8 @@
 import discord
 
 import Variables
-from commands.command import Command
 from Util import GearbotLogging
+from commands.command import Command
 
 
 class OwnerCommand(Command):
@@ -19,6 +19,7 @@ class Stop(OwnerCommand):
 
     async def execute(self, client, channel, user, params):
         await client.send_message(channel, 'Shutting down')
+        await GearbotLogging.logToLogChannel(f"Shutdown initiated by {user.name}")
         await client.close()
 
 

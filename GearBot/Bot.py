@@ -7,7 +7,7 @@ from logging import DEBUG, INFO
 import discord
 
 import Variables
-from Util import configuration, spam, GearbotLogging
+from Util import configuration, spam, GearbotLogging, Timer
 from Util.Commands import COMMANDS
 from commands import CustomCommands
 
@@ -29,12 +29,17 @@ async def on_ready():
         await GearbotLogging.logToLogChannel("Readying commands")
         for command in COMMANDS.values():
             command.onReady(dc_client)
-        await dc_client.change_presence(game=discord.Game(name='gears'))
+
+        Timer.start_timer()
+
         if (Variables.DEBUG_MODE):
             await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
         else:
             await GearbotLogging.logToLogChannel("Gearbot is now online")
+
+
         Variables.HAS_STARTED = True
+    await dc_client.change_presence(game=discord.Game(name='gears'))
 
 @dc_client.event
 async def on_message(message:discord.Message):

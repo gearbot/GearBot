@@ -1,3 +1,4 @@
+import Variables
 from commands.command import Command
 
 
@@ -9,4 +10,5 @@ class Ping(Command):
         self.extraHelp["info"] = "Just pongs"
 
     async def execute(self, client, channel, user, params):
+        print(f"ping trigger, {Variables.MINECRAFT_RUNNING}, {Variables.MINECRAFT_TERMINATED}")
         await (client.send_message(channel, "Pong"))
