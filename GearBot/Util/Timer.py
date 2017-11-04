@@ -27,7 +27,7 @@ def internalTimer():
 async def execTimer():
     from Variables import MINECRAFT_TERMINATED, MINECRAFT_RUNNING
     global MINECRAFT_TERMINATED, MINECRAFT_RUNNING
-    print(f"timer trigger, {MINECRAFT_RUNNING}, {MINECRAFT_TERMINATED}")
+    # print(f"timer trigger, {MINECRAFT_RUNNING}, {MINECRAFT_TERMINATED}")
     if MINECRAFT_RUNNING and MINECRAFT_TERMINATED:
         MINECRAFT_TERMINATED = MINECRAFT_RUNNING = False
         await GearbotLogging.logToLogChannel("Minecraft terminated")

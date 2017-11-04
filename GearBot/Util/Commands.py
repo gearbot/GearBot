@@ -6,6 +6,7 @@ from commands.Latest import Latest
 from commands.OwnerCommands import Stop, Upgrade
 from commands.Roles import Roles
 from commands.Test import Test
+from commands.Tester import Tester
 from commands.command import Command
 from commands.ping import Ping
 
@@ -59,6 +60,7 @@ COMMANDS = {
     "remove": RemoveCustomCommand(),
     "latest": Latest(),
     "test": Test(),
-    "roles": Roles()
+    "roles": Roles(),
+    "tester": Tester()
     #"mute": Mute()
 }
