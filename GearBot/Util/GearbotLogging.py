@@ -14,7 +14,7 @@ async def logToLogChannel(text):
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
     except discord.InvalidArgument:
-        logging.warning("Exception: Invalid message arguments")
+        logging.error("Exception: Invalid message arguments")
     except Exception as e:
         logging.error("Exception: {}".format(str(e)))
 
@@ -25,14 +25,14 @@ async def logToModChannel(text):
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
     except discord.InvalidArgument:
-        logging.warning("Exception: Invalid message arguments")
+        logging.error("Exception: Invalid message arguments")
     except Exception as e:
         logging.error("Exception: {}".format(str(e)))
 
 
 async def on_command_error(channel:discord.Channel, sender:discord.User, cmd, args, exception):
     try:
-        logging.warning("Command execution failed:"
+        logging.error("Command execution failed:"
                         f"    Command: {cmd}"
                         f"    Arguments: {args}"
                         f"    Channel: {'Private Message' if channel.is_private else channel.name}"
@@ -41,7 +41,7 @@ async def on_command_error(channel:discord.Channel, sender:discord.User, cmd, ar
         await Variables.DISCORD_CLIENT.send_message(channel,
             f"Execution of the {cmd} command failed, please try again later")
     except Exception as e:
-        logging.warning(f"Failed to notify caller:\n{e}")
+        logging.error(f"Failed to notify caller:\n{e}")
 
     try:
         embed = discord.Embed(colour=discord.Colour(0xff0000),

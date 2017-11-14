@@ -11,7 +11,7 @@ from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
 
-dc_client = discord.Client()
+dc_client:discord.Client = discord.Client()
 
 @dc_client.event
 async def on_ready():
@@ -21,10 +21,8 @@ async def on_ready():
         configuration.onReady()
         Variables.APP_INFO = await dc_client.application_info()
 
-        await GearbotLogging.logToLogChannel("Loading custom commands")
-        for server in dc_client.servers:
-            logging.info(f"Loading commands for {server.name} ({server.id})")
-            CustomCommands.loadCommands(server.id)
+        CustomCommands.loadCommands()
+        await GearbotLogging.logToLogChannel(f"Loaded {Variables.CUSTOM_COMMANDS.__len__()} custom commands")
 
         await GearbotLogging.logToLogChannel("Readying commands")
         for command in COMMANDS.values():
@@ -49,6 +47,8 @@ async def on_message(message:discord.Message):
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
 
+    author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id) if message.channel.is_private else message.author
+
     if message.content.startswith(Variables.PREFIX):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
@@ -59,24 +59,23 @@ async def on_message(message:discord.Message):
     try:
         if cmd in COMMANDS.keys():
             command = COMMANDS[cmd]
-            if command.canExecute(message.author):
-                await command.execute(dc_client, message.channel, message.author, args)
+            if command.canExecute(author):
+                await command.execute(dc_client, message.channel, author, args)
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:
-            customCommands = CustomCommands.getCommands(message.server.id)
-            if cmd in customCommands.keys():
-                await dc_client.send_message(message.channel, customCommands[cmd])
+            if cmd in Variables.CUSTOM_COMMANDS.keys():
+                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
                 return
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
         logging.info("Bot is not allowed to send messages")
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
     except discord.InvalidArgument as e:
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
         logging.info("Exception: Invalid message arguments")
     except Exception as e:
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
         traceback.print_exc()
 
 

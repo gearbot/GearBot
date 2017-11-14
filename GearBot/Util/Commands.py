@@ -1,6 +1,6 @@
 import discord
 
-from commands import CustomCommands
+import Variables
 from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
 from commands.Latest import Latest
 from commands.OwnerCommands import Stop, Upgrade
@@ -42,9 +42,8 @@ class Help(Command):
             embed.add_field(name="\u200b", value=explanations)
 
             info = ""
-            customCommands = CustomCommands.getCommands(channel.server.id)
-            if len(customCommands) > 0:
-                for key in customCommands:
+            if len(Variables.CUSTOM_COMMANDS) > 0:
+                for key in Variables.CUSTOM_COMMANDS:
                     info += f"{key}\n"
                 embed.add_field(name="Custom commands", value=info, inline=False)
 

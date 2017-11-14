@@ -1,5 +1,3 @@
-import logging
-
 import MySQLdb
 
 from Util import configuration
@@ -14,20 +12,7 @@ def getConnection():
 
 def initialize():
     db = getConnection()
-    cursor = db.cursor()
-    ensureTableExists(cursor, "command",
-                      "create table command(name varchar(50) not null,	text text not null,	server varchar(25) not null, primary key (name, server));")
     db.close()
-
-def ensureTableExists(cursor, tablename, creator):
-    cursor.execute(f"""
-          SELECT COUNT(*)
-          FROM information_schema.tables
-          WHERE table_name = '{tablename}'
-          """)
-    if cursor.fetchone()[0] == 0:
-        logging.warning(f"Table {tablename} did not exist and had to be created")
-        cursor.execute(creator)
 
 def executeStatement(statement, params):
     db = getConnection()

@@ -2,7 +2,6 @@ import json
 import logging
 
 import Variables
-from Util import Database
 
 CONFIG_VARIABLES = dict()
 
@@ -19,7 +18,7 @@ def loadconfig():
         print(e)
         raise e
     Variables.PREFIX = getConfigVar("PREFIX", "!")
-    Database.initialize()
+    # Database.initialize()
 
 
 def onReady():
