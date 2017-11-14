@@ -71,12 +71,12 @@ async def on_message(message:discord.Message):
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
         logging.info("Bot is not allowed to send messages")
-        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
     except discord.InvalidArgument as e:
-        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
         logging.info("Exception: Invalid message arguments")
     except Exception as e:
-        await GearbotLogging.on_command_error(message.channel, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
         traceback.print_exc()
 
 

@@ -1,9 +1,9 @@
+import datetime
+import logging
+import time
 import traceback
 
 import discord
-import logging
-import datetime
-import time
 
 import Variables
 
@@ -30,12 +30,13 @@ async def logToModChannel(text):
         logging.error("Exception: {}".format(str(e)))
 
 
-async def on_command_error(channel, cmd, args, exception):
+async def on_command_error(channel:discord.Channel, sender:discord.User, cmd, args, exception):
     try:
         logging.warning("Command execution failed:"
                         f"    Command: {cmd}"
                         f"    Arguments: {args}"
-                        f"    Channel: {channel.name}"
+                        f"    Channel: {'Private Message' if channel.is_private else channel.name}"
+                        f"    Sender: {sender.name}#{sender.discriminator}"
                         f"    Exception: {exception}")
         await Variables.DISCORD_CLIENT.send_message(channel,
             f"Execution of the {cmd} command failed, please try again later")
@@ -50,7 +51,8 @@ async def on_command_error(channel, cmd, args, exception):
 
         embed.add_field(name="Command", value=cmd)
         embed.add_field(name="Arguments", value=args)
-        embed.add_field(name="Channel", value=channel.name)
+        embed.add_field(name="Channel", value='Private Message' if channel.is_private else channel.name)
+        embed.add_field(name="Sender", value=f"{sender.name}#{sender.discriminator}")
         embed.add_field(name="Exception", value=exception)
         embed.add_field(name="Stacktrace", value=traceback.format_exc())
 
