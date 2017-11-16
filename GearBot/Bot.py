@@ -21,7 +21,7 @@ async def on_ready():
         configuration.onReady()
         Variables.APP_INFO = await dc_client.application_info()
 
-        CustomCommands.loadCommands()
+        await CustomCommands.loadCommands()
         await GearbotLogging.logToLogChannel(f"Loaded {Variables.CUSTOM_COMMANDS.__len__()} custom commands")
 
         await GearbotLogging.logToLogChannel("Readying commands")
@@ -47,8 +47,6 @@ async def on_message(message:discord.Message):
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
 
-    author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id) if message.channel.is_private else message.author
-
     if message.content.startswith(Variables.PREFIX):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
@@ -57,6 +55,8 @@ async def on_message(message:discord.Message):
         return
 
     try:
+        author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(
+            message.author.id) if message.channel.is_private else message.author
         if cmd in COMMANDS.keys():
             command = COMMANDS[cmd]
             if command.canExecute(author):

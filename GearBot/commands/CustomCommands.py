@@ -36,14 +36,14 @@ class RemoveCustomCommand(RoleCommand):
             await client.send_message(channel, "I don't know that command so was unable to remove it")
 
 
-def loadCommands():
+async def loadCommands():
     try:
         with open('commands.json', 'r') as jsonfile:
             Variables.CUSTOM_COMMANDS = json.load(jsonfile)
     except FileNotFoundError:
-        Util.GearbotLogging.logToLogChannel("No custom commands file found")
+        await Util.GearbotLogging.logToLogChannel("No custom commands file found")
     except Exception as e:
-        Util.GearbotLogging.logToLogChannel("Error parsing custom commands")
+        await Util.GearbotLogging.logToLogChannel("Error parsing custom commands")
         print(e)
         raise e
 
