@@ -55,8 +55,10 @@ async def on_message(message:discord.Message):
         return
 
     try:
-        author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(
-            message.author.id) if message.channel.is_private else message.author
+        if message.channel.is_private:
+            author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id)
+        else:
+            author = message.author
         if cmd in COMMANDS.keys():
             command = COMMANDS[cmd]
             if command.canExecute(author):
@@ -70,12 +72,12 @@ async def on_message(message:discord.Message):
             logging.debug(f"command '{cmd}' not recognized")
     except discord.Forbidden as e:
         logging.info("Bot is not allowed to send messages")
-        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
     except discord.InvalidArgument as e:
-        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
         logging.info("Exception: Invalid message arguments")
     except Exception as e:
-        await GearbotLogging.on_command_error(message.channel, author, cmd, args, e)
+        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
         traceback.print_exc()
 
 
