@@ -1,6 +1,7 @@
 import discord
 
 import Variables
+from commands.Clean import Clean
 from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
 from commands.Latest import Latest
 from commands.OwnerCommands import Stop, Upgrade
@@ -62,6 +63,7 @@ COMMANDS = {
     "test": Test(),
     "roles": Roles(),
     "tester": Tester(),
-    "requesttesting": RequestTesting()
+    "requesttesting": RequestTesting(),
+    "clean": Clean()
     #"mute": Mute()
 }
