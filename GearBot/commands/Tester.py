@@ -15,8 +15,12 @@ class Tester(Command):
         self.extraHelp["Obligations"] = "**None**.\nBeing a tester does not require you to be at the ready and test everything whenever you are pinged. All testing is optional but we do ask that if you join the testers group you try to test things from time to time"
 
     async def execute(self, client: discord.Client, channel: discord.Channel, user: discord.user.User, params) -> None:
-        role = discord.utils.get(channel.server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
-        member = (channel.server.get_member(user.id))
+        server = discord.utils.get(client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")) if channel.is_private else channel.server
+        role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
+        if not channel.is_private:
+            member = (server.get_member(user.id))
+        else:
+            member = user
         if isTester(user):
             await client.remove_roles(member, role)
             await client.send_message(channel, "You are now no longer a tester")
