@@ -5,6 +5,7 @@ from commands.Clean import Clean
 from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
 from commands.Latest import Latest
 from commands.OwnerCommands import Stop, Upgrade
+from commands.Quote import Quote
 from commands.RequestTesting import RequestTesting
 from commands.Roles import Roles
 from commands.Test import Test
@@ -64,6 +65,7 @@ COMMANDS = {
     "roles": Roles(),
     "tester": Tester(),
     "requesttesting": RequestTesting(),
-    "clean": Clean()
+    "clean": Clean(),
+    "quote": Quote()
     #"mute": Mute()
 }

@@ -63,6 +63,8 @@ async def on_message(message:discord.Message):
             command = COMMANDS[cmd]
             if command.canExecute(author):
                 await command.execute(dc_client, message.channel, author, args)
+                if (command.shouldDeleteTrigger):
+                    await dc_client.delete_message(message)
             else:
                 await dc_client.send_message(message.channel, "You do not have permission to execute this command")
         else:

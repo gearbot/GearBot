@@ -4,9 +4,10 @@ import discord
 class Command:
     """Base command class"""
 
-    def __init__(self) -> None:
+    def __init__(self, shouldDeleteTrigger = False) -> None:
         self.extraHelp = dict()
         self.extraHelp["info"] = "I'm sorry but i don't have any more info for this command"
+        self.shouldDeleteTrigger = shouldDeleteTrigger
 
     def canExecute(self, user:discord.user.User)->bool:
         return True
