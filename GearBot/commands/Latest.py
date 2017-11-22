@@ -65,4 +65,4 @@ class Latest(Command):
         embed.add_field(name="Older versions",
                         value="All other Buildcraft versions can be found in the [archives](https://www.mod-buildcraft.com/releases/)")
 
-        await client.send_message(channel, "The latest version of BuildCraft is 7.99.8 and can be found at <https://www.mod-buildcraft.com/buildcraft-7998-alpha.html>", embed=embed)
+        await client.send_message(channel, "The latest version of BuildCraft is 7.99.12 and can be found at <https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html>", embed=embed)
