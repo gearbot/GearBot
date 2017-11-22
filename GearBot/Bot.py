@@ -37,7 +37,7 @@ async def on_ready():
 
 
         Variables.HAS_STARTED = True
-    await dc_client.change_presence(game=discord.Game(name='gears'))
+    await dc_client.change_presence(game=discord.Game(name='with gears'))
 
 @dc_client.event
 async def on_message(message:discord.Message):
