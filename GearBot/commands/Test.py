@@ -1,5 +1,6 @@
 import threading
 import time
+from itertools import combinations
 
 import discord
 
@@ -34,3 +35,11 @@ class Test(Command):
         thread = threading.Thread(target=otherThread)
         thread.start()
         return
+
+    count = 0
+    list = ["builders", "energy", "factory", "robotics", "silicon", "transport"]
+    for i in range(1, len(list)):
+        for combo in combinations(list, i):
+            print(combo)
+            count += 1
+    print(f"total combinations: {count}")

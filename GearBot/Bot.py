@@ -7,7 +7,7 @@ from logging import DEBUG, INFO
 import discord
 
 import Variables
-from Util import configuration, spam, GearbotLogging
+from Util import configuration, spam, GearbotLogging, Timer
 from Util.Commands import COMMANDS
 from commands import CustomCommands
 
@@ -37,6 +37,7 @@ async def on_ready():
 
 
         Variables.HAS_STARTED = True
+        Timer.start_timer(dc_client)
     await dc_client.change_presence(game=discord.Game(name='with gears'))
 
 @dc_client.event

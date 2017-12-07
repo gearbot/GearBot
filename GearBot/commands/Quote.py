@@ -23,6 +23,7 @@ class Quote(Command):
             message = await client.get_message(channel, params[0])
             found = True
         except Exception as e:
+            await client.send_typing(channel)
             pass
         if not found:
             for ch in channel.server.channels:
