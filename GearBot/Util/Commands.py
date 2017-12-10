@@ -12,6 +12,7 @@ from commands.Test import Test
 from commands.Tester import Tester
 from commands.command import Command
 from commands.ping import Ping
+from versions.VersionInfo import addVersion
 
 
 class Help(Command):
@@ -66,6 +67,7 @@ COMMANDS = {
     "tester": Tester(),
     "requesttesting": RequestTesting(),
     "clean": Clean(),
-    "quote": Quote()
+    "quote": Quote(),
+    "addversion": addVersion()
     #"mute": Mute()
 }

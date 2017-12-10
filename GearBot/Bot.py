@@ -28,8 +28,6 @@ async def on_ready():
         for command in COMMANDS.values():
             command.onReady(dc_client)
 
-        # Timer.start_timer()
-
         if (Variables.DEBUG_MODE):
             await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
         else:
@@ -37,7 +35,7 @@ async def on_ready():
 
 
         Variables.HAS_STARTED = True
-        Timer.start_timer(dc_client)
+        # Timer.start_timer(dc_client)
     await dc_client.change_presence(game=discord.Game(name='with gears'))
 
 @dc_client.event

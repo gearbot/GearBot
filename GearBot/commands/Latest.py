@@ -4,6 +4,8 @@ import time
 import discord
 
 from commands.command import Command
+from versions import VersionInfo
+from distutils.version import LooseVersion
 
 
 class Latest(Command):
@@ -47,15 +49,15 @@ class Latest(Command):
         #     }
         # }
 
-        embed = discord.Embed(title="The latest version of BuildCraft is 7.99.12", colour=discord.Colour(0x54d5ff),
-                              url="https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html",
+        latest = VersionInfo.getSortedVersions()[0]
+        embed = discord.Embed(title=f"The latest version of BuildCraft is {latest['BC_VERSION']}]", colour=discord.Colour(0x54d5ff),
+                              url=latest["BLOG_LINK"],
                               description="Latest versions per MC version:",
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
         embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
         embed.set_author(name="Buildcraft releases", url="http://www.mod-buildcraft.com/")
-
-        embed.add_field(name="1.12.2",
+        for version in VersionInfo.getSortedVersions():
+            embed.add_field(name=version["MC_VERSION"],
                         value="Buildcraft 7.99.12 (alpha)\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/7.99.12/buildcraft-7.99.12.jar)")
 
         embed.add_field(name="1.11.2",
