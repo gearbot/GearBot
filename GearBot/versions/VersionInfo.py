@@ -1,9 +1,5 @@
 import json
 
-import discord
-
-from Util import configuration
-from commands.RoleCommands import RoleCommand
 from distutils.version import LooseVersion
 
 versions:dict = dict()
@@ -50,31 +46,5 @@ def cmp_to_key(mycmp):
 def getSortedVersions():
     return sorted(list(versions.keys()), key=cmp_to_key(compareVersions))
 
-
-class addVersion(RoleCommand):
-    """Adds a new BC release"""
-
-    def __init__(self):
-        super().__init__()
-        self.extraHelp["params"] = "Minecraft version\nBuildcraft version\nBlog post link"
-
-    async def execute(self, client: discord.Client, channel: discord.Channel, user: discord.user.User, params) -> None:
-        global versions
-        if not len(params) == 3:
-            await client.send_message(channel, "Invalid params")
-            return
-        MCVersion = params[0]
-        BCVersion = params[1]
-        blogLink = params[2]
-        if not MCVersion in versions.keys():
-            versions[MCVersion] = dict()
-            await client.send_message(channel, "I didn't know that MC version existed, yet, now i do!")
-        versions[MCVersion]["BC_VERSION"] = BCVersion
-        versions[MCVersion]["BLOG_LINK"] = blogLink
-        saveVersionInfo()
-
-        return
-
-    def onReady(self, client: discord.Client):
-        initVersionInfo()
-        self.role = configuration.getConfigVar("DEV_ROLE_ID")
+def getLatest():
+    return versions[getSortedVersions()[0]]

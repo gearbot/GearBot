@@ -7,9 +7,10 @@ from logging import DEBUG, INFO
 import discord
 
 import Variables
-from Util import configuration, spam, GearbotLogging, Timer
+from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
+from versions import VersionInfo
 
 dc_client:discord.Client = discord.Client()
 
@@ -23,6 +24,8 @@ async def on_ready():
 
         await CustomCommands.loadCommands()
         await GearbotLogging.logToLogChannel(f"Loaded {Variables.CUSTOM_COMMANDS.__len__()} custom commands")
+
+        VersionInfo.initVersionInfo()
 
         await GearbotLogging.logToLogChannel("Readying commands")
         for command in COMMANDS.values():
@@ -41,6 +44,7 @@ async def on_ready():
 @dc_client.event
 async def on_message(message:discord.Message):
     global dc_client
+    client:discord.Client = dc_client
     if (message.content is None) or (message.content == '') or message.author.bot:
         return
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
@@ -50,6 +54,16 @@ async def on_message(message:discord.Message):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
         logging.debug(f"command '{cmd}' with arguments {args} issued")
+    elif message.author.id == Variables.AWAITING_REPLY_FROM:
+        if message.content.lower() == "yes":
+            print("setting new primary release")
+            await client.edit_channel(Variables.GENERAL_CHANNEL, topic=f"General discussions about Buildcraft. \nLatest version:{Variables.NEW_PRIMARY_VERSION['BC_VERSION']} \nFull changelog and download: {Variables.NEW_PRIMARY_VERSION['BLOG_LINK']}")
+            Variables.AWAITING_REPLY_FROM = None
+        elif message.content.lower() == "no":
+            print("not setting new primary release")
+        else:
+            await dc_client.send_message(message.channel, "Sorry but i don't understand what you mean with that, a simple yes/no would be perfect")
+        return
     else:
         return
 

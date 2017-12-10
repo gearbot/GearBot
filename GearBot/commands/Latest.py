@@ -5,7 +5,6 @@ import discord
 
 from commands.command import Command
 from versions import VersionInfo
-from distutils.version import LooseVersion
 
 
 class Latest(Command):
@@ -49,22 +48,22 @@ class Latest(Command):
         #     }
         # }
 
-        latest = VersionInfo.getSortedVersions()[0]
-        embed = discord.Embed(title=f"The latest version of BuildCraft is {latest['BC_VERSION']}]", colour=discord.Colour(0x54d5ff),
+        latest = VersionInfo.versions[VersionInfo.getSortedVersions()[0]]
+        embed = discord.Embed(title=f"The latest version of BuildCraft is {latest['BC_VERSION']}", colour=discord.Colour(0x54d5ff),
                               url=latest["BLOG_LINK"],
                               description="Latest versions per MC version:",
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()))
         embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
         embed.set_author(name="Buildcraft releases", url="http://www.mod-buildcraft.com/")
-        for version in VersionInfo.getSortedVersions():
-            embed.add_field(name=version["MC_VERSION"],
-                        value="Buildcraft 7.99.12 (alpha)\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/7.99.12/buildcraft-7.99.12.jar)")
+        for v in VersionInfo.getSortedVersions()[:3]:
+            version = VersionInfo.versions[v]
+            info = f"Buildcraft {version['BC_VERSION']} ({version['BC_DESIGNATION']})\n[Blog]({version['BLOG_LINK']}) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/{version['BC_VERSION']}/buildcraft-{version['BC_VERSION']}.jar)"
+            if "BCC_VERSION" in version.keys():
+                    info += f"\n\nBuildcraft Compat {version['BCC_VERSION']}\n[Blog]({version['BCC_BLOG_LINK']}) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraftCompat/{version['BCC_VERSION']}/buildcraft-compat-{version['BCC_VERSION']}.jar)"
+            embed.add_field(name=v,
+                        value=info)
 
-        embed.add_field(name="1.11.2",
-                        value="Buildcraft 7.99.8.1 (alpha)\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/7.99.8.1/buildcraft-7.99.8.1.jar)\n\nBuildcraft Compat 7.99.0\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](http://www.mod-buildcraft.com/releases/BuildCraftCompat/7.99.0/buildcraft-compat-7.99.0.jar)")
-        embed.add_field(name="1.7.10",
-                        value="Buildcraft 7.1.23 (stable)\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/7.1.23/buildcraft-7.1.23.jar)\n\nBuildcraft Compat 7.1.7\n[Blog](https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html) | [Direct download](http://www.mod-buildcraft.com/releases/BuildCraftCompat/7.1.7/buildcraft-compat-7.1.7.jar)")
         embed.add_field(name="Older versions",
                         value="All other Buildcraft versions can be found in the [archives](https://www.mod-buildcraft.com/releases/)")
 
-        await client.send_message(channel, "The latest version of BuildCraft is 7.99.12 and can be found at <https://www.mod-buildcraft.com/buildcraft-79912-alpha-buildcraft-79981-alpha-buildcraft-7123-stable-buildcraftcompat-717-stable-buildcraftcompat-7990-alpha.html>", embed=embed)
+        await client.send_message(channel, embed=embed)
