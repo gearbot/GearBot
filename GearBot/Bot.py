@@ -57,10 +57,13 @@ async def on_message(message:discord.Message):
     elif message.author.id == Variables.AWAITING_REPLY_FROM:
         if message.content.lower() == "yes":
             print("setting new primary release")
+            await client.send_typing(Variables.GENERAL_CHANNEL)
             await client.edit_channel(Variables.GENERAL_CHANNEL, topic=f"General discussions about Buildcraft. \nLatest version:{Variables.NEW_PRIMARY_VERSION['BC_VERSION']} \nFull changelog and download: {Variables.NEW_PRIMARY_VERSION['BLOG_LINK']}")
+            await client.send_message(message.channel, f"{Variables.NEW_PRIMARY_VERSION['BC_VERSION']} is now the primary release")
             Variables.AWAITING_REPLY_FROM = None
         elif message.content.lower() == "no":
             print("not setting new primary release")
+            Variables.AWAITING_REPLY_FROM = None
         else:
             await dc_client.send_message(message.channel, "Sorry but i don't understand what you mean with that, a simple yes/no would be perfect")
         return
