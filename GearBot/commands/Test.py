@@ -1,8 +1,8 @@
 import asyncio
 import datetime
+import logging
 import os
 import shutil
-import threading
 import time
 import traceback
 from itertools import combinations
@@ -26,8 +26,12 @@ class Test(Command):
 
     async def execute(self, client:discord.Client, channel:discord.Channel, user:discord.user.User, params)-> None:
         await client.send_message(channel, "Initiating...")
-        t = threading.Thread(target=runTest, args=(client, channel,client.loop,))
-        t.start()
+        gearbox = os.getcwd() + "\\\\gearbox"
+        if not os.path.exists(gearbox):
+            os.makedirs(gearbox)
+        else:
+            shutil.rmtree("gearbox\\\\BuildCraft")
+        client.loop.create_task(runRealTest(client, channel))
 
         return
 
@@ -39,21 +43,9 @@ class Test(Command):
                 count += 1
         print(f"total combinations: {count}")
 
-def runTest(client:discord.Client, channel:discord.Channel, clientLoop):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(runTestAsync(client, channel, clientLoop))
-    loop.close()
-
-async def runTestAsync(client:discord.Client, channel:discord.Channel, clientLoop):
+async def runRealTest(client:discord.Client, channel:discord.Channel):
     try:
-        gearbox = os.getcwd() + "\\\\gearbox"
-        if not os.path.exists(gearbox):
-            os.makedirs(gearbox)
-        else:
-            shutil.rmtree(gearbox + "\\\\BuildCraft")
-        runCommand(["git", "clone", "https://github.com/BuildCraft/BuildCraft"])
+        runCommand(["git", "clone", "https://github.com/BuildCraft/BuildCraft"], shell=True)
         props = {}
         embed = discord.Embed(title="Extracted information")
         with open(gearbox + "\\\\BuildCraft\\\\build.properties", "r") as file:
@@ -64,15 +56,19 @@ async def runTestAsync(client:discord.Client, channel:discord.Channel, clientLoo
                     kv = line.split("=")
                     props[kv[0]] = kv[1]
                     embed.add_field(name=kv[0], value=kv[1])
-        asyncio.run_coroutine_threadsafe(client.send_message(channel, "Clone complete", embed=embed), clientLoop)
+        asyncio.run_coroutine_threadsafe(client.send_message(channel, "Clone complete", embed=embed), client.loop)
 
-        runCommand(["git", "submodule", "init"], folder="BuildCraft")
-        runCommand(["git", "submodule", "update"], folder="BuildCraft")
-        asyncio.run_coroutine_threadsafe(client.send_message(channel, "Submodules ready"), clientLoop)
-        runCommand(["gradlew.bat", "build", "--no-daemon"], folder="BuildCraft", prepend=True)
+        runCommand(["git", "submodule", "init"], folder="BuildCraft", shell=True)
+        runCommand(["git", "submodule", "update"], folder="BuildCraft", shell=True)
+        asyncio.run_coroutine_threadsafe(client.send_message(channel, "Submodules ready"), client.loop)
+        commands = []
+        compileP = Popen([f"{os.getcwd()}\\\\gearbox\\\\BuildCraft\\\\gradlew.bat", "build", "--no-daemon"], cwd=f"{os.getcwd()}\\\\gearbox\\\\BuildCraft")
+
+        runCommand(["wget", f"http://files.minecraftforge.net/maven/net/minecraftforge/forge/{props['mc_version']}-{props['forge_version']}/forge-{props['mc_version']}-{props['forge_version']}-installer.jar"], shell=True)
+        while compileP.poll() is None:
+            time.sleep(1)
         with open(f"{gearbox}\\\\BuildCraft\\\\build\\\\libs\\\\{props['mod_version']}\\\\buildcraft-{props['mod_version']}.jar", "rb") as jar:
-            asyncio.run_coroutine_threadsafe(client.send_file(channel, jar, content="Done"), clientLoop)
-        forgelink = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/1.12.2-14.23.1.2566/forge-1.12.2-14.23.1.2566-installer.jar"
+            asyncio.run_coroutine_threadsafe(client.send_file(channel, jar, content="Done"), client.loop)
     except Exception as e:
         embed = discord.Embed(colour=discord.Colour(0xff0000),
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()))
@@ -80,17 +76,20 @@ async def runTestAsync(client:discord.Client, channel:discord.Channel, clientLoo
         embed.set_author(name="Something went wrong!")
         embed.add_field(name="Exception", value=e)
         embed.add_field(name="Stacktrace", value=traceback.format_exc())
-        asyncio.run_coroutine_threadsafe(client.send_message(channel, embed=embed), clientLoop)
+        asyncio.run_coroutine_threadsafe(client.send_message(channel, embed=embed), client.loop)
+        logging.error(e)
+        logging.error(traceback.format_exc())
 
-def runCommand(command, folder=None, delay=1, prepend=False):
+
+def runCommand(command, folder=None, delay=1, prepend=False, shell = False):
     location = os.getcwd() + "\\\\gearbox"
     if not folder is None:
         location += f"\\\\{folder}"
     if prepend:
-        command[0] =  f"{location}\\\\{command[0]}"
-    p = Popen(command, cwd=location)
+        command[0] = f"{location}\\\\{command[0]}"
+    p = Popen(command, cwd=location, shell=shell)
     while p.poll() is None:
-        time.sleep(delay)
+        asyncio.sleep(delay)
     p.communicate()
     code = p.returncode
     return code
