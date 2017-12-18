@@ -46,7 +46,7 @@ async def runRealTest(client:discord.Client, channel:discord.Channel):
             os.makedirs(gearbox)
         else:
             shutil.rmtree(r"gearbox/BuildCraft")
-        await runCommand(["git", "clone", "--depth=1","https://github.com/BuildCraft/BuildCraft"], shell=True)
+        await runCommand(["git clone --depth=1 https://github.com/BuildCraft/BuildCraft"], shell=True)
         props = {}
         embed = discord.Embed(title="Extracted information")
         with open(gearbox + r"/BuildCraft/build.properties", "r") as file:
@@ -59,13 +59,13 @@ async def runRealTest(client:discord.Client, channel:discord.Channel):
                     embed.add_field(name=kv[0], value=kv[1])
         await client.send_message(channel, "Clone complete", embed=embed)
 
-        await runCommand(["git", "submodule", "init"], folder="BuildCraft", shell=True)
-        await runCommand(["git", "submodule", "update"], folder="BuildCraft", shell=True)
+        await runCommand(["git submodule init"], folder="BuildCraft", shell=True)
+        await runCommand(["git submodule update"], folder="BuildCraft", shell=True)
         await client.send_message(channel, "Submodules ready")
         commands = []
         compileP = Popen([rf"{os.getcwd()}/gearbox/BuildCraft/gradlew.bat", "build", "--no-daemon"], cwd=rf"{os.getcwd()}/gearbox/BuildCraft")
 
-        await runCommand(["wget", f"http://files.minecraftforge.net/maven/net/minecraftforge/forge/{props['mc_version']}-{props['forge_version']}/forge-{props['mc_version']}-{props['forge_version']}-installer.jar"], shell=True)
+        await runCommand([f"wget http://files.minecraftforge.net/maven/net/minecraftforge/forge/{props['mc_version']}-{props['forge_version']}/forge-{props['mc_version']}-{props['forge_version']}-installer.jar"], shell=True)
         while compileP.poll() is None:
             await asyncio.sleep(2)
         await client.send_file(channel, rf"{gearbox}/BuildCraft/build/libs/{props['mod_version']}/buildcraft-{props['mod_version']}.jar", content="Done")
