@@ -41,15 +41,15 @@ class Test(Command):
 
 async def runRealTest(client:discord.Client, channel:discord.Channel):
     try:
-        gearbox = os.getcwd() + r"\gearbox"
+        gearbox = os.getcwd() + r"/gearbox"
         if not os.path.exists(gearbox):
             os.makedirs(gearbox)
         else:
-            shutil.rmtree(r"gearbox\BuildCraft")
+            shutil.rmtree(r"gearbox/BuildCraft")
         await runCommand(["git", "clone", "--depth=1","https://github.com/BuildCraft/BuildCraft"], shell=True)
         props = {}
         embed = discord.Embed(title="Extracted information")
-        with open(gearbox + r"\BuildCraft\build.properties", "r") as file:
+        with open(gearbox + r"/BuildCraft/build.properties", "r") as file:
             lines = file.readlines()
             for line in lines:
                 line = line.strip()
@@ -63,12 +63,12 @@ async def runRealTest(client:discord.Client, channel:discord.Channel):
         await runCommand(["git", "submodule", "update"], folder="BuildCraft", shell=True)
         await client.send_message(channel, "Submodules ready")
         commands = []
-        compileP = Popen([rf"{os.getcwd()}\gearbox\BuildCraft\gradlew.bat", "build", "--no-daemon"], cwd=rf"{os.getcwd()}\gearbox\BuildCraft")
+        compileP = Popen([rf"{os.getcwd()}/gearbox/BuildCraft/gradlew.bat", "build", "--no-daemon"], cwd=rf"{os.getcwd()}/gearbox/BuildCraft")
 
         await runCommand(["wget", f"http://files.minecraftforge.net/maven/net/minecraftforge/forge/{props['mc_version']}-{props['forge_version']}/forge-{props['mc_version']}-{props['forge_version']}-installer.jar"], shell=True)
         while compileP.poll() is None:
             await asyncio.sleep(2)
-        await client.send_file(channel, rf"{gearbox}\BuildCraft\build\libs\{props['mod_version']}\buildcraft-{props['mod_version']}.jar", content="Done")
+        await client.send_file(channel, rf"{gearbox}/BuildCraft/build/libs/{props['mod_version']}/buildcraft-{props['mod_version']}.jar", content="Done")
     except Exception as e:
         logging.error(e)
         logging.error(traceback.format_exc())
@@ -82,11 +82,11 @@ async def runRealTest(client:discord.Client, channel:discord.Channel):
 
 
 async def runCommand(command, folder=None, delay=2, prepend=False, shell = False):
-    location = os.getcwd() + r"\gearbox"
+    location = os.getcwd() + r"/gearbox"
     if not folder is None:
-        location += rf"\{folder}"
+        location += rf"/{folder}"
     if prepend:
-        command[0] = rf"{location}\{command[0]}"
+        command[0] = rf"{location}/{command[0]}"
     p = Popen(command, cwd=location, shell=shell)
     while p.poll() is None:
         await asyncio.sleep(delay)
