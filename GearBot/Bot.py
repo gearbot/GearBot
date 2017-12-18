@@ -27,7 +27,7 @@ async def on_ready():
 
         VersionInfo.initVersionInfo()
 
-        await GearbotLogging.logToLogChannel("Readying commands")
+        # await GearbotLogging.logToLogChannel("Readying commands")
         for command in COMMANDS.values():
             command.onReady(dc_client)
 
