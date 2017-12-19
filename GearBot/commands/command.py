@@ -23,7 +23,7 @@ class Command:
 
         for key in self.extraHelp.keys():
             if not key == "info":
-                embed.add_field(name=key , value=self.extraHelp[key])
+                embed.add_field(name=key , value=self.extraHelp[key], inline=False)
 
         await client.send_message(channel, embed=embed)
 

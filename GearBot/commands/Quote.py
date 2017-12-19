@@ -9,7 +9,7 @@ class Quote(Command):
     def __init__(self) -> None:
         super().__init__()
         self.extraHelp["info"] = "Quotes the requested message"
-        self.extraHelp["Params"] = "ID - ID of the message to quote"
+        self.extraHelp["Params"] = "ID of the message to quote"
         self.extraHelp["Example"] = "!quote 392600991264014346"
         self.shouldDeleteTrigger = True
 
