@@ -35,6 +35,11 @@ def getConfigVar(key, default=None) :
         saveConfig()
     return CONFIG_VARIABLES[key]
 
+def setConfigVar(key, value):
+    global CONFIG_VARIABLES
+    CONFIG_VARIABLES[key] = value
+    saveConfig()
+
 
 def saveConfig():
     global CONFIG_VARIABLES
