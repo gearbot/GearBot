@@ -28,7 +28,9 @@ def getSortedVersionsArray(versions):
     return sorted(list(versions), key=cmp_to_key(compareVersions))
 
 def getLatest(versions):
-    return getSortedVersions(versions)[0]
+    result = getSortedVersions(versions)
+    return result[0] if len(result) > 0 else None
 
 def getLatestArray(versions):
-    return getSortedVersionsArray(versions)[0]
+    result = getSortedVersionsArray(versions)
+    return result[0] if len(result) > 0 else None

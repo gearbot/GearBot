@@ -31,13 +31,13 @@ class Latest(Command):
                 latest_bcc_v = VersionInfo.getLatestArray(mc_version['BCC'])
 
 
-                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry']}) | [Direct download]({latest_bc['downloads']['main']})"
+                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry'] if 'blog_entry' in latest_bc else 'https://www.mod-buildcraft.com'}) | [Direct download]({latest_bc['downloads']['main']})"
                 if "supported" in latest_bc.keys() and latest_bc["supported"] == False:
                     info = info + " | **THIS VERSION IS UNSUPPORTED**"
                 info = info + "\n\n\u200b"
                 if not latest_bcc_v is None:
                     latest_bcc = VersionChecker.BC_VERSION_LIST[latest_bcc_v]
-                    info += f"Buildcraft Compat {latest_bcc_v}\n[Blog]({latest_bcc['blog_entry']}) | [Direct download]({latest_bcc['downloads']['main']})"
+                    info += f"Buildcraft Compat {latest_bcc_v}\n[Blog]({latest_bcc['blog_entry'] if 'blog_entry' in latest_bcc else 'https://www.mod-buildcraft.com'}) | [Direct download]({latest_bcc['downloads']['main']})"
                     if "supported" in latest_bcc.keys() and latest_bcc["supported"] == False:
                         info = info + " | **THIS VERSION IS UNSUPPORTED**"
                     info = info + "\n\n\u200b"
