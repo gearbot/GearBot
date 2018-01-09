@@ -31,7 +31,7 @@ class Latest(Command):
                 latest_bcc_v = VersionInfo.getLatestArray(mc_version['BCC'])
 
 
-                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry'] if 'blog_entry' in latest_bc else 'https://www.mod-buildcraft.com'}) | [Direct download]({latest_bc['downloads']['main']})"
+                info = f"Buildcraft {latest_bc_v}\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraft/changelog/{latest_bc_v}.html) | [Blog]({latest_bc['blog_entry'] if 'blog_entry' in latest_bc else 'https://www.mod-buildcraft.com'}) | [Direct download]({latest_bc['downloads']['main']})"
                 if "supported" in latest_bc.keys() and latest_bc["supported"] == False:
                     info = info + " | **THIS VERSION IS UNSUPPORTED**"
                 info = info + "\n\n\u200b"
@@ -44,6 +44,8 @@ class Latest(Command):
                 embed.add_field(name=f"Latest BuildCraft releases for {v}:",
                                 value=info)
                 await client.send_message(channel, embed=embed)
+            else:
+                await client.send_message(channel, f"I'm sorry but there seem to be no releases for {v}, if they exist they are probably so old i can't make out their labels anymore")
 
         else:
             latest = VersionInfo.getLatest(VersionChecker.BC_VERSION_LIST)
@@ -63,7 +65,7 @@ class Latest(Command):
                 if "supported" in latest_bc.keys() and latest_bc["supported"] == False:
                     continue
 
-                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry']}) | [Direct download]({latest_bc['downloads']['main']})\n\n\u200b"
+                info = f"Buildcraft {latest_bc_v}\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraft/changelog/{latest_bc_v}.html) | [Blog]({latest_bc['blog_entry']}) | [Direct download]({latest_bc['downloads']['main']})\n\n\u200b"
                 if not latest_bcc_v is None:
                         latest_bcc = VersionChecker.BC_VERSION_LIST[latest_bcc_v]
                         info += f"Buildcraft Compat {latest_bcc_v}\n[Blog]({latest_bcc['blog_entry']}) | [Direct download]({latest_bcc['downloads']['main']})\n\n\u200b"
