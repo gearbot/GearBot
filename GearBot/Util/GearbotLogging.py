@@ -19,9 +19,9 @@ async def logToLogChannel(text):
         logging.error("Exception: {}".format(str(e)))
 
 
-async def logToModChannel(text):
+async def logToModChannel(text = None, embed=None):
     try:
-        await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, '{}'.format(text))
+        await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, text='{}'.format(text), embed=embed)
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
     except discord.InvalidArgument:

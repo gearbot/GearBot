@@ -1,26 +1,4 @@
-import json
-
 from distutils.version import LooseVersion
-
-versions:dict = dict()
-
-def initVersionInfo():
-    try:
-        with open('versions.json', 'r') as jsonfile:
-            global versions
-            versions = json.load(jsonfile)
-    except FileNotFoundError:
-        saveVersionInfo()
-        initVersionInfo()
-    except Exception as e:
-        print(e)
-        raise e
-
-def saveVersionInfo():
-    global versions
-    with open('versions.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(versions, indent=4, skipkeys=True, sort_keys=True)))
-
 def compareVersions(v1, v2):
     return LooseVersion(v1) > LooseVersion(v2)
 
@@ -43,8 +21,14 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-def getSortedVersions():
+def getSortedVersions(versions):
     return sorted(list(versions.keys()), key=cmp_to_key(compareVersions))
 
-def getLatest():
-    return versions[getSortedVersions()[0]]
+def getSortedVersionsArray(versions):
+    return sorted(list(versions), key=cmp_to_key(compareVersions))
+
+def getLatest(versions):
+    return getSortedVersions(versions)[0]
+
+def getLatestArray(versions):
+    return getSortedVersionsArray(versions)[0]

@@ -26,6 +26,7 @@ def onReady():
     Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MOD_LOG_CHANNEL", "0"))
     Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("BOT_LOG_CHANNEL", "0"))
     Variables.ANNOUNCEMENTS_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("ANNOUNCEMENTS_CHANNEL", "0"))
+    Variables.TESTING_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("TESTING_CHANNEL", "0"))
 
 
 def getConfigVar(key, default=None) :

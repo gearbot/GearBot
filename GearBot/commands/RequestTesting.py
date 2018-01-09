@@ -18,7 +18,7 @@ class RequestTesting(RoleCommand):
         role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
         await client.edit_role(server, role, mentionable=True)
         embed = discord.Embed(title="New things to test!", description=" ".join(params[0::]))
-        await client.send_message(Variables.ANNOUNCEMENTS_CHANNEL, f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>", embed=embed)
+        await client.send_message(Variables.TESTING_CHANNEL, f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>", embed=embed)
         await client.edit_role(server, role, mentionable=False)
 
     def onReady(self, client: discord.Client):

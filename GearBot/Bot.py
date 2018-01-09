@@ -10,7 +10,7 @@ import Variables
 from Util import configuration, spam, GearbotLogging
 from Util.Commands import COMMANDS
 from commands import CustomCommands
-from versions import VersionInfo
+from versions import VersionChecker
 
 dc_client:discord.Client = discord.Client()
 
@@ -25,7 +25,7 @@ async def on_ready():
         await CustomCommands.loadCommands()
         await GearbotLogging.logToLogChannel(f"Loaded {Variables.CUSTOM_COMMANDS.__len__()} custom commands")
 
-        VersionInfo.initVersionInfo()
+        VersionChecker.init(dc_client)
 
         # await GearbotLogging.logToLogChannel("Readying commands")
         for command in COMMANDS.values():

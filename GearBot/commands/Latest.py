@@ -4,7 +4,7 @@ import time
 import discord
 
 from commands.command import Command
-from versions import VersionInfo
+from versions import VersionInfo, VersionChecker
 
 
 class Latest(Command):
@@ -16,23 +16,65 @@ class Latest(Command):
 
     async def execute(self, client, channel, user, params):
 
+        if len(params) == 1:
+            v = params[0]
+            embed = discord.Embed(title=f"Buildcraft releases",
+                                  url="http://www.mod-buildcraft.com/",
+                                  colour=discord.Colour(0x54d5ff),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
 
-        latest = VersionInfo.versions[VersionInfo.getSortedVersions()[0]]
-        embed = discord.Embed(title=f"The latest version of BuildCraft is {latest['BC_VERSION']}", colour=discord.Colour(0x54d5ff),
-                              url=latest["BLOG_LINK"],
-                              description="Latest versions per MC version:",
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-        embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
-        embed.set_author(name="Buildcraft releases", url="http://www.mod-buildcraft.com/")
-        for v in VersionInfo.getSortedVersions()[:3]:
-            version = VersionInfo.versions[v]
-            info = f"Buildcraft {version['BC_VERSION']} ({version['BC_DESIGNATION']})\n[Blog]({version['BLOG_LINK']}) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraft/{version['BC_VERSION']}/buildcraft-{version['BC_VERSION']}.jar)"
-            if "BCC_VERSION" in version.keys():
-                    info += f"\n\nBuildcraft Compat {version['BCC_VERSION']}\n[Blog]({version['BCC_BLOG_LINK']}) | [Direct download](https://www.mod-buildcraft.com/releases/BuildCraftCompat/{version['BCC_VERSION']}/buildcraft-compat-{version['BCC_VERSION']}.jar)"
-            embed.add_field(name=v,
-                        value=info)
+            if v in VersionChecker.VERSIONS_PER_MC_VERSION:
+                mc_version = VersionChecker.VERSIONS_PER_MC_VERSION[v]
+                latest_bc_v = VersionInfo.getLatestArray(mc_version['BC'])
+                latest_bc = VersionChecker.BC_VERSION_LIST[latest_bc_v]
+                latest_bcc_v = VersionInfo.getLatestArray(mc_version['BCC'])
 
-        embed.add_field(name="Older versions",
-                        value="All other Buildcraft versions can be found in the [archives](https://www.mod-buildcraft.com/releases/)")
 
-        await client.send_message(channel, embed=embed)
+                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry']}) | [Direct download]({latest_bc['downloads']['main']})"
+                if "supported" in latest_bc.keys() and latest_bc["supported"] == False:
+                    info = info + " | **THIS VERSION IS UNSUPPORTED**"
+                info = info + "\n\n\u200b"
+                if not latest_bcc_v is None:
+                    latest_bcc = VersionChecker.BC_VERSION_LIST[latest_bcc_v]
+                    info += f"Buildcraft Compat {latest_bcc_v}\n[Blog]({latest_bcc['blog_entry']}) | [Direct download]({latest_bcc['downloads']['main']})"
+                    if "supported" in latest_bcc.keys() and latest_bcc["supported"] == False:
+                        info = info + " | **THIS VERSION IS UNSUPPORTED**"
+                    info = info + "\n\n\u200b"
+                embed.add_field(name=f"Latest BuildCraft releases for {v}:",
+                                value=info)
+                await client.send_message(channel, embed=embed)
+
+        else:
+            latest = VersionInfo.getLatest(VersionChecker.BC_VERSION_LIST)
+            embed = discord.Embed(title=f"The latest version of BuildCraft is {latest}",
+                                  colour=discord.Colour(0x54d5ff),
+                                  url=VersionChecker.BC_VERSION_LIST[latest]["blog_entry"],
+                                  description="Latest versions per MC version:",
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
+            embed.set_author(name="Buildcraft releases", url="http://www.mod-buildcraft.com/")
+            count = 0
+            for v in VersionInfo.getSortedVersions(VersionChecker.VERSIONS_PER_MC_VERSION):
+                mc_version = VersionChecker.VERSIONS_PER_MC_VERSION[v]
+                latest_bc_v = VersionInfo.getLatestArray(mc_version['BC'])
+                latest_bc = VersionChecker.BC_VERSION_LIST[latest_bc_v]
+                latest_bcc_v = VersionInfo.getLatestArray(mc_version['BCC'])
+                if "supported" in latest_bc.keys() and latest_bc["supported"] == False:
+                    continue
+
+                info = f"Buildcraft {latest_bc_v}\n[Blog]({latest_bc['blog_entry']}) | [Direct download]({latest_bc['downloads']['main']})\n\n\u200b"
+                if not latest_bcc_v is None:
+                        latest_bcc = VersionChecker.BC_VERSION_LIST[latest_bcc_v]
+                        info += f"Buildcraft Compat {latest_bcc_v}\n[Blog]({latest_bcc['blog_entry']}) | [Direct download]({latest_bcc['downloads']['main']})\n\n\u200b"
+                embed.add_field(name=v,
+                            value=info)
+                count = count + 1
+                if count == 3:
+                    break
+
+            embed.add_field(name="Older versions",
+                            value="All other Buildcraft versions can be found in the [archives](https://www.mod-buildcraft.com/releases/)")
+
+
+            await client.send_message(channel, embed=embed)

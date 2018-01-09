@@ -11,9 +11,8 @@ from commands.Roles import Roles
 from commands.Test import Test
 from commands.Tester import Tester
 from commands.command import Command
+from commands.info import Info
 from commands.ping import Ping
-from versions.AddCompatVersion import AddCompatVersion
-from versions.AddVersion import AddVersion
 
 
 class Help(Command):
@@ -69,7 +68,6 @@ COMMANDS = {
     "requesttesting": RequestTesting(),
     "clean": Clean(),
     "quote": Quote(),
-    "addversion": AddVersion(),
-    "addcompatversion": AddCompatVersion()
+    "info": Info()
     #"mute": Mute()
 }
