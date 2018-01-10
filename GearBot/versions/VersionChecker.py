@@ -57,7 +57,7 @@ async def runVersionChecker(client:discord.Client):
                                 newBClist[version] = info
                             except Exception as ex:
                                 logging.error(f"Failed to fetch info for BuildCraft {version}")
-                            await asyncio.sleep(0.1)
+                            await asyncio.sleep(0)
 
 
                 content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/BuildCraftCompat/versions.txt")
@@ -78,78 +78,89 @@ async def runVersionChecker(client:discord.Client):
                                 newBCClist[version] = info
                             except Exception as ex:
                                 logging.error(f"Failed to fetch info for BuildCraft Compat {version}")
-                            await asyncio.sleep(0.1)
+                            await asyncio.sleep(0)
 
 
 
                 content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/versions.txt")
                 versionlistBCT = content.decode("utf-8").split("\n")[:-1]
-                newBCT = len(versionlistBCT) - len(BCT_VERSION_LIST)
-                logging.info(f"found {len(versionlistBCT)} BuildCraft pre-releases, {newBCT} new")
-                if newBCT > 0:
-                    for version in versionlistBCT:
-                        if not version in BCT_VERSION_LIST.keys():
-                            logging.info(f"New Buildcraft Compat release detected: {version}")
-                            try:
-                                with urllib.request.urlopen(f"https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/{version}.json") as inforequest:
-                                    info = json.load(inforequest)
-                                    if not "mc_version" in info.keys():
-                                        # no info, set to dummy
-                                        info["mc_version"] = "Unknown"
-                                    if not "forge_version" in info.keys():
-                                        info["forge_version"] = "Unknown"
-                                BCT_VERSION_LIST[version] = info
-                                newBCTlist[version] = info
-                            except Exception as ex:
-                                logging.error(f"Failed to fetch info for BuildCraft Testing {version}")
-                            await asyncio.sleep(0.1)
+                logging.info(f"analizing BCT list for new versions")
+                newBCT = 0
 
-            sorted = processVersions(newBClist, newBCClist)
-            await asyncio.sleep(0.1)
-            if (ALLOWED_TO_ANNOUNCE):
-                if newBC + newBCC > 0:
-                    embed = discord.Embed(title=f"I found {newBC + newBCC} new releases!", color=0x66E2CE, timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                    embed.set_thumbnail(url="https://i.imgur.com/nYVf16P.png")
-                    blogpost = None
+                for version in versionlistBCT:
+                    if not version in BCT_VERSION_LIST.keys():
+                        newBCT = newBCT + 1
+                        logging.info(f"New Buildcraft Test version detected: {version}")
+                        try:
+                            with urllib.request.urlopen(
+                                    f"https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/{version}.json") as inforequest:
+                                info = json.load(inforequest)
+                                if not "mc_version" in info.keys():
+                                    # no info, set to dummy
+                                    info["mc_version"] = "Unknown"
+                                if not "forge_version" in info.keys():
+                                    info["forge_version"] = "Unknown"
+                            BCT_VERSION_LIST[version] = info
+                            newBCTlist[version] = info
+                        except Exception as ex:
+                            logging.error(f"Failed to fetch info for BuildCraft test version {version}")
+                        await asyncio.sleep(0)
+
+
+                sorted = processVersions(newBClist, newBCClist)
+                await asyncio.sleep(0)
+                if (ALLOWED_TO_ANNOUNCE):
+                    if newBC + newBCC > 0:
+                        embed = discord.Embed(title=f"I found {newBC + newBCC} new releases!", color=0x66E2CE, timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+                        embed.set_thumbnail(url="https://i.imgur.com/nYVf16P.png")
+                        blogpost = None
+                        for version, versions in sorted.items():
+                            infostring = ""
+                            for BCVersion in versions["BC"]:
+                                infostring = infostring + f"Buildcraft {BCVersion}\n"
+                                if blogpost is None and 'blog_entry' in newBClist[BCVersion].keys():
+                                    blogpost = newBClist[BCVersion]['blog_entry']
+                            for BCCVersion in versions["BCC"]:
+                                infostring = infostring + f"Buildcraft Compat {BCCVersion}\n"
+                                if blogpost is None and 'blog_entry' in newBCClist[BCCVersion].keys():
+                                    blogpost = newBCClist[BCCVersion]['blog_entry']
+                            embed.add_field(name=f"Minecraft {version}", value=infostring)
+                        if not blogpost is None:
+                            embed.add_field(name="More info", value=f"[Blog post]({blogpost})")
+                        await client.send_message(Variables.ANNOUNCEMENTS_CHANNEL, embed=embed)
+                        await asyncio.sleep(0)
+                    if (newBCT > 0):
+                        server = discord.utils.get(client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID"))
+                        role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
+                        await client.edit_role(server, role, mentionable=True)
+                        shouldMention = True
+                        for version, info in newBCTlist.items():
+                            embed = discord.Embed(title="I found a new pre-release!", color=0x865F32, timestamp=datetime.datetime.utcfromtimestamp(time.time()), description=f"Version: {version}\nMC version: {info['mc_version']}\n[Download]({info['downloads']['main']}) | [More info](https://www.mod-buildcraft.com/pages/tests.html)")
+                            embed.set_thumbnail(url="https://i.imgur.com/UcyDPBe.png")
+                            message = await client.send_message(Variables.TESTING_CHANNEL, f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>" if shouldMention else None, embed=embed)
+                            shouldMention = False
+                            info['messageID'] = message.id
+                            await client.pin_message(message)
+                            await asyncio.sleep(0)
+                        await client.edit_role(server, role, mentionable=False)
+                        await asyncio.sleep(0)
+                    for version, info in BCT_VERSION_LIST.items():
+                        if not version in versionlistBCT and 'messageID' in info.keys():
+                            await client.unpin_message(await client.get_message(Variables.TESTING_CHANNEL, info['messageID']))
+
+                if newBC + newBCC + newBCT > 0:
+                    embed = discord.Embed(title=f"Version check complete, {newBC + newBCC + newBCT} new releases detected", timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     for version, versions in sorted.items():
-                        infostring = ""
-                        for BCVersion in versions["BC"]:
-                            infostring = infostring + f"Buildcraft {BCVersion}\n"
-                            if blogpost is None and 'blog_entry' in newBClist[BCVersion].keys():
-                                blogpost = newBClist[BCVersion]['blog_entry']
-                        for BCCVersion in versions["BCC"]:
-                            infostring = infostring + f"Buildcraft Compat {BCCVersion}\n"
-                            if blogpost is None and 'blog_entry' in newBCClist[BCCVersion].keys():
-                                blogpost = newBCClist[BCCVersion]['blog_entry']
-                        embed.add_field(name=f"Minecraft {version}", value=infostring)
-                    if not blogpost is None:
-                        embed.add_field(name="More info", value=f"[Blog post]({blogpost})")
-                    await client.send_message(Variables.ANNOUNCEMENTS_CHANNEL, embed=embed)
-                    await asyncio.sleep(0.1)
-                for version, info in newBCTlist.items():
-                    server = discord.utils.get(client.servers, id=configuration.getConfigVar(
-                        "MAIN_SERVER_ID"))
-                    role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
-                    embed = discord.Embed(title="I found a new pre-release!", color=0x865F32, timestamp=datetime.datetime.utcfromtimestamp(time.time()), description=f"Version: {version}\nMC version: {info['mc_version']}\n[Download]({info['downloads']['main']}) | [More info](https://www.mod-buildcraft.com/pages/tests.html)")
-                    embed.set_thumbnail(url="https://i.imgur.com/UcyDPBe.png")
-                    await client.edit_role(server, role, mentionable=True)
-                    await client.send_message(Variables.TESTING_CHANNEL, f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>", embed=embed)
-                    await client.edit_role(server, role, mentionable=False)
-                    await asyncio.sleep(0.1)
-
-            if newBC + newBCC + newBCT > 0:
-                embed = discord.Embed(title=f"Version check complete, {newBC + newBCC + newBCT} new releases detected", timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                for version, versions in sorted.items():
-                    embed.add_field(name=version, value=f"BuildCraft relseases:\t\t\t\t\t{len(versions['BC'])}\nBuildCraft Compat releases:\t {len(versions['BCC'])}\t")
-                await client.send_message(Variables.BOT_LOG_CHANNEL, embed=embed)
-                await asyncio.sleep(0.1)
-            saveVersions()
-            ALLOWED_TO_ANNOUNCE = True
-            await asyncio.sleep(0.1)
-            VERSIONS_PER_MC_VERSION = processVersions(BC_VERSION_LIST, BCC_VERSION_LIST)
+                        embed.add_field(name=version, value=f"BuildCraft releases:\t\t\t\t\t{len(versions['BC'])}\nBuildCraft Compat releases:\t {len(versions['BCC'])}\t")
+                    await client.send_message(Variables.BOT_LOG_CHANNEL, embed=embed)
+                    await asyncio.sleep(0)
+                saveVersions()
+                ALLOWED_TO_ANNOUNCE = True
+                await asyncio.sleep(0)
+                VERSIONS_PER_MC_VERSION = processVersions(BC_VERSION_LIST, BCC_VERSION_LIST)
             await asyncio.sleep(600)
     except Exception as ex:
-        logging.error("Version check execution failed, bot restart required:"
+        logging.error("Version check execution failed!"
                       f"    Exception: {ex}")
         try:
             embed = discord.Embed(colour=discord.Colour(0xff0000),
@@ -176,7 +187,7 @@ def assembleVersionString(info):
 async def getFileContent(url):
     with urllib.request.urlopen(url) as request:
         content = request.read()
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     return content
 
 def loadVersions():
