@@ -13,11 +13,4 @@ TESTING_CHANNEL:discord.Channel = None
 PREFIX = None
 CUSTOM_COMMANDS = dict()
 
-#Minecraft
-MINECRAFT_RUNNING = False
-MINECRAFT_TERMINATED = False
-
-AWAITING_REPLY_FROM = None
-NEW_PRIMARY_VERSION = None
-
 GENERAL_CHANNEL:discord.Channel = None

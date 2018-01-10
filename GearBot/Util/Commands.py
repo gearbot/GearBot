@@ -8,6 +8,7 @@ from commands.OwnerCommands import Stop, Upgrade
 from commands.Quote import Quote
 from commands.RequestTesting import RequestTesting
 from commands.Roles import Roles
+from commands.SetInfo import SetInfo
 from commands.Test import Test
 from commands.Tester import Tester
 from commands.command import Command
@@ -68,6 +69,7 @@ COMMANDS = {
     "requesttesting": RequestTesting(),
     "clean": Clean(),
     "quote": Quote(),
-    "info": Info()
+    "info": Info(),
+    "setinfo": SetInfo()
     #"mute": Mute()
 }

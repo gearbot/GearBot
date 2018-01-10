@@ -54,49 +54,34 @@ async def on_message(message:discord.Message):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
         logging.debug(f"command '{cmd}' with arguments {args} issued")
-    elif message.author.id == Variables.AWAITING_REPLY_FROM:
-        if message.content.lower() == "yes":
-            print("setting new primary release")
-            await client.send_typing(Variables.GENERAL_CHANNEL)
-            await client.edit_channel(Variables.GENERAL_CHANNEL, topic=f"General discussions about Buildcraft. \nLatest version:{Variables.NEW_PRIMARY_VERSION['BC_VERSION']} \nFull changelog and download: {Variables.NEW_PRIMARY_VERSION['BLOG_LINK']}")
-            await client.send_message(message.channel, f"{Variables.NEW_PRIMARY_VERSION['BC_VERSION']} is now the primary release")
-            Variables.AWAITING_REPLY_FROM = None
-        elif message.content.lower() == "no":
-            print("not setting new primary release")
-            Variables.AWAITING_REPLY_FROM = None
-        else:
-            await dc_client.send_message(message.channel, "Sorry but i don't understand what you mean with that, a simple yes/no would be perfect")
-        return
-    else:
-        return
 
-    try:
-        if message.channel.is_private:
-            author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id)
-        else:
-            author = message.author
-        if cmd in COMMANDS.keys():
-            command = COMMANDS[cmd]
-            if command.canExecute(author):
-                await command.execute(dc_client, message.channel, author, args)
-                if (command.shouldDeleteTrigger):
-                    await dc_client.delete_message(message)
+        try:
+            if message.channel.is_private:
+                author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id)
             else:
-                await dc_client.send_message(message.channel, "You do not have permission to execute this command")
-        else:
-            if cmd in Variables.CUSTOM_COMMANDS.keys():
-                await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
-                return
-            logging.debug(f"command '{cmd}' not recognized")
-    except discord.Forbidden as e:
-        logging.info("Bot is not allowed to send messages")
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-    except discord.InvalidArgument as e:
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-        logging.info("Exception: Invalid message arguments")
-    except Exception as e:
-        await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-        traceback.print_exc()
+                author = message.author
+            if cmd in COMMANDS.keys():
+                command = COMMANDS[cmd]
+                if command.canExecute(author):
+                    await command.execute(dc_client, message.channel, author, args)
+                    if (command.shouldDeleteTrigger):
+                        await dc_client.delete_message(message)
+                else:
+                    await dc_client.send_message(message.channel, "You do not have permission to execute this command")
+            else:
+                if cmd in Variables.CUSTOM_COMMANDS.keys():
+                    await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
+                    return
+                logging.debug(f"command '{cmd}' not recognized")
+        except discord.Forbidden as e:
+            logging.info("Bot is not allowed to send messages")
+            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+        except discord.InvalidArgument as e:
+            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+            logging.info("Exception: Invalid message arguments")
+        except Exception as e:
+            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
+            traceback.print_exc()
 
 
 
