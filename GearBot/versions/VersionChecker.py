@@ -83,11 +83,13 @@ async def runVersionChecker(client:discord.Client):
                                 logging.error(f"Failed to fetch info for BuildCraft Compat {version}")
                             await asyncio.sleep(0)
 
-
-
-                content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/versions.txt")
-                versionlistBCT = content.decode("utf-8").split("\n")[:-1]
-                logging.info(f"analizing BCT list for new versions")
+                versionlistBCT = []
+                try:
+                    content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/versions.txt")
+                    versionlistBCT = content.decode("utf-8").split("\n")[:-1]
+                    logging.info(f"analizing BCT list for new versions")
+                except Exception as ex:
+                    logging.info("Failed to get the versionlist, there must not be any pre-releases atm")
                 newBCT = 0
 
                 for version in versionlistBCT:
@@ -127,6 +129,7 @@ async def runVersionChecker(client:discord.Client):
     except Exception as ex:
         logging.error("Version check execution failed!"
                       f"    Exception: {ex}")
+        logging.error(traceback.format_exc())
         try:
             embed = discord.Embed(colour=discord.Colour(0xff0000),
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))
