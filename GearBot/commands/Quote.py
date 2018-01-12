@@ -43,11 +43,13 @@ class Quote(Command):
                 embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
                 if len(message.attachments) == 1:
                     embed.set_image(url=message.attachments[0]["url"])
-                embed.set_footer(text=f"Quote requested by {user.name}")
+                embed.set_footer(text=f"Send in <#{message.channel.id} | Quote requested by {user.name} | ID: {message.id}")
                 await client.send_message(channel, embed=embed)
             for embed in message.embeds:
                 if 'timestamp' in embed.keys():
                     embed['timestamp'] = datetime.datetime.strptime(embed['timestamp'], "%Y-%m-%dT%H:%M:%S.%f+00:00")
-                await client.send_message(channel, embed=discord.Embed(**embed))
+                newEmbed = discord.Embed(**embed)
+                newEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                await client.send_message(channel, embed=newEmbed)
         else:
             await client.send_message(channel, "Unable to find that message")
