@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 
 from commands.command import Command
@@ -30,17 +32,22 @@ class Quote(Command):
         if not found:
             for ch in channel.server.channels:
                 try:
-                    message:discord.Message = await client.get_message(ch, params[0])
+                    message: discord.Message = await client.get_message(ch, params[0])
                     break
                 except Exception as e:
                     pass
-        if not message == False:
-            embed = discord.Embed(colour=discord.Colour(0xd5fff), description=message.content,
+        if not message == False :
+            if message.content is not None and message.content != '':
+                embed = discord.Embed(colour=discord.Colour(0xd5fff), description=message.content,
                                   timestamp=message.timestamp)
-            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-            if len(message.attachments) == 1:
-                embed.set_image(url=message.attachments[0]["url"])
-            embed.set_footer(text=f"Quote requested by {user.name}")
-            await client.send_message(channel, embed=embed)
+                embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                if len(message.attachments) == 1:
+                    embed.set_image(url=message.attachments[0]["url"])
+                embed.set_footer(text=f"Quote requested by {user.name}")
+                await client.send_message(channel, embed=embed)
+            for embed in message.embeds:
+                if 'timestamp' in embed.keys():
+                    embed['timestamp'] = datetime.datetime.strptime(embed['timestamp'], "%Y-%m-%dT%H:%M:%S.%f+00:00")
+                await client.send_message(channel, embed=discord.Embed(**embed))
         else:
             await client.send_message(channel, "Unable to find that message")
