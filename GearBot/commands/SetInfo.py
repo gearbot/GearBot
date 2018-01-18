@@ -47,8 +47,8 @@ def getInfo(type, target):
     if type == 'BCT':
         if target in VersionChecker.BCT_VERSION_LIST.keys():
             return VersionChecker.BCT_VERSION_LIST[target], Variables.TESTING_CHANNEL
-        if type == 'BCCT':
-            if target in VersionChecker.BCCT_VERSION_LIST.keys():
-                return VersionChecker.BCCT_VERSION_LIST[target], Variables.TESTING_CHANNEL
+    if type == 'BCCT':
+        if target in VersionChecker.BCCT_VERSION_LIST.keys():
+            return VersionChecker.BCCT_VERSION_LIST[target], Variables.TESTING_CHANNEL
     return None, None
 
