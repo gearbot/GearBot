@@ -9,7 +9,7 @@ import urllib.request
 import discord
 
 import Variables
-from Util import configuration
+from Util import configuration, GearbotLogging
 from versions import VersionInfo
 
 BC_VERSION_LIST = {}
@@ -21,173 +21,9 @@ ALLOWED_TO_ANNOUNCE = True
 VERSIONS_PER_MC_VERSION = {}
 
 
-async def runVersionChecker(client:discord.Client):
-    try:
-        global LAST_UPDATE, ALLOWED_TO_ANNOUNCE, VERSIONS_PER_MC_VERSION
-        while not client.is_closed:
-            newBC = 0
-            newBCC = 0
-            newBCT = 0
-            newBCCT = 0
-            newBClist = {}
-            newBCClist = {}
-            newBCTlist = {}
-            newBCCTlist = {}
-            logging.info("Version check initiated")
-            timestamp = int(await getFileContent("https://www.mod-buildcraft.com/build_info_full/last_change.txt"))
-            prevChange = LAST_UPDATE
-            logging.info(timestamp)
-            if timestamp > prevChange:
-                logging.info("Timestamp updated, on to finding the new things")
-                LAST_UPDATE = timestamp
-                logging.info("Fetching BuildCraft releases")
-                content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/BuildCraft/versions.txt")
-                versionlistBC = content.decode("utf-8").split("\n")[:-1] #strip last empty entry
-                newBC = len(versionlistBC) - len(BC_VERSION_LIST)
-                logging.info(f"found {len(versionlistBC)} BuildCraft releases, {newBC} new")
-                if newBC > 0:
-                    for version in versionlistBC:
-                        if not version in BC_VERSION_LIST.keys():
-                            logging.info(f"New BuildCraft release detected: {version}")
-                            try:
-                                with urllib.request.urlopen(f"https://www.mod-buildcraft.com/build_info_full/BuildCraft/{version}.json") as inforequest:
-                                    info = json.load(inforequest)
-                                    if not "mc_version" in info.keys():
-                                        # no info, set to dummy
-                                        info["mc_version"] = "Unknown"
-                                    if not "forge_version" in info.keys():
-                                        info["forge_version"] = "Unknown"
-                                BC_VERSION_LIST[version] = info
-                                newBClist[version] = info
-                            except Exception as ex:
-                                logging.error(f"Failed to fetch info for BuildCraft {version}")
-                            await asyncio.sleep(0)
-
-
-                content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/BuildCraftCompat/versions.txt")
-                versionlistBCC = content.decode("utf-8").split("\n")[:-1]
-                newBCC = len(versionlistBCC) - len(BCC_VERSION_LIST)
-                logging.info(f"found {len(versionlistBCC)} BuildCraft Compat releases, {newBCC} new")
-                if newBCC > 0:
-                    for version in versionlistBCC:
-                        if not version in BCC_VERSION_LIST.keys():
-                            logging.info(f"New Buildcraft Compat release detected: {version}")
-                            try:
-                                with urllib.request.urlopen(f"https://www.mod-buildcraft.com/build_info_full/BuildCraftCompat/{version}.json") as inforequest:
-                                    info = json.load(inforequest)
-                                    if not "mc_version" in info.keys():
-                                        # no info, set to dummy
-                                        info["mc_version"] = "Unknown"
-                                    if not "forge_version" in info.keys():
-                                        info["forge_version"] = "Unknown"
-                                BCC_VERSION_LIST[version] = info
-                                newBCClist[version] = info
-                            except Exception as ex:
-                                logging.error(f"Failed to fetch info for BuildCraft Compat {version}")
-                            await asyncio.sleep(0)
-
-                versionlistBCT = []
-                try:
-                    content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/versions.txt")
-                    versionlistBCT = content.decode("utf-8").split("\n")[:-1]
-                    logging.info(f"analizing BCT list for new versions")
-                except Exception as ex:
-                    logging.info("Failed to get the versionlist, there must not be any pre-releases atm")
-                newBCT = 0
-
-                for version in versionlistBCT:
-                    if not version in BCT_VERSION_LIST.keys():
-                        newBCT = newBCT + 1
-                        logging.info(f"New Buildcraft Test version detected: {version}")
-                        try:
-                            with urllib.request.urlopen(
-                                    f"https://www.mod-buildcraft.com/build_info_full/testing/BuildCraft/{version}.json") as inforequest:
-                                info = json.load(inforequest)
-                                if not "mc_version" in info.keys():
-                                    # no info, set to dummy
-                                    info["mc_version"] = "Unknown"
-                                if not "forge_version" in info.keys():
-                                    info["forge_version"] = "Unknown"
-                            BCT_VERSION_LIST[version] = info
-                            newBCTlist[version] = info
-                        except Exception as ex:
-                            logging.error(f"Failed to fetch info for BuildCraft test version {version}")
-                        await asyncio.sleep(0)
-
-                try:
-                    content = await getFileContent("https://www.mod-buildcraft.com/build_info_full/testing/BuildCraftCompat/versions.txt")
-                    versionlistBCCT = content.decode("utf-8").split("\n")[:-1]
-                    logging.info(f"analizing BCCT list for new versions")
-                except Exception as ex:
-                    logging.info("Failed to get the versionlist, there must not be any pre-releases atm")
-                newBCCT = 0
-
-                for version in versionlistBCCT:
-                    if not version in BCCT_VERSION_LIST.keys():
-                        newBCCT = newBCCT + 1
-                        logging.info(f"New BuildCraft Compat Test version detected: {version}")
-                        try:
-                            with urllib.request.urlopen(
-                                    f"https://www.mod-buildcraft.com/build_info_full/testing/BuildCraftCompat/{version}.json") as inforequest:
-                                info = json.load(inforequest)
-                                if not "mc_version" in info.keys():
-                                    # no info, set to dummy
-                                    info["mc_version"] = "Unknown"
-                                if not "forge_version" in info.keys():
-                                    info["forge_version"] = "Unknown"
-                            BCCT_VERSION_LIST[version] = info
-                            newBCCTlist[version] = info
-                        except Exception as ex:
-                            logging.error(f"Failed to fetch info for BuildCraft Compat test version {version}")
-                        await asyncio.sleep(0)
-
-
-                sorted = processVersions(newBClist, newBCClist)
-                await asyncio.sleep(0)
-                if ALLOWED_TO_ANNOUNCE:
-                    await announceNewVersions(sorted, newBClist, newBCClist, client)
-
-                    await handleNewTestReleases(newBCT, client, newBCTlist, versionlistBCT, "BuildCraft")
-                    await handleNewTestReleases(newBCCT, client, newBCCTlist, versionlistBCCT, "BuildCraft Compat")
-
-                await logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client)
-
-                saveVersions()
-                ALLOWED_TO_ANNOUNCE = True
-                await asyncio.sleep(0)
-                VERSIONS_PER_MC_VERSION = processVersions(BC_VERSION_LIST, BCC_VERSION_LIST)
-            await asyncio.sleep(600)
-    except Exception as ex:
-        logging.error("Version check execution failed!"
-                      f"    Exception: {ex}")
-        logging.error(traceback.format_exc())
-        try:
-            embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-            embed.set_author(name="Version check execution failed!")
-
-            embed.add_field(name="Exception", value=ex)
-            embed.add_field(name="Stacktrace", value=traceback.format_exc())
-
-            await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, embed=embed)
-        except Exception as ex:
-            logging.error("Failed to log exception to discord")
-
-def assembleVersionString(info):
-    infostring = f"Minecraft version:\t{info['mc_version']}\n"
-    if "forge_version" in info.keys():
-        infostring = infostring + f"Forge version:\t{info['forge_version']}\n"
-    if "blog_entry" in info.keys():
-        infostring = infostring + f"[Blog]({info['blog_entry']}) | "
-    infostring = infostring + f"[Direct download]({info['downloads']['main']})\n\u200b"
-    return infostring
-
-async def getFileContent(url):
-    with urllib.request.urlopen(url) as request:
-        content = request.read()
-    await asyncio.sleep(0)
-    return content
+def init(client):
+    loadVersions()
+    client.loop.create_task(runVersionChecker(client))
 
 def loadVersions():
     global BC_VERSION_LIST, BCC_VERSION_LIST, BCT_VERSION_LIST, ALLOWED_TO_ANNOUNCE, LAST_UPDATE, VERSIONS_PER_MC_VERSION, BCCT_VERSION_LIST
@@ -208,6 +44,125 @@ def loadVersions():
         print(e)
         raise e
 
+
+async def runVersionChecker(client:discord.Client):
+    try:
+        global LAST_UPDATE, ALLOWED_TO_ANNOUNCE, VERSIONS_PER_MC_VERSION
+        while not client.is_closed:
+            logging.info("Version check initiated")
+            timestamp = int(await getFileContent("https://www.mod-buildcraft.com/build_info_full/last_change.txt"))
+            prevChange = LAST_UPDATE
+            if timestamp > prevChange:
+                logging.info("Timestamp updated, on to finding the new things")
+                LAST_UPDATE = timestamp
+                logging.info("Fetching BuildCraft releases")
+
+                newBClist, removed = await getVersionList("BuildCraft", BC_VERSION_LIST)
+                newBCClist, removed = await getVersionList("BuildCraftCompat", BCC_VERSION_LIST)
+                newBCTlist, removedBCT = await getVersionList("testing/BuildCraft", BCT_VERSION_LIST)
+                newBCCTlist, removedBCCT = await getVersionList("testing/BuildCraftCompat", BCCT_VERSION_LIST)
+
+                sorted = processVersions(newBClist, newBCClist)
+                await asyncio.sleep(0)
+
+                if ALLOWED_TO_ANNOUNCE:
+                    await announceNewVersions(sorted, newBClist, newBCClist, client)
+
+                    await handleNewTestReleases(newBCTlist, removedBCT, "BuildCraft", client)
+                    await handleNewTestReleases(newBCCTlist, removedBCCT, "BuildCraft Compat", client)
+
+                await logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client)
+
+                saveVersions()
+                ALLOWED_TO_ANNOUNCE = True
+                await asyncio.sleep(0)
+                VERSIONS_PER_MC_VERSION = processVersions(BC_VERSION_LIST, BCC_VERSION_LIST)
+            await asyncio.sleep(600)
+    except Exception as ex:
+        logging.error("Version check execution failed!"
+                      f"    Exception: {ex}")
+        logging.error(traceback.format_exc())
+        try:
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+            embed.set_author(name="Version check execution failed!")
+
+            embed.add_field(name="Exception", value=str(ex))
+            embed.add_field(name="Stacktrace", value=traceback.format_exc())
+
+            await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, embed=embed)
+        except Exception as ex:
+            logging.error("Failed to log exception to discord")
+
+async def getVersionList(link, list):
+    added = {}
+    removed = {}
+    errorstring = ""
+    try:
+        content = await getFileContent(f"https://www.mod-buildcraft.com/build_info_full/{link}/versions.txt")
+        versionlist = content.decode("utf-8").split("\n")[:-1]
+        for v in versionlist:
+            if not v in list.keys():
+                try:
+                    with urllib.request.urlopen(f"https://www.mod-buildcraft.com/build_info_full/{link}/{v}.json") as inforequest:
+                        info = json.load(inforequest)
+                        if not "mc_version" in info.keys():
+                            # no info, set to dummy
+                            info["mc_version"] = "Unknown"
+                        if not "forge_version" in info.keys():
+                            info["forge_version"] = "Unknown"
+                        list[v] = info
+                        added[v] = info
+                        logging.info(f"New {link} release: {v}")
+                except Exception as ex:
+                    errorstring = f"{errorstring}Failed to get info for {link} release {v}\n"
+            await asyncio.sleep(0)
+        for v in list.keys():
+            if not v in versionlist:
+                if link.startswith("testing"):
+                    removed[v] = list[v]
+                    logging.info(f"{link} release removed: {v}")
+                else:
+                    errorstring = f"{errorstring}ERROR: {link} {v} release went missing!\n"
+        for v in removed.keys():
+            del list[v]
+
+    except Exception as ex:
+        if link.startswith("testing"):
+            logging.info(f"Seems there are no more {link} versions, clearing")
+            for v in list.keys():
+                removed[v] = list[v]
+            for v in removed.keys():
+                del list[v]
+        else:
+            logging.error(f"Failed to fetch info for {link}")
+            raise ex
+    if len(errorstring) > 0:
+        logging.error(errorstring)
+        GearbotLogging.logToLogChannel(embed=discord.Embed(colour=discord.Colour(0xff0000),
+                                                           timestamp=datetime.datetime.utcfromtimestamp(time.time()),
+                                                           title="Versioncheck for {link} failure!",
+                                                           description=errorstring))
+        return {}, {}
+    await asyncio.sleep(0)
+    return added, removed
+
+def assembleVersionString(info):
+    infostring = f"Minecraft version:\t{info['mc_version']}\n"
+    if "forge_version" in info.keys():
+        infostring = infostring + f"Forge version:\t{info['forge_version']}\n"
+    if "blog_entry" in info.keys():
+        infostring = infostring + f"[Blog]({info['blog_entry']}) | "
+    infostring = infostring + f"[Direct download]({info['downloads']['main']})\n\u200b"
+    return infostring
+
+async def getFileContent(url):
+    with urllib.request.urlopen(url) as request:
+        content = request.read()
+    await asyncio.sleep(0)
+    return content
+
 def saveVersions():
     with open('versioninfo.json', 'w') as jsonfile:
         jsonfile.write((json.dumps({"BC_VERSION_LIST": BC_VERSION_LIST,
@@ -216,11 +171,6 @@ def saveVersions():
                                     "BCCT_VERSION_LIST": BCCT_VERSION_LIST,
                                     "LAST_UPDATE": LAST_UPDATE
                                     }, indent=4, skipkeys=True, sort_keys=True)))
-
-
-def init(client):
-    loadVersions()
-    client.loop.create_task(runVersionChecker(client))
 
 def processVersions(BC, BCC):
     sorted = {}
@@ -272,13 +222,13 @@ async def announceNewVersions(sorted, newBClist, newBCClist, client):
     await client.edit_channel(Variables.GENERAL_CHANNEL,
                               topic=f"General discussions about BuildCraft. \nLatest version: {latest} \nFull changelog and download: {BC_VERSION_LIST[latest]['blog_entry']}")
 
-async def handleNewTestReleases(newBCT, client, newBCTlist, versionlistBCT, name):
-    if newBCT > 0:
+async def handleNewTestReleases(new, removed, name, client):
+    if len(new) > 0:
         server = discord.utils.get(client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID"))
         role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
         await client.edit_role(server, role, mentionable=True)
         shouldMention = False
-        for version, info in newBCTlist.items():
+        for version, info in new.items():
             embed = discord.Embed(title=f"I found a new {name} pre-release!", color=0x865F32,
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                   description=f"Version: {version}\nMC version: {info['mc_version']}\n[Download]({info['downloads']['main']}) | [More info](https://www.mod-buildcraft.com/pages/tests.html)")
@@ -292,8 +242,8 @@ async def handleNewTestReleases(newBCT, client, newBCTlist, versionlistBCT, name
             await asyncio.sleep(0)
         await client.edit_role(server, role, mentionable=False)
         await asyncio.sleep(0)
-    for version, info in BCT_VERSION_LIST.items():
-        if not version in versionlistBCT and 'messageID' in info.keys():
+    for version, info in removed.items():
+        if 'messageID' in info.keys():
             await client.unpin_message(await client.get_message(Variables.TESTING_CHANNEL, info['messageID']))
 
 

@@ -8,9 +8,9 @@ import discord
 import Variables
 
 
-async def logToLogChannel(text):
+async def logToLogChannel(text = None, embed = None):
     try:
-        await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, '{}'.format(text))
+        await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, text, embed=embed)
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
     except discord.InvalidArgument:
