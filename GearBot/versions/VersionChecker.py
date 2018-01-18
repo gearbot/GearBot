@@ -68,8 +68,9 @@ async def runVersionChecker(client:discord.Client):
                 if ALLOWED_TO_ANNOUNCE:
                     await announceNewVersions(sorted, newBClist, newBCClist, client)
 
-                    await handleNewTestReleases(newBCTlist, removedBCT, "BuildCraft", client)
-                    await handleNewTestReleases(newBCCTlist, removedBCCT, "BuildCraft Compat", client)
+                    shouldMention = True
+                    shouldMention = await handleNewTestReleases(newBCTlist, removedBCT, "BuildCraft", client, shouldMention)
+                    await handleNewTestReleases(newBCCTlist, removedBCCT, "BuildCraft Compat", client, shouldMention)
 
                 await logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client)
 
@@ -222,12 +223,11 @@ async def announceNewVersions(sorted, newBClist, newBCClist, client):
     await client.edit_channel(Variables.GENERAL_CHANNEL,
                               topic=f"General discussions about BuildCraft. \nLatest version: {latest} \nFull changelog and download: {BC_VERSION_LIST[latest]['blog_entry']}")
 
-async def handleNewTestReleases(new, removed, name, client):
+async def handleNewTestReleases(new, removed, name, client, shouldMention):
     if len(new) > 0:
         server = discord.utils.get(client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID"))
         role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
         await client.edit_role(server, role, mentionable=True)
-        shouldMention = False
         for version, info in new.items():
             embed = discord.Embed(title=f"I found a new {name} pre-release!", color=0x865F32,
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()),
@@ -245,6 +245,7 @@ async def handleNewTestReleases(new, removed, name, client):
     for version, info in removed.items():
         if 'messageID' in info.keys():
             await client.unpin_message(await client.get_message(Variables.TESTING_CHANNEL, info['messageID']))
+    return shouldMention
 
 
 async def logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client):

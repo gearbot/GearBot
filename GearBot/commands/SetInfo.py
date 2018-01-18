@@ -12,7 +12,7 @@ class SetInfo(RoleCommand):
     def __init__(self) -> None:
         super().__init__()
         self.extraHelp["info"] = "Allows setting a message on an announcement of a (pre-)release"
-        self.extraHelp["params"] = "Type: the type of release (BC, BCC or BCT)\nversion: The version to set the message for\nMessage: the rest of the command string will be used as message to set"
+        self.extraHelp["params"] = "Type: the type of release (BC, BCC, BCT or BCCT)\nversion: The version to set the message for\nMessage: the rest of the command string will be used as message to set"
 
     async def execute(self, client: discord.Client, channel: discord.Channel, user: discord.user.User, params) -> None:
         if len(params) < 3:
@@ -47,5 +47,8 @@ def getInfo(type, target):
     if type == 'BCT':
         if target in VersionChecker.BCT_VERSION_LIST.keys():
             return VersionChecker.BCT_VERSION_LIST[target], Variables.TESTING_CHANNEL
+        if type == 'BCCT':
+            if target in VersionChecker.BCCT_VERSION_LIST.keys():
+                return VersionChecker.BCCT_VERSION_LIST[target], Variables.TESTING_CHANNEL
     return None, None
 
