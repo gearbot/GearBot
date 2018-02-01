@@ -10,6 +10,7 @@ import Variables
 
 async def logToLogChannel(text = None, embed = None):
     try:
+        logging.info(text)
         await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, text, embed=embed)
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
@@ -21,7 +22,30 @@ async def logToLogChannel(text = None, embed = None):
 
 async def logToModChannel(text = None, embed=None):
     try:
-        await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, text='{}'.format(text), embed=embed)
+        logging.info(text)
+        await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, '{}'.format(text), embed=embed)
+    except discord.Forbidden:
+        logging.error("Exception: Bot is not allowed to send messages in logging channel")
+    except discord.InvalidArgument:
+        logging.error("Exception: Invalid message arguments")
+    except Exception as e:
+        logging.error("Exception: {}".format(str(e)))
+
+async def logToMinorChannel(text = None, embed=None):
+    try:
+        logging.info(text)
+        await Variables.DISCORD_CLIENT.send_message(Variables.MINOR_LOG_CHANNEL, '{}'.format(text), embed=embed)
+    except discord.Forbidden:
+        logging.error("Exception: Bot is not allowed to send messages in logging channel")
+    except discord.InvalidArgument:
+        logging.error("Exception: Invalid message arguments")
+    except Exception as e:
+        logging.error("Exception: {}".format(str(e)))
+
+async def logToJoinChannel(text = None, embed=None):
+    try:
+        logging.info(text)
+        await Variables.DISCORD_CLIENT.send_message(Variables.JOIN_LOG_CHANNEL, '{}'.format(text), embed=embed)
     except discord.Forbidden:
         logging.error("Exception: Bot is not allowed to send messages in logging channel")
     except discord.InvalidArgument:

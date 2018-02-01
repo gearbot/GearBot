@@ -1,4 +1,5 @@
 import json
+import logging
 
 import discord
 
@@ -37,6 +38,7 @@ class RemoveCustomCommand(RoleCommand):
 
 
 async def loadCommands():
+    logging.info("Loading custom commands")
     try:
         with open('commands.json', 'r') as jsonfile:
             Variables.CUSTOM_COMMANDS = json.load(jsonfile)

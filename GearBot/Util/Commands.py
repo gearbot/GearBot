@@ -4,6 +4,7 @@ import Variables
 from commands.Clean import Clean
 from commands.CustomCommands import AddCustomCommand, RemoveCustomCommand
 from commands.Latest import Latest
+from commands.Mute import Mute
 from commands.OwnerCommands import Stop, Upgrade
 from commands.Quote import Quote
 from commands.RequestTesting import RequestTesting
@@ -70,6 +71,6 @@ COMMANDS = {
     "clean": Clean(),
     "quote": Quote(),
     "info": Info(),
-    "setinfo": SetInfo()
-    #"mute": Mute()
+    "setinfo": SetInfo(),
+    "mute": Mute()
 }

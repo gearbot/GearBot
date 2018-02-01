@@ -21,6 +21,6 @@ class RequestTesting(RoleCommand):
         await client.send_message(Variables.TESTING_CHANNEL, f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>", embed=embed)
         await client.edit_role(server, role, mentionable=False)
 
-    def onReady(self, client: discord.Client):
+    async def onReady(self, client: discord.Client):
         self.role = configuration.getConfigVar("DEV_ROLE_ID")
 

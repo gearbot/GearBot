@@ -28,6 +28,8 @@ def onReady():
     Variables.ANNOUNCEMENTS_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("ANNOUNCEMENTS_CHANNEL", "0"))
     Variables.TESTING_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("TESTING_CHANNEL", "0"))
     Variables.GENERAL_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("GENERAL_CHANNEL", "0"))
+    Variables.MINOR_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MINOR_LOG_CHANNEL", "0"))
+    Variables.JOIN_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("JOIN_LOG_CHANNEL", "0"))
 
 
 def getConfigVar(key, default=None) :

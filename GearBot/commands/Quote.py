@@ -43,7 +43,7 @@ class Quote(Command):
                 embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
                 if len(message.attachments) == 1:
                     embed.set_image(url=message.attachments[0]["url"])
-                embed.set_footer(text=f"Send in <#{message.channel.id}> | Quote requested by {user.name} | ID: {message.id}")
+                embed.set_footer(text=f"Send in #{message.channel.name} | Quote requested by {user.name} | ID: {message.id}")
                 await client.send_message(channel, embed=embed)
             for embed in message.embeds:
                 if 'timestamp' in embed.keys():

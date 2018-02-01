@@ -33,7 +33,7 @@ class SetInfo(RoleCommand):
         await client.edit_message(message, newMessage)
         await client.send_message(channel, "Info updated!")
 
-    def onReady(self, client: discord.Client):
+    async def onReady(self, client: discord.Client):
         self.role = configuration.getConfigVar("DEV_ROLE_ID")
 
 

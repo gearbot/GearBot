@@ -28,5 +28,5 @@ class Command:
         await client.send_message(channel, embed=embed)
 
 
-    def onReady(self, client:discord.Client):
+    async def onReady(self, client:discord.Client):
         pass
