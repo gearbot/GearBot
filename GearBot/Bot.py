@@ -22,10 +22,11 @@ MESSAGE_CACHE = dict()
 @dc_client.event
 async def on_ready():
     if not Variables.HAS_STARTED:
-        configuration.onReady()
-        await GearbotLogging.logToLogChannel(f"Gearbot startup sequence initialized, spinning up the gears")
+
         global dc_client
         Variables.DISCORD_CLIENT = dc_client
+        configuration.onReady()
+        await GearbotLogging.logToLogChannel(f"Gearbot startup sequence initialized, spinning up the gears")
         Variables.APP_INFO = await dc_client.application_info()
 
         await CustomCommands.loadCommands()
