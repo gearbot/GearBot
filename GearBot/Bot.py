@@ -26,7 +26,7 @@ async def on_ready():
         global dc_client
         Variables.DISCORD_CLIENT = dc_client
         configuration.onReady()
-        await GearbotLogging.logToLogChannel(f"Gearbot startup sequence initialized, spinning up the gears")
+        await GearbotLogging.logToLogChannel(f"<:woodGear:344163118089240596> Gearbot startup sequence initialized, spinning up the gears <:woodGear:344163118089240596>")
         Variables.APP_INFO = await dc_client.application_info()
 
         await CustomCommands.loadCommands()
@@ -51,7 +51,7 @@ async def on_ready():
         if (Variables.DEBUG_MODE):
             await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
         else:
-            await GearbotLogging.logToLogChannel("Gearbot is now online")
+            await GearbotLogging.logToLogChannel("<:diamondGear:344163228101640192> Gearbot is now online <:diamondGear:344163228101640192>")
 
 
         Variables.HAS_STARTED = True
@@ -63,17 +63,18 @@ async def on_channel_create(channel:discord.Channel):
     MESSAGE_CACHE[channel.id] = deque(maxlen=500)
 
 @dc_client.event
-async def on_member_join(member):
-    await GearbotLogging.logToJoinChannel(f"{member.name}#{member.discriminator} (`{member.id}`) has joined, account created at {member.created_at}")
-    if member.id in Variables.MUTED_USERS and time.time() < Variables.MUTED_USERS[member.id]:
-        role = discord.utils.get(member.server.roles, id=configuration.getConfigVar("MUTE_ROLE_ID"))
-        await dc_client.add_roles(member, role)
-        await GearbotLogging.logToModChannel(f"{member.name}#{member.discriminator} has rejoined the server before his mute time was up and has been re-muted")
-        await dc_client.send_message(member, f"You rejoined the server before your mute was over so the role has been re-applied and moderators have been notified, nice try and enjoy the rest of your mute!")
+async def on_member_join(member:discord.Member):
+    if member.server.id == configuration.getConfigVar("MAIN_SERVER_ID"):
+        await GearbotLogging.logToJoinChannel(f":inbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has joined, account created at {member.created_at}")
+        if member.id in Variables.MUTED_USERS and time.time() < Variables.MUTED_USERS[member.id]:
+            role = discord.utils.get(member.server.roles, id=configuration.getConfigVar("MUTE_ROLE_ID"))
+            await dc_client.add_roles(member, role)
+            await GearbotLogging.logToModChannel(f":zipper_mouth: {member.name}#{member.discriminator} has rejoined the server before his mute time was up and has been re-muted")
+            await dc_client.send_message(member, f"<:ironGear:344163170664841216> You rejoined the server before your mute was over so the role has been re-applied and moderators have been notified, nice try and enjoy the rest of your mute! <:ironGear:344163170664841216>")
 
 @dc_client.event
 async def on_member_remove(member):
-    await GearbotLogging.logToJoinChannel(f"{member.name}#{member.discriminator} (`{member.id}`) has left the server")
+    await GearbotLogging.logToJoinChannel(f":outbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has left the server")
 
 
 
@@ -122,7 +123,8 @@ async def on_message(message:discord.Message):
         return
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
-    MESSAGE_CACHE[message.channel.id].append(message)
+    if message.channel.id in MESSAGE_CACHE.keys():
+        MESSAGE_CACHE[message.channel.id].append(message)
     if message.content.startswith(Variables.PREFIX):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
