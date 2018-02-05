@@ -31,7 +31,7 @@ class Upgrade(OwnerCommand):
         self.extraHelp["info"] = "Upgrade to the next tier"
 
     async def execute(self, client: discord.Client, channel: discord.Channel, user: discord.user.User, params) -> None:
-        await client.send_message(channel, "I'll be right back with new gears!")
+        await client.send_message(channel, "<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
         await GearbotLogging.logToLogChannel(f"Upgrade initiated by {user.name}")
         file = open("upgradeRequest", "w")
         file.write("upgrade requested")

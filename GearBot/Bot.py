@@ -46,7 +46,10 @@ async def on_ready():
                 MESSAGE_CACHE[channel.id] = deque(maxlen=500)
                 async for log in dc_client.logs_from(channel, limit=500):
                     if not log.author.bot or log.content is None or log.content == '':
-                        MESSAGE_CACHE[channel.id].append(log)
+                        MESSAGE_CACHE[channel.id].append({
+                            "id": log.id,
+                            "content": log.content
+                             })
 
         if (Variables.DEBUG_MODE):
             await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
@@ -88,15 +91,15 @@ async def on_socket_raw_receive(thing):
             old = None
             after = None
             for message in MESSAGE_CACHE[info['d']["channel_id"]]:
-                if message.id == info['d']["id"]:
-                    after = await dc_client.get_message(dc_client.get_channel(info['d']["channel_id"]), info['d']["id"])
+                if message["id"] == info['d']["id"] and message["content"] != info['d']['content']:
                     old = message
+                    after = await dc_client.get_message(dc_client.get_channel(info['d']["channel_id"]), info['d']["id"])
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    embed.add_field(name="Before", value=message.content)
-                    embed.add_field(name="After", value=after.content)
+                    embed.set_author(name=after.author.name, icon_url=after.author.avatar_url)
+                    embed.add_field(name="Before", value=message["content"], inline=False)
+                    embed.add_field(name="After", value=info['d']['content'], inline=False)
                     await GearbotLogging.logToMinorChannel(
-                        f":pencil: Message by {message.author.name}#{message.author.discriminator} has been edited:",
+                        f":pencil: Message by {after.author.name}#{after.author.discriminator} has been edited:",
                         embed=embed)
                     break
             if not old is None:
@@ -124,7 +127,10 @@ async def on_message(message:discord.Message):
     elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
         await spam.check_for_spam(dc_client, message)
     if message.channel.id in MESSAGE_CACHE.keys():
-        MESSAGE_CACHE[message.channel.id].append(message)
+        MESSAGE_CACHE[message.channel.id].append({
+            "id": message.id,
+            "content": message.content
+        })
     if message.content.startswith(Variables.PREFIX):
         cmd, *args = message.content[1:].split()
         cmd = cmd.lower()
@@ -142,7 +148,7 @@ async def on_message(message:discord.Message):
                     if (command.shouldDeleteTrigger):
                         await dc_client.delete_message(message)
                 else:
-                    await dc_client.send_message(message.channel, "You do not have permission to execute this command")
+                    await dc_client.send_message(message.channel, ":lock: You do not have permission to execute this command :lock: ")
             else:
                 if cmd in Variables.CUSTOM_COMMANDS.keys():
                     await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
