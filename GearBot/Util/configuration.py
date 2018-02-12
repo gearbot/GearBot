@@ -3,14 +3,14 @@ import logging
 
 import Variables
 
-CONFIG_VARIABLES = dict()
+GLOBAL_CONFIG = dict()
 
 
-def loadconfig():
-    global CONFIG_VARIABLES
+def loadGlobalConfig():
+    global GLOBAL_CONFIG
     try:
-        with open('config.json', 'r') as jsonfile:
-            CONFIG_VARIABLES = json.load(jsonfile)
+        with open('config/config.json', 'r') as jsonfile:
+            GLOBAL_CONFIG = json.load(jsonfile)
     except FileNotFoundError:
         logging.error("Unable to load config, running with defaults")
     except Exception as e:
@@ -22,7 +22,7 @@ def loadconfig():
 
 
 def onReady():
-    global CONFIG_VARIABLES
+    global GLOBAL_CONFIG
     Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MOD_LOG_CHANNEL", "0"))
     Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("BOT_LOG_CHANNEL", "0"))
     Variables.ANNOUNCEMENTS_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("ANNOUNCEMENTS_CHANNEL", "0"))
@@ -33,19 +33,19 @@ def onReady():
 
 
 def getConfigVar(key, default=None) :
-    global CONFIG_VARIABLES
-    if not key in CONFIG_VARIABLES.keys():
-        CONFIG_VARIABLES[key] = default
+    global GLOBAL_CONFIG
+    if not key in GLOBAL_CONFIG.keys():
+        GLOBAL_CONFIG[key] = default
         saveConfig()
-    return CONFIG_VARIABLES[key]
+    return GLOBAL_CONFIG[key]
 
 def setConfigVar(key, value):
-    global CONFIG_VARIABLES
-    CONFIG_VARIABLES[key] = value
+    global GLOBAL_CONFIG
+    GLOBAL_CONFIG[key] = value
     saveConfig()
 
 
 def saveConfig():
-    global CONFIG_VARIABLES
+    global GLOBAL_CONFIG
     with open('config.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(CONFIG_VARIABLES, indent=4, skipkeys=True, sort_keys=True)))
+        jsonfile.write((json.dumps(GLOBAL_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
