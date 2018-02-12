@@ -115,7 +115,7 @@ async def on_socket_raw_receive(thing):
                     embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
                     embed.set_footer(text=f"Send in #{message.channel.name}")
                     await GearbotLogging.logToMinorChannel(
-                        f":wastebasket: Message by {message.author.name}#{message.author.discriminator} has been removed:",
+                        f":wastebasket: Message by {message.author.name}#{message.author.discriminator} has been removed in <#{info['d']['channel_id']}>:",
                         embed=embed)
                     break
 
