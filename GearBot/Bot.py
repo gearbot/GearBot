@@ -110,7 +110,7 @@ async def on_socket_raw_receive(thing):
                              })
         if 't' in info.keys() and info['t'] == "MESSAGE_DELETE":
             for message in MESSAGE_CACHE[info['d']["channel_id"]]:
-                if message.id == info['d']["id"]:
+                if message["id"] == info['d']["id"]:
                     embed = discord.Embed(timestamp=message.timestamp, description=message.content)
                     embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
                     embed.set_footer(text=f"Send in #{message.channel.name}")
