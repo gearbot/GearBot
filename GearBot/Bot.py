@@ -99,12 +99,15 @@ async def on_socket_raw_receive(thing):
                     embed.add_field(name="Before", value=message["content"], inline=False)
                     embed.add_field(name="After", value=info['d']['content'], inline=False)
                     await GearbotLogging.logToMinorChannel(
-                        f":pencil: Message by {after.author.name}#{after.author.discriminator} has been edited:",
+                        f":pencil: Message by {after.author.name}#{after.author.discriminator} in <#{info['d']['channel_id']}> has been edited:",
                         embed=embed)
                     break
             if not old is None:
                 MESSAGE_CACHE[info['d']["channel_id"]].remove(old)
-                MESSAGE_CACHE[info['d']["channel_id"]].append(after)
+                MESSAGE_CACHE[info['d']["channel_id"]].append({
+                            "id": after.id,
+                            "content": after.content
+                             })
         if 't' in info.keys() and info['t'] == "MESSAGE_DELETE":
             for message in MESSAGE_CACHE[info['d']["channel_id"]]:
                 if message.id == info['d']["id"]:
