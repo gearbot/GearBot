@@ -16,3 +16,5 @@ DEBUG_MODE = False
 # MUTED_USERS = dict()
 #
 # GENERAL_CHANNEL:discord.Channel = None
+
+STARTUP_COMPLETE = False

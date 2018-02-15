@@ -225,8 +225,8 @@ async def announceNewVersions(sorted, newBClist, newBCClist, client):
 
 async def handleNewTestReleases(new, removed, name, client, shouldMention):
     if len(new) > 0:
-        server = discord.utils.get(client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID"))
-        role = discord.utils.get(server.roles, id=configuration.getConfigVar("TESTER_ROLE_ID"))
+        server = discord.utils.get(client.servers, id=configuration.getMasterConfigVar("MAIN_SERVER_ID"))
+        role = discord.utils.get(server.roles, id=configuration.getMasterConfigVar("TESTER_ROLE_ID"))
         await client.edit_role(server, role, mentionable=True)
         for version, info in new.items():
             embed = discord.Embed(title=f"I found a new {name} pre-release!", color=0x865F32,
@@ -234,7 +234,7 @@ async def handleNewTestReleases(new, removed, name, client, shouldMention):
                                   description=f"Version: {version}\nMC version: {info['mc_version']}\n[Download]({info['downloads']['main']}) | [More info](https://www.mod-buildcraft.com/pages/tests.html)")
             embed.set_thumbnail(url="https://i.imgur.com/UcyDPBe.png")
             message = await client.send_message(Variables.TESTING_CHANNEL,
-                                                f"<@&{configuration.getConfigVar('TESTER_ROLE_ID')}>" if shouldMention else None,
+                                                f"<@&{configuration.getMasterConfigVar('TESTER_ROLE_ID')}>" if shouldMention else None,
                                                 embed=embed)
             shouldMention = False
             info['messageID'] = message.id

@@ -1,31 +1,44 @@
 import logging
 import os
 from argparse import ArgumentParser
+import traceback
 
+import discord
 from discord.ext import commands
 
-from Util import GearBotLogging
+import Variables
+from Util import GearbotLogging
 from Util import configuration
 
 configuration.loadGlobalConfig()
-bot = commands.Bot(command_prefix=configuration.getConfigVar("PREFIX"))
+bot = commands.Bot(command_prefix=configuration.getMasterConfigVar("PREFIX", "!"))
 
 @bot.event
 async def on_ready():
-    GearBotLogging.info('Logged on as {0}!'.format(bot.user))
+    if not Variables.STARTUP_COMPLETE:
+        # GearbotLogging.info('Logged on as {0}!'.format(bot.user))
+        await GearbotLogging.onReady(bot)
+        await configuration.onReady(bot)
+        Variables.STARTUP_COMPLETE = True
 
 @bot.event
 async def on_message(message):
     #GearBotLogging.info('Message from {0.author}: {0.content}'.format(message))
     await bot.process_commands(message)
 
+
+@bot.event
+async def on_guild_join(guild:discord.Guild):
+    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id})")
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
+        GearbotLogging.warn("a command was not allowed to run")
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-
+    GearbotLogging.error(f"error in {event}")
 
 
 extensions = [
@@ -50,13 +63,13 @@ if __name__ == '__main__':
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
-    elif not configuration.getConfigVar("LOGIN_TOKEN", "0") is "0":
-        token = configuration.getConfigVar("LOGIN_TOKEN")
+    elif not configuration.getMasterConfigVar("LOGIN_TOKEN", "0") is "0":
+        token = configuration.getMasterConfigVar("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
     for extension in extensions:
         try:
-            bot.load_extension(extension)
+            bot.load_extension("Cogs." + extension)
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))

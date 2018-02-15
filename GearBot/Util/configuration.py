@@ -1,51 +1,66 @@
 import json
 import logging
 
-import Variables
+import copy
+import discord
+from discord.ext import commands
 
-GLOBAL_CONFIG = dict()
+import Variables
+from Util import GearbotLogging
+
+MASTER_CONFIG = dict()
+SERVER_CONFIGS = dict()
+
+CONFIG_TEMPLATE = {
+    "dummy": "info"
+}
 
 
 def loadGlobalConfig():
-    global GLOBAL_CONFIG
+    global MASTER_CONFIG
     try:
-        with open('config/config.json', 'r') as jsonfile:
-            GLOBAL_CONFIG = json.load(jsonfile)
+        with open('config/master.json', 'r') as jsonfile:
+            MASTER_CONFIG = json.load(jsonfile)
     except FileNotFoundError:
         logging.error("Unable to load config, running with defaults")
     except Exception as e:
         logging.error("Failed to parse configuration")
         print(e)
         raise e
-    Variables.PREFIX = getConfigVar("PREFIX", "!")
     # Database.initialize()
 
 
-def onReady():
-    global GLOBAL_CONFIG
-    Variables.MOD_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MOD_LOG_CHANNEL", "0"))
-    Variables.BOT_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("BOT_LOG_CHANNEL", "0"))
-    Variables.ANNOUNCEMENTS_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("ANNOUNCEMENTS_CHANNEL", "0"))
-    Variables.TESTING_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("TESTING_CHANNEL", "0"))
-    Variables.GENERAL_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("GENERAL_CHANNEL", "0"))
-    Variables.MINOR_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("MINOR_LOG_CHANNEL", "0"))
-    Variables.JOIN_LOG_CHANNEL = Variables.DISCORD_CLIENT.get_channel(getConfigVar("JOIN_LOG_CHANNEL", "0"))
+async def onReady(bot:commands.Bot):
+    GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds")
+    for guild in bot.guilds:
+        GearbotLogging.info(f"Loading info for {guild.name} ({guild.id})")
+        await loadConfig(guild)
 
 
-def getConfigVar(key, default=None) :
-    global GLOBAL_CONFIG
-    if not key in GLOBAL_CONFIG.keys():
-        GLOBAL_CONFIG[key] = default
-        saveConfig()
-    return GLOBAL_CONFIG[key]
+async def loadConfig(guild:discord.Guild):
+    global SERVER_CONFIGS
+    try:
+        with open(f'config/{guild.id}.json', 'r') as jsonfile:
+            SERVER_CONFIGS[guild.id] = json.load(jsonfile)
+    except FileNotFoundError:
+        logging.info(f"No config available for {guild.name} ({guild.id}, creating blank one")
+        SERVER_CONFIGS[guild.id] = copy.deepcopy(CONFIG_TEMPLATE)
+        saveConfig(guild.id)
 
-def setConfigVar(key, value):
-    global GLOBAL_CONFIG
-    GLOBAL_CONFIG[key] = value
-    saveConfig()
+def saveConfig(id):
+    global SERVER_CONFIGS
+    with open(f'config/{id}.json', 'w') as jsonfile:
+        jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
+
+def getMasterConfigVar(key, default=None) :
+    global MASTER_CONFIG
+    if not key in MASTER_CONFIG.keys():
+        MASTER_CONFIG[key] = default
+        saveMasterConfig()
+    return MASTER_CONFIG[key]
 
 
-def saveConfig():
-    global GLOBAL_CONFIG
-    with open('config.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(GLOBAL_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
+def saveMasterConfig():
+    global MASTER_CONFIG
+    with open('config/master.json', 'w') as jsonfile:
+        jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))

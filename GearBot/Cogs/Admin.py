@@ -1,4 +1,4 @@
-from Cogs.Bot import bot
+from Bot import bot
 
 
 class Admin:
