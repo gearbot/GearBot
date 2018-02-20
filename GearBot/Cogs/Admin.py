@@ -1,3 +1,5 @@
+import discord
+
 from Bot import bot
 
 
@@ -7,7 +9,7 @@ class Admin:
         self.bot = bot
 
     def __unload(self):
-        print('cleanup goes here')
+        pass
 
     def __global_check(self, ctx):
         return True
@@ -30,6 +32,11 @@ class Admin:
     @bot.command()
     async def test(self, ctx, arg):
         await ctx.send(arg)
+
+    @bot.command()
+    async def testerror(self, ctx, target:discord.Member):
+        test = None
+        test.crashPlease()
 
 def setup(bot):
     bot.add_cog(Admin(bot))

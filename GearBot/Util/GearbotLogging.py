@@ -1,5 +1,6 @@
 import logging
 import sys
+import traceback
 
 import discord
 from discord.ext import commands
@@ -28,6 +29,10 @@ def warn(message):
 
 def error(message):
     logger.error(message)
+
+def exception(message, error):
+    logger.error(message)
+    traceback.format_tb(error.__traceback__)
 
 
 async def onReady(client:commands.Bot):
