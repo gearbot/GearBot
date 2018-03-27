@@ -86,8 +86,8 @@ async def on_member_join(member: discord.Member):
 
 @dc_client.event
 async def on_member_remove(member):
-    await GearbotLogging.logToJoinChannel(
-        f":outbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has left the server")
+    if member.server.id == configuration.getConfigVar("MAIN_SERVER_ID"):
+            await GearbotLogging.logToJoinChannel(f":outbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has left the server")
 
 
 @dc_client.event
