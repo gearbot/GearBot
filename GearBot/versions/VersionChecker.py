@@ -9,7 +9,7 @@ import urllib.request
 import discord
 
 import Variables
-from Util import configuration, GearbotLogging
+from Util import Configuration, GearbotLogging
 from versions import VersionInfo
 
 BC_VERSION_LIST = {}
@@ -225,8 +225,8 @@ async def announceNewVersions(sorted, newBClist, newBCClist, client):
 
 async def handleNewTestReleases(new, removed, name, client, shouldMention):
     if len(new) > 0:
-        server = discord.utils.get(client.servers, id=configuration.getMasterConfigVar("MAIN_SERVER_ID"))
-        role = discord.utils.get(server.roles, id=configuration.getMasterConfigVar("TESTER_ROLE_ID"))
+        server = discord.utils.get(client.servers, id=Configuration.getMasterConfigVar("MAIN_SERVER_ID"))
+        role = discord.utils.get(server.roles, id=Configuration.getMasterConfigVar("TESTER_ROLE_ID"))
         await client.edit_role(server, role, mentionable=True)
         for version, info in new.items():
             embed = discord.Embed(title=f"I found a new {name} pre-release!", color=0x865F32,

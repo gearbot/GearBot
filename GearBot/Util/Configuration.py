@@ -10,7 +10,13 @@ MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
 
 CONFIG_TEMPLATE = {
-    "PREFIX": "!"
+    "PREFIX": "!",
+    "ADMIN_ROLE_ID": 0,
+    "MOD_ROLE_ID": 0,
+    "MINOR_LOGS": 0,
+    "JOIN_LOGS": 0,
+    "MOD_LOGS": 0,
+    "MUTE_ROLE": 0
 }
 
 
@@ -51,6 +57,13 @@ def loadConfig(guild:discord.Guild):
 
 def getConfigVar(id, key):
     return SERVER_CONFIGS[id][key]
+
+def getConfigVarChannel(id, key, bot:commands.Bot):
+    return bot.get_channel(getConfigVar(id, key))
+
+def setConfigVar(id, key, value):
+    SERVER_CONFIGS[id][key] = value
+    saveConfig(id)
 
 def saveConfig(id):
     global SERVER_CONFIGS

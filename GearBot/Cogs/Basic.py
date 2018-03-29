@@ -3,7 +3,8 @@ import time
 from discord.ext import commands
 
 from Bot import bot
-from Util import Decorators
+from Util import Permissioncheckers
+
 
 class Basic:
 
@@ -23,18 +24,9 @@ class Basic:
     async def __local_check(self, ctx):
         return True
 
-    async def __error(self, ctx, error):
-        print('Error in {0.command.qualified_name}: {1}'.format(ctx, error))
-
-    async def __before_invoke(self, ctx):
-        print('cog local before: {0.command.qualified_name}'.format(ctx))
-
-    async def __after_invoke(self, ctx):
-        print('cog local after: {0.command.qualified_name}'.format(ctx))
-
     @bot.command()
     async def ping(self, ctx:commands.Context):
-        if (Decorators.is_owner()(ctx)):
+        if (Permissioncheckers.is_owner()(ctx)):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
             t2 = time.perf_counter()

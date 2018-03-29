@@ -1,11 +1,11 @@
+import datetime
 import logging
 import sys
+import time
 import traceback
 
 import discord
 from discord.ext import commands
-
-from Util import configuration
 
 logger = logging.getLogger('gearbot')
 logger.setLevel(logging.INFO)
@@ -17,6 +17,8 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 BOT_LOG_CHANNEL:discord.TextChannel
+
+startupErrors = []
 
 
 def info(message):
@@ -32,16 +34,51 @@ def error(message):
 
 def exception(message, error):
     logger.error(message)
-    traceback.format_tb(error.__traceback__)
+    trace = ""
+    logger.error(str(error))
+    for line in traceback.format_tb(error.__traceback__):
+        trace = f"{trace}\n{line}"
+    logger.error(trace)
 
 
-async def onReady(client:commands.Bot):
+# for errors during startup before the bot fully loaded and can't log to botlog yet
+def startupError(message, error):
+    logger.exception(message)
+    startupErrors.append({
+        "message": message,
+        "exception": error,
+        "stacktrace": traceback.format_exc().splitlines()
+    })
+
+
+
+async def onReady(bot:commands.Bot, channelID):
     global BOT_LOG_CHANNEL
-    BOT_LOG_CHANNEL = client.get_channel(configuration.getMasterConfigVar("BOT_LOG_CHANNEL", 0))
+    BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
-        logger.error("Logging channel is misconfigured, aborting startup")
-        await client.logout()
-    await logToBotlog(message="Gearbot startup sequence initialized, spinning up the gears")
+        logger.error("Logging channel is misconfigured, aborting startup!")
+        await bot.logout()
+    info = await bot.application_info()
+    if len(startupErrors) > 0:
+        await logToBotlog(f":rotating_light: Caught {len(startupErrors)} {'exceptions' if len(startupErrors) > 1 else 'exception'} during startup")
+        for error in startupErrors:
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+            embed.set_author(name=error["message"])
+
+            embed.add_field(name="Exception", value=error["exception"])
+            stacktrace = ""
+            while len(error["stacktrace"]) > 0:
+                partial = error["stacktrace"].pop(0)
+                if len(stacktrace) + len(partial) > 1024:
+                    embed.add_field(name="Stacktrace", value=stacktrace)
+                    stacktrace = ""
+                stacktrace = f"{stacktrace}\n{partial}"
+            if len(stacktrace) > 0:
+                embed.add_field(name="Stacktrace", value=stacktrace)
+            await logToBotlog(embed=embed)
+    await logToBotlog(message=f"The gears are turning, {info.name} ready !")
 
 
 async def logToBotlog(message = None, embed = None, log = True):
