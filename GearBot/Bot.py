@@ -49,6 +49,7 @@ async def on_message(message:discord.Message):
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id})")
+    Configuration.loadConfig(guild)
 
 
 @bot.event
