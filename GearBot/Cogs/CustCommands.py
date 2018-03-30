@@ -36,7 +36,7 @@ class CustCommands:
         for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):
             command.delete_instance()
 
-    @commands.group(aliases=['commands'])
+    @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
     async def command(self, ctx:commands.Context):
         """Lists all custom commands for this server, also the base command to making, updating and removing them"""

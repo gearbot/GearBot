@@ -35,6 +35,7 @@ async def on_ready():
     if not bot.STARTUP_COMPLETE:
         await Configuration.onReady(bot)
         await GearbotLogging.onReady(bot, Configuration.MASTER_CONFIG["BOT_LOG_CHANNEL"])
+        await bot.change_presence(activity=discord.Game(name='with gears'))
         bot.STARTUP_COMPLETE = True
 
 

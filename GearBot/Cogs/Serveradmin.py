@@ -17,21 +17,25 @@ class Serveradmin:
 
     @commands.command()
     async def prefix(self, ctx:commands.Context, newPrefix):
+        """Sets a new prefix for this server"""
         Configuration.setConfigVar(ctx.guild.id, "PREFIX", newPrefix)
         await ctx.send(f"The new server prefix is `{newPrefix}`")
 
     @commands.command()
     async def adminrole(self, ctx: commands.Context, roleID):
+        """Sets the server admin role"""
         Configuration.setConfigVar(ctx.guild.id, "ADMIN_ROLE_ID", roleID)
         await ctx.send(f"The new server admin role is `{roleID}`")
 
     @commands.command()
     async def modrole(self, ctx: commands.Context, roleID):
+        """Sets the role with moderation rights"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_ROLE_ID", roleID)
         await ctx.send(f"The new server moderation role is `{roleID}`")
 
     @commands.command()
     async def muteRole(self, ctx:commands.Context, role:discord.Role):
+        """Sets what role to use for mutes"""
         guild:discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:
@@ -49,10 +53,12 @@ class Serveradmin:
 
     @commands.group()
     async def disable(self, ctx:commands.Context):
+        """Base command for disabeling features"""
         pass
 
     @disable.command()
     async def mute(self, ctx:commands.Context):
+        """Disable the mute feature"""
         role = discord.utils.get(ctx.guild.roles, id=Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE"))
         if role is not None:
             for member in role.members:
