@@ -109,7 +109,7 @@ class CustCommands:
             await asyncio.sleep(1)
         if message.author.bot:
             return
-        if message.channel.guild is None:
+        if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         prefix = Configuration.getConfigVar(message.guild.id, "PREFIX")
         if message.content.startswith(prefix, 0):
