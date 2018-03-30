@@ -21,7 +21,7 @@ from database import DatabaseConnector
 def prefix_callable(bot, message):
     user_id = bot.user.id
     prefixes = [f'<@!{user_id}> ', f'<@{user_id}> '] #execute commands by mentioning
-    if message.guild is None:
+    if message.guild is None or not bot.STARTUP_COMPLETE:
         prefixes.append('!') #use default ! prefix in DMs
     else:
         prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
@@ -40,25 +40,10 @@ async def on_ready():
 
 @bot.event
 async def on_message(message:discord.Message):
-    if message.channel.id == 414716941131841549:
-        positive = None
-        positiveID = 0
-        negative = None
-        negativeID = 0
-        for emoji in message.guild.emoji:
-            if emoji.id == positiveID:
-                positive = emoji
-            elif emoji.id == negativeID:
-                negative = emoji
-
-        await message.add_reaction(positive)
-        await message.add_reaction(negative)
-    # GearBotLogging.info('Message from {0.author}: {0.content}'.format(message))
+    if message.author.bot:
+        return
     await bot.process_commands(message)
 
-@bot.event
-async def on_raw_reaction_add(emoji:discord.PartialEmoji, message_id, channel_id, user_id):
-    message:discord.Message = await bot.get_channel(channel_id).get_message(message_id)
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):

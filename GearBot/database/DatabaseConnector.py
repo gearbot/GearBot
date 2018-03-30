@@ -7,11 +7,24 @@ connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"), us
 
 class LoggedMessage(Model):
     messageid = BigIntegerField(primary_key=True)
-    content = CharField(max_length=2048, collation="utf8mb4_general_ci")
+    content = CharField(max_length=2048, collation="utf8mb4_general_ci", null=True)
     author = BigIntegerField()
+    timestamp = FloatField()
+    channel = BigIntegerField()
 
     class Meta:
         database = connection
+
+
+class LoggedAttachment(Model):
+    id = BigIntegerField(primary_key=True)
+    url = CharField()
+    isImage = BooleanField()
+    messageid = BigIntegerField()
+
+    class Meta:
+        database = connection
+
 
 class CustomCommand(Model):
     id = PrimaryKeyField()
@@ -25,4 +38,4 @@ class CustomCommand(Model):
 
 def init():
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment])

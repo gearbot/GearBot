@@ -7,7 +7,7 @@ from discord.embeds import EmptyEmbed
 from discord.ext import commands
 
 from Util import GearbotLogging, Configuration, Permissioncheckers
-from database.DatabaseConnector import LoggedMessage
+from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class ModLog:
@@ -90,12 +90,14 @@ class ModLog:
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 async for message in channel.history(limit=250, reverse=False):
-                    if message.author == self.bot.user or message.content is None or message.content is "":
+                    if message.author == self.bot.user:
                         continue
                     logged = LoggedMessage.get_or_none(messageid=message.id)
                     if logged is None:
                         LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                                  content=message.content)
+                                                              content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
+                        for a in message.attachments:
+                            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
                         newCount = newCount + 1
                     elif logged.content != message.content:
                         logged.content = message.content
@@ -114,9 +116,11 @@ class ModLog:
     async def on_message(self, message: discord.Message):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
-        if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user or message.content is None or message.content is "":
+        if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user:
             return
-        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content)
+        for a in message.attachments:
+            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
+        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id)
 
 
     async def on_raw_message_delete(self, message_id, channel_id):
@@ -149,8 +153,7 @@ class ModLog:
             if channelid is not 0:
                 logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 if logChannel is not None:
-                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
-                                          description=message.content)
+                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")

@@ -69,6 +69,7 @@ class CustCommands:
         if reply is None or reply == "":
             ctx.send("Please provide a response as well")
         else:
+            trigger = trigger.lower()
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
@@ -81,6 +82,7 @@ class CustCommands:
     @command.command()
     @commands.guild_only()
     async def remove(self, ctx:commands.Context, trigger:str):
+        trigger = trigger.lower()
         if trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
@@ -91,6 +93,7 @@ class CustCommands:
     @command.command()
     @commands.guild_only()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
+        trigger = trigger.lower()
         if reply is None:
             ctx.send("Please provide a response as well")
         else:
@@ -107,12 +110,14 @@ class CustCommands:
     async def on_message(self, message: discord.Message):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
+        if message.author.bot:
+            return
         if message.channel.guild is None:
             return
         prefix = Configuration.getConfigVar(message.guild.id, "PREFIX")
         if message.content.startswith(prefix, 0):
             for trigger in self.commands[message.guild.id]:
-                if message.content == prefix+trigger or (message.content.startswith(trigger, len(prefix)) and message.content[len(prefix+trigger)] == " "):
+                if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
                     await message.channel.send(self.commands[message.guild.id][trigger])
 
 
