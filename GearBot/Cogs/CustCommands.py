@@ -16,18 +16,8 @@ class CustCommands:
         if self.bot.STARTUP_COMPLETE:
             self.reloadCommands()
 
-    def __unload(self):
-        #cleanup
-        pass
-
-    def __global_check(self, ctx):
-        return True
-
-    def __global_check_once(self, ctx):
-        return True
-
     async def __local_check(self, ctx):
-        return Permissioncheckers.isServerMod(ctx)
+        return True
 
     async def on_ready(self):
         self.reloadCommands()
@@ -49,6 +39,7 @@ class CustCommands:
     @commands.group(aliases=['commands'])
     @commands.guild_only()
     async def command(self, ctx:commands.Context):
+        """Base command for custom commands, prints all commands otherwise"""
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=f"Custom command list for {ctx.guild.name}")
             value = ""
@@ -65,6 +56,7 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
+    @Permissioncheckers.modOnly()
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         if reply is None or reply == "":
             ctx.send("Please provide a response as well")
@@ -81,6 +73,7 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
+    @Permissioncheckers.modOnly()
     async def remove(self, ctx:commands.Context, trigger:str):
         trigger = trigger.lower()
         if trigger in self.commands[ctx.guild.id]:
@@ -92,6 +85,7 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
+    @Permissioncheckers.modOnly()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
         trigger = trigger.lower()
         if reply is None:

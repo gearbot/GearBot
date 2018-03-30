@@ -4,7 +4,6 @@ import os
 from discord.ext import commands
 
 from Util import GearbotLogging
-from database.DatabaseConnector import LoggedMessage
 
 
 class Admin:
@@ -16,8 +15,9 @@ class Admin:
         return await ctx.bot.is_owner(ctx.author)
 
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def restart(self, ctx):
+        """Restarts the bot"""
         await self.bot.logout()
         await self.bot.close()
         await asyncio.sleep(11)
@@ -55,12 +55,7 @@ class Admin:
         else:
             await ctx.send(f"I can't find that cog.")
 
-    @commands.command()
-    async def test(self, ctx, id:str):
-        message = LoggedMessage.get_by_id(id)
-        await ctx.send(message.content)
-
-    @commands.command()
+    @commands.command(hidden=True)
     async def upgrade(self, ctx):
         await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
         await GearbotLogging.logToBotlog(f"Upgrade initiated by {ctx.author.name}")

@@ -25,3 +25,8 @@ def isServerMod(ctx:commands.Context):
             if str(role.id) == str(modrole):
                 return True
     return isServerAdmin(ctx)
+
+def modOnly():
+    async def predicate(ctx):
+        return isServerMod(ctx)
+    return commands.check(predicate)
