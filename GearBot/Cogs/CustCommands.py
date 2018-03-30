@@ -39,7 +39,7 @@ class CustCommands:
     @commands.group(aliases=['commands'])
     @commands.guild_only()
     async def command(self, ctx:commands.Context):
-        """Base command for custom commands, prints all commands otherwise"""
+        """Lists all custom commands for this server, also the base command to making, updating and removing them"""
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=f"Custom command list for {ctx.guild.name}")
             value = ""
@@ -54,10 +54,11 @@ class CustCommands:
             else:
                 await ctx.send("No custom commands have been created yet")
 
-    @command.command()
+    @command.command(aliases=["new", "add"])
     @commands.guild_only()
     @Permissioncheckers.modOnly()
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
+        """Create a new command"""
         if reply is None or reply == "":
             ctx.send("Please provide a response as well")
         else:
@@ -75,6 +76,7 @@ class CustCommands:
     @commands.guild_only()
     @Permissioncheckers.modOnly()
     async def remove(self, ctx:commands.Context, trigger:str):
+        """Removes a custom command"""
         trigger = trigger.lower()
         if trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
@@ -87,6 +89,7 @@ class CustCommands:
     @commands.guild_only()
     @Permissioncheckers.modOnly()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
+        """Sets a new reply for the specified command"""
         trigger = trigger.lower()
         if reply is None:
             ctx.send("Please provide a response as well")

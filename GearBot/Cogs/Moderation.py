@@ -27,7 +27,9 @@ class Moderation:
         return Permissioncheckers.isServerMod(ctx)
 
     @commands.command()
+    @commands.guild_only()
     async def roles(selfs, ctx:commands.Context):
+        """Lists all roles on the server and their IDs, usefull for configuring without having to ping that role"""
         roles = ""
         ids = ""
         for role in ctx.guild.roles:
@@ -39,6 +41,7 @@ class Moderation:
         await ctx.send(ctx.channel, embed=embed)
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, user: discord.User, *, reason="No reason given."):
         """Kicks an user from the server."""
@@ -46,6 +49,7 @@ class Moderation:
         await ctx.send(f":ok_hand: {user.name} ({user.id}) was kicked. Reason: `{reason}`")
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx:commands.Context, user: discord.Member, *, reason="No reason given"):
         """Bans an user from the server."""
@@ -56,6 +60,7 @@ class Moderation:
             await ctx.send(f":no_entry: You are not allowed to ban {user.name}")
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def forceban(self, ctx:commands.Context, user_id: int, *, reason="No reason given"):
         """Bans a user even if they are not in the server"""
@@ -73,6 +78,7 @@ class Moderation:
             await ctx.invoke(self.ban, member, reason=reason)
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def unban(self, ctx, member: BannedMember, *, reason="No reason given"):
         """Unbans an user from the server."""
@@ -82,8 +88,10 @@ class Moderation:
 
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def mute(self, ctx:commands.Context, target:discord.Member, durationNumber:int, durationIdentifier:str, *, reason="No reason provided"):
+        """Temporary mutes someone"""
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(f":warning: Unable to comply, you have not told me what role i can use to mute people, but i can still kick {target.mention} if you want while a server admin tells me what role i can use")
@@ -105,6 +113,7 @@ class Moderation:
                     await modlog.send(f":zipper_mouth: {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx:commands.Context, target:discord.Member, *, reason="No reason provided"):
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
@@ -117,6 +126,10 @@ class Moderation:
             else:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                 await ctx.send(f"{target.display_name} has been unmuted")
+                modlog = ctx.guild.get_channel(Configuration.getConfigVar(ctx.guild.id, "MOD_LOGS"))
+                if modlog is not None:
+                    await modlog.send(
+                        f":innocent: {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
 
 
     async def on_guild_channel_create(self, channel:discord.abc.GuildChannel):
@@ -129,6 +142,19 @@ class Moderation:
                     await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
                 else:
                     await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
+
+    async def on_member_join(self, member: discord.Member):
+        while not self.bot.STARTUP_COMPLETE:
+            await asyncio.sleep(1)
+        if member.id in self.mutes[str(member.guild.id)]:
+            roleid = Configuration.getConfigVar(member.guild.id, "MUTE_ROLE")
+            if roleid is not 0:
+                role = discord.utils.get(member.guild.roles, id=roleid)
+                if role is not None:
+                    await member.add_roles(role, reason="Member left and re-joined before mute expired")
+                    modlog = member.guild.get_channel(Configuration.getConfigVar(member.guild.id, "MOD_LOGS"))
+                    if modlog is not None:
+                        await modlog.send(f":zipper_mouth: {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
