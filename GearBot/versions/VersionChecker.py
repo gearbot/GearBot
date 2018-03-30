@@ -72,7 +72,7 @@ async def runVersionChecker(client:discord.Client):
                     shouldMention = await handleNewTestReleases(newBCTlist, removedBCT, "BuildCraft", client, shouldMention)
                     await handleNewTestReleases(newBCCTlist, removedBCCT, "BuildCraft Compat", client, shouldMention)
 
-                await logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client)
+                    await logNewVersions(newBClist, newBCClist, newBCTlist, newBCCTlist, sorted, client)
 
                 saveVersions()
                 ALLOWED_TO_ANNOUNCE = True
