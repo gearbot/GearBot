@@ -122,6 +122,8 @@ class ModLog:
     async def on_message(self, message: discord.Message):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
+        if message.guild is None:
+            return
         if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user:
             return
         for a in message.attachments:
