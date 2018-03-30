@@ -146,7 +146,7 @@ class Moderation:
     async def on_member_join(self, member: discord.Member):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
-        if member.id in self.mutes[str(member.guild.id)]:
+        if str(member.guild.id) in self.mutes and member.id in self.mutes[str(member.guild.id)]:
             roleid = Configuration.getConfigVar(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
                 role = discord.utils.get(member.guild.roles, id=roleid)
