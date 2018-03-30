@@ -1,193 +1,173 @@
 import datetime
-import json
 import logging
 import os
 import time
 import traceback
 from argparse import ArgumentParser
-from collections import deque
-from logging import DEBUG, INFO
 
 import discord
+from discord import abc
+from discord.ext import commands
+from peewee import MySQLDatabase
 
-import Variables
-from Util import configuration, spam, GearbotLogging
-from Util.Commands import COMMANDS
-from commands import CustomCommands
-from versions import VersionChecker
+from Util import Configuration
+from Util import GearbotLogging
 
-dc_client:discord.Client = discord.Client()
-MESSAGE_CACHE = dict()
+#load global config before database
+Configuration.loadGlobalConfig()
 
-@dc_client.event
+from database import DatabaseConnector
+
+def prefix_callable(bot, message):
+    user_id = bot.user.id
+    prefixes = [f'<@!{user_id}> ', f'<@{user_id}> '] #execute commands by mentioning
+    if message.guild is None or not bot.STARTUP_COMPLETE:
+        prefixes.append('!') #use default ! prefix in DMs
+    else:
+        prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
+    return prefixes
+
+bot = commands.Bot(command_prefix=prefix_callable)
+bot.STARTUP_COMPLETE = False
+
+@bot.event
 async def on_ready():
-    if not Variables.HAS_STARTED:
-
-        global dc_client
-        Variables.DISCORD_CLIENT = dc_client
-        configuration.onReady()
-        await GearbotLogging.logToLogChannel(f"<:woodGear:344163118089240596> Gearbot startup sequence initialized, spinning up the gears <:woodGear:344163118089240596>")
-        Variables.APP_INFO = await dc_client.application_info()
-
-        await CustomCommands.loadCommands()
-        await GearbotLogging.logToLogChannel(f"Loaded {Variables.CUSTOM_COMMANDS.__len__()} custom commands")
-
-        VersionChecker.init(dc_client)
-
-        logging.info("Readying commands")
-        for command in COMMANDS.values():
-            await command.onReady(dc_client)
-
-        logging.info("Populating recent message cache")
-        server = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID"))
-        gearbot = server.get_member(Variables.APP_INFO.id)
-        for channel in server.channels:
-            if channel.permissions_for(gearbot).read_messages:
-                MESSAGE_CACHE[channel.id] = deque(maxlen=500)
-                async for log in dc_client.logs_from(channel, limit=500):
-                    if not log.author.bot or log.content is None or log.content == '':
-                        MESSAGE_CACHE[channel.id].append({
-                            "id": log.id,
-                            "content": log.content
-                             })
-
-        if (Variables.DEBUG_MODE):
-            await GearbotLogging.logToLogChannel("Gearbot: Testing Editon is now online")
-        else:
-            await GearbotLogging.logToLogChannel("<:diamondGear:344163228101640192> Gearbot is now online <:diamondGear:344163228101640192>")
+    if not bot.STARTUP_COMPLETE:
+        await Configuration.onReady(bot)
+        await GearbotLogging.onReady(bot, Configuration.MASTER_CONFIG["BOT_LOG_CHANNEL"])
+        await bot.change_presence(activity=discord.Game(name='with gears'))
+        bot.STARTUP_COMPLETE = True
 
 
-        Variables.HAS_STARTED = True
-    await dc_client.change_presence(game=discord.Game(name='with gears'))
-
-
-@dc_client.event
-async def on_channel_create(channel:discord.Channel):
-    MESSAGE_CACHE[channel.id] = deque(maxlen=500)
-
-@dc_client.event
-async def on_member_join(member:discord.Member):
-    if member.server.id == configuration.getConfigVar("MAIN_SERVER_ID"):
-        await GearbotLogging.logToJoinChannel(f":inbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has joined, account created at {member.created_at}")
-        if member.id in Variables.MUTED_USERS and time.time() < Variables.MUTED_USERS[member.id]:
-            role = discord.utils.get(member.server.roles, id=configuration.getConfigVar("MUTE_ROLE_ID"))
-            await dc_client.add_roles(member, role)
-            await GearbotLogging.logToModChannel(f":zipper_mouth: {member.name}#{member.discriminator} has rejoined the server before his mute time was up and has been re-muted")
-            await dc_client.send_message(member, f"<:ironGear:344163170664841216> You rejoined the server before your mute was over so the role has been re-applied and moderators have been notified, nice try and enjoy the rest of your mute! <:ironGear:344163170664841216>")
-
-@dc_client.event
-async def on_member_remove(member):
-    await GearbotLogging.logToJoinChannel(f":outbox_tray: {member.name}#{member.discriminator} (`{member.id}`) has left the server")
-
-
-
-
-
-@dc_client.event
-async def on_socket_raw_receive(thing):
-    if isinstance(thing, str):
-        info = json.loads(thing)
-        if 't' in info.keys() and info['t'] == "MESSAGE_UPDATE" and "author" in info['d'].keys() and not ("bot" in info['d']["author"].keys() and info['d']["author"]["bot"]):
-            old = None
-            after = None
-            for message in MESSAGE_CACHE[info['d']["channel_id"]]:
-                if message["id"] == info['d']["id"] and message["content"] != info['d']['content']:
-                    old = message
-                    after = await dc_client.get_message(dc_client.get_channel(info['d']["channel_id"]), info['d']["id"])
-                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                    embed.set_author(name=after.author.name, icon_url=after.author.avatar_url)
-                    embed.add_field(name="Before", value=message["content"], inline=False)
-                    embed.add_field(name="After", value=info['d']['content'], inline=False)
-                    await GearbotLogging.logToMinorChannel(
-                        f":pencil: Message by {after.author.name}#{after.author.discriminator} in <#{info['d']['channel_id']}> has been edited:",
-                        embed=embed)
-                    break
-            if not old is None:
-                MESSAGE_CACHE[info['d']["channel_id"]].remove(old)
-                MESSAGE_CACHE[info['d']["channel_id"]].append({
-                            "id": after.id,
-                            "content": after.content
-                             })
-        if 't' in info.keys() and info['t'] == "MESSAGE_DELETE":
-            for message in MESSAGE_CACHE[info['d']["channel_id"]]:
-                if message["id"] == info['d']["id"]:
-                    embed = discord.Embed(timestamp=message.timestamp, description=message.content)
-                    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    embed.set_footer(text=f"Send in #{message.channel.name}")
-                    await GearbotLogging.logToMinorChannel(
-                        f":wastebasket: Message by {message.author.name}#{message.author.discriminator} has been removed in <#{info['d']['channel_id']}>:",
-                        embed=embed)
-                    break
-
-
-
-@dc_client.event
+@bot.event
 async def on_message(message:discord.Message):
-    global dc_client
-    client:discord.Client = dc_client
-    if (message.content is None) or (message.content == '') or message.author.bot:
+    if message.author.bot:
         return
-    elif not (message.content.startswith(Variables.PREFIX) or message.channel.is_private):
-        await spam.check_for_spam(dc_client, message)
-    if message.channel.id in MESSAGE_CACHE.keys():
-        MESSAGE_CACHE[message.channel.id].append({
-            "id": message.id,
-            "content": message.content
-        })
-    if message.content.startswith(Variables.PREFIX):
-        cmd, *args = message.content[1:].split()
-        cmd = cmd.lower()
-        logging.debug(f"command '{cmd}' with arguments {args} issued")
-
-        try:
-            if message.channel.is_private:
-                author = discord.utils.get(dc_client.servers, id=configuration.getConfigVar("MAIN_SERVER_ID")).get_member(message.author.id)
-            else:
-                author = message.author
-            if cmd in COMMANDS.keys():
-                command = COMMANDS[cmd]
-                if command.canExecute(author):
-                    await command.execute(dc_client, message.channel, author, args)
-                    if (command.shouldDeleteTrigger):
-                        await dc_client.delete_message(message)
-                else:
-                    await dc_client.send_message(message.channel, ":lock: You do not have permission to execute this command :lock: ")
-            else:
-                if cmd in Variables.CUSTOM_COMMANDS.keys():
-                    await dc_client.send_message(message.channel, Variables.CUSTOM_COMMANDS[cmd])
-                    return
-                logging.debug(f"command '{cmd}' not recognized")
-        except discord.Forbidden as e:
-            logging.info("Bot is not allowed to send messages")
-            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-        except discord.InvalidArgument as e:
-            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-            logging.info("Exception: Invalid message arguments")
-        except Exception as e:
-            await GearbotLogging.on_command_error(message.channel, message.author, cmd, args, e)
-            traceback.print_exc()
+    await bot.process_commands(message)
 
 
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id})")
 
-parser = ArgumentParser()
-parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
-parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
-parser.add_argument("--token", help="Specify your Discord token")
 
-clargs = parser.parse_args()
-Variables.DEBUG_MODE = clargs.debug
-logging.basicConfig(level=DEBUG if clargs.debugLogging else INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")
+@bot.event
+async def on_command_error(ctx: commands.Context, error):
+    if isinstance(error, commands.NoPrivateMessage):
+        await ctx.send("This command cannot be used in private messages.")
+    elif isinstance(error, commands.BotMissingPermissions):
+        GearbotLogging.error(f"Encountered a permissions error while executing {ctx.command}")
+        await ctx.send(error)
+    elif isinstance(error, commands.DisabledCommand):
+        await ctx.send("Sorry. This command is disabled and cannot be used.")
+    elif isinstance(error, commands.CheckFailure):
+        await ctx.send(":lock: You do not have the required permissions to run this command")
+    elif isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(error)
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(f"You are missing a required argument!(See !help {ctx.command.qualified_name} for info on how to use this command)")
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send(f"Invalid argument given! (See !help {ctx.command.qualified_name} for info on how to use this commmand)")
+    elif isinstance(error, commands.CommandNotFound):
+        return
+    else:
+        # log to logger first just in case botlog logging fails as well
+        GearbotLogging.exception(f"Command execution failed:\n"
+                                 f"    Command: {ctx.command}\n"
+                                 f"    Message: {ctx.message.content}\n"
+                                 f"    Channel: {'Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name}\n"
+                                 f"    Sender: {ctx.author.name}#{ctx.author.discriminator}\n"
+                                 f"    Exception: {error}", error.original)
+        # notify caller
+        await ctx.send(":rotating_light: Something went wrong while executing that command :rotating_light:")
 
+        embed = discord.Embed(colour=discord.Colour(0xff0000),
+                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+        embed.set_author(name="Command execution failed:")
+        embed.add_field(name="Command", value=ctx.command)
+        embed.add_field(name="Original message", value=ctx.message.content)
+        embed.add_field(name="Channel",
+                        value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name)
+        embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
+        embed.add_field(name="Exception", value=error.original)
+        v = ""
+        for line in traceback.format_tb(error.original.__traceback__):
+            if len(v) + len(line) > 1024:
+                embed.add_field(name="Stacktrace", value=v)
+                v = ""
+            v = f"{v}\n{line}"
+        if len(v) > 0:
+            embed.add_field(name="Stacktrace", value=v)
+        await GearbotLogging.logToBotlog(embed=embed)
+
+
+@bot.event
+async def on_error(event, *args, **kwargs):
+    # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+    GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
+    embed = discord.Embed(colour=discord.Colour(0xff0000),
+                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+    embed.set_author(name=f"Caught an error in {event}:")
+
+    embed.add_field(name="args", value=str(args))
+    embed.add_field(name="kwargs", value=str(kwargs))
+    v = ""
+    for line in traceback.format_exc():
+        if len(v) + len(line) > 1024:
+            embed.add_field(name="Stacktrace", value=v)
+            v = ""
+        v = f"{v}{line}"
+    if len(v) > 0:
+        embed.add_field(name="Stacktrace", value=v)
+    await GearbotLogging.logToBotlog(embed=embed)
+    # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+    try:
+        pass
+    except Exception as ex:
+        GearbotLogging.error(
+            f"Failed to log to botlog, eighter discord broke or something is seriously wrong!\n{ex}")
+        GearbotLogging.error(traceback.format_exc())
+
+
+extensions = [
+    "Basic",
+    "Admin",
+    "Moderation",
+    "Serveradmin",
+    "ModLog",
+    "CustCommands"
+]
 
 if __name__ == '__main__':
-    configuration.loadconfig()
+    parser = ArgumentParser()
+    parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
+    parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
+    parser.add_argument("--token", help="Specify your Discord token")
+
+    logger = logging.getLogger('discord')
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(handler)
+    clargs = parser.parse_args()
     if 'gearbotlogin' in os.environ:
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
-    elif not configuration.getConfigVar("LOGIN_TOKEN", "0") is "0":
-        token = configuration.getConfigVar("LOGIN_TOKEN")
+    elif not Configuration.getMasterConfigVar("LOGIN_TOKEN", "0") is "0":
+        token = Configuration.getMasterConfigVar("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
-    dc_client.run(token)
+    for extension in extensions:
+        try:
+            bot.load_extension("Cogs." + extension)
+        except Exception as e:
+            GearbotLogging.startupError(f"Failed to load extention {extension}", e)
+    GearbotLogging.info("Connecting to the database")
+    DatabaseConnector.init()
+    bot.database_connection: MySQLDatabase = DatabaseConnector.connection
+    GearbotLogging.info("Database connection established, spinning up")
+    bot.run(token)
+    bot.database_connection.close()

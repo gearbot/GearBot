@@ -1,85 +1,87 @@
 import datetime
 import logging
+import sys
 import time
 import traceback
 
 import discord
+from discord.ext import commands
 
-import Variables
+logger = logging.getLogger('gearbot')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='gearbot.log', encoding='utf-8', mode='w+')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
+handler = logging.StreamHandler(stream=sys.stdout)
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
+BOT_LOG_CHANNEL:discord.TextChannel
 
-async def logToLogChannel(text = None, embed = None):
-    try:
-        logging.info(text)
-        await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, text, embed=embed)
-    except discord.Forbidden:
-        logging.error("Exception: Bot is not allowed to send messages in logging channel")
-    except discord.InvalidArgument:
-        logging.error("Exception: Invalid message arguments")
-    except Exception as e:
-        logging.error("Exception: {}".format(str(e)))
-
-
-async def logToModChannel(text = None, embed=None):
-    try:
-        logging.info(text)
-        await Variables.DISCORD_CLIENT.send_message(Variables.MOD_LOG_CHANNEL, '{}'.format(text), embed=embed)
-    except discord.Forbidden:
-        logging.error("Exception: Bot is not allowed to send messages in logging channel")
-    except discord.InvalidArgument:
-        logging.error("Exception: Invalid message arguments")
-    except Exception as e:
-        logging.error("Exception: {}".format(str(e)))
-
-async def logToMinorChannel(text = None, embed=None):
-    try:
-        logging.info(text)
-        await Variables.DISCORD_CLIENT.send_message(Variables.MINOR_LOG_CHANNEL, '{}'.format(text), embed=embed)
-    except discord.Forbidden:
-        logging.error("Exception: Bot is not allowed to send messages in logging channel")
-    except discord.InvalidArgument:
-        logging.error("Exception: Invalid message arguments")
-    except Exception as e:
-        logging.error("Exception: {}".format(str(e)))
-
-async def logToJoinChannel(text = None, embed=None):
-    try:
-        logging.info(text)
-        await Variables.DISCORD_CLIENT.send_message(Variables.JOIN_LOG_CHANNEL, '{}'.format(text), embed=embed)
-    except discord.Forbidden:
-        logging.error("Exception: Bot is not allowed to send messages in logging channel")
-    except discord.InvalidArgument:
-        logging.error("Exception: Invalid message arguments")
-    except Exception as e:
-        logging.error("Exception: {}".format(str(e)))
+startupErrors = []
 
 
-async def on_command_error(channel:discord.Channel, sender:discord.User, cmd, args, exception):
-    try:
-        logging.error("Command execution failed:"
-                        f"    Command: {cmd}"
-                        f"    Arguments: {args}"
-                        f"    Channel: {'Private Message' if channel.is_private else channel.name}"
-                        f"    Sender: {sender.name}#{sender.discriminator}"
-                        f"    Exception: {exception}")
-        await Variables.DISCORD_CLIENT.send_message(channel,
-            f"Execution of the {cmd} command failed, please try again later")
-    except Exception as e:
-        logging.error(f"Failed to notify caller:\n{e}")
+def info(message):
+    logger.info(message)
 
-    try:
-        embed = discord.Embed(colour=discord.Colour(0xff0000),
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
-        embed.set_author(name="Command execution failed")
+def warn(message):
+    logger.warning(message)
 
-        embed.add_field(name="Command", value=cmd)
-        embed.add_field(name="Arguments", value=args)
-        embed.add_field(name="Channel", value='Private Message' if channel.is_private else channel.name)
-        embed.add_field(name="Sender", value=f"{sender.name}#{sender.discriminator}")
-        embed.add_field(name="Exception", value=exception)
-        embed.add_field(name="Stacktrace", value=traceback.format_exc())
 
-        await Variables.DISCORD_CLIENT.send_message(Variables.BOT_LOG_CHANNEL, embed=embed)
-    except Exception as e:
-        logging.error(f"Failed to log to logging channel:\n{e}")
+def error(message):
+    logger.error(message)
+
+def exception(message, error):
+    logger.error(message)
+    trace = ""
+    logger.error(str(error))
+    for line in traceback.format_tb(error.__traceback__):
+        trace = f"{trace}\n{line}"
+    logger.error(trace)
+
+
+# for errors during startup before the bot fully loaded and can't log to botlog yet
+def startupError(message, error):
+    logger.exception(message)
+    startupErrors.append({
+        "message": message,
+        "exception": error,
+        "stacktrace": traceback.format_exc().splitlines()
+    })
+
+
+
+async def onReady(bot:commands.Bot, channelID):
+    global BOT_LOG_CHANNEL
+    BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
+    if BOT_LOG_CHANNEL is None:
+        logger.error("Logging channel is misconfigured, aborting startup!")
+        await bot.logout()
+    info = await bot.application_info()
+    if len(startupErrors) > 0:
+        await logToBotlog(f":rotating_light: Caught {len(startupErrors)} {'exceptions' if len(startupErrors) > 1 else 'exception'} during startup")
+        for error in startupErrors:
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+            embed.set_author(name=error["message"])
+
+            embed.add_field(name="Exception", value=error["exception"])
+            stacktrace = ""
+            while len(error["stacktrace"]) > 0:
+                partial = error["stacktrace"].pop(0)
+                if len(stacktrace) + len(partial) > 1024:
+                    embed.add_field(name="Stacktrace", value=stacktrace)
+                    stacktrace = ""
+                stacktrace = f"{stacktrace}\n{partial}"
+            if len(stacktrace) > 0:
+                embed.add_field(name="Stacktrace", value=stacktrace)
+            await logToBotlog(embed=embed)
+    await logToBotlog(message=f"The gears are turning, {info.name} ready !")
+
+
+async def logToBotlog(message = None, embed = None, log = True):
+    await BOT_LOG_CHANNEL.send(content=message, embed=embed)
+    if log:
+        info(message)
