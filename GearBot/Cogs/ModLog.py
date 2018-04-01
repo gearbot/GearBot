@@ -180,7 +180,7 @@ class ModLog:
         if channelid is not 0:
             logChannel:discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                dif = (datetime.datetime.now() - member.created_at)
+                dif = (datetime.datetime.utcnow() - member.created_at)
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
                 age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
