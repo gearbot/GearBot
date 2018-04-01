@@ -181,7 +181,9 @@ class ModLog:
             logChannel:discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
                 dif = (datetime.datetime.now() - member.created_at)
-                age = (f"{dif.days} days") if dif.days > 0 else f"{dif.hour} hours, {dif.min} mins"
+                minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
+                hours, minutes = divmod(minutes, 60)
+                age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
                 await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago")
 
     async def on_member_remove(self, member:discord.Member):
