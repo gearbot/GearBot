@@ -27,7 +27,7 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
     return prefixes
 
-bot = commands.Bot(command_prefix=prefix_callable)
+bot = commands.Bot(command_prefix=prefix_callable, case_insensitive=True)
 bot.STARTUP_COMPLETE = False
 
 @bot.event
@@ -132,6 +132,7 @@ async def on_error(event, *args, **kwargs):
         GearbotLogging.error(traceback.format_exc())
 
 
+
 extensions = [
     "Basic",
     "Admin",
@@ -169,6 +170,10 @@ if __name__ == '__main__':
     GearbotLogging.info("Connecting to the database")
     DatabaseConnector.init()
     bot.database_connection: MySQLDatabase = DatabaseConnector.connection
-    GearbotLogging.info("Database connection established, spinning up")
+    GearbotLogging.info("Database connection established")
+    GearbotLogging.info("Ready to go, spinning up the gears")
     bot.run(token)
+    GearbotLogging.info("GearBot shutting down, cleaning up")
     bot.database_connection.close()
+    GearbotLogging.info("Cleanup complete")
+

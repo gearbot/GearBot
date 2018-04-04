@@ -15,25 +15,30 @@ class Serveradmin:
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
 
-    @commands.command()
+    @commands.group()
+    async def configure(self, ctx:commands.Context):
+        """Configure server specific settings"""
+        await ctx.send("See the subcommands (!help configure) for configurations")
+
+    @configure.command()
     async def prefix(self, ctx:commands.Context, newPrefix):
         """Sets a new prefix for this server"""
         Configuration.setConfigVar(ctx.guild.id, "PREFIX", newPrefix)
-        await ctx.send(f"The new server prefix is `{newPrefix}`")
+        await ctx.send(f"The server prefix is now `{newPrefix}`")
 
-    @commands.command()
+    @configure.command()
     async def adminrole(self, ctx: commands.Context, roleID):
         """Sets the server admin role"""
         Configuration.setConfigVar(ctx.guild.id, "ADMIN_ROLE_ID", roleID)
-        await ctx.send(f"The new server admin role is `{roleID}`")
+        await ctx.send(f"The server admin role is now `{roleID}`")
 
-    @commands.command()
+    @configure.command()
     async def modrole(self, ctx: commands.Context, roleID):
         """Sets the role with moderation rights"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_ROLE_ID", roleID)
-        await ctx.send(f"The new server moderation role is `{roleID}`")
+        await ctx.send(f"The server moderation role is now `{roleID}`")
 
-    @commands.command()
+    @configure.command()
     async def muteRole(self, ctx:commands.Context, role:discord.Role):
         """Sets what role to use for mutes"""
         guild:discord.Guild = ctx.guild

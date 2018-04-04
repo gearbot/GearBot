@@ -4,7 +4,6 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -29,7 +28,7 @@ class Basic:
     @commands.command(hidden=True)
     async def ping(self, ctx:commands.Context):
         """Basic ping to see if the bot is still up"""
-        if (Permissioncheckers.is_owner()(ctx)):
+        if (ctx.bot.is_owner(ctx.author)):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
             t2 = time.perf_counter()

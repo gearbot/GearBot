@@ -131,6 +131,39 @@ class Moderation:
                     await modlog.send(
                         f":innocent: {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
 
+    @commands.command()
+    async def userinfo(self, ctx: commands.Context, user: str = None):
+        """Shows information about the chosen user"""
+        if user == None:
+            user = ctx.author
+            member = ctx.guild.get_member(user.id)
+        if user != ctx.author:
+            try:
+                member = await commands.MemberConverter().convert(ctx, user)
+                user = member
+            except:
+                user = await ctx.bot.get_user_info(int(user))
+                member = None
+        embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar_url)
+        embed.add_field(name="Name", value=f"{user.name}#{user.discriminator}", inline=True)
+        embed.add_field(name="ID", value=user.id, inline=True)
+        embed.add_field(name="Bot Account", value=user.bot, inline=True)
+        embed.add_field(name="Animated Avatar", value=user.is_avatar_animated(), inline=True)
+        if member != None:
+            account_joined = member.joined_at.strftime("%d-%m-%Y")
+            embed.add_field(name="Nickname", value=member.nick, inline=True)
+            embed.add_field(name="Top Role", value=member.top_role.name, inline=True)
+            embed.add_field(name="Joined At",
+                            value=f"{account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)",
+                            inline=True)
+        account_made = user.created_at.strftime("%d-%m-%Y")
+        embed.add_field(name="Account Created At",
+                        value=f"{account_made} ({(ctx.message.created_at - user.created_at).days} days ago)",
+                        inline=True)
+        embed.add_field(name="Avatar URL", value=user.avatar_url)
+        await ctx.send(embed=embed)
 
     async def on_guild_channel_create(self, channel:discord.abc.GuildChannel):
         guild:discord.Guild = channel.guild

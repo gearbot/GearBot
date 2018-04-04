@@ -51,7 +51,7 @@ def loadConfig(guild:discord.Guild):
                     config[key] = CONFIG_TEMPLATE[key]
             SERVER_CONFIGS[guild.id] = config
     except FileNotFoundError:
-        GearbotLogging.info(f"No config available for {guild.name} ({guild.id}, creating blank one")
+        GearbotLogging.info(f"No config available for {guild.name} ({guild.id}), creating blank one")
         SERVER_CONFIGS[guild.id] = copy.deepcopy(CONFIG_TEMPLATE)
         saveConfig(guild.id)
 

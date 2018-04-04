@@ -7,6 +7,7 @@ from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
+from Cogs.Serveradmin import Serveradmin
 from Util import GearbotLogging, Configuration, Permissioncheckers
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
@@ -19,17 +20,10 @@ class ModLog:
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
 
-    @commands.group(name="logging")
-    async def logging(self, ctx):
-        if ctx.invoked_subcommand is None:
-            await ctx.send("Logging base command")
 
-    @logging.group()
-    async def minor(self, ctx: commands.Context):
-        pass
-
-    @minor.command(name="setChannel")
-    async def setChannel1(self, ctx: commands.Context, channel: discord.TextChannel):
+    @Serveradmin.configure.command()
+    async def minorLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for minor logs (edit/delete)"""
         if channel is None:
             raise BadArgument("Missing channel")
         permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
@@ -44,18 +38,16 @@ class ModLog:
         else:
             await ctx.send(f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages and embed_links)")
 
-    @minor.command(name="disable")
-    async def disabe1(self, ctx:commands.Context, *, channel:discord.TextChannel=None):
+    @Serveradmin.disable.command(name="minorLogChannel")
+    async def disableMinorLogChannel(self, ctx:commands.Context):
+        """Disables minor logs (edit/delete)"""
         Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", 0)
         await ctx.send("Minor logs have been dissabled")
 
 
-    @logging.group()
-    async def join(self, ctx:commands.Context):
-        pass
-
-    @join.command(name="setChannel")
-    async def setChannel2(self, ctx: commands.Context, channel: discord.TextChannel):
+    @Serveradmin.configure.command()
+    async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for join/leave logs"""
         permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
         if permissions.read_messages and permissions.send_messages:
             Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", channel.id)
@@ -64,17 +56,15 @@ class ModLog:
             await ctx.send(
                 f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
 
-    @join.command(name="disable")
-    async def disable2(self, ctx: commands.Context):
+    @Serveradmin.disable.command(name="joinLogChannel")
+    async def disablejoinLogChannel(self, ctx: commands.Context):
+        """Disables join/leave logs"""
         Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", 0)
         await ctx.send("Join logs have been dissabled")
 
-    @logging.group()
-    async def moderation(self, ctx: commands.Context):
-        pass
-
-    @moderation.command(name="setChannel")
-    async def setChannel3(self, ctx: commands.Context, channel: discord.TextChannel):
+    @Serveradmin.configure.command()
+    async def modLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for modlogs (mute/kick/ban/...)"""
         permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
         if permissions.read_messages and permissions.send_messages:
             Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", channel.id)
@@ -82,8 +72,9 @@ class ModLog:
         else:
             await ctx.send(f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
 
-    @moderation.command(name="disable")
-    async def disable3(self, ctx: commands.Context):
+    @Serveradmin.disable.command(name="modLogChannel")
+    async def disablemodLogChannel(self, ctx: commands.Context):
+        """Disables the modlogs (mute/kick/ban/...)"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", 0)
         await ctx.send("Mod logs have been dissabled")
 

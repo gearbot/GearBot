@@ -34,7 +34,7 @@ class Admin:
             self.bot.unload_extension(f"Cogs.{cog}")
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been reloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded', log=True)
+            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}', log=True)
         else:
             await ctx.send(f"I can't find that cog.")
 
@@ -43,7 +43,7 @@ class Admin:
         if os.path.isfile(f"Cogs/{cog}.py"):
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f"**{cog}** has been loaded!")
-            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded!", log=True)
+            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}", log=True)
         else:
             await ctx.send(f"I can't find that cog.")
 
@@ -56,7 +56,7 @@ class Admin:
         if cog in cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded', log=True)
+            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}', log=True)
         else:
             await ctx.send(f"I can't find that cog.")
 
