@@ -152,6 +152,9 @@ class ModLog:
             if channelid is not 0:
                 logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 if logChannel is not None:
+                    if message.content == data["content"]:
+                        #prob just pinned
+                        return
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)

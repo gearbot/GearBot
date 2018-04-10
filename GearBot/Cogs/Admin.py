@@ -1,5 +1,6 @@
 import asyncio
 import os
+from datetime import datetime
 
 from discord.ext import commands
 
@@ -70,6 +71,15 @@ class Admin:
         await self.bot.logout()
         await self.bot.close()
         await asyncio.sleep(11)
+
+    @commands.command()
+    async def uptime(self, ctx):
+        uptime = datetime.utcnow() - self.bot.start_time
+        hours, remainder = divmod(int(uptime.total_seconds()), 3600)
+        days, hours = divmod(hours, 24)
+        minutes, seconds = divmod(remainder, 60)
+
+        await ctx.send(f"<:gearDiamond:433284297345073153>  Gears have been spinning for {days} day, {hours} hours, {minutes} minutes and {seconds} seconds\n<:BCWrench:433284297181495298> {self.bot.messageCount} messages have been processed")
 
 def setup(bot):
     bot.add_cog(Admin(bot))

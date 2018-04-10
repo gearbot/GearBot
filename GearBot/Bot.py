@@ -29,6 +29,7 @@ def prefix_callable(bot, message):
 
 bot = commands.Bot(command_prefix=prefix_callable, case_insensitive=True)
 bot.STARTUP_COMPLETE = False
+bot.messageCount = 0
 
 @bot.event
 async def on_ready():
@@ -36,11 +37,13 @@ async def on_ready():
         await Configuration.onReady(bot)
         await GearbotLogging.onReady(bot, Configuration.MASTER_CONFIG["BOT_LOG_CHANNEL"])
         await bot.change_presence(activity=discord.Game(name='with gears'))
+        bot.start_time = datetime.datetime.utcnow()
         bot.STARTUP_COMPLETE = True
 
 
 @bot.event
 async def on_message(message:discord.Message):
+    bot.messageCount = bot.messageCount + 1
     if message.author.bot:
         return
     await bot.process_commands(message)
@@ -139,7 +142,8 @@ extensions = [
     "Moderation",
     "Serveradmin",
     "ModLog",
-    "CustCommands"
+    "CustCommands",
+    # "BCVersionChecker"
 ]
 
 if __name__ == '__main__':

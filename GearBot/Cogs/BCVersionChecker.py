@@ -25,6 +25,9 @@ class BCVersionChecker:
         #cleanup
         self.running = False
 
+    def loadVersions(self):
+        pass
+
 
 
 def setup(bot):
