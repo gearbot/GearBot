@@ -72,6 +72,7 @@ class Admin:
 
     @commands.command()
     async def stats(self, ctx):
+        """Operational stats"""
         uptime = datetime.utcnow() - self.bot.start_time
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
@@ -82,6 +83,7 @@ class Admin:
 
     @commands.command()
     async def reconnectdb(self, ctx):
+        """Disconnect and reconnect the database, for in case it does run away again"""
         self.bot.database_connection.close()
         self.bot.database_connection.connect()
         await ctx.send("Database connection re-established")
