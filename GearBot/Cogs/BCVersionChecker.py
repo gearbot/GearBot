@@ -12,12 +12,9 @@ class BCVersionChecker:
         self.bot:commands.Bot = bot
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
-        self.BCT_VERSION_LIST = {}
-        self.BCCT_VERSION_LIST = {}
-        self.LAST_UPDATE = 0
         self.ALLOWED_TO_ANNOUNCE = True
-        self.VERSIONS_PER_MC_VERSION = {}
         self.running = True
+        self.force = False
         self.loadVersions()
         self.bot.loop.create_task(versionChecker(self))
 
@@ -39,22 +36,27 @@ async def versionChecker(checkcog:BCVersionChecker):
     GearbotLogging.info("Started BC version checking background task")
     session:aiohttp.ClientSession
     reply:aiohttp.ClientResponse
-    while checkcog.running:
-        async with aiohttp.ClientSession() as session:
+    lastUpdate = 0
+    async with aiohttp.ClientSession() as session:
+        while checkcog.running:
             try:
-                lastUpdate = 0
                 async with session.get('https://www.mod-buildcraft.com/build_info_full/last_change.txt') as reply:
                     stamp = await reply.text()
+                    stamp = int(stamp[:-1])
                     if stamp > lastUpdate:
                         GearbotLogging.info("New BC version somewhere!")
-
                         lastUpdate = stamp
                     pass
             except Exception as ex:
                 pass
+            for i in range(1,60):
+                if checkcog.force:
+                    break
+                await asyncio.sleep(10)
+
     GearbotLogging.info("BC version checking background task terminated")
 
 
-async def getList(session, url):
-    async with session.get(url) as reply:
-        return await reply.text().split("\n")[:-1]
+async def getList(session, link):
+    async with session.get(f"https://www.mod-buildcraft.com/build_info_full/{link}/versions.json") as reply:
+        return await reply.json()

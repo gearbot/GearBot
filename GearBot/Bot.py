@@ -31,6 +31,8 @@ def prefix_callable(bot, message):
 bot = commands.Bot(command_prefix=prefix_callable, case_insensitive=True)
 bot.STARTUP_COMPLETE = False
 bot.messageCount = 0
+bot.commandCount = 0
+bot.errors = 0
 
 @bot.event
 async def on_ready():
@@ -48,8 +50,8 @@ async def on_ready():
             pass #doesn't work on windows
 
 
-        await bot.change_presence(activity=discord.Game(name='with gears'))
         bot.start_time = datetime.datetime.utcnow()
+        await bot.change_presence(activity=discord.Game(name='with gears'))
         bot.STARTUP_COMPLETE = True
 
 async def keepDBalive():
@@ -62,7 +64,10 @@ async def on_message(message:discord.Message):
     bot.messageCount = bot.messageCount + 1
     if message.author.bot:
         return
-    await bot.process_commands(message)
+    ctx:commands.Context = await bot.get_context(message)
+    if ctx.command is not None:
+        bot.commandCount = bot.commandCount + 1
+    await bot.invoke(ctx)
 
 
 @bot.event
@@ -91,6 +96,7 @@ async def on_command_error(ctx: commands.Context, error):
     elif isinstance(error, commands.CommandNotFound):
         return
     else:
+        bot.errors = bot.errors + 1
         # log to logger first just in case botlog logging fails as well
         GearbotLogging.exception(f"Command execution failed:\n"
                                  f"    Command: {ctx.command}\n"
@@ -125,6 +131,7 @@ async def on_command_error(ctx: commands.Context, error):
 @bot.event
 async def on_error(event, *args, **kwargs):
     # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+    bot.errors = bot.errors + 1
     GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
     embed = discord.Embed(colour=discord.Colour(0xff0000),
                           timestamp=datetime.datetime.utcfromtimestamp(time.time()))
