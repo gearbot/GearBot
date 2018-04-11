@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import time
 import traceback
+from concurrent.futures import CancelledError
 
 import discord
 from discord.ext import commands
@@ -225,8 +226,11 @@ async def unmuteTask(modcog:Moderation):
             for id in guildstoremove:
                 del modcog.mutes[id]
             await asyncio.sleep(10)
+        except CancelledError:
+            pass #bot shutdown
         except Exception as ex:
-            GearbotLogging.exception("Something went wrong in the unmute task", ex)
+            GearbotLogging.error("Something went wrong in the unmute task")
+            GearbotLogging.error(traceback.format_exc())
             skips.append(userid)
             embed = discord.Embed(colour=discord.Colour(0xff0000),
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from discord.ext import commands
 
-from Util import GearbotLogging
+from Util import GearbotLogging, Util
 
 
 class Admin:
@@ -20,10 +20,7 @@ class Admin:
     async def restart(self, ctx):
         """Restarts the bot"""
         await ctx.send("Restarting...")
-        await GearbotLogging.logToBotlog(f"Restart triggered by {ctx.author.name}", log=True)
-        await self.bot.logout()
-        await self.bot.close()
-        await asyncio.sleep(11)
+        await Util.cleanExit(self.bot, ctx.author.name)
 
     @commands.command(hidden=True)
     async def reload(self, ctx, *, cog: str):
@@ -78,8 +75,14 @@ class Admin:
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
         minutes, seconds = divmod(remainder, 60)
+        await ctx.send(f"<:gearDiamond:433284297345073153>  Gears have been spinning for {days} day, {hours} hours, {minutes} minutes and {seconds} seconds\n<:gearGold:433284297554788352> {self.bot.messageCount} messages have been processed")
 
-        await ctx.send(f"<:gearDiamond:433284297345073153>  Gears have been spinning for {days} day, {hours} hours, {minutes} minutes and {seconds} seconds\n<:BCWrench:433284297181495298> {self.bot.messageCount} messages have been processed")
+    @commands.command()
+    async def reconnectDB(self, ctx):
+        self.bot.database_connection.close()
+        self.bot.database_connection.connect()
+        await ctx.send("Database connection re-established")
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

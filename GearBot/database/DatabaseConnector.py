@@ -39,3 +39,4 @@ class CustomCommand(Model):
 def init():
     connection.connect()
     connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment])
+    connection.close()

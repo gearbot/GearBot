@@ -1,6 +1,8 @@
+import asyncio
 import datetime
 import logging
 import os
+import signal
 import time
 import traceback
 from argparse import ArgumentParser
@@ -10,8 +12,7 @@ from discord import abc
 from discord.ext import commands
 from peewee import MySQLDatabase
 
-from Util import Configuration
-from Util import GearbotLogging
+from Util import Configuration, GearbotLogging, Util
 
 #load global config before database
 Configuration.loadGlobalConfig()
@@ -36,10 +37,25 @@ async def on_ready():
     if not bot.STARTUP_COMPLETE:
         await Configuration.onReady(bot)
         await GearbotLogging.onReady(bot, Configuration.MASTER_CONFIG["BOT_LOG_CHANNEL"])
+        bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
+
+        #shutdown handler for clean exit on linux
+        try:
+            for signame in ('SIGINT', 'SIGTERM'):
+                asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
+                                        lambda: asyncio.ensure_future(Util.cleanExit(bot, signame)))
+        except Exception:
+            pass #doesn't work on windows
+
+
         await bot.change_presence(activity=discord.Game(name='with gears'))
         bot.start_time = datetime.datetime.utcnow()
         bot.STARTUP_COMPLETE = True
 
+async def keepDBalive():
+    while not bot.is_closed():
+        bot.database_connection.connection().ping(True)
+        await asyncio.sleep(3600)
 
 @bot.event
 async def on_message(message:discord.Message):

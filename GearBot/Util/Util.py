@@ -2,6 +2,8 @@ import json
 
 from discord.ext import commands
 
+from Util import GearbotLogging
+
 
 def fetchFromDisk(filename):
     try:
@@ -34,3 +36,8 @@ def convertToSeconds(value: int, type: str):
         raise commands.BadArgument(f"Invalid duration: `{type}`\nValid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
     else:
         return value
+
+async def cleanExit(bot, trigger):
+    await GearbotLogging.logToBotlog(f"Shutdown triggered by {trigger}", log=True)
+    await bot.logout()
+    await bot.close()
