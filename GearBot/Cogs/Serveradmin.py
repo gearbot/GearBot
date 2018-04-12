@@ -52,9 +52,15 @@ class Serveradmin:
         Configuration.setConfigVar(ctx.guild.id, "MUTE_ROLE", int(role.id))
         await ctx.send(f"{role.mention} will now be used for muting people, denying send permissions for the role")
         for channel in guild.text_channels:
-            await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
+            try:
+                await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
+            except discord.Forbidden as ex:
+                await ctx.send(f"I was forbidden to setup {channel.mention}")
         for channel in guild.voice_channels:
-            await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
+            try:
+                await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
+            except discord.Forbidden as ex:
+                await ctx.send(f"I was forbidden to setup voice channel {channel.name}")
 
     @commands.group()
     async def disable(self, ctx:commands.Context):
