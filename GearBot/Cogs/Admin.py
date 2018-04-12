@@ -77,9 +77,9 @@ class Admin:
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
         minutes, seconds = divmod(remainder, 60)
-        tacos, remainder = divmod(int(uptime.total_seconds()), 30)
+        tacos, remainder = divmod(int(uptime.total_seconds()), 15)
         await ctx.send(
-            f"<:gearDiamond:433284297345073153> Gears have been spinning for {days} day, {hours} hours, {minutes} minutes and {seconds} seconds\n<:gearGold:433284297554788352> {self.bot.messageCount} messages have been processed\n<:gearIron:433284297563045901> Number of times ks messed with my gears (causing errors): {self.bot.errors}\n<:gearStone:433284297340878849> Numbers of command executed: {self.bot.commandCount}\n<:gearWood:433284297336815616> Working in {len(self.bot.guilds)} guilds\n:taco: About {tacos} tacos could have been produced and eaten in this time\n<:todo:433693576036352024> Add more stats")
+            f"<:gearDiamond:433284297345073153> Gears have been spinning for {days} day, {hours} hours, {minutes} minutes and {seconds} seconds\n<:gearGold:433284297554788352> {self.bot.messageCount} messages have been processed\n<:gearIron:433284297563045901> Number of times ks has grinded my gears (causing errors): {self.bot.errors}\n<:gearStone:433284297340878849> Numbers of command executed: {self.bot.commandCount}\n<:gearWood:433284297336815616> Working in {len(self.bot.guilds)} guilds\n:taco: About {tacos} tacos could have been produced and eaten in this time\n<:todo:433693576036352024> Add more stats")
 
     @commands.command()
     async def reconnectdb(self, ctx):
@@ -96,6 +96,10 @@ class Admin:
             await asyncio.sleep(1)
         p.communicate()
         await ctx.send(f"Pull completed with exit code {p.returncode}")
+
+    @commands.command()
+    async def test(self, ctx):
+        await ctx.send("<a:aMeowWave:394101112652693526>")
 
 
 def setup(bot):
