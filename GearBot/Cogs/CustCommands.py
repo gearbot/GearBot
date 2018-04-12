@@ -13,16 +13,15 @@ class CustCommands:
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         self.commands = dict()
-        if self.bot.STARTUP_COMPLETE:
-            self.reloadCommands()
+        self.bot.loop.create_task(self.reloadCommands())
 
     async def __local_check(self, ctx):
         return True
 
-    async def on_ready(self):
-        self.reloadCommands()
 
-    def reloadCommands(self):
+    async def reloadCommands(self):
+        while not self.bot.STARTUP_COMPLETE:
+            await asyncio.sleep(1)
         for guild in self.bot.guilds:
             self.commands[guild.id] = dict()
             for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):

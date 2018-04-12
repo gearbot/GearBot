@@ -15,10 +15,12 @@ class Serveradmin:
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
 
+    @commands.guild_only()
     @commands.group()
     async def configure(self, ctx:commands.Context):
         """Configure server specific settings"""
-        await ctx.send("See the subcommands (!help configure) for configurations")
+        if ctx.subcommand_passed is None:
+            await ctx.send("See the subcommands (!help configure) for configurations")
 
     @configure.command()
     async def prefix(self, ctx:commands.Context, newPrefix):
@@ -51,18 +53,31 @@ class Serveradmin:
             return
         Configuration.setConfigVar(ctx.guild.id, "MUTE_ROLE", int(role.id))
         await ctx.send(f"{role.mention} will now be used for muting people, denying send permissions for the role")
+        failed = []
         for channel in guild.text_channels:
             try:
                 await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
             except discord.Forbidden as ex:
-                await ctx.send(f"I was forbidden to setup {channel.mention}")
+                failed.append(channel.mention)
         for channel in guild.voice_channels:
             try:
                 await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
             except discord.Forbidden as ex:
-                await ctx.send(f"I was forbidden to setup voice channel {channel.name}")
+                failed.append(f"Voice channel {channel.name}")
+        if len(failed) > 0:
+            message = f"I was unable to configure muting in the following channels, there probably is an explicit deny on that channel for 'manage channel' on those channels or their category (if they are synced) for one of my roles (includes everyone role). Please make sure i can manage those channels and run this command again or deny the `send_messages` and `add_reactions` permissions for {role.mention} manually\n"
+            for fail in failed:
+                if len(message) + len(fail) > 2048:
+                    await ctx.send(message)
+                    message = ""
+                message = message + fail
+            if len(message) > 0:
+                await ctx.send(message)
+        else:
+            await ctx.send(f"Automatic mute setup complete")
 
     @commands.group()
+    @commands.guild_only()
     async def disable(self, ctx:commands.Context):
         """Base command for disabeling features"""
         pass

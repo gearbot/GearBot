@@ -7,6 +7,8 @@ import traceback
 import discord
 from discord.ext import commands
 
+from Util import Configuration
+
 logger = logging.getLogger('gearbot')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='gearbot.log', encoding='utf-8', mode='w+')
@@ -85,3 +87,12 @@ async def logToBotlog(message = None, embed = None, log = True):
     await BOT_LOG_CHANNEL.send(content=message, embed=embed)
     if log:
         info(message)
+
+async def logToModLog(guild, message=None, embed=None):
+    modlog:discord.TextChannel = guild.get_channel(Configuration.getConfigVar(guild.id, "MOD_LOGS"))
+    if modlog is not None:
+        perms = modlog.permissions_for(guild.me)
+        if perms.send_messages:
+            await modlog.send(message, embed=embed)
+        #TODO: notify guild owner?
+

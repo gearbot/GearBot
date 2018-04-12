@@ -109,9 +109,7 @@ class Moderation:
                 self.mutes[str(ctx.guild.id)][str(target.id)] = until
                 await ctx.send(f"{target.display_name} has been muted")
                 Util.saveToDisk("mutes", self.mutes)
-                modlog = ctx.guild.get_channel(Configuration.getConfigVar(ctx.guild.id, "MOD_LOGS"))
-                if modlog is not None:
-                    await modlog.send(f":zipper_mouth: {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
+                await GearbotLogging.logToModLog(ctx.guild, f":zipper_mouth: {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
 
     @commands.command()
     @commands.guild_only()
@@ -127,10 +125,7 @@ class Moderation:
             else:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                 await ctx.send(f"{target.display_name} has been unmuted")
-                modlog = ctx.guild.get_channel(Configuration.getConfigVar(ctx.guild.id, "MOD_LOGS"))
-                if modlog is not None:
-                    await modlog.send(
-                        f":innocent: {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
+                await GearbotLogging.logToModLog(ctx.guild, f":innocent: {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
 
     @commands.command()
     async def userinfo(self, ctx: commands.Context, user: str = None):
@@ -171,7 +166,7 @@ class Moderation:
         roleid = Configuration.getConfigVar(guild.id, "MUTE_ROLE")
         if roleid is not 0:
             role = discord.utils.get(guild.roles, id=roleid)
-            if role is not None:
+            if role is not None and channel.permissions_for(guild.me).manage_channels:
                 if isinstance(channel, discord.TextChannel):
                     await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
                 else:
@@ -185,10 +180,11 @@ class Moderation:
             if roleid is not 0:
                 role = discord.utils.get(member.guild.roles, id=roleid)
                 if role is not None:
-                    await member.add_roles(role, reason="Member left and re-joined before mute expired")
-                    modlog = member.guild.get_channel(Configuration.getConfigVar(member.guild.id, "MOD_LOGS"))
-                    if modlog is not None:
-                        await modlog.send(f":zipper_mouth: {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
+                    if member.guild.me.guild_permissions.manage_roles:
+                        await member.add_roles(role, reason="Member left and re-joined before mute expired")
+                        await GearbotLogging.logToModLog(member.guild, f":zipper_mouth: {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
+                    else:
+                        await GearbotLogging.logToModLog(member.guild, f"{member.name}#{member.discriminator} (`{member.id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute")
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
@@ -200,6 +196,8 @@ async def unmuteTask(modcog:Moderation):
     skips = []
     updated = False
     while modcog.running:
+        userid = 0
+        guildid=0
         try:
             guildstoremove = []
             for guildid, list in modcog.mutes.items():
@@ -211,10 +209,11 @@ async def unmuteTask(modcog:Moderation):
                     if time.time() > until and userid not in skips:
                         member = guild.get_member(int(userid))
                         role = discord.utils.get(guild.roles, id=Configuration.getConfigVar(int(guildid), "MUTE_ROLE"))
-                        modlog = guild.get_channel(Configuration.getConfigVar(int(guildid), "MOD_LOGS"))
-                        await member.remove_roles(role, reason="Mute expired")
-                        if modlog is not None:
-                            await modlog.send(f":innocent: {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
+                        if guild.me.guild_permissions.manage_roles:
+                            await member.remove_roles(role, reason="Mute expired")
+                            await GearbotLogging.logToModLog(guild, f":innocent: {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
+                        else:
+                            await GearbotLogging.logToModLog(guild, f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but i no longer have the permissions needed to unmute this person, please remove the role manually!")
                         updated = True
                         toremove.append(userid)
                 for todo in toremove:
