@@ -39,7 +39,7 @@ class Admin:
 
     @commands.command(hidden=True)
     async def load(self, ctx, cog: str):
-        if os.path.isfile(f"Cogs/{cog}.py"):
+        if os.path.isfile(f"Cogs/{cog}.py") or os.path.isfile(f"GearBot/Cogs/{cog}.py"):
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f"**{cog}** has been loaded!")
             await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}", log=True)
