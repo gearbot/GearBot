@@ -1,4 +1,6 @@
 from distutils.version import LooseVersion
+
+
 def compareVersions(v1, v2):
     return LooseVersion(v1) > LooseVersion(v2)
 
@@ -21,16 +23,10 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-def getSortedVersions(versions):
-    return sorted(list(versions.keys()), key=cmp_to_key(compareVersions))
 
-def getSortedVersionsArray(versions):
+def getSortedVersions(versions):
     return sorted(list(versions), key=cmp_to_key(compareVersions))
 
 def getLatest(versions):
     result = getSortedVersions(versions)
-    return result[0] if len(result) > 0 else None
-
-def getLatestArray(versions):
-    result = getSortedVersionsArray(versions)
     return result[0] if len(result) > 0 else None

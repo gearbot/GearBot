@@ -1,9 +1,10 @@
 import asyncio
 
 import aiohttp
+import discord
 from discord.ext import commands
 
-from Util import GearbotLogging
+from Util import GearbotLogging, VersionInfo
 
 
 class BCVersionChecker:
@@ -12,7 +13,6 @@ class BCVersionChecker:
         self.bot:commands.Bot = bot
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
-        self.ALLOWED_TO_ANNOUNCE = True
         self.running = True
         self.force = False
         self.loadVersions()
@@ -46,9 +46,23 @@ async def versionChecker(checkcog:BCVersionChecker):
                     if stamp > lastUpdate:
                         GearbotLogging.info("New BC version somewhere!")
                         lastUpdate = stamp
+                        checkcog.BC_VERSION_LIST = await getList(session, "BuildCraft")
+                        checkcog.BCC_VERSION_LIST = await getList(session, "BuildCraftCompat")
+                        highestMC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST.keys())
+                        latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
+                        generalID = 309218657798455298
+                        channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
+                        if not latestBC in channel.topic:
+                            async with session.get(f'https://www.mod-buildcraft.com/build_info_full/BuildCraft/{latestBC}.json') as reply:
+                                info = await reply.json()
+                                newTopic = f"General discussions about BuildCraft.\n" \
+                                           f"Latest version: {latestBC}\n" \
+                                           f"Full changelog and download: {info['blog_entry']}"
+                                await channel.edit(topic=newTopic)
+                        pass
                     pass
             except Exception as ex:
-                pass
+                GearbotLogging.error("something went wrong")
             for i in range(1,60):
                 if checkcog.force:
                     break
@@ -59,4 +73,7 @@ async def versionChecker(checkcog:BCVersionChecker):
 
 async def getList(session, link):
     async with session.get(f"https://www.mod-buildcraft.com/build_info_full/{link}/versions.json") as reply:
-        return await reply.json()
+        list = await reply.json()
+        if "unknown" in list.keys():
+            del list["unknown"]
+        return list
