@@ -52,7 +52,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                         latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
                         generalID = 309218657798455298
                         channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
-                        if not latestBC in channel.topic:
+                        if channel is not None and latestBC not in channel.topic:
                             async with session.get(f'https://www.mod-buildcraft.com/build_info_full/BuildCraft/{latestBC}.json') as reply:
                                 info = await reply.json()
                                 newTopic = f"General discussions about BuildCraft.\n" \

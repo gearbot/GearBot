@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from subprocess import Popen
 
+import discord
 from discord.ext import commands
 
 from Util import GearbotLogging, Util
@@ -107,6 +108,9 @@ class Admin:
     async def test(self, ctx):
         await ctx.send("<a:aMeowWave:394101112652693526>")
 
+    @commands.command()
+    async def setStatus(self, ctx, type:int, *, status:str):
+        await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
 
 def setup(bot):
     bot.add_cog(Admin(bot))

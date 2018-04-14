@@ -51,8 +51,8 @@ async def on_ready():
 
 
         bot.start_time = datetime.datetime.utcnow()
-        await bot.change_presence(activity=discord.Game(name='with gears'))
         bot.STARTUP_COMPLETE = True
+    await bot.change_presence(activity=discord.Game(name='with gears'))
 
 async def keepDBalive():
     while not bot.is_closed():
@@ -166,7 +166,7 @@ extensions = [
     "Serveradmin",
     "ModLog",
     "CustCommands",
-    # "BCVersionChecker"
+    "BCVersionChecker"
 ]
 
 if __name__ == '__main__':
