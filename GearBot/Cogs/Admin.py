@@ -53,7 +53,6 @@ class Admin:
         cogs = []
         for c in ctx.bot.cogs:
             cogs.append(c.replace('Cog', ''))
-
         if cog in cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded')
@@ -103,7 +102,8 @@ class Admin:
         while p.poll() is None:
             await asyncio.sleep(1)
         out, error = p.communicate()
-        await ctx.send(f"Pull completed with exit code {p.returncode}```{out}```")
+        out
+        await ctx.send(f"Pull completed with exit code {p.returncode}```{out.decode('utf-8')}```")
 
     @commands.command()
     async def test(self, ctx):
