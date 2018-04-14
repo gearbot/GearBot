@@ -111,6 +111,7 @@ class Admin:
     @commands.command()
     async def setStatus(self, ctx, type:int, *, status:str):
         await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
+        await ctx.send("Status updated")
 
 def setup(bot):
     bot.add_cog(Admin(bot))
