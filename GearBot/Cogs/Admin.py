@@ -1,5 +1,6 @@
 import asyncio
 import os
+import subprocess
 from datetime import datetime
 from subprocess import Popen
 
@@ -98,11 +99,11 @@ class Admin:
     @commands.command()
     async def pull(self, ctx):
         """Pulls from github so an upgrade can be performed without full restart"""
-        p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True)
+        p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
         while p.poll() is None:
             await asyncio.sleep(1)
-        p.communicate()
-        await ctx.send(f"Pull completed with exit code {p.returncode}")
+        out, error = p.communicate()
+        await ctx.send(f"Pull completed with exit code {p.returncode}```{out}```")
 
     @commands.command()
     async def test(self, ctx):
