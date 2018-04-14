@@ -136,7 +136,7 @@ class ModLog:
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
-                    await logChannel.send(f":wastebasket: Message by {user.name} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
+                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
 
     async def on_raw_message_edit(self, message_id, data):
         while not self.bot.STARTUP_COMPLETE:

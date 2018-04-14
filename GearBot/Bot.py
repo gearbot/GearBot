@@ -140,6 +140,7 @@ async def on_error(event, *args, **kwargs):
 
     embed.add_field(name="args", value=str(args))
     embed.add_field(name="kwargs", value=str(kwargs))
+    embed.add_field(name="cause message", value=traceback._cause_message)
     v = ""
     for line in traceback.format_exc():
         if len(v) + len(line) > 1024:
