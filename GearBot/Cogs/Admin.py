@@ -70,7 +70,7 @@ class Admin:
         await ctx.send(f"Pull completed with exit code {p.returncode}```{out.decode('utf-8')}```")
 
     @commands.command()
-    async def setStatus(self, ctx, type:int, *, status:str):
+    async def setstatus(self, ctx, type:int, *, status:str):
         await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
         await ctx.send("Status updated")
 
