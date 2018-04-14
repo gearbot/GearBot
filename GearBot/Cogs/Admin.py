@@ -26,41 +26,6 @@ class Admin:
         await Util.cleanExit(self.bot, ctx.author.name)
 
     @commands.command(hidden=True)
-    async def reload(self, ctx, *, cog: str):
-        cogs = []
-        for c in ctx.bot.cogs:
-            cogs.append(c.replace('Cog', ''))
-
-        if cog in cogs:
-            self.bot.unload_extension(f"Cogs.{cog}")
-            self.bot.load_extension(f"Cogs.{cog}")
-            await ctx.send(f'**{cog}** has been reloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}', log=True)
-        else:
-            await ctx.send(f"I can't find that cog.")
-
-    @commands.command(hidden=True)
-    async def load(self, ctx, cog: str):
-        if os.path.isfile(f"Cogs/{cog}.py") or os.path.isfile(f"GearBot/Cogs/{cog}.py"):
-            self.bot.load_extension(f"Cogs.{cog}")
-            await ctx.send(f"**{cog}** has been loaded!")
-            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}", log=True)
-        else:
-            await ctx.send(f"I can't find that cog.")
-
-    @commands.command(hidden=True)
-    async def unload(self, ctx, cog: str):
-        cogs = []
-        for c in ctx.bot.cogs:
-            cogs.append(c.replace('Cog', ''))
-        if cog in cogs:
-            self.bot.unload_extension(f"Cogs.{cog}")
-            await ctx.send(f'**{cog}** has been unloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}', log=True)
-        else:
-            await ctx.send(f"I can't find that cog.")
-
-    @commands.command(hidden=True)
     async def upgrade(self, ctx):
         await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
         await GearbotLogging.logToBotlog(f"Upgrade initiated by {ctx.author.name}", log=True)
@@ -102,12 +67,7 @@ class Admin:
         while p.poll() is None:
             await asyncio.sleep(1)
         out, error = p.communicate()
-        out
         await ctx.send(f"Pull completed with exit code {p.returncode}```{out.decode('utf-8')}```")
-
-    @commands.command()
-    async def test(self, ctx):
-        await ctx.send("<a:aMeowWave:394101112652693526>")
 
     @commands.command()
     async def setStatus(self, ctx, type:int, *, status:str):

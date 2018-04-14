@@ -167,7 +167,8 @@ extensions = [
     "Serveradmin",
     "ModLog",
     "CustCommands",
-    "BCVersionChecker"
+    "BCVersionChecker",
+    "Reload"
 ]
 
 if __name__ == '__main__':
