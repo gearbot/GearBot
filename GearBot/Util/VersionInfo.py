@@ -2,7 +2,7 @@ from distutils.version import LooseVersion
 
 
 def compareVersions(v1, v2):
-    return LooseVersion(v1) > LooseVersion(v2)
+    return LooseVersion(v1 if v1 != 'unknown' else 0) > LooseVersion(v2 if v2 != 'unknown' else 0)
 
 def cmp_to_key(mycmp):
     'Convert a cmp= function into a key= function'
