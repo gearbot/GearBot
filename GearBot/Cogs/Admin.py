@@ -67,7 +67,7 @@ class Admin:
         while p.poll() is None:
             await asyncio.sleep(1)
         out, error = p.communicate()
-        await ctx.send(f"Pull completed with exit code {p.returncode}```{out.decode('utf-8')}```")
+        await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
 
     @commands.command()
     async def setstatus(self, ctx, type:int, *, status:str):

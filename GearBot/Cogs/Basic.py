@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from random import random
 
 import discord
 from discord.ext import commands
@@ -85,6 +86,15 @@ class Basic:
                 embed.set_footer(text=f"Send in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
                 await ctx.send(embed=embed)
                 await ctx.message.delete()
+
+    @commands.command()
+    async def coinflip(self, ctx, *, thing:str):
+        """Random decision making"""
+        outcome = random.randint(1, 2)
+        if outcome == 1 or ("mute" in thing and "vos" in thing):
+            await ctx.send(f"Yes, you should absolutely {thing}")
+        else:
+            await ctx.send(f"No you should probably not {thing}")
 
 
 def setup(bot):

@@ -19,15 +19,12 @@ class BCVersionChecker:
         self.BCC_VERSION_LIST = {}
         self.running = True
         self.force = False
-        self.loadVersions()
         self.bot.loop.create_task(versionChecker(self))
 
     def __unload(self):
         #cleanup
         self.running = False
 
-    def loadVersions(self):
-        pass
 
 
 
@@ -95,6 +92,4 @@ async def versionChecker(checkcog:BCVersionChecker):
 async def getList(session, link):
     async with session.get(f"https://www.mod-buildcraft.com/build_info_full/{link}/versions.json") as reply:
         list = await reply.json()
-        if "unknown" in list.keys():
-            del list["unknown"]
         return list
