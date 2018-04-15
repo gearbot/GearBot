@@ -1,4 +1,8 @@
 import asyncio
+import time
+import traceback
+from concurrent.futures import CancelledError
+from datetime import datetime
 
 import aiohttp
 import discord
@@ -61,10 +65,27 @@ async def versionChecker(checkcog:BCVersionChecker):
                                 await channel.edit(topic=newTopic)
                         pass
                     pass
+            except CancelledError:
+                pass  # bot shutdown
             except Exception as ex:
-                GearbotLogging.error("something went wrong")
+                GearbotLogging.error("Something went wrong in the BC version checker task")
+                GearbotLogging.error(traceback.format_exc())
+                embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                      timestamp=datetime.utcfromtimestamp(time.time()))
+
+                embed.set_author(name="Something went wrong in the BC version checker task:")
+                embed.add_field(name="Exception", value=ex)
+                v = ""
+                for line in traceback.format_exc().splitlines():
+                    if len(v) + len(line) > 1024:
+                        embed.add_field(name="Stacktrace", value=v)
+                        v = ""
+                    v = f"{v}\n{line}"
+                if len(v) > 0:
+                    embed.add_field(name="Stacktrace", value=v)
+                await GearbotLogging.logToBotlog(embed=embed)
             for i in range(1,60):
-                if checkcog.force:
+                if checkcog.force or not checkcog.running:
                     break
                 await asyncio.sleep(10)
 
