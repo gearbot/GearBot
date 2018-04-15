@@ -93,4 +93,6 @@ async def versionChecker(checkcog:BCVersionChecker):
 async def getList(session, link):
     async with session.get(f"https://www.mod-buildcraft.com/build_info_full/{link}/versions.json") as reply:
         list = await reply.json()
+        if "unknown" in list.keys():
+            del list["unknown"]
         return list
