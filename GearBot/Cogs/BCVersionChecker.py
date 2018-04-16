@@ -65,7 +65,7 @@ async def versionChecker(checkcog:BCVersionChecker):
             except CancelledError:
                 pass  # bot shutdown
             except Exception as ex:
-                checkcog.bot.errors = checkcog.bot.errors + checkcog.bot.errors
+                checkcog.bot.errors = checkcog.bot.errors + 1
                 GearbotLogging.error("Something went wrong in the BC version checker task")
                 GearbotLogging.error(traceback.format_exc())
                 embed = discord.Embed(colour=discord.Colour(0xff0000),
