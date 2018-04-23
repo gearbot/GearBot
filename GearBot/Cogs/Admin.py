@@ -74,5 +74,15 @@ class Admin:
         await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
         await ctx.send("Status updated")
 
+    @commands.command()
+    async def test(self, ctx:commands.Context):
+        channel: discord.TextChannel = ctx.channel
+        hook:discord.Webhook
+        names = ""
+        hooks = await channel.webhooks()
+        for hook in hooks:
+            names = f"{names}\n{hook.name}"
+        await ctx.send(f"Found {len(hooks)}:{names}")
+
 def setup(bot):
     bot.add_cog(Admin(bot))
