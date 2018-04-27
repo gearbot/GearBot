@@ -31,12 +31,12 @@ class BCVersionChecker:
 
     @commands.command()
     async def latest(self, ctx:commands.Context, version=None):
-        async with ctx.typing():
-            if version is None:
-                version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
-            if version not in self.BC_VERSION_LIST.keys():
-                await ctx.send(f"Sorry but `{version}` does not seem to be a valid MC version that has BuildCraft releases.")
-            else:
+        if version is None:
+            version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
+        if version not in self.BC_VERSION_LIST.keys():
+            await ctx.send(f"Sorry but `{version}` does not seem to be a valid MC version that has BuildCraft releases.")
+        else:
+            async with ctx.typing():
                 latestBC = VersionInfo.getLatest(self.BC_VERSION_LIST[version])
                 latestBCinfo = await self.getVersionDetails("BuildCraft", latestBC)
 
