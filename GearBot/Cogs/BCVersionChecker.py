@@ -25,6 +25,30 @@ class BCVersionChecker:
         #cleanup
         self.running = False
 
+    @commands.command()
+    async def latest(self, ctx:commands.Context, version=None):
+        if version is None:
+            version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
+        if version not in self.BC_VERSION_LIST.keys():
+            await ctx.send(f"Sorry but `{version}` does not seem to be a valid MC version that has BuildCraft releases.")
+        else:
+            lastestBC = VersionInfo.getLatest(self.BC_VERSION_LIST[version])
+
+            embed = discord.Embed(title=f"Buildcraft releases", url="http://www.mod-buildcraft.com/",
+                                  colour=discord.Colour(0x54d5ff), timestamp=datetime.utcfromtimestamp(time.time()))
+            embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
+            info = f"Buildcraft {lastestBC}\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraft/changelog/{lastestBC}.html) | [Blog]({lastestBC['blog_entry'] if 'blog_entry' in lastestBC else 'https://www.mod-buildcraft.com'}) | [Direct download](https://mod-buildcraft.com/releases/BuildCraft/{lastestBC}/buildcraft-{lastestBC}.jar)"
+
+            embed.add_field(name=f"Latest BuildCraft releases for {version}:", value=info)
+
+            await ctx.send(embed=embed)
+
+            if version in self.BCC_VERSION_LIST.keys():
+                latestBCC = VersionInfo.getLatest(self.BCC_VERSION_LIST[version])
+
+
+
+
 
 
 
