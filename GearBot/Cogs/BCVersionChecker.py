@@ -62,7 +62,7 @@ class BCVersionChecker:
 
     @commands.command()
     @commands.is_owner()
-    async def cleanCache(self, ctx):
+    async def cleancache(self, ctx):
         self.infoCache = {
             "BuildCraft": {},
             "BuildCraftCompat": {}
