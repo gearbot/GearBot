@@ -46,7 +46,7 @@ class BCVersionChecker:
                     latestBCCinfo = await self.getVersionDetails("BuildCraftCompat", latestBCC)
                     info = f"{info}\n\nBuildcraft Compat {latestBCC}:\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraftCompat/changelog/{latestBCC}.html) | [Blog]({latestBCCinfo['blog_entry'] if 'blog_entry' in latestBCCinfo else 'https://www.mod-buildcraft.com'}) | [Direct download]({latestBCCinfo['downloads']['main']})"
 
-                embed = discord.Embed(colour=discord.Colour(0x54d5ff), timestamp=datetime.utcfromtimestamp(time.time()),
+                embed = discord.Embed(colour=discord.Colour(0x54d5ff), timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                       description=info)
                 embed.set_author(name=f"BuildCraft releases for {version}", url="https://www.mod-buildcraft.com/pages/download.html", icon_url="https://i.imgur.com/YKGkDDZ.png")
                 await ctx.send(embed=embed)
@@ -141,7 +141,7 @@ async def versionChecker(checkcog:BCVersionChecker):
             embed = discord.Embed(colour=discord.Colour(0xff0000),
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))
             embed.set_author(name="Something went wrong in the BC version checker task:")
-            embed.add_field(name="Exception", value=ex)
+            embed.add_field(name="Exception", value=str(ex))
             v = ""
             for line in traceback.format_exc().splitlines():
                 if len(v) + len(line) > 1024:
