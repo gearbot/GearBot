@@ -19,6 +19,10 @@ class BCVersionChecker:
         self.BCC_VERSION_LIST = {}
         self.running = True
         self.force = False
+        self.infoCache = {
+            "BuildCraft": {},
+            "BuildCraftCompat": {}
+        }
         self.bot.loop.create_task(versionChecker(self))
 
     def __unload(self):
@@ -27,30 +31,34 @@ class BCVersionChecker:
 
     @commands.command()
     async def latest(self, ctx:commands.Context, version=None):
-        if version is None:
-            version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
-        if version not in self.BC_VERSION_LIST.keys():
-            await ctx.send(f"Sorry but `{version}` does not seem to be a valid MC version that has BuildCraft releases.")
-        else:
-            lastestBC = VersionInfo.getLatest(self.BC_VERSION_LIST[version])
+        async with ctx.typing():
+            if version is None:
+                version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
+            if version not in self.BC_VERSION_LIST.keys():
+                await ctx.send(f"Sorry but `{version}` does not seem to be a valid MC version that has BuildCraft releases.")
+            else:
+                latestBC = VersionInfo.getLatest(self.BC_VERSION_LIST[version])
+                latestBCinfo = await self.getVersionDetails("BuildCraft", latestBC)
 
-            embed = discord.Embed(title=f"Buildcraft releases", url="http://www.mod-buildcraft.com/",
-                                  colour=discord.Colour(0x54d5ff), timestamp=datetime.utcfromtimestamp(time.time()))
-            embed.set_thumbnail(url="https://i.imgur.com/YKGkDDZ.png")
-            info = f"Buildcraft {lastestBC}\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraft/changelog/{lastestBC}.html) | [Blog]({lastestBC['blog_entry'] if 'blog_entry' in lastestBC else 'https://www.mod-buildcraft.com'}) | [Direct download](https://mod-buildcraft.com/releases/BuildCraft/{lastestBC}/buildcraft-{lastestBC}.jar)"
+                info = f"Buildcraft {latestBC}:\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraft/changelog/{latestBC}.html) | [Blog]({latestBCinfo['blog_entry'] if 'blog_entry' in latestBCinfo else 'https://www.mod-buildcraft.com'}) | [Direct download]({latestBCinfo['downloads']['main']})"
+                if version in self.BCC_VERSION_LIST.keys():
+                    latestBCC = VersionInfo.getLatest(self.BCC_VERSION_LIST[version])
+                    latestBCCinfo = await self.getVersionDetails("BuildCraftCompat", latestBCC)
+                    info = f"{info}\n\nBuildcraft Compat {latestBCC}:\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraftCompat/changelog/{latestBCC}.html) | [Blog]({latestBCCinfo['blog_entry'] if 'blog_entry' in latestBCCinfo else 'https://www.mod-buildcraft.com'}) | [Direct download]({latestBCCinfo['downloads']['main']})"
 
-            embed.add_field(name=f"Latest BuildCraft releases for {version}:", value=info)
-
-            await ctx.send(embed=embed)
-
-            if version in self.BCC_VERSION_LIST.keys():
-                latestBCC = VersionInfo.getLatest(self.BCC_VERSION_LIST[version])
-
-
-
+                embed = discord.Embed(colour=discord.Colour(0x54d5ff), timestamp=datetime.utcfromtimestamp(time.time()),
+                                      description=info)
+                embed.set_author(name=f"BuildCraft releases for {version}", url="https://www.mod-buildcraft.com/pages/download.html", icon_url="https://i.imgur.com/YKGkDDZ.png")
+                await ctx.send(embed=embed)
 
 
-
+    async def getVersionDetails(self, mod, version):
+        if not version in self.infoCache[mod].keys():
+            session: aiohttp.ClientSession = self.bot.aiosession
+            async with session.get(f'https://www.mod-buildcraft.com/build_info_full/{mod}/{version}.json') as reply:
+                info = await reply.json()
+                self.infoCache[mod][version] = info
+        return self.infoCache[mod][version]
 
 def setup(bot):
     bot.add_cog(BCVersionChecker(bot))
@@ -59,57 +67,54 @@ async def versionChecker(checkcog:BCVersionChecker):
     while not checkcog.bot.STARTUP_COMPLETE:
         await asyncio.sleep(1)
     GearbotLogging.info("Started BC version checking background task")
-    session:aiohttp.ClientSession
+    session:aiohttp.ClientSession = checkcog.bot.aiosession
     reply:aiohttp.ClientResponse
     lastUpdate = 0
-    async with aiohttp.ClientSession() as session:
-        while checkcog.running:
-            try:
-                async with session.get('https://www.mod-buildcraft.com/build_info_full/last_change.txt') as reply:
-                    stamp = await reply.text()
-                    stamp = int(stamp[:-1])
-                    if stamp > lastUpdate:
-                        GearbotLogging.info("New BC version somewhere!")
-                        lastUpdate = stamp
-                        checkcog.BC_VERSION_LIST = await getList(session, "BuildCraft")
-                        checkcog.BCC_VERSION_LIST = await getList(session, "BuildCraftCompat")
-                        highestMC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST.keys())
-                        latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
-                        generalID = 309218657798455298
-                        channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
-                        if channel is not None and latestBC not in channel.topic:
-                            async with session.get(f'https://www.mod-buildcraft.com/build_info_full/BuildCraft/{latestBC}.json') as reply:
-                                info = await reply.json()
-                                newTopic = f"General discussions about BuildCraft.\n" \
-                                           f"Latest version: {latestBC}\n" \
-                                           f"Full changelog and download: {info['blog_entry']}"
-                                await channel.edit(topic=newTopic)
-                        pass
+    while checkcog.running:
+        try:
+            async with session.get('https://www.mod-buildcraft.com/build_info_full/last_change.txt') as reply:
+                stamp = await reply.text()
+                stamp = int(stamp[:-1])
+                if stamp > lastUpdate:
+                    GearbotLogging.info("New BC version somewhere!")
+                    lastUpdate = stamp
+                    checkcog.BC_VERSION_LIST = await getList(session, "BuildCraft")
+                    checkcog.BCC_VERSION_LIST = await getList(session, "BuildCraftCompat")
+                    highestMC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST.keys())
+                    latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
+                    generalID = 309218657798455298
+                    channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
+                    if channel is not None and latestBC not in channel.topic:
+                        info = checkcog.getVersionDetails("BuildCraft", latestBC)
+                        newTopic = f"General discussions about BuildCraft.\n" \
+                                   f"Latest version: {latestBC}\n" \
+                                   f"Full changelog and download: {info['blog_entry']}"
+                        await channel.edit(topic=newTopic)
                     pass
-            except CancelledError:
-                pass  # bot shutdown
-            except Exception as ex:
-                checkcog.bot.errors = checkcog.bot.errors + 1
-                GearbotLogging.error("Something went wrong in the BC version checker task")
-                GearbotLogging.error(traceback.format_exc())
-                embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                      timestamp=datetime.utcfromtimestamp(time.time()))
-
-                embed.set_author(name="Something went wrong in the BC version checker task:")
-                embed.add_field(name="Exception", value=ex)
-                v = ""
-                for line in traceback.format_exc().splitlines():
-                    if len(v) + len(line) > 1024:
-                        embed.add_field(name="Stacktrace", value=v)
-                        v = ""
-                    v = f"{v}\n{line}"
-                if len(v) > 0:
+                pass
+        except CancelledError:
+            pass  # bot shutdown
+        except Exception as ex:
+            checkcog.bot.errors = checkcog.bot.errors + 1
+            GearbotLogging.error("Something went wrong in the BC version checker task")
+            GearbotLogging.error(traceback.format_exc())
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.utcfromtimestamp(time.time()))
+            embed.set_author(name="Something went wrong in the BC version checker task:")
+            embed.add_field(name="Exception", value=ex)
+            v = ""
+            for line in traceback.format_exc().splitlines():
+                if len(v) + len(line) > 1024:
                     embed.add_field(name="Stacktrace", value=v)
-                await GearbotLogging.logToBotlog(embed=embed)
-            for i in range(1,60):
-                if checkcog.force or not checkcog.running:
-                    break
-                await asyncio.sleep(10)
+                    v = ""
+                v = f"{v}\n{line}"
+            if len(v) > 0:
+                embed.add_field(name="Stacktrace", value=v)
+            await GearbotLogging.logToBotlog(embed=embed)
+        for i in range(1,60):
+            if checkcog.force or not checkcog.running:
+                break
+            await asyncio.sleep(10)
 
     GearbotLogging.info("BC version checking background task terminated")
 

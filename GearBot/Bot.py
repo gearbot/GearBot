@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 import datetime
 import logging
@@ -48,6 +49,8 @@ async def on_ready():
                                         lambda: asyncio.ensure_future(Util.cleanExit(bot, signame)))
         except Exception:
             pass #doesn't work on windows
+
+        bot.aiosession = aiohttp.ClientSession()
 
 
         bot.start_time = datetime.datetime.utcnow()
