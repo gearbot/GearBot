@@ -63,11 +63,12 @@ class Admin:
     @commands.command()
     async def pull(self, ctx):
         """Pulls from github so an upgrade can be performed without full restart"""
-        p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
-        while p.poll() is None:
-            await asyncio.sleep(1)
-        out, error = p.communicate()
-        await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
+        async with ctx.typing():
+            p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+            while p.poll() is None:
+                await asyncio.sleep(1)
+            out, error = p.communicate()
+            await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
 
     @commands.command()
     async def setstatus(self, ctx, type:int, *, status:str):
