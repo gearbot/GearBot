@@ -60,6 +60,15 @@ class BCVersionChecker:
                 self.infoCache[mod][version] = info
         return self.infoCache[mod][version]
 
+    @commands.command()
+    @commands.is_owner()
+    async def cleanCache(self, ctx):
+        self.infoCache = {
+            "BuildCraft": {},
+            "BuildCraftCompat": {}
+        }
+        await ctx.send("Cache cleaned")
+
 def setup(bot):
     bot.add_cog(BCVersionChecker(bot))
 
