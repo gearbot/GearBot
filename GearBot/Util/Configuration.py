@@ -16,7 +16,8 @@ CONFIG_TEMPLATE = {
     "MINOR_LOGS": 0,
     "JOIN_LOGS": 0,
     "MOD_LOGS": 0,
-    "MUTE_ROLE": 0
+    "MUTE_ROLE": 0,
+    "DEV_ROLE": 0
 }
 
 

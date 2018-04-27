@@ -2,13 +2,13 @@ import asyncio
 import time
 import traceback
 from concurrent.futures import CancelledError
-from datetime import datetime
+import datetime
 
 import aiohttp
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, VersionInfo
+from Util import GearbotLogging, VersionInfo, Permissioncheckers
 
 
 class BCVersionChecker:
@@ -69,6 +69,37 @@ class BCVersionChecker:
         }
         await ctx.send("Cache cleaned")
 
+    @commands.command()
+    @commands.bot_has_permissions(manage_roles=True)
+    @Permissioncheckers.devOnly()
+    async def requesttesting(self, ctx:commands.Context, roleName):
+        role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
+        if role is None:
+            await ctx.send("Unable to find that role")
+        else:
+            await role.edit(mentionable=True)
+            await ctx.send("Role is now mentionable and awaiting your announcement")
+
+            def check(message:discord.Message):
+                return role in message.role_mentions
+            until = datetime.datetime.now() + datetime.timedelta(minutes=1)
+
+            done = False
+            while not done:
+                try:
+                    message:discord.Message = await self.bot.wait_for('message', check=check, timeout=(until - datetime.datetime.now()).seconds)
+                    if message.author == ctx.author:
+                        await message.pin()
+                        done = True
+                    else:
+                        await message.delete()
+                        await message.channel.send(f"{message.author.mention}: You where not authorized to mention that role, please do not try that again")
+                except:
+                    await ctx.send("Time ran out, role is now no longer mentionable")
+                    done = True
+            await role.edit(mentionable=False)
+
+
 def setup(bot):
     bot.add_cog(BCVersionChecker(bot))
 
@@ -108,7 +139,7 @@ async def versionChecker(checkcog:BCVersionChecker):
             GearbotLogging.error("Something went wrong in the BC version checker task")
             GearbotLogging.error(traceback.format_exc())
             embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                  timestamp=datetime.utcfromtimestamp(time.time()))
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
             embed.set_author(name="Something went wrong in the BC version checker task:")
             embed.add_field(name="Exception", value=ex)
             v = ""

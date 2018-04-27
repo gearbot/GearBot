@@ -30,3 +30,16 @@ def modOnly():
     async def predicate(ctx):
         return isServerMod(ctx)
     return commands.check(predicate)
+
+def isDev(ctx:commands.Context):
+    devrole = Configuration.getConfigVar(ctx.guild.id, "DEV_ROLE")
+    if devrole != 0:
+        for role in ctx.author.roles:
+            if role.id == devrole:
+                return True
+    return isServerAdmin(ctx)
+
+def devOnly():
+    async def predicate(ctx):
+        return isDev(ctx)
+    return commands.check(predicate)

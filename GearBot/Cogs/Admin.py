@@ -7,7 +7,7 @@ from subprocess import Popen
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Util
+from Util import GearbotLogging, Util, Configuration
 
 
 class Admin:
@@ -84,6 +84,14 @@ class Admin:
         for hook in hooks:
             names = f"{names}\n{hook.name}"
         await ctx.send(f"Found {len(hooks)}:{names}")
+
+    @commands.command()
+    async def reloadconfigs(self, ctx:commands.Context):
+        async with ctx.typing():
+            Configuration.loadGlobalConfig()
+            await Configuration.onReady(self.bot)
+            await ctx.send("Configs reloaded")
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

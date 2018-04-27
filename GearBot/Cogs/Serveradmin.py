@@ -76,6 +76,11 @@ class Serveradmin:
         else:
             await ctx.send(f"Automatic mute setup complete")
 
+    @configure.command()
+    async def devRole(self, ctx:commands.Context, roleID):
+        Configuration.setConfigVar(ctx.guild.id, "DEV_ROLE", roleID)
+        await ctx.send(f"The server dev role has been set.")
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):

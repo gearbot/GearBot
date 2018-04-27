@@ -16,7 +16,7 @@ class Moderation:
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
-        self.mutes = Util.fetchFromDisk("mutes")
+        bot.mutes = self.mutes = Util.fetchFromDisk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
 
