@@ -1,8 +1,8 @@
 import asyncio
+import datetime
 import time
 import traceback
 from concurrent.futures import CancelledError
-import datetime
 
 import aiohttp
 import discord
