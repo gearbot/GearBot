@@ -2,7 +2,11 @@ from peewee import *
 
 from Util import Configuration
 
-connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"), user=Configuration.getMasterConfigVar("DATABASE_USER"), password=Configuration.getMasterConfigVar("DATABASE_PASS"), host=Configuration.getMasterConfigVar("DATABASE_HOST"), port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
+connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"),
+                  user=Configuration.getMasterConfigVar("DATABASE_USER"),
+                  password=Configuration.getMasterConfigVar("DATABASE_PASS"),
+                  host=Configuration.getMasterConfigVar("DATABASE_HOST"),
+                  port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
 
 
 class LoggedMessage(Model):
@@ -37,6 +41,12 @@ class CustomCommand(Model):
 
 
 def init():
+    global connection
+    connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"),
+                  user=Configuration.getMasterConfigVar("DATABASE_USER"),
+                  password=Configuration.getMasterConfigVar("DATABASE_PASS"),
+                  host=Configuration.getMasterConfigVar("DATABASE_HOST"),
+                  port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
     connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment])
     connection.close()

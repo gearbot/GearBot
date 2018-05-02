@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Permissioncheckers, Configuration, Util, GearbotLogging
+from Util import Permissioncheckers, Configuration, Utils, GearbotLogging
 from Util.Converters import BannedMember
 
 
@@ -16,12 +16,12 @@ class Moderation:
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
-        bot.mutes = self.mutes = Util.fetchFromDisk("mutes")
+        bot.mutes = self.mutes = Utils.fetchFromDisk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
 
     def __unload(self):
-        Util.saveToDisk("mutes", self.mutes)
+        Utils.saveToDisk("mutes", self.mutes)
         self.running = False
 
     async def __local_check(self, ctx):
@@ -101,14 +101,14 @@ class Moderation:
             if role is None:
                 await ctx.send(f":warning: Unable to comply, someone has removed the role i was told to use, but i can still kick {target.mention} while a server admin makes a new role for me to use")
             else:
-                duration = Util.convertToSeconds(durationNumber, durationIdentifier)
+                duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
                 until = time.time() + duration
                 await target.add_roles(role, reason=f"{reason}, as requested by {ctx.author.name}")
                 if not str(ctx.guild.id) in self.mutes:
                     self.mutes[str(ctx.guild.id)] = dict()
                 self.mutes[str(ctx.guild.id)][str(target.id)] = until
                 await ctx.send(f"{target.display_name} has been muted")
-                Util.saveToDisk("mutes", self.mutes)
+                Utils.saveToDisk("mutes", self.mutes)
                 await GearbotLogging.logToModLog(ctx.guild, f":zipper_mouth: {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
 
     @commands.command()
@@ -220,7 +220,7 @@ async def unmuteTask(modcog:Moderation):
                     del list[todo]
                 await asyncio.sleep(0)
             if updated:
-                Util.saveToDisk("mutes", modcog.mutes)
+                Utils.saveToDisk("mutes", modcog.mutes)
                 updated = False
             for id in guildstoremove:
                 del modcog.mutes[id]

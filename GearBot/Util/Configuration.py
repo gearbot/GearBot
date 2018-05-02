@@ -8,6 +8,7 @@ from Util import GearbotLogging
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
+master_loaded = False
 
 CONFIG_TEMPLATE = {
     "PREFIX": "!",
@@ -29,10 +30,11 @@ async def onReady(bot:commands.Bot):
 
 
 def loadGlobalConfig():
-    global MASTER_CONFIG
+    global MASTER_CONFIG, master_loaded
     try:
         with open('config/master.json', 'r') as jsonfile:
             MASTER_CONFIG = json.load(jsonfile)
+            master_loaded = True
     except FileNotFoundError:
         GearbotLogging.error("Unable to load config, running with defaults")
     except Exception as e:
@@ -73,6 +75,8 @@ def saveConfig(id):
 
 def getMasterConfigVar(key, default=None) :
     global MASTER_CONFIG
+    if not master_loaded:
+        loadGlobalConfig()
     if not key in MASTER_CONFIG.keys():
         MASTER_CONFIG[key] = default
         saveMasterConfig()

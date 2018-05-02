@@ -7,7 +7,7 @@ from subprocess import Popen
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Util, Configuration
+from Util import GearbotLogging, Utils, Configuration
 
 
 class Admin:
@@ -23,7 +23,7 @@ class Admin:
     async def restart(self, ctx):
         """Restarts the bot"""
         await ctx.send("Restarting...")
-        await Util.cleanExit(self.bot, ctx.author.name)
+        await Utils.cleanExit(self.bot, ctx.author.name)
 
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
@@ -74,16 +74,6 @@ class Admin:
     async def setstatus(self, ctx, type:int, *, status:str):
         await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
         await ctx.send("Status updated")
-
-    @commands.command()
-    async def test(self, ctx:commands.Context):
-        channel: discord.TextChannel = ctx.channel
-        hook:discord.Webhook
-        names = ""
-        hooks = await channel.webhooks()
-        for hook in hooks:
-            names = f"{names}\n{hook.name}"
-        await ctx.send(f"Found {len(hooks)}:{names}")
 
     @commands.command()
     async def reloadconfigs(self, ctx:commands.Context):

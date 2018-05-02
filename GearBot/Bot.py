@@ -13,12 +13,9 @@ from discord import abc
 from discord.ext import commands
 from peewee import MySQLDatabase
 
-from Util import Configuration, GearbotLogging, Util
-
-#load global config before database
-Configuration.loadGlobalConfig()
-
-from database import DatabaseConnector
+from Util import Configuration, GearbotLogging
+from Util import Utils as Utils
+import Util
 
 def prefix_callable(bot, message):
     user_id = bot.user.id
@@ -38,21 +35,18 @@ bot.errors = 0
 @bot.event
 async def on_ready():
     if not bot.STARTUP_COMPLETE:
-        await Configuration.onReady(bot)
-        await GearbotLogging.onReady(bot, Configuration.MASTER_CONFIG["BOT_LOG_CHANNEL"])
+        await Util.readyBot(bot)
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
         try:
             for signame in ('SIGINT', 'SIGTERM'):
                 asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                        lambda: asyncio.ensure_future(Util.cleanExit(bot, signame)))
+                                        lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
         except Exception:
             pass #doesn't work on windows
 
         bot.aiosession = aiohttp.ClientSession()
-
-
         bot.start_time = datetime.datetime.utcnow()
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Game(name='with gears'))
@@ -205,10 +199,7 @@ if __name__ == '__main__':
             bot.load_extension("Cogs." + extension)
         except Exception as e:
             GearbotLogging.startupError(f"Failed to load extention {extension}", e)
-    GearbotLogging.info("Connecting to the database")
-    DatabaseConnector.init()
-    bot.database_connection: MySQLDatabase = DatabaseConnector.connection
-    GearbotLogging.info("Database connection established")
+    Util.prepDatabase(bot)
     GearbotLogging.info("Ready to go, spinning up the gears")
     bot.run(token)
     GearbotLogging.info("GearBot shutting down, cleaning up")

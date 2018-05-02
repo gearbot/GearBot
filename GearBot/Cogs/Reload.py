@@ -1,8 +1,10 @@
+import importlib
 import os
 
 from discord.ext import commands
 
 from Util import GearbotLogging
+import Util
 
 
 class Reload:
@@ -46,6 +48,15 @@ class Reload:
             await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}', log=True)
         else:
             await ctx.send(f"I can't find that cog.")
+
+    @commands.command(hidden=True)
+    async def hotreload(self, ctx:commands.Context):
+        async with ctx.typing():
+            await GearbotLogging.logToBotlog("Hot reload in progress...")
+            utils = importlib.reload(Util)
+            await utils.reload(self.bot)
+            await GearbotLogging.logToBotlog("Hot reload complete")
+        await ctx.send("Hot reload complete")
 
 def setup(bot):
     bot.add_cog(Reload(bot))

@@ -80,7 +80,9 @@ async def onReady(bot:commands.Bot, channelID):
             if len(stacktrace) > 0:
                 embed.add_field(name="Stacktrace", value=stacktrace)
             await logToBotlog(embed=embed)
-    await logToBotlog(message=f"The gears are turning, {info.name} ready !")
+    if not bot.STARTUP_COMPLETE:
+        await logToBotlog(message=f"The gears are turning, {info.name} ready !")
+
 
 
 async def logToBotlog(message = None, embed = None, log = True):
