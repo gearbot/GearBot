@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands
 
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
-from Util import Permissioncheckers
 
 
 class Basic:
@@ -89,7 +88,7 @@ class Basic:
                 await ctx.message.delete()
 
     @commands.command()
-    async def coinflip(self, ctx, *, thing:str):
+    async def coinflip(self, ctx, *, thing:str = "do the thing"):
         """Random decision making"""
         outcome = random.randint(1, 2)
         if outcome == 1 or ("mute" in thing and "vos" in thing):
