@@ -6,6 +6,7 @@ import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.ext.commands import BadArgument
+from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent, RawReactionActionEvent, RawReactionClearEvent
 
 from Cogs.Serveradmin import Serveradmin
 from Util import GearbotLogging, Configuration, Permissioncheckers
@@ -120,49 +121,51 @@ class ModLog:
         LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id)
 
 
-    async def on_raw_message_delete(self, message_id, channel_id):
+    async def on_raw_message_delete(self, data:RawMessageDeleteEvent):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
-        message = LoggedMessage.get_or_none(messageid=message_id)
+        message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None:
-            channel: discord.TextChannel = self.bot.get_channel(channel_id)
+            channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
                 logChannel:discord.TextChannel = self.bot.get_channel(channelid)
-                if logChannel is not None:
+                if logChannel is not None and message.content != None and message.content != "":
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
                     await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
 
-    async def on_raw_message_edit(self, message_id, data):
+    async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
-        message = LoggedMessage.get_or_none(messageid=message_id)
-        if message is not None and "content" in data:
-            channel: discord.TextChannel = self.bot.get_channel(int(data["channel_id"]))
+        message = LoggedMessage.get_or_none(messageid=event.message_id)
+        if message is not None and "content" in event.data:
+            channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
                 logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 if logChannel is not None:
-                    if message.content == data["content"]:
+                    if message.content == event.data["content"]:
                         #prob just pinned
                         return
+                    if message.content is None or message.content == "":
+                        message.content = "<no content>"
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
                     embed.add_field(name="Before", value=message.content, inline=False)
-                    embed.add_field(name="After", value=data["content"], inline=False)
+                    embed.add_field(name="After", value=event.data["content"], inline=False)
                     await logChannel.send(
                         f":pencil: Message by {user.name} (`{user.id}`) in {channel.mention} has been edited",
                         embed=embed)
-                    message.content = data["content"]
+                    message.content = event.data["content"]
                     message.save()
 
     async def on_member_join(self, member:discord.Member):
