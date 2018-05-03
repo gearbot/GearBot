@@ -83,7 +83,7 @@ class Basic:
                 except:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
-                embed.set_footer(text=f"Send in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
+                embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
                 await ctx.send(embed=embed)
                 await ctx.message.delete()
 
