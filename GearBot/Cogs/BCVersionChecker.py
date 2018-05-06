@@ -125,7 +125,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                     generalID = 309218657798455298
                     channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
                     if channel is not None and latestBC not in channel.topic:
-                        info = checkcog.getVersionDetails("BuildCraft", latestBC)
+                        info = await checkcog.getVersionDetails("BuildCraft", latestBC)
                         newTopic = f"General discussions about BuildCraft.\n" \
                                    f"Latest version: {latestBC}\n" \
                                    f"Full changelog and download: {info['blog_entry']}"
