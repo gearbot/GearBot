@@ -5,6 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
+from Util import Configuration
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -95,6 +96,24 @@ class Basic:
             await ctx.send(f"Yes, you should absolutely {thing}")
         else:
             await ctx.send(f"No you should probably not {thing}")
+
+    @commands.command()
+    async def role(self, ctx:commands.Context, *, role:str):
+        try:
+            role = await commands.RoleConverter().convert(ctx, role)
+        except Exception as ex:
+            await ctx.send("Unable to find that role.")
+        else:
+            roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
+            if role.id in roles:
+                if role in ctx.author.roles:
+                    await ctx.author.remove_roles(role)
+                    await ctx.send(f"You left the `{role.name}` role.")
+                else:
+                    await ctx.author.add_roles(role)
+                    await ctx.send(f"Welcome to the `{role.name}` role!")
+            else:
+                await ctx.send("You are not allowed to add this role to yourself")
 
 
 def setup(bot):

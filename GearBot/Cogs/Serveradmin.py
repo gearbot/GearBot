@@ -81,6 +81,29 @@ class Serveradmin:
         Configuration.setConfigVar(ctx.guild.id, "DEV_ROLE", roleID)
         await ctx.send(f"The server dev role has been set.")
 
+    @configure.group()
+    async def selfroles(self, ctx:commands.Context):
+        if ctx.subcommand_passed is None:
+            await ctx.send("Assignable roles")
+
+    @selfroles.command()
+    async def add(self, ctx:commands.Context, role:discord.Role):
+        current = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
+        if role.id in current:
+            await ctx.send("This role is already assignable")
+        else:
+            current.append(role.id)
+            Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
+            
+    @selfroles.command()
+    async def remove(self, ctx:commands.Context, role:discord.Role):
+        current = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
+        if role.id not in current:
+            await ctx.send("This wasn't assignable")
+        else:
+            current.remove(role.id)
+            Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):

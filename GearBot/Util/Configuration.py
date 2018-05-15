@@ -18,7 +18,8 @@ CONFIG_TEMPLATE = {
     "JOIN_LOGS": 0,
     "MOD_LOGS": 0,
     "MUTE_ROLE": 0,
-    "DEV_ROLE": 0
+    "DEV_ROLE": 0,
+    "SELF_ROLES": []
 }
 
 
