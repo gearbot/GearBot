@@ -83,6 +83,7 @@ class Serveradmin:
 
     @configure.group()
     async def selfroles(self, ctx:commands.Context):
+        """Allows adding/removing roles from the self assignable list"""
         if ctx.subcommand_passed is None:
             await ctx.send("Assignable roles")
 
