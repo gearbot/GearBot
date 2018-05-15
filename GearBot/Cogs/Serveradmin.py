@@ -94,7 +94,7 @@ class Serveradmin:
         else:
             current.append(role.id)
             Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
-            await ctx.send(f"The `{role.name} role is now assignable")
+            await ctx.send(f"The {role.name} role is now assignable")
             
     @selfroles.command()
     async def remove(self, ctx:commands.Context, role:discord.Role):
@@ -104,7 +104,7 @@ class Serveradmin:
         else:
             current.remove(role.id)
             Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
-            await ctx.send(f"The `{role.name} role is now no longer assignable")
+            await ctx.send(f"The {role.name} role is now no longer assignable")
 
     @commands.group()
     @commands.guild_only()

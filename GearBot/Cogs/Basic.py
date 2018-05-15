@@ -116,10 +116,10 @@ class Basic:
                 if role.id in roles:
                     if role in ctx.author.roles:
                         await ctx.author.remove_roles(role)
-                        await ctx.send(f"You left the `{role.name}` role.")
+                        await ctx.send(f"You left the {role.name} role.")
                     else:
                         await ctx.author.add_roles(role)
-                        await ctx.send(f"Welcome to the `{role.name}` role!")
+                        await ctx.send(f"Welcome to the {role.name} role!")
                 else:
                     await ctx.send("You are not allowed to add this role to yourself")
 
