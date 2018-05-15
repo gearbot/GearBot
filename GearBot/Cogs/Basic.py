@@ -98,22 +98,30 @@ class Basic:
             await ctx.send(f"No you should probably not {thing}")
 
     @commands.command()
-    async def role(self, ctx:commands.Context, *, role:str):
-        try:
-            role = await commands.RoleConverter().convert(ctx, role)
-        except Exception as ex:
-            await ctx.send("Unable to find that role.")
-        else:
+    async def role(self, ctx:commands.Context, *, role:str = None):
+        if role is None:
+            desc = ""
             roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
-            if role.id in roles:
-                if role in ctx.author.roles:
-                    await ctx.author.remove_roles(role)
-                    await ctx.send(f"You left the `{role.name}` role.")
-                else:
-                    await ctx.author.add_roles(role)
-                    await ctx.send(f"Welcome to the `{role.name}` role!")
+            for role in roles:
+                desc = f"{desc}<@&{role}>\n"
+            embed = discord.Embed(title="asignable roles", colour=discord.Colour(0xbffdd), description=desc)
+            await ctx.send(embed=embed)
+        else:
+            try:
+                role = await commands.RoleConverter().convert(ctx, role)
+            except Exception as ex:
+                await ctx.send("Unable to find that role.")
             else:
-                await ctx.send("You are not allowed to add this role to yourself")
+                roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
+                if role.id in roles:
+                    if role in ctx.author.roles:
+                        await ctx.author.remove_roles(role)
+                        await ctx.send(f"You left the `{role.name}` role.")
+                    else:
+                        await ctx.author.add_roles(role)
+                        await ctx.send(f"Welcome to the `{role.name}` role!")
+                else:
+                    await ctx.send("You are not allowed to add this role to yourself")
 
 
 def setup(bot):
