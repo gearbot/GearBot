@@ -86,7 +86,8 @@ class Basic:
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
                 await ctx.send(embed=embed)
-                await ctx.message.delete()
+                if ctx.channel.permissions_for(ctx.me).manage_messages:
+                    await ctx.message.delete()
 
     @commands.command()
     async def coinflip(self, ctx, *, thing:str = "do the thing"):
