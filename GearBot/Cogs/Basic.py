@@ -41,6 +41,7 @@ class Basic:
     @commands.command()
     async def quote(self, ctx:commands.Context, messageid:int):
         """Quotes the requested message"""
+        embed = None
         async with ctx.typing():
             message = LoggedMessage.get_or_none(messageid=messageid)
             if message is None:
@@ -58,9 +59,7 @@ class Basic:
                             pass
                         if message is not None:
                             break
-            if message is None:
-                await ctx.send("I was unable to find that message anywhere, is it somewhere i can't see?")
-            else:
+            if message is not None:
                 attachment = None
                 attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == messageid)
                 if len(attachments) == 1:
@@ -85,9 +84,12 @@ class Basic:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
-                await ctx.send(embed=embed)
-                if ctx.channel.permissions_for(ctx.me).manage_messages:
-                    await ctx.message.delete()
+        if embed is None:
+            await ctx.send("I was unable to find that message anywhere, is it somewhere i can't see?")
+        else:
+            await ctx.send(embed=embed)
+            if ctx.channel.permissions_for(ctx.me).manage_messages:
+                await ctx.message.delete()
 
     @commands.command()
     async def coinflip(self, ctx, *, thing:str = "do the thing"):
