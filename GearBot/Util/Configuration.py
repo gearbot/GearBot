@@ -52,7 +52,10 @@ def loadConfig(guild:discord.Guild):
             config = json.load(jsonfile)
             for key in CONFIG_TEMPLATE:
                 if key not in config:
-                    config[key] = CONFIG_TEMPLATE[key]
+                    if CONFIG_TEMPLATE[key] == []:
+                        config[key] = []
+                    else:
+                        config[key] = CONFIG_TEMPLATE[key]
             SERVER_CONFIGS[guild.id] = config
     except FileNotFoundError:
         GearbotLogging.info(f"No config available for {guild.name} ({guild.id}), creating blank one")
