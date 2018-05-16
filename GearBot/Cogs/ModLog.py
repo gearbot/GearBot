@@ -17,6 +17,7 @@ class ModLog:
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
+        self.bot.loop.create_task(self.prep())
 
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
@@ -104,7 +105,7 @@ class ModLog:
                     count = count + 1
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s")
 
-    async def on_ready(self):
+    async def prep(self):
         for guild in self.bot.guilds:
             if Configuration.getConfigVar(guild.id, "MINOR_LOGS") is not 0:
                 await self.buildCache(guild)
