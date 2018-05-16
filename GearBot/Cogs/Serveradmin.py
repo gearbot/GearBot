@@ -107,6 +107,31 @@ class Serveradmin:
             Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
             await ctx.send(f"The {role.name} role is now no longer assignable")
 
+    @configure.group()
+    async def ignoredUsers(self, ctx):
+        """Configures users to ignore for edit/delete logs (like bots spamming the logs with edits"""
+        pass
+
+    @ignoredUsers.command(name="add")
+    async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
+        current = Configuration.getConfigVar(ctx.guild.id, "IGNORED_USERS")
+        if user.id in current:
+            await ctx.send("This user is already ignored")
+        else:
+            current.append(user.id)
+            Configuration.setConfigVar(ctx.guild.id, "IGNORED_USERS", current)
+            await ctx.send("I will now no longer log this user's edited/deleted messages")
+
+    @ignoredUsers.command(name="remove")
+    async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
+        current = Configuration.getConfigVar(ctx.guild.id, "IGNORED_USERS")
+        if user.id not in current:
+            await ctx.send("This user was not on my ignore list")
+        else:
+            current.remove(user.id)
+            Configuration.setConfigVar(ctx.guild.id, "IGNORED_USERS", current)
+            await ctx.send("I will now no longer ignore this user's edited/deleted messages")
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):

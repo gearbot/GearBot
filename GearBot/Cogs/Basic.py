@@ -99,7 +99,7 @@ class Basic:
 
     @commands.command()
     async def role(self, ctx:commands.Context, *, role:str = None):
-        """Lists self-assignable roles are adds/removes one from you"""
+        """Lists self assignable roles or adds/removes [role] from you"""
         if role is None:
             desc = ""
             roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")

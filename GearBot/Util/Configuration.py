@@ -19,7 +19,8 @@ CONFIG_TEMPLATE = {
     "MOD_LOGS": 0,
     "MUTE_ROLE": 0,
     "DEV_ROLE": 0,
-    "SELF_ROLES": []
+    "SELF_ROLES": [],
+    "IGNORED_USERS": []
 }
 
 
@@ -42,7 +43,6 @@ def loadGlobalConfig():
         GearbotLogging.error("Failed to parse configuration")
         print(e)
         raise e
-    # Database.initialize()
 
 
 def loadConfig(guild:discord.Guild):

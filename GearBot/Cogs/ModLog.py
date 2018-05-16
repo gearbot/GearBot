@@ -6,7 +6,7 @@ import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.ext.commands import BadArgument
-from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent, RawReactionActionEvent, RawReactionClearEvent
+from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
 from Cogs.Serveradmin import Serveradmin
 from Util import GearbotLogging, Configuration, Permissioncheckers
@@ -129,6 +129,8 @@ class ModLog:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
+            if hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS"):
+                return
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
                 logChannel:discord.TextChannel = self.bot.get_channel(channelid)
@@ -162,8 +164,8 @@ class ModLog:
                     embed.set_footer(text=f"Send in #{channel.name}")
                     embed.add_field(name="Before", value=message.content, inline=False)
                     embed.add_field(name="After", value=event.data["content"], inline=False)
-                    await logChannel.send(
-                        f":pencil: Message by {user.name} (`{user.id}`) in {channel.mention} has been edited",
+                    if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
+                        await logChannel.send(f":pencil: Message by {user.name} (`{user.id}`) in {channel.mention} has been edited",
                         embed=embed)
                     message.content = event.data["content"]
                     message.save()

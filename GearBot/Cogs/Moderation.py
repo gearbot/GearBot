@@ -30,7 +30,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     async def roles(selfs, ctx:commands.Context):
-        """Lists all roles on the server and their IDs, usefull for configuring without having to ping that role"""
+        """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
         roles = ""
         ids = ""
         for role in ctx.guild.roles:
