@@ -87,8 +87,8 @@ class Moderation:
     async def unban(self, ctx, member: BannedMember, *, reason="No reason given"):
         """Unbans an user from the server."""
         await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
-        await ctx.send(f":ok_hand: {member.user.name} ({member.user.id}) has been unbanned. Reason: `{reason}`")
-        await GearbotLogging.logToModLog(ctx.guild, f":innocent: {member.user.name} (`{member.user.id}`) was un-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+        await ctx.send(f":ok_hand: {member.user.name}#{member.user.discriminator} ({member.user.id}) has been unbanned. Reason: `{reason}`")
+        await GearbotLogging.logToModLog(ctx.guild, f":innocent: {member.user.name}#{member.user.discriminator} (`{member.user.id}`) was un-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
         # This should work even if the user isn't cached
 
 
