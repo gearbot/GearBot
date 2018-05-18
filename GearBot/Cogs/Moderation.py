@@ -47,8 +47,8 @@ class Moderation:
     async def kick(self, ctx, user: discord.User, *, reason="No reason given."):
         """Kicks an user from the server."""
         await ctx.guild.kick(user, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
-        await ctx.send(f":ok_hand: {user.name} (`{user.id}`) was kicked. Reason: `{reason}`")
-        await GearbotLogging.logToModLog(ctx.guild, f":boot: {user.name} (`{user.id}`) was kicked by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+        await ctx.send(f":ok_hand: {user.name}#{user.discriminator} (`{user.id}`) was kicked. Reason: `{reason}`")
+        await GearbotLogging.logToModLog(ctx.guild, f":boot: {user.name}#{user.discriminator} (`{user.id}`) was kicked by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
 
     @commands.command()
     @commands.guild_only()
@@ -57,10 +57,10 @@ class Moderation:
         """Bans an user from the server."""
         if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or await ctx.bot.is_owner(ctx.author):
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
-            await ctx.send(f":ok_hand: {user.name} ({user.id}) was banned. Reason: `{reason}`")
+            await ctx.send(f":ok_hand: {user.name}#{user.discriminator} ({user.id}) was banned. Reason: `{reason}`")
             await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name} (`{user.id}`) was banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
         else:
-            await ctx.send(f":no_entry: You are not allowed to ban {user.name}")
+            await ctx.send(f":no_entry: You are not allowed to ban {user.name}#{user.discriminator}")
 
     @commands.command()
     @commands.guild_only()
@@ -75,8 +75,8 @@ class Moderation:
                 await ctx.send("You cannot ban that user!")
             else:
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
-                await ctx.send(f":ok_hand: {user.name} ({user.id}) was banned. Reason: `{reason}`")
-                await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name} (`{user.id}`) was force banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+                await ctx.send(f":ok_hand: {user.name}#{user.discriminator} ({user.id}) was banned. Reason: `{reason}`")
+                await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name}#{user.discriminator} (`{user.id}`) was force banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
         else:
             await ctx.send(f":warning: {member.name} is on this server, executing regular ban command instead")
             await ctx.invoke(self.ban, member, reason=reason)
