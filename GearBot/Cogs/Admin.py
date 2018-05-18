@@ -1,6 +1,10 @@
 import asyncio
+import contextlib
+import io
 import os
 import subprocess
+import textwrap
+import traceback
 from datetime import datetime
 from subprocess import Popen
 
@@ -81,6 +85,47 @@ class Admin:
             Configuration.loadGlobalConfig()
             await Configuration.onReady(self.bot)
             await ctx.send("Configs reloaded")
+
+    @commands.command(hidden=True)
+    async def eval(self, ctx:commands.Context, *, code: str):
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message
+        }
+
+        env.update(globals())
+
+        if code.startswith('```'):
+            code = "\n".join(code.split("\n")[1:-1])
+
+        out = io.StringIO()
+
+        to_compile = f'async def func():\n{textwrap.indent(code, "  ")}'
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+
+        func = env['func']
+        try:
+            with contextlib.redirect_stdout(out):
+                ret = await func()
+        except Exception as e:
+            value = out.getvalue()
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = out.getvalue()
+            if ret is None:
+                if value:
+                    await ctx.send(f'```py\n{value}\n```')
+            else:
+                self._last_result = ret
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
 
 def setup(bot):
