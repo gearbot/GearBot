@@ -78,7 +78,7 @@ def saveConfig(id):
         jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
 
 def getMasterConfigVar(key, default=None) :
-    global MASTER_CONFIG
+    global MASTER_CONFIG, master_loaded
     if not master_loaded:
         loadGlobalConfig()
     if not key in MASTER_CONFIG.keys():

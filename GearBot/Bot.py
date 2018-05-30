@@ -49,7 +49,7 @@ async def on_ready():
         bot.aiosession = aiohttp.ClientSession()
         bot.start_time = datetime.datetime.utcnow()
         bot.STARTUP_COMPLETE = True
-    await bot.change_presence(activity=discord.Game(name='with gears'))
+    await bot.change_presence(activity=discord.Activity(type=3, name='with gears'))
 
 async def keepDBalive():
     while not bot.is_closed():

@@ -1,10 +1,6 @@
 from Util import *
 from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo
 import importlib
-
-
-Configuration.loadGlobalConfig()
-
 from database import DatabaseConnector
 
 components = [
