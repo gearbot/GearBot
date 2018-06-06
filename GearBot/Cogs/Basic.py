@@ -108,7 +108,7 @@ class Basic:
             roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
             for role in roles:
                 desc = f"{desc}<@&{role}>\n"
-            embed = discord.Embed(title="asignable roles", colour=discord.Colour(0xbffdd), description=desc)
+            embed = discord.Embed(title="assignable roles", colour=discord.Colour(0xbffdd), description=desc)
             await ctx.send(embed=embed)
         else:
             try:
