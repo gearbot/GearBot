@@ -109,3 +109,4 @@ ENV/
 modtester/
 gearbox/
 .gradle/
+config/
