@@ -72,7 +72,10 @@ class Basic:
                         else:
                             embed.add_field(name="Attachment link", value=attachment.url)
                 else:
-                    embed = discord.Embed(colour=discord.Color(0xd5fff), description=message.content, timestamp=datetime.utcfromtimestamp(message.timestamp))
+                    description = message.content if len(message.content) < 930 else message.content[0:930]
+                    channel = self.bot.get_channel(message.channel)
+                    description += f"\n\nhttps://discordapp.com/channels/{channel.guild.id}/{channel.id}/{messageid}"
+                    embed = discord.Embed(colour=discord.Color(0xd5fff), description=description, timestamp=datetime.utcfromtimestamp(message.timestamp))
                     if attachment is not None:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
