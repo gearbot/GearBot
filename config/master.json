@@ -1,0 +1,9 @@
+{
+  "BOT_LOG_CHANNEL": 0,
+  "DATABASE_HOST": "localhost",
+  "DATABASE_NAME": "gearbot",
+  "DATABASE_PASS": "databasepass",
+  "DATABASE_PORT": 3306,
+  "DATABASE_USER": "gearbot",
+  "LOGIN_TOKEN": "redacted"
+}
