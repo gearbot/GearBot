@@ -119,6 +119,7 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx:commands.Context, target:discord.Member, *, reason="No reason provided"):
+        """Lifts a mute"""
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(f"The mute feature has been dissabled on this server, as such i cannot unmute that person")

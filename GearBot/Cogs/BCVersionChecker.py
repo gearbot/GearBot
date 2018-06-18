@@ -30,6 +30,7 @@ class BCVersionChecker:
         self.running = False
 
     @commands.command()
+    @Permissioncheckers.bc_only()
     async def latest(self, ctx:commands.Context, version=None):
         if version is None:
             version = VersionInfo.getLatest(self.BC_VERSION_LIST.keys())
@@ -63,6 +64,7 @@ class BCVersionChecker:
     @commands.command()
     @commands.is_owner()
     async def cleancache(self, ctx):
+        """Reset the cache"""
         self.infoCache = {
             "BuildCraft": {},
             "BuildCraftCompat": {}
@@ -72,7 +74,8 @@ class BCVersionChecker:
     @commands.command()
     @commands.bot_has_permissions(manage_roles=True)
     @Permissioncheckers.devOnly()
-    async def requesttesting(self, ctx:commands.Context, roleName):
+    async def request_testing(self, ctx:commands.Context, roleName):
+        """Make a role pingable for announcements"""
         role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
         if role is None:
             await ctx.send("Unable to find that role")
@@ -144,7 +147,7 @@ async def versionChecker(checkcog:BCVersionChecker):
             embed.add_field(name="Exception", value=str(ex))
             v = ""
             for line in traceback.format_exc().splitlines():
-                if len(v) + len(line) > 1024:
+                if len(v) + len(line) >= 1024:
                     embed.add_field(name="Stacktrace", value=v)
                     v = ""
                 v = f"{v}\n{line}"

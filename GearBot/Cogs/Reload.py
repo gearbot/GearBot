@@ -1,10 +1,13 @@
+import asyncio
 import importlib
 import os
+import subprocess
+from subprocess import Popen
 
 from discord.ext import commands
 
-from Util import GearbotLogging
 import Util
+from Util import GearbotLogging
 
 
 class Reload:
@@ -57,6 +60,16 @@ class Reload:
             await utils.reload(self.bot)
             await GearbotLogging.logToBotlog("Hot reload complete")
         await ctx.send("Hot reload complete")
+
+    @commands.command()
+    async def pull(self, ctx):
+        """Pulls from github so an upgrade can be performed without full restart"""
+        async with ctx.typing():
+            p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+            while p.poll() is None:
+                await asyncio.sleep(1)
+            out, error = p.communicate()
+            await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
 
 def setup(bot):
     bot.add_cog(Reload(bot))

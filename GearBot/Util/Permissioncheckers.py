@@ -49,3 +49,11 @@ def devOnly():
     async def predicate(ctx):
         return isDev(ctx)
     return commands.check(predicate)
+
+def is_bc(ctx:commands.Context):
+    return ctx.guild.id == 309218657798455298
+
+def bc_only():
+    async def predicate(ctx):
+        return is_bc(ctx)
+    return commands.check(predicate)

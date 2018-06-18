@@ -1,12 +1,8 @@
-import asyncio
 import contextlib
 import io
-import os
-import subprocess
 import textwrap
 import traceback
 from datetime import datetime
-from subprocess import Popen
 
 import discord
 from discord.ext import commands
@@ -63,23 +59,17 @@ class Admin:
         self.bot.database_connection.connect()
         await ctx.send("Database connection re-established")
 
-    @commands.command()
-    async def pull(self, ctx):
-        """Pulls from github so an upgrade can be performed without full restart"""
-        async with ctx.typing():
-            p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
-            while p.poll() is None:
-                await asyncio.sleep(1)
-            out, error = p.communicate()
-            await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
+
 
     @commands.command()
     async def setstatus(self, ctx, type:int, *, status:str):
+        """Sets a playing/streaming/listening/watching status"""
         await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
         await ctx.send("Status updated")
 
     @commands.command()
     async def reloadconfigs(self, ctx:commands.Context):
+        """Reloads all server configs from disk"""
         async with ctx.typing():
             Configuration.loadGlobalConfig()
             await Configuration.onReady(self.bot)
