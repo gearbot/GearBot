@@ -5,10 +5,8 @@ import time
 import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
-from discord.ext.commands import BadArgument
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
-from Cogs.Serveradmin import Serveradmin
 from Util import GearbotLogging, Configuration, Permissioncheckers
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
@@ -18,67 +16,14 @@ class ModLog:
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         self.bot.loop.create_task(self.prep())
+        self.bot.loop.create_task(cache_task(self))
+        self.running = True
+
+    def __unload(self):
+        self.running = False
 
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
-
-
-    @Serveradmin.configure.command()
-    async def minorLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for minor logs (edit/delete)"""
-        if channel is None:
-            raise BadArgument("Missing channel")
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages and permissions.embed_links:
-            old = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
-            Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for minor logs")
-            if old == 0:
-                await ctx.send(f"Caching recent messages for logging...")
-                await self.buildCache(ctx.guild)
-                await ctx.send("Caching complete")
-        else:
-            await ctx.send(f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages and embed_links)")
-
-    @Serveradmin.disable.command(name="minorLogChannel")
-    async def disableMinorLogChannel(self, ctx:commands.Context):
-        """Disables minor logs (edit/delete)"""
-        Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", 0)
-        await ctx.send("Minor logs have been dissabled")
-
-
-    @Serveradmin.configure.command()
-    async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for join/leave logs"""
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages:
-            Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for join logs")
-        else:
-            await ctx.send(
-                f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
-
-    @Serveradmin.disable.command(name="joinLogChannel")
-    async def disablejoinLogChannel(self, ctx: commands.Context):
-        """Disables join/leave logs"""
-        Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", 0)
-        await ctx.send("Join logs have been dissabled")
-
-    @Serveradmin.configure.command()
-    async def modLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for modlogs (mute/kick/ban/...)"""
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages:
-            Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for mod logs")
-        else:
-            await ctx.send(f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
-
-    @Serveradmin.disable.command(name="modLogChannel")
-    async def disablemodLogChannel(self, ctx: commands.Context):
-        """Disables the modlogs (mute/kick/ban/...)"""
-        Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", 0)
-        await ctx.send("Mod logs have been dissabled")
 
     async def buildCache(self, guild:discord.Guild):
         start = time.perf_counter()
@@ -89,6 +34,9 @@ class ModLog:
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 async for message in channel.history(limit=250, reverse=False):
+                    if not self.running:
+                        GearbotLogging.info("Cog unloaded while still building cache, aborting")
+                        return
                     if message.author == self.bot.user:
                         continue
                     logged = LoggedMessage.get_or_none(messageid=message.id)
@@ -212,6 +160,19 @@ class ModLog:
             if logChannel is not None:
                 await logChannel.send(
                     f":rotating_light: {user.display_name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
+
+
+async def cache_task(modlog:ModLog):
+    while not modlog.bot.STARTUP_COMPLETE:
+        await asyncio.sleep(1)
+    GearbotLogging.info("Started modlog background task")
+    while modlog.running:
+        if len(modlog.bot.to_cache) > 0:
+            ctx = modlog.bot.to_cache.pop(0)
+            await modlog.buildCache(ctx.guild)
+            await ctx.send("Caching complete")
+        await asyncio.sleep(1)
+    GearbotLogging.info("modlog background task terminated")
 
 
 

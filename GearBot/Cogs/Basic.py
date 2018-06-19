@@ -30,13 +30,13 @@ class Basic:
     @commands.command(hidden=True)
     async def ping(self, ctx:commands.Context):
         """Basic ping to see if the bot is still up"""
-        if (self.bot.is_owner(ctx.author)):
+        if await self.bot.is_owner(ctx.author):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
             t2 = time.perf_counter()
             await ctx.send(f":hourglass: Gateway ping is {round((t2 - t1) * 1000)}ms :hourglass:")
         else:
-            await ctx.send("pong")
+            await ctx.send(":ping_pong:")
 
     @commands.command()
     async def quote(self, ctx:commands.Context, messageid:int):

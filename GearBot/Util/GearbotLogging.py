@@ -10,13 +10,14 @@ from discord.ext import commands
 from Util import Configuration
 
 logger = logging.getLogger('gearbot')
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='gearbot.log', encoding='utf-8', mode='w+')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
-handler = logging.StreamHandler(stream=sys.stdout)
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+def init_logger():
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler(filename='gearbot.log', encoding='utf-8', mode='w+')
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(handler)
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(handler)
 
 BOT_LOG_CHANNEL:discord.TextChannel
 

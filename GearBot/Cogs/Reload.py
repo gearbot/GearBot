@@ -48,7 +48,7 @@ class Reload:
         if cog in cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}', log=True)
+            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
         else:
             await ctx.send(f"I can't find that cog.")
 
@@ -58,6 +58,15 @@ class Reload:
             await GearbotLogging.logToBotlog("Hot reload in progress...")
             utils = importlib.reload(Util)
             await utils.reload(self.bot)
+            await GearbotLogging.logToBotlog("Reloading all cogs...")
+            cogs = []
+            for c in ctx.bot.cogs:
+                cogs.append(c.replace('Cog', ''))
+            for cog in cogs:
+                self.bot.unload_extension(f"Cogs.{cog}")
+                GearbotLogging.info(f'{cog} has been unloaded')
+                self.bot.load_extension(f"Cogs.{cog}")
+                GearbotLogging.info(f'{cog} has been loaded')
             await GearbotLogging.logToBotlog("Hot reload complete")
         await ctx.send("Hot reload complete")
 

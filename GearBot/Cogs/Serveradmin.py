@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands import BadArgument
 
 from Util import Configuration, Permissioncheckers
 
@@ -7,6 +8,7 @@ from Util import Configuration, Permissioncheckers
 class Serveradmin:
 
     def __init__(self, bot):
+        bot.to_cache = []
         self.bot = bot
 
     def __unload(self):
@@ -23,10 +25,13 @@ class Serveradmin:
             await ctx.send("See the subcommands (!help configure) for configurations")
 
     @configure.command()
-    async def prefix(self, ctx:commands.Context, newPrefix):
-        """Sets a new prefix for this server"""
-        Configuration.setConfigVar(ctx.guild.id, "PREFIX", newPrefix)
-        await ctx.send(f"The server prefix is now `{newPrefix}`")
+    async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
+        """Sets or show the server prefix"""
+        if new_prefix is None:
+            await ctx.send(f"The current server prefix is `{Configuration.getConfigVar(ctx.guild.id, 'PREFIX')}`")
+        else:
+            Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
+            await ctx.send(f"The server prefix is now `{new_prefix}`")
 
     @configure.command()
     async def adminrole(self, ctx: commands.Context, roleID):
@@ -132,6 +137,45 @@ class Serveradmin:
             Configuration.setConfigVar(ctx.guild.id, "IGNORED_USERS", current)
             await ctx.send("I will now no longer ignore this user's edited/deleted messages")
 
+    @configure.command()
+    async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for join/leave logs"""
+        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
+        if permissions.read_messages and permissions.send_messages:
+            Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", channel.id)
+            await ctx.send(f"{channel.mention} will now be used for join logs")
+        else:
+            await ctx.send(
+                f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
+
+    @configure.command()
+    async def modLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for modlogs (mute/kick/ban/...)"""
+        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
+        if permissions.read_messages and permissions.send_messages:
+            Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", channel.id)
+            await ctx.send(f"{channel.mention} will now be used for mod logs")
+        else:
+            await ctx.send(
+                f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages)")
+
+    @configure.command()
+    async def minorLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """Sets the logging channel for minor logs (edit/delete)"""
+        if channel is None:
+            raise BadArgument("Missing channel")
+        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
+        if permissions.read_messages and permissions.send_messages and permissions.embed_links:
+            old = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
+            Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", channel.id)
+            await ctx.send(f"{channel.mention} will now be used for minor logs")
+            if old == 0:
+                await ctx.send(f"Caching recent messages for logging...")
+                self.bot.to_cache.append(ctx)
+        else:
+            await ctx.send(
+                f"I cannot use {channel.mention} for logging, i do not have the required permissions in there (read_messages, send_messages and embed_links)")
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):
@@ -147,6 +191,26 @@ class Serveradmin:
                 await member.remove_roles(role, reason=f"Mute feature has been dissabled")
         Configuration.setConfigVar(ctx.guild.id, "MUTE_ROLE", 0)
         await ctx.send("Mute feature has been dissabled, all people muted have been unmuted and the role can now be removed")
+
+    @disable.command(name="minorLogChannel")
+    async def disableMinorLogChannel(self, ctx: commands.Context):
+        """Disables minor logs (edit/delete)"""
+        Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", 0)
+        await ctx.send("Minor logs have been dissabled")
+
+
+
+    @disable.command(name="modLogChannel")
+    async def disablemodLogChannel(self, ctx: commands.Context):
+        """Disables the modlogs (mute/kick/ban/...)"""
+        Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", 0)
+        await ctx.send("Mod logs have been dissabled")
+
+    @disable.command(name="joinLogChannel")
+    async def disablejoinLogChannel(self, ctx: commands.Context):
+        """Disables join/leave logs"""
+        Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", 0)
+        await ctx.send("Join logs have been dissabled")
 
 
 

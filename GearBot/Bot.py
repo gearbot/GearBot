@@ -186,6 +186,9 @@ if __name__ == '__main__':
     handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
+
+    GearbotLogging.init_logger()
+
     clargs = parser.parse_args()
     if 'gearbotlogin' in os.environ:
         token = os.environ['gearbotlogin']
