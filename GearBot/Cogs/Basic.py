@@ -134,7 +134,7 @@ class Basic:
     async def test(self, ctx):
        async def send(message):
             await ctx.send(message)
-       await Confirmation.confirm(ctx, "You sure?", on_yes=send("Doing the thing!"), on_no=send("Not doing the thing!"))
+       await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
 
 def setup(bot):
     bot.add_cog(Basic(bot))
