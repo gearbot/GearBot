@@ -5,7 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import Configuration
+from Util import Configuration, Confirmation
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -48,7 +48,7 @@ class Basic:
                 for guild in self.bot.guilds:
                     for channel in guild.text_channels:
                         try:
-                            dmessage:discord.Message = await channel.get_message(messageid)
+                            dmessage: discord.Message = await channel.get_message(messageid)
                             for a in dmessage.attachments:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
@@ -130,6 +130,11 @@ class Basic:
                 else:
                     await ctx.send("You are not allowed to add this role to yourself")
 
+    @commands.command()
+    async def test(self, ctx):
+       async def send(message):
+            await ctx.send(message)
+       await Confirmation.confirm(ctx, "You sure?", on_yes=send("Doing the thing!"), on_no=send("Not doing the thing!"))
 
 def setup(bot):
     bot.add_cog(Basic(bot))
