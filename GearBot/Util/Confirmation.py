@@ -29,6 +29,6 @@ async def confirm(ctx:commands.Context, text, timeout=30, on_yes = None, on_no =
         await ctx.send(f"I got no answer within {timeout} seconds.. Aborting.")
     else:
         if reaction.emoji is yes and on_yes is not None:
-            await on_yes
+            await on_yes()
         elif reaction.emoji is no and on_no is not None:
-            await on_no
+            await on_no()

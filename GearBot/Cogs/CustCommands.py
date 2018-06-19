@@ -4,7 +4,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration
+from Util import Permissioncheckers, Configuration, Confirmation
 from database.DatabaseConnector import CustomCommand
 
 
@@ -68,8 +68,12 @@ class CustCommands:
                 self.commands[ctx.guild.id][trigger] = reply
                 await ctx.send(f"Command `{trigger}` has been added")
             else:
-                await ctx.send(f":warning: This command already exists, updating it with the new text")
-                await ctx.invoke(self.update, trigger, reply=reply)
+                async def yes():
+                    await ctx.send("Updating...")
+                    await ctx.invoke(self.update, trigger, reply=reply)
+                async def no():
+                    ctx.send("Keeping the old one")
+                await Confirmation.confirm(ctx, "This command already exists, do you want to replace it with this new text?", on_yes=yes , on_no=no)
 
     @command.command()
     @commands.guild_only()
