@@ -4,9 +4,9 @@ import discord
 from discord import utils
 from discord.ext import commands
 
-yesID = 433693576036352024
-noID = 433284297181495298
-yes = None
+yesID = 458907588986273812
+noID = 458907619864739841
+yes = Noneb
 no = None
 
 def on_ready(bot):
