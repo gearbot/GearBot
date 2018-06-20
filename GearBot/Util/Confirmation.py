@@ -6,7 +6,7 @@ from discord.ext import commands
 
 yesID = 458907588986273812
 noID = 458907619864739841
-yes = Noneb
+yes = None
 no = None
 
 def on_ready(bot):
