@@ -104,6 +104,7 @@ class Basic:
             await ctx.send(f"No you should probably not {thing}")
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def role(self, ctx:commands.Context, *, role:str = None):
         """Lists self assignable roles or adds/removes [role] from you"""
         if role is None:
