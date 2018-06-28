@@ -118,7 +118,7 @@ async def on_command_error(ctx: commands.Context, error):
         embed.add_field(name="Command", value=ctx.command)
         embed.add_field(name="Original message", value=ctx.message.content)
         embed.add_field(name="Channel",
-                        value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name)
+                        value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
         embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
         embed.add_field(name="Exception", value=error.original)
         v = ""
