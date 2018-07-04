@@ -137,5 +137,11 @@ class Basic:
             await ctx.send(message)
        await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
 
+    async def on_guild_role_delete(self, role:discord.Role):
+        roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
+        if role.id in roles:
+            roles.remove(role.id)
+            Configuration.saveConfig(role.guild.id)
+
 def setup(bot):
     bot.add_cog(Basic(bot))
