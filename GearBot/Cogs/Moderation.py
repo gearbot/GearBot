@@ -223,6 +223,11 @@ class Moderation:
                     else:
                         await GearbotLogging.logToModLog(member.guild, f"{member.name}#{member.discriminator} (`{member.id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute")
 
+    async def on_guild_remove(self, guild:discord.Guild):
+        if guild.id in self.mutes.keys():
+            del self.mutes[guild.id]
+            Utils.saveToDisk("mutes", self.mutes)
+
 def setup(bot):
     bot.add_cog(Moderation(bot))
 
