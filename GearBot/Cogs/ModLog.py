@@ -7,7 +7,7 @@ from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
-from Util import GearbotLogging, Configuration, Permissioncheckers
+from Util import GearbotLogging, Configuration, Permissioncheckers, Utils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -111,8 +111,8 @@ class ModLog:
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
-                    embed.add_field(name="Before", value=message.content, inline=False)
-                    embed.add_field(name="After", value=event.data["content"], inline=False)
+                    embed.add_field(name="Before", value=Utils.trim_message(message.content, 1024), inline=False)
+                    embed.add_field(name="After", value=Utils.trim_message(event.data["content"], 1024), inline=False)
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
                         await logChannel.send(f":pencil: Message by {user.name} (`{user.id}`) in {channel.mention} has been edited",
                         embed=embed)

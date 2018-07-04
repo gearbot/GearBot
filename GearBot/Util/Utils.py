@@ -42,3 +42,9 @@ async def cleanExit(bot, trigger):
     await bot.logout()
     await bot.close()
     bot.aiosession.close()
+
+
+def trim_message(message, limit):
+    if len(message) < limit - 3:
+        return message
+    return f"{message[:limit-1]}..."
