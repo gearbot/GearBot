@@ -172,7 +172,8 @@ extensions = [
     "ModLog",
     "CustCommands",
     "BCVersionChecker",
-    "Reload"
+    "Reload",
+    "PageCog"
 ]
 
 if __name__ == '__main__':

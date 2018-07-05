@@ -8,38 +8,77 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging
+from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages
 from Util.Converters import BannedMember
 
 
 class Moderation:
+
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         bot.mutes = self.mutes = Utils.fetchFromDisk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
+        Pages.register("roles", self.roles_init, self.roles_update)
 
     def __unload(self):
         Utils.saveToDisk("mutes", self.mutes)
         self.running = False
+        Pages.unregister("roles")
 
     async def __local_check(self, ctx):
         return Permissioncheckers.isServerMod(ctx)
 
+
+    async def roles_init(self, ctx):
+        pages = self.gen_roles_pages(ctx.guild)
+        page = pages[0]
+        embed = discord.Embed(title=ctx.guild.name + " roles", color=0x54d5ff)
+        embed.add_field(name="\u200b", value=page["roles"], inline=True)
+        embed.add_field(name="\u200b", value=page["ids"], inline=True)
+        return None, embed, len(pages) > 1
+
+    async def roles_update(self, message, pagenum, action):
+        pages = self.gen_roles_pages(message.guild)
+        if action == "PREV":
+            pagenum -= 1
+        elif action == "NEXT":
+            pagenum += 1
+        if pagenum < 0:
+            pagenum = len(pages) - 1
+        if pagenum == len(pages):
+            pagenum = 0
+        page = pages[pagenum]
+        embed = discord.Embed(title=message.guild.name + " roles", color=0x54d5ff)
+        embed.add_field(name="\u200b", value=page["roles"], inline=True)
+        embed.add_field(name="\u200b", value=page["ids"], inline=True)
+        return None, embed, pagenum
+
+    def gen_roles_pages(self, guild:discord.Guild):
+        pages = []
+        current_roles = ""
+        current_ids = ""
+        for role in guild.roles:
+            if len(current_roles + f"<@&{role.id}>\n\n") > 300:
+                pages.append({
+                    "roles": current_roles,
+                    "ids": current_ids
+                })
+                current_ids = ""
+                current_roles = ""
+            current_roles += f"<@&{role.id}>\n\n"
+            current_ids += str(role.id) + "\n\n"
+        pages.append({
+            "roles": current_roles,
+            "ids": current_ids
+        })
+        return pages
     @commands.command()
     @commands.guild_only()
     async def roles(selfs, ctx:commands.Context):
         """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
-        roles = ""
-        ids = ""
-        for role in ctx.guild.roles:
-            roles += f"<@&{role.id}>\n\n"
-            ids += str(role.id) + "\n\n"
-        embed = discord.Embed(title=ctx.guild.name + " roles", color=0x54d5ff)
-        embed.add_field(name="\u200b", value=roles, inline=True)
-        embed.add_field(name="\u200b", value=ids, inline=True)
-        await ctx.send(ctx.channel, embed=embed)
+        await Pages.create_new("roles", ctx)
 
     @commands.command()
     @commands.guild_only()

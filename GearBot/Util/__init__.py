@@ -1,5 +1,3 @@
-import importlib
-
 from Util import *
 from database import DatabaseConnector
 from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation
@@ -25,6 +23,7 @@ async def reload(bot):
 async def readyBot(bot):
     await Configuration.onReady(bot)
     Confirmation.on_ready(bot)
+    Pages.on_ready(bot)
     await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
 
 def prepDatabase(bot):
