@@ -173,7 +173,7 @@ extensions = [
     "CustCommands",
     "BCVersionChecker",
     "Reload",
-    "PageCog"
+    "PageHandler"
 ]
 
 if __name__ == '__main__':

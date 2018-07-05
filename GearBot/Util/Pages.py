@@ -18,6 +18,7 @@ def on_ready(bot):
     global prev_emoji, next_emoji
     prev_emoji = utils.get(bot.emojis, id=prev_id)
     next_emoji = utils.get(bot.emojis, id=next_id)
+    load_from_disc()
 
 
 def register(type, init, update):
@@ -26,8 +27,9 @@ def register(type, init, update):
         "update": update
     }
 
-def unregister(type):
-    del page_handlers[type]
+def unregister(type_handler):
+    if type_handler in page_handlers.keys():
+        del page_handlers[type_handler]
 
 async def create_new(type, ctx, **kwargs):
     text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
@@ -50,12 +52,13 @@ async def update(message, action):
     message_id = str(message.id)
     if message_id in known_messages.keys():
         type = known_messages[message_id]["type"]
-        page_num = known_messages[message_id]["page"]
-        text, embed, page = await page_handlers[type]["update"](message, page_num, action)
-        await message.edit(content=text, embed=embed)
-        known_messages[message_id]["page"] = page
-        save_to_disc()
-        return True
+        if type in page_handlers.keys():
+            page_num = known_messages[message_id]["page"]
+            text, embed, page = await page_handlers[type]["update"](message, page_num, action)
+            await message.edit(content=text, embed=embed)
+            known_messages[message_id]["page"] = page
+            save_to_disc()
+            return True
     return False
 
 def save_to_disc():

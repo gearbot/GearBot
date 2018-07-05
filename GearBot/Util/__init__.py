@@ -15,6 +15,7 @@ components = [
 ]
 
 async def reload(bot):
+    import importlib
     for c in components:
         importlib.reload(c)
     prepDatabase(bot)
