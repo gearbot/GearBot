@@ -199,6 +199,7 @@ if __name__ == '__main__':
         token = Configuration.getMasterConfigVar("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
+    bot.remove_command("help")
     for extension in extensions:
         try:
             bot.load_extension("Cogs." + extension)

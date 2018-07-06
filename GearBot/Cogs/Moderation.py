@@ -39,7 +39,7 @@ class Moderation:
         embed.add_field(name="\u200b", value=page["ids"], inline=True)
         return None, embed, len(pages) > 1
 
-    async def roles_update(self, message, pagenum, action):
+    async def roles_update(self, ctx, message, pagenum, action):
         pages = self.gen_roles_pages(message.guild)
         if action == "PREV":
             pagenum -= 1
