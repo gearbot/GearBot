@@ -16,6 +16,7 @@ class Basic:
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         Pages.register("help", self.init_help, self.update_help)
+        Pages.register("role", self.init_role, self.update_role)
 
     def __unload(self):
         #cleanup
@@ -106,17 +107,36 @@ class Basic:
         else:
             await ctx.send(f"No you should probably not {thing}")
 
+    async def init_role(self, ctx):
+        pages = self.gen_role_pages(ctx.guild)
+        page = pages[0]
+        embed = discord.Embed(title=f"{ctx.guild.name} assignable roles (1/{len(pages)})", colour=discord.Colour(0xbffdd), description=page)
+        return None, embed, len(pages) > 1
+
+    async def update_role(self, ctx, message, page_num, action, data):
+        pages = self.gen_role_pages(message.guild)
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        embed = discord.Embed(title=f"{message.guild.name} assignable roles ({page_num + 1}/{len(pages)})", color=0x54d5ff, description=page)
+        return None, embed, page_num
+
+    def gen_role_pages(self, guild:discord.Guild):
+        pages = []
+        current_roles = ""
+        roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+        for role in roles:
+            if len(current_roles + f"<@&{role}>\n\n") > 300:
+                pages.append(current_roles)
+                current_roles = ""
+            current_roles += f"<@&{role}>\n\n"
+        pages.append(current_roles)
+        return pages
+
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
     async def role(self, ctx:commands.Context, *, role:str = None):
         """Lists self assignable roles or adds/removes [role] from you"""
         if role is None:
-            desc = ""
-            roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
-            for role in roles:
-                desc = f"{desc}<@&{role}>\n"
-            embed = discord.Embed(title="assignable roles", colour=discord.Colour(0xbffdd), description=desc)
-            await ctx.send(embed=embed)
+            await Pages.create_new("role", ctx)
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
