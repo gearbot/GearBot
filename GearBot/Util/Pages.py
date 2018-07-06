@@ -21,10 +21,11 @@ def on_ready(bot):
     load_from_disc()
 
 
-def register(type, init, update):
+def register(type, init, update, sender_only=False):
     page_handlers[type] = {
         "init": init,
-        "update": update
+        "update": update,
+        "sender_only": sender_only
     }
 
 def unregister(type_handler):
@@ -34,11 +35,15 @@ def unregister(type_handler):
 async def create_new(type, ctx, **kwargs):
     text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
     message:discord.Message = await ctx.channel.send(text, embed=embed)
-    known_messages[str(message.id)] = {
+    data = {
         "type": type,
         "page": 0,
-        "trigger": ctx.message.id
+        "trigger": ctx.message.id,
+        "sender": ctx.author.id
     }
+    for k, v in kwargs.items():
+        data[k] = v
+    known_messages[str(message.id)] = data
 
     if has_pages:
         await message.add_reaction(prev_emoji)
@@ -49,19 +54,21 @@ async def create_new(type, ctx, **kwargs):
 
     save_to_disc()
 
-async def update(bot, message, action):
+async def update(bot, message, action, user):
     message_id = str(message.id)
     if message_id in known_messages.keys():
         type = known_messages[message_id]["type"]
         if type in page_handlers.keys():
-            page_num = known_messages[message_id]["page"]
-            trigger_message = await message.channel.get_message(known_messages[message_id]["trigger"])
-            ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
-            text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action)
-            await message.edit(content=text, embed=embed)
-            known_messages[message_id]["page"] = page
-            save_to_disc()
-            return True
+            data = known_messages[message_id]
+            if data["sender"] == user or page_handlers[type]["sender_only"] is False:
+                page_num = data["page"]
+                trigger_message = await message.channel.get_message(data["trigger"])
+                ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
+                text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
+                await message.edit(content=text, embed=embed)
+                known_messages[message_id]["page"] = page
+                save_to_disc()
+                return True
     return False
 
 def basic_pages(pages, page_num, action):

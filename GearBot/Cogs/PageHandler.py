@@ -15,10 +15,10 @@ class PageHandler:
             return
         message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
         if payload.emoji.id == Pages.prev_id:
-            if await Pages.update(self.bot, message , "PREV"):
+            if await Pages.update(self.bot, message , "PREV", payload.user_id):
                 await message.remove_reaction(Pages.prev_emoji, user)
         elif payload.emoji.id == Pages.next_id:
-            if await Pages.update(self.bot, message, "NEXT"):
+            if await Pages.update(self.bot, message, "NEXT", payload.user_id):
                 await message.remove_reaction(Pages.next_emoji, user)
 
 def setup(bot):

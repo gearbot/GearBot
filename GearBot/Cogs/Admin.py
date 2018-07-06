@@ -7,13 +7,17 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils, Configuration
+from Util import GearbotLogging, Utils, Configuration, Pages
 
 
 class Admin:
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
+        Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
+
+    def __unload(self):
+        Pages.unregister("eval")
 
     async def __local_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author)
@@ -77,6 +81,7 @@ class Admin:
 
     @commands.command(hidden=True)
     async def eval(self, ctx:commands.Context, *, code: str):
+        output = None
         env = {
             'bot': self.bot,
             'ctx': ctx,
@@ -98,7 +103,7 @@ class Admin:
         try:
             exec(to_compile, env)
         except Exception as e:
-            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            output = f'{e.__class__.__name__}: {e}'
 
         func = env['func']
         try:
@@ -106,15 +111,39 @@ class Admin:
                 ret = await func()
         except Exception as e:
             value = out.getvalue()
-            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+            output = f'{value}{traceback.format_exc()}'
         else:
             value = out.getvalue()
             if ret is None:
                 if value:
-                    await ctx.send(f'```py\n{value}\n```')
+                    output = value
             else:
-                await ctx.send(f'```py\n{value}{ret}\n```')
+                output = f'{value}{ret}'
 
+        if output is not None:
+            lines = output.splitlines(keepends=True)
+            pages = []
+            page = ""
+            count = 0
+            for line in lines:
+                if len(page) + len(line) > 1900 or count == 20:
+                    pages.append(page)
+                    page = line
+                    count = 1
+                else:
+                    page += line
+                count += 1
+            pages.append(page)
+            await Pages.create_new("eval", ctx, pages=pages)
 
+    async def init_eval(self, ctx, pages=[]):
+        page = pages[0]
+        num = len(pages)
+        return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1
+
+    async def update_eval(self, ctx, message, page_num, action, data):
+        pages = data["pages"]
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, page_num
 def setup(bot):
     bot.add_cog(Admin(bot))

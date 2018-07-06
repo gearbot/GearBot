@@ -149,7 +149,7 @@ class Basic:
         pages = await self.get_help_pages(ctx)
         return f"**Gearbot help 1/{len(pages)}**```diff\n{pages[0]}```", None, len(pages) > 1
 
-    async def update_help(self, ctx, message, page_num, action):
+    async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx)
         page, page_num = Pages.basic_pages(pages, page_num, action)
         return f"**Gearbot help {page_num+1}/{len(pages)}**```diff\n{page}```", None, page_num
