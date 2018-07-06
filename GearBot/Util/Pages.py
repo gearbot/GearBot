@@ -64,6 +64,18 @@ async def update(bot, message, action):
             return True
     return False
 
+def basic_pages(pages, page_num, action):
+    if action == "PREV":
+        page_num -= 1
+    elif action == "NEXT":
+        page_num += 1
+    if page_num < 0:
+        page_num = len(pages) - 1
+    if page_num == len(pages):
+        page_num = 0
+    page = pages[page_num]
+    return page, page_num
+
 def save_to_disc():
     Utils.saveToDisk("known_messages", known_messages)
 

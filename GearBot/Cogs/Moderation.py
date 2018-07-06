@@ -39,21 +39,13 @@ class Moderation:
         embed.add_field(name="\u200b", value=page["ids"], inline=True)
         return None, embed, len(pages) > 1
 
-    async def roles_update(self, ctx, message, pagenum, action):
+    async def roles_update(self, ctx, message, page_num, action):
         pages = self.gen_roles_pages(message.guild)
-        if action == "PREV":
-            pagenum -= 1
-        elif action == "NEXT":
-            pagenum += 1
-        if pagenum < 0:
-            pagenum = len(pages) - 1
-        if pagenum == len(pages):
-            pagenum = 0
-        page = pages[pagenum]
+        page, page_num = Pages.basic_pages(pages, page_num, action)
         embed = discord.Embed(title=message.guild.name + " roles", color=0x54d5ff)
         embed.add_field(name="\u200b", value=page["roles"], inline=True)
         embed.add_field(name="\u200b", value=page["ids"], inline=True)
-        return None, embed, pagenum
+        return None, embed, page_num
 
     def gen_roles_pages(self, guild:discord.Guild):
         pages = []
