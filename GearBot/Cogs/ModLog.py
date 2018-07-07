@@ -25,7 +25,7 @@ class ModLog:
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.isServerAdmin(ctx)
 
-    async def buildCache(self, guild:discord.Guild):
+    async def buildCache(self, guild:discord.Guild, limit = 250):
         start = time.perf_counter()
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id})")
         newCount = 0
@@ -33,7 +33,7 @@ class ModLog:
         count = 0
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
-                async for message in channel.history(limit=250, reverse=False):
+                async for message in channel.history(limit=limit, reverse=False):
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting")
                         return
@@ -160,6 +160,22 @@ class ModLog:
             if logChannel is not None:
                 await logChannel.send(
                     f":rotating_light: {user.display_name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
+
+
+    async def on_member_update(self, before:discord.Member, after:discord.Member):
+        while not self.bot.STARTUP_COMPLETE:
+            await asyncio.sleep(1)
+        #check if we should log at all
+        log_channel = self.bot.get_channel(Configuration.getConfigVar(before.guild.id, "MINOR_LOGS"))
+        if log_channel is None:
+            return
+
+        if before.nick != after.nick:
+            if before.nick is None:
+                message = f":name_badge: {before.name}#{before.discriminator} added a nickname: `{after.nick}`"
+
+
+        pass
 
 
 async def cache_task(modlog:ModLog):

@@ -119,7 +119,7 @@ class Moderation:
         """Unbans an user from the server."""
         await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
         await ctx.send(f":ok_hand: {member.user.name}#{member.user.discriminator} ({member.user.id}) has been unbanned. Reason: `{reason}`")
-        await GearbotLogging.logToModLog(ctx.guild, f":innocent: {member.user.name}#{member.user.discriminator} (`{member.user.id}`) was un-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+        await GearbotLogging.logToModLog(ctx.guild, f"<:gearInnocent:465177981287923712> {member.user.name}#{member.user.discriminator} (`{member.user.id}`) was un-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
         # This should work even if the user isn't cached
 
 
@@ -144,7 +144,7 @@ class Moderation:
                 self.mutes[str(ctx.guild.id)][str(target.id)] = until
                 await ctx.send(f"{target.display_name} has been muted")
                 Utils.saveToDisk("mutes", self.mutes)
-                await GearbotLogging.logToModLog(ctx.guild, f":zipper_mouth: {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
+                await GearbotLogging.logToModLog(ctx.guild, f"<:gearMute:465177981221077003> {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
 
     @commands.command()
     @commands.guild_only()
@@ -161,7 +161,7 @@ class Moderation:
             else:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                 await ctx.send(f"{target.display_name} has been unmuted")
-                await GearbotLogging.logToModLog(ctx.guild, f":innocent: {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
+                await GearbotLogging.logToModLog(ctx.guild, f"<:gearInnocent:465177981287923712> {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
 
     @commands.command()
     async def userinfo(self, ctx: commands.Context, user: str = None):
@@ -250,7 +250,7 @@ class Moderation:
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
                         await member.add_roles(role, reason="Member left and re-joined before mute expired")
-                        await GearbotLogging.logToModLog(member.guild, f":zipper_mouth: {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
+                        await GearbotLogging.logToModLog(member.guild, f"<:gearMute:465177981221077003> {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
                     else:
                         await GearbotLogging.logToModLog(member.guild, f"{member.name}#{member.discriminator} (`{member.id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute")
 
@@ -284,7 +284,7 @@ async def unmuteTask(modcog:Moderation):
                         role = discord.utils.get(guild.roles, id=Configuration.getConfigVar(int(guildid), "MUTE_ROLE"))
                         if guild.me.guild_permissions.manage_roles:
                             await member.remove_roles(role, reason="Mute expired")
-                            await GearbotLogging.logToModLog(guild, f":innocent: {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
+                            await GearbotLogging.logToModLog(guild, f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
                         else:
                             await GearbotLogging.logToModLog(guild, f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but i no longer have the permissions needed to unmute this person, please remove the role manually!")
                         updated = True
