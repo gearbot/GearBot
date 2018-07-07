@@ -1,13 +1,12 @@
-import collections
 import random
 import time
 from datetime import datetime
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import CommandError
+from discord.ext.commands import clean_content
 
-from Util import Configuration, Confirmation, Utils, Pages
+from Util import Configuration, Confirmation, Pages, HelpGenerator
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -162,64 +161,30 @@ class Basic:
 
 
     @commands.command()
-    async def help(self, ctx, *commands : str):
-        await Pages.create_new("help", ctx)
+    async def help(self, ctx, *, query:str=None):
+        await Pages.create_new("help", ctx, query=query)
 
-    async def init_help(self, ctx):
-        pages = await self.get_help_pages(ctx)
+    async def init_help(self, ctx, query):
+        pages = await self.get_help_pages(ctx, query)
+        if pages is None:
+            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"'), None, False
         return f"**Gearbot help 1/{len(pages)}**```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
-        pages = await self.get_help_pages(ctx)
+        pages = await self.get_help_pages(ctx, data["query"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
         return f"**Gearbot help {page_num+1}/{len(pages)}**```diff\n{page}```", None, page_num
 
-    async def get_help_pages(self, ctx):
-        command_tree = dict()
-        longest = 0
-        for cog in self.bot.cogs:
-            commands = self.bot.get_cog_commands(cog)
-            if len(commands) == 0:
-                continue
-            command_list = dict()
-            for command in commands:
-                try:
-                    runnable = await command.can_run(ctx)
-                except CommandError:
-                    #not sure if needed, lib does it prob best to catch it just in case
-                    runnable = False
-                except Exception as ex:
-                    if ctx is None:
-                        #we don't always have a valid context, in this case assume all context dependant commands as not available
-                        runnable = False
-                    else:
-                        #we have a context so error is not due to it being missing, raise it up
-                        raise ex
-                if not command.hidden and runnable:
-                    command_list[command.name] = Utils.trim_message(command.short_doc, 120)
-                    if len(command.name) > longest:
-                        longest = len(command.name)
-            if len(command_list) > 0:
-                command_tree[cog] = collections.OrderedDict(sorted(command_list.items()))
-        command_tree = collections.OrderedDict(sorted(command_tree.items()))
-
-        output_tree = collections.OrderedDict()
-        for cog, commands in command_tree.items():
-            output= f'- {cog}\n'
-            for command_name, info in commands.items():
-                output += "  " + command_name + (" " * (longest - len(command_name) + 2)) + info + "\n"
-            output_tree[cog] = output
-
-        pages = []
-        output = ""
-        for out in output_tree.values():
-            if len(output) + len(out) > 1000:
-                pages.append(output)
-                output = out
+    async def get_help_pages(self, ctx, query):
+        if query is None:
+            return await HelpGenerator.command_list(self.bot, ctx)
+        else:
+            if query in self.bot.cogs:
+                return await HelpGenerator.gen_cog_help(self.bot, ctx, query)
             else:
-                output += out + "\n"
-        pages.append(output)
-        return pages
+                pass
+        return None
+
 
     async def on_guild_role_delete(self, role:discord.Role):
         roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
