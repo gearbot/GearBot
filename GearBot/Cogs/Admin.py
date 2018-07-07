@@ -104,22 +104,21 @@ class Admin:
             exec(to_compile, env)
         except Exception as e:
             output = f'{e.__class__.__name__}: {e}'
-
-        func = env['func']
-        try:
-            with contextlib.redirect_stdout(out):
-                ret = await func()
-        except Exception as e:
-            value = out.getvalue()
-            output = f'{value}{traceback.format_exc()}'
         else:
-            value = out.getvalue()
-            if ret is None:
-                if value:
-                    output = value
+            func = env['func']
+            try:
+                with contextlib.redirect_stdout(out):
+                    ret = await func()
+            except Exception as e:
+                value = out.getvalue()
+                output = f'{value}{traceback.format_exc()}'
             else:
-                output = f'{value}{ret}'
-
+                value = out.getvalue()
+                if ret is None:
+                    if value:
+                        output = value
+                else:
+                    output = f'{value}{ret}'
         if output is not None:
             lines = output.splitlines(keepends=True)
             pages = []
