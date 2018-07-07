@@ -182,7 +182,18 @@ class Basic:
             if query in self.bot.cogs:
                 return await HelpGenerator.gen_cog_help(self.bot, ctx, query)
             else:
-                pass
+                target = self.bot
+                layers = query.split(" ")
+                while len(layers) > 0:
+                    layer = layers.pop(0)
+                    if layer in target.all_commands.keys():
+                        target = target.all_commands[layer]
+                    else:
+                        target = None
+                        break
+                if target is not None and target is not self.bot.all_commands:
+                    return await HelpGenerator.gen_command_help(self.bot, ctx, target)
+
         return None
 
 

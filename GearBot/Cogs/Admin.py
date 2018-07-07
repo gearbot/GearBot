@@ -120,20 +120,7 @@ class Admin:
                 else:
                     output = f'{value}{ret}'
         if output is not None:
-            lines = output.splitlines(keepends=True)
-            pages = []
-            page = ""
-            count = 0
-            for line in lines:
-                if len(page) + len(line) > 1900 or count == 20:
-                    pages.append(page)
-                    page = line
-                    count = 1
-                else:
-                    page += line
-                count += 1
-            pages.append(page)
-            await Pages.create_new("eval", ctx, pages=pages)
+            await Pages.create_new("eval", ctx, pages=Pages.paginate(output))
 
     async def init_eval(self, ctx, pages=[]):
         page = pages[0]

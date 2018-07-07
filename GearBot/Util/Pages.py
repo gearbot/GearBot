@@ -7,8 +7,8 @@ page_handlers = dict()
 
 known_messages = dict()
 
-prev_id = 433284297336815616
-next_id = 433284297340878849
+prev_id = 465164576552517651
+next_id = 465164576682541068
 
 prev_emoji = None
 next_emoji = None
@@ -82,6 +82,33 @@ def basic_pages(pages, page_num, action):
         page_num = 0
     page = pages[page_num]
     return page, page_num
+
+def paginate(input):
+    lines = input.splitlines(keepends=True)
+    pages = []
+    page = ""
+    count = 0
+    for line in lines:
+        if len(page) + len(line) > 1900 or count == 20:
+            if page == "":
+                # single 2k line, split smaller
+                words = line.split(" ")
+                for word in words:
+                    if len(page) + len(word) > 1900:
+                        pages.append(page)
+                        page = f"{word} "
+                    else:
+                        page += f"{word} "
+            else:
+                pages.append(page)
+                page = line
+                count = 1
+        else:
+            page += line
+        count += 1
+    pages.append(page)
+    return pages
+
 
 def save_to_disc():
     Utils.saveToDisk("known_messages", known_messages)
