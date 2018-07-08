@@ -83,13 +83,13 @@ def basic_pages(pages, page_num, action):
     page = pages[page_num]
     return page, page_num
 
-def paginate(input):
+def paginate(input, max_lines = 20):
     lines = input.splitlines(keepends=True)
     pages = []
     page = ""
     count = 0
     for line in lines:
-        if len(page) + len(line) > 1900 or count == 20:
+        if len(page) + len(line) > 1900 or count == max_lines:
             if page == "":
                 # single 2k line, split smaller
                 words = line.split(" ")

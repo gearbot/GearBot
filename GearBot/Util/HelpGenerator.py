@@ -96,6 +96,6 @@ def dict_to_pages(dict, suffix=""):
     # if some page does end up over 2k, split it
     real_pages = []
     for p in pages:
-        for page in Pages.paginate(p):
+        for page in Pages.paginate(p, max_lines=100):
             real_pages.append(page)
     return real_pages
