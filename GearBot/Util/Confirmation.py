@@ -4,8 +4,8 @@ import discord
 from discord import utils
 from discord.ext import commands
 
-yesID = 459697272326848520
-noID = 459697272314265600
+yesID = 465582004260569088
+noID = 465582003874693130
 yes = None
 no = None
 

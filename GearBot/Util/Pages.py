@@ -7,8 +7,8 @@ page_handlers = dict()
 
 known_messages = dict()
 
-prev_id = 465164576552517651
-next_id = 465164576682541068
+prev_id = 465582003669041163
+next_id = 465582003677298708
 
 prev_emoji = None
 next_emoji = None
