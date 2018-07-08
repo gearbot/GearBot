@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Confirmation, Pages, HelpGenerator
+from Util import Configuration, Pages, HelpGenerator
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -153,11 +153,11 @@ class Basic:
                 else:
                     await ctx.send("You are not allowed to add this role to yourself")
 
-    @commands.command()
-    async def test(self, ctx):
-       async def send(message):
-            await ctx.send(message)
-       await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
+    # @commands.command()
+    # async def test(self, ctx):
+    #    async def send(message):
+    #         await ctx.send(message)
+    #    await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
 
 
     @commands.command()

@@ -58,8 +58,10 @@ class CustCommands:
     @Permissioncheckers.modOnly()
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Create a new command"""
-        if reply is None or reply == "":
-            ctx.send("Please provide a response as well")
+        if len(trigger) == 0:
+            await ctx.send("Empty triggers, isn't that like empty promises? something you shouldn't do?")
+        elif reply is None or reply == "":
+            await ctx.send("Please provide a response as well")
         else:
             trigger = trigger.lower()
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
