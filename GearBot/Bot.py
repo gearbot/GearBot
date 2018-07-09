@@ -116,7 +116,7 @@ async def on_command_error(ctx: commands.Context, error):
 
         embed.set_author(name="Command execution failed:")
         embed.add_field(name="Command", value=ctx.command)
-        embed.add_field(name="Original message", value=ctx.message.content)
+        embed.add_field(name="Original message", value=Utils.trim_message(ctx.message.content, 1024))
         embed.add_field(name="Channel",
                         value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
         embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")

@@ -167,7 +167,7 @@ class Basic:
     async def init_help(self, ctx, query):
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
-            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"'), None, False
+            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"' if len(query) < 1500 else "Sorry, can't help you with that wall of text"), None, False
         return f"**Gearbot help 1/{len(pages)}**```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
