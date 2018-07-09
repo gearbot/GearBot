@@ -1,6 +1,6 @@
 from Util import *
 from database import DatabaseConnector
-from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation
+from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator
 
 components = [
     Configuration,
@@ -11,7 +11,8 @@ components = [
     Utils,
     VersionInfo,
     DatabaseConnector,
-    Confirmation
+    Confirmation,
+    HelpGenerator
 ]
 
 async def reload(bot):

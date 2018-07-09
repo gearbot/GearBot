@@ -13,7 +13,10 @@ class PageHandler:
         user = guild.get_member(payload.user_id)
         if guild.me.id == payload.user_id:
             return
-        message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
+        try:
+            message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
+        except discord.NotFound:
+            pass
         if payload.emoji.id == Pages.prev_id:
             if await Pages.update(self.bot, message , "PREV", payload.user_id):
                 await message.remove_reaction(Pages.prev_emoji, user)
