@@ -31,6 +31,7 @@ class Serveradmin:
             await ctx.send(f"The current server prefix is `{Configuration.getConfigVar(ctx.guild.id, 'PREFIX')}`")
         elif len(new_prefix) > 25:
             await ctx.send("Please use a shorter prefix")
+        else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
             await ctx.send(f"The server prefix is now `{new_prefix}`")
 
