@@ -111,6 +111,16 @@ class Moderation:
         else:
             await ctx.send(f":warning: {member.name} is on this server, executing regular ban command instead")
             await ctx.invoke(self.ban, member, reason=reason)
+    @commands.command()
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
+    async def purge(self, ctx, msgs: int):
+        """Purges up to 100 messages in this channel."""
+        if msgs > 100:
+            await ctx.send("You can only purge 100 messages at a time.")
+        else:
+            deleted = await ctx.channel.purge(limit=msgs)
+            await ctx.send(f"Deleted {(len(deleted))} message(s)!")
 
     @commands.command()
     @commands.guild_only()
