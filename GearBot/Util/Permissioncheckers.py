@@ -51,7 +51,7 @@ def devOnly():
     return commands.check(predicate)
 
 def is_bc(ctx:commands.Context):
-    return ctx.guild.id == 309218657798455298
+    return ctx. guild is not None and ctx.guild.id == 309218657798455298
 
 def bc_only():
     async def predicate(ctx):
