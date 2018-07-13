@@ -83,18 +83,18 @@ def basic_pages(pages, page_num, action):
     page = pages[page_num]
     return page, page_num
 
-def paginate(input, max_lines = 20):
-    lines = input.splitlines(keepends=True)
+def paginate(input, max_lines = 20, max_chars = 1900):
+    lines = str(input).splitlines(keepends=True)
     pages = []
     page = ""
     count = 0
     for line in lines:
-        if len(page) + len(line) > 1900 or count == max_lines:
+        if len(page) + len(line) > max_chars or count == max_lines:
             if page == "":
                 # single 2k line, split smaller
                 words = line.split(" ")
                 for word in words:
-                    if len(page) + len(word) > 1900:
+                    if len(page) + len(word) > max_chars:
                         pages.append(page)
                         page = f"{word} "
                     else:
@@ -108,6 +108,41 @@ def paginate(input, max_lines = 20):
         count += 1
     pages.append(page)
     return pages
+
+def paginate_fields(input):
+    pages = []
+    for page in input:
+        page_fields = dict()
+        for name, content in page.items():
+            page_fields[name] = paginate(content, max_chars=1024)
+        pages.append(page_fields)
+    real_pages = []
+    for page in pages:
+        page_count = 0
+        page_fields = dict()
+        for name, parts in page.items():
+            base_name = name
+            if len(parts) is 1:
+                if page_count + len(name) + len(parts[0]) > 4000:
+                    real_pages.append(page_fields)
+                    page_fields = dict()
+                    page_count = 0
+                page_fields[name] = parts[0]
+                page_count += len(name) + len(parts[0])
+            else:
+                for i in range(len(parts)):
+                    part = parts[i]
+                    name = f"{base_name} ({i+1}/{len(parts)})"
+                    if page_count + len(name) + len(part) > 3000:
+                        real_pages.append(page_fields)
+                        page_fields = dict()
+                        page_count = 0
+                    page_fields[name] = part
+                    page_count += len(name) + len(part)
+        real_pages.append(page_fields)
+    return real_pages
+
+
 
 
 def save_to_disc():

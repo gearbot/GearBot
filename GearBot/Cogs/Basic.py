@@ -20,6 +20,7 @@ class Basic:
     def __unload(self):
         #cleanup
         Pages.unregister("help")
+        Pages.unregister("role")
 
     def __global_check(self, ctx):
         return True
