@@ -88,7 +88,7 @@ class ModLog:
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
-                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
+                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author}#{user.discriminator} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         while not self.bot.STARTUP_COMPLETE:
@@ -114,7 +114,7 @@ class ModLog:
                     embed.add_field(name="Before", value=Utils.trim_message(message.content, 1024), inline=False)
                     embed.add_field(name="After", value=Utils.trim_message(event.data["content"], 1024), inline=False)
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
-                        await logChannel.send(f":pencil: Message by {user.name} (`{user.id}`) in {channel.mention} has been edited",
+                        await logChannel.send(f":pencil: Message by {user.name}#{user.discriminator} (`{user.id}`) in {channel.mention} has been edited",
                         embed=embed)
                     message.content = event.data["content"]
                     message.save()
@@ -149,7 +149,7 @@ class ModLog:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
                 await logChannel.send(
-                    f":rotating_light: {user.display_name}#{user.discriminator} (`{user.id}`) has been banned from the server.")
+                    f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been banned from the server.")
 
     async def on_member_unban(self, guild, user):
         while not self.bot.STARTUP_COMPLETE:
@@ -159,23 +159,36 @@ class ModLog:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
                 await logChannel.send(
-                    f":rotating_light: {user.display_name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
+                    f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
 
-
-    async def on_member_update(self, before:discord.Member, after:discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
+    def Clean_Name(self, text):
+        return text.replace("@","").replace("`","")
+        
+    async def on_member_update(self, before, after):
+        while not self.bot.startup_done:
             await asyncio.sleep(1)
-        #check if we should log at all
-        log_channel = self.bot.get_channel(Configuration.getConfigVar(before.guild.id, "MINOR_LOGS"))
-        if log_channel is None:
-            return
-
-        if before.nick != after.nick:
-            if before.nick is None:
-                message = f":name_badge: {before.name}#{before.discriminator} added a nickname: `{after.nick}`"
-
-
-        pass
+        channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
+        if channelid is not 0:
+            logChannel: discord.TextChannel = self.bot.get_channel(channelid)
+            if logChannel is not None:
+                if (before.nick != after.nick and
+                    after.nick != before.nick):
+                    after_clean_name = self.Clean_Name(after.name)
+                    after_clean_display_name = self.Clean_Name(after.display_name)
+                    before_clean_name = self.Clean_Name(after.name)
+                    before_clean_display_name = self.Clean_Name(before.display_name)
+                    await logChannel.send(
+                        f':name_badge: {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **``\u200b{before_clean_display_name}``** to **``\u200b{after_clean_display_name}``**.'
+                    )
+                elif (before.name != after.name and
+                    after.name != before.name):
+                    after_clean_name = self.Clean_Name(after.name)
+                    after_clean_display_name = self.Clean_Name(after.display_name)
+                    before_clean_name = self.Clean_Name(before.name)
+                    before_clean_display_name = self.Clean_Name(before.display_name)
+                    await logChannel.send(
+                        f':name_badge: {before_clean_name}#{before.discriminator} (`{before.id}`) has changed username from **``\u200b{before_clean_name}``** to **``\u200b{after_clean_name}``**.'
+                    )
 
 
 async def cache_task(modlog:ModLog):
