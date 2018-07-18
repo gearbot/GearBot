@@ -37,6 +37,7 @@ class CustCommands:
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
+    @Permissioncheckers.no_testers()
     async def command(self, ctx:commands.Context):
         """Lists all custom commands for this server, also the base command to making, updating and removing them"""
         if ctx.invoked_subcommand is None:

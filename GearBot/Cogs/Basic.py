@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Pages, HelpGenerator
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -32,6 +32,7 @@ class Basic:
         return True
 
     @commands.command(hidden=True)
+    @Permissioncheckers.no_testers()
     async def ping(self, ctx:commands.Context):
         """Basic ping to see if the bot is still up"""
         if await self.bot.is_owner(ctx.author):
@@ -43,6 +44,7 @@ class Basic:
             await ctx.send(":ping_pong:")
 
     @commands.command()
+    @Permissioncheckers.no_testers()
     async def quote(self, ctx:commands.Context, messageid:int):
         """Quotes the requested message"""
         embed = None
@@ -99,6 +101,7 @@ class Basic:
                 await ctx.message.delete()
 
     @commands.command()
+    @Permissioncheckers.no_testers()
     async def coinflip(self, ctx, *, thing:str = "do the thing"):
         """Random decision making"""
         outcome = random.randint(1, 2)
@@ -132,6 +135,7 @@ class Basic:
         return pages
 
     @commands.command()
+    @Permissioncheckers.no_testers()
     @commands.bot_has_permissions(embed_links=True)
     async def role(self, ctx:commands.Context, *, role:str = None):
         """Lists self assignable roles or adds/removes [role] from you"""

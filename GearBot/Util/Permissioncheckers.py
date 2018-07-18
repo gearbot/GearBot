@@ -50,10 +50,15 @@ def devOnly():
         return isDev(ctx)
     return commands.check(predicate)
 
-def is_bc(ctx:commands.Context):
-    return ctx. guild is not None and ctx.guild.id == 309218657798455298
+def is_server(ctx, id):
+    return ctx.guild is not None and ctx.guild.id == id
 
 def bc_only():
     async def predicate(ctx):
-        return is_bc(ctx)
+        return is_server(ctx, 309218657798455298)
+    return commands.check(predicate)
+
+def no_testers():
+    async def predicate(ctx):
+        return not is_server(ctx, 197038439483310086)
     return commands.check(predicate)

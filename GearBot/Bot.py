@@ -90,6 +90,8 @@ async def on_command_error(ctx: commands.Context, error):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest":
+            if ctx.guild.id == 197038439483310086:
+                return
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
