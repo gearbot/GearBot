@@ -165,7 +165,7 @@ class ModLog:
         return text.replace("@","").replace("`","")
         
     async def on_member_update(self, before, after):
-        while not self.bot.startup_done:
+        while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
         if channelid is not 0:

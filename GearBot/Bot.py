@@ -173,8 +173,8 @@ extensions = [
     "CustCommands",
     "BCVersionChecker",
     "Reload",
-    "PageHandler",
-    "Minecraft"
+    "PageHandler"
+    #"Minecraft"
 ]
 
 if __name__ == '__main__':
