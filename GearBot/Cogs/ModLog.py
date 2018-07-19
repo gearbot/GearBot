@@ -162,7 +162,7 @@ class ModLog:
                     f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
 
     def Clean_Name(self, text):
-        return text.replace("@","").replace("`","")
+        return text.replace("@","@\u200b").replace("`","")
         
     async def on_member_update(self, before, after):
         while not self.bot.STARTUP_COMPLETE:
@@ -175,7 +175,6 @@ class ModLog:
                     after.nick != before.nick):
                     after_clean_name = self.Clean_Name(after.name)
                     after_clean_display_name = self.Clean_Name(after.display_name)
-                    before_clean_name = self.Clean_Name(after.name)
                     before_clean_display_name = self.Clean_Name(before.display_name)
                     await logChannel.send(
                         f':name_badge: {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **``\u200b{before_clean_display_name}``** to **``\u200b{after_clean_display_name}``**.'
@@ -183,11 +182,9 @@ class ModLog:
                 elif (before.name != after.name and
                     after.name != before.name):
                     after_clean_name = self.Clean_Name(after.name)
-                    after_clean_display_name = self.Clean_Name(after.display_name)
                     before_clean_name = self.Clean_Name(before.name)
-                    before_clean_display_name = self.Clean_Name(before.display_name)
                     await logChannel.send(
-                        f':name_badge: {before_clean_name}#{before.discriminator} (`{before.id}`) has changed username from **``\u200b{before_clean_name}``** to **``\u200b{after_clean_name}``**.'
+                        f':name_badge: {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **``\u200b{before_clean_name}#{after.discriminator}``** to **``\u200b{after_clean_name}#{after.discriminator}``**.'
                     )
 
 
