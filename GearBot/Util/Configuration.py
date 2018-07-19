@@ -20,7 +20,8 @@ CONFIG_TEMPLATE = {
     "MUTE_ROLE": 0,
     "DEV_ROLE": 0,
     "SELF_ROLES": [],
-    "IGNORED_USERS": []
+    "IGNORED_USERS": [],
+    "INVITE_WHITELIST": []
 }
 
 

@@ -48,3 +48,7 @@ def trim_message(message, limit):
     if len(message) < limit - 3:
         return message
     return f"{message[:limit-1]}..."
+
+
+def clean(text):
+    return text.replace("@","@\u200b").replace("`", "")

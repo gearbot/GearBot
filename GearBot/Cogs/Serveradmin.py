@@ -103,7 +103,7 @@ class Serveradmin:
             current.append(role.id)
             Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
             await ctx.send(f"The {role.name} role is now assignable")
-            
+
     @selfroles.command()
     async def remove(self, ctx:commands.Context, role:discord.Role):
         current = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
@@ -113,6 +113,30 @@ class Serveradmin:
             current.remove(role.id)
             Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
             await ctx.send(f"The {role.name} role is now no longer assignable")
+
+    @configure.group()
+    async def invite_whitelist(self, ctx: commands.Context):
+        """Allows adding/removing servers from the invite whitelist, only enforced when there are servers on the list"""
+
+    @invite_whitelist.command(name="add")
+    async def add_to_whitelist(self, ctx: commands.Context, server:int):
+        current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
+        if server in current:
+            await ctx.send("This server is already whitelisted")
+        else:
+            current.append(server)
+            Configuration.setConfigVar(ctx.guild.id, "INVITE_WHITELIST", current)
+            await ctx.send(f"Server {server} is now whitelisted")
+
+    @invite_whitelist.command(name="remove")
+    async def remove_from_whitelist(self, ctx: commands.Context, server:int):
+        current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
+        if server in current:
+            await ctx.send("This server was not whitelisted")
+        else:
+            current.remove(server)
+            Configuration.setConfigVar(ctx.guild.id, "INVITE_WHITELIST", current)
+            await ctx.send(f"Server {server} is no longer whitelisted")
 
     @configure.group()
     async def ignoredUsers(self, ctx):

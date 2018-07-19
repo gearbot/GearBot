@@ -99,3 +99,11 @@ async def logToModLog(guild, message=None, embed=None):
             await modlog.send(message, embed=embed)
         #TODO: notify guild owner?
 
+
+async def log_to_minor_log(guild, message=None, embed=None):
+    minor_log:discord.TextChannel = guild.get_channel(Configuration.getConfigVar(guild.id, "MINOR_LOGS"))
+    if minor_log is not None:
+        perms = minor_log.permissions_for(guild.me)
+        if perms.send_messages:
+            await minor_log.send(message, embed=embed)
+

@@ -175,7 +175,8 @@ extensions = [
     "CustCommands",
     "BCVersionChecker",
     "Reload",
-    "PageHandler"
+    "PageHandler",
+    "Censor"
     #"Minecraft"
 ]
 
