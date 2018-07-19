@@ -31,8 +31,13 @@ class Censor:
                     invite:discord.Invite = await self.bot.get_invite(code)
                 except discord.NotFound:
                     pass
+                except KeyError:
+                    await message.delete()
+                    clean_message = await clean_content().convert(ctx, message.content)
+                    await GearbotLogging.log_to_minor_log(message.guild,
+                                                          f":no_entry_sign: Censored message by {message.author.name}#{message.author.discriminator}, invite code `{code}` to `DM group` is not allowed\n```{clean_message}```")
                 else:
-                    if not invite.guild.id in guilds and invite.guild.id != guild.id:
+                    if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != guild.id):
                         await message.delete()
                         clean_message = await clean_content().convert(ctx ,message.content)
                         await GearbotLogging.log_to_minor_log(message.guild, f":no_entry_sign: Censored message by {message.author.name}#{message.author.discriminator}, invite code `{code}` to `{invite.guild.name}` is not allowed\n```{clean_message}```")
