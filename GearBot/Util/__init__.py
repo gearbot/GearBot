@@ -26,6 +26,10 @@ async def readyBot(bot):
     await Configuration.onReady(bot)
     Confirmation.on_ready(bot)
     Pages.on_ready(bot)
+    bot.data = {
+        "forced_exits": [],
+        "unbans": []
+    }
     await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
 
 def prepDatabase(bot):
