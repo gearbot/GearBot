@@ -25,6 +25,8 @@ def isServerMod(ctx:commands.Context):
         return False
     modrole = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLE_ID")
     if modrole != 0:
+        if not hasattr( ctx.author, "roles"):
+            return False
         for role in ctx.author.roles:
             if str(role.id) == str(modrole):
                 return True

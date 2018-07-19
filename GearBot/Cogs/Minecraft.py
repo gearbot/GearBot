@@ -25,7 +25,7 @@ class Minecraft:
         if not project_name in self.cf_cache.keys():
             self.fetching.append(project_name)
             if log:
-                message = await ctx.send("Fetching info, please stand by...")
+                message = await ctx.send("<a:gearLoading:468054357724889089> Fetching info, please hold <a:gearLoading:468054357724889089>")
             info = await self.fetch_info(project_name)
             if info is False:
                 if log:
@@ -57,8 +57,7 @@ class Minecraft:
                     "categories": parsed["categories"],
                     "links": dict(),
                     "thumbnail": parsed["thumbnail"],
-                    "downloads": parsed["downloads"]["total"],
-                    "description": parsed["description"]
+                    "downloads": parsed["downloads"]["total"]
                 }
 
                 for link in parsed["links"]:
@@ -91,8 +90,7 @@ class Minecraft:
                 "Project type": info["type"].lower(),
                 "Project categories": "\n".join(info["categories"]),
                 "Links": "\n".join(f"[{k}]({v})" for k, v in info["links"].items()),
-                "Downloads": info["downloads"],
-                "Description": info["description"]
+                "Downloads": "{:,}".format(info["downloads"])
             }
             return Pages.paginate_fields([fields])
 
