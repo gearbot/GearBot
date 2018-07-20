@@ -26,9 +26,9 @@ CONFIG_TEMPLATE = {
 
 
 async def onReady(bot:commands.Bot):
-    GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds")
+    GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
     for guild in bot.guilds:
-        GearbotLogging.info(f"Loading info for {guild.name} ({guild.id})")
+        GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
         loadConfig(guild)
 
 
@@ -39,9 +39,9 @@ def loadGlobalConfig():
             MASTER_CONFIG = json.load(jsonfile)
             master_loaded = True
     except FileNotFoundError:
-        GearbotLogging.error("Unable to load config, running with defaults")
+        GearbotLogging.error("Unable to load config, running with defaults.")
     except Exception as e:
-        GearbotLogging.error("Failed to parse configuration")
+        GearbotLogging.error("Failed to parse configuration.")
         print(e)
         raise e
 
@@ -59,7 +59,7 @@ def loadConfig(guild:discord.Guild):
                         config[key] = CONFIG_TEMPLATE[key]
             SERVER_CONFIGS[guild.id] = config
     except FileNotFoundError:
-        GearbotLogging.info(f"No config available for {guild.name} ({guild.id}), creating blank one")
+        GearbotLogging.info(f"No config available for {guild.name} ({guild.id}), creating a blank one.")
         SERVER_CONFIGS[guild.id] = copy.deepcopy(CONFIG_TEMPLATE)
         saveConfig(guild.id)
 

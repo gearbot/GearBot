@@ -58,7 +58,7 @@ class Admin:
 
     @commands.command()
     async def reconnectdb(self, ctx):
-        """Disconnect and reconnect the database, for in case it does run away again"""
+        """Disconnect and reconnect the database, for case it does run away again"""
         self.bot.database_connection.close()
         self.bot.database_connection.connect()
         await ctx.send("Database connection re-established")
@@ -131,5 +131,6 @@ class Admin:
         pages = data["pages"]
         page, page_num = Pages.basic_pages(pages, page_num, action)
         return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, page_num
+
 def setup(bot):
     bot.add_cog(Admin(bot))

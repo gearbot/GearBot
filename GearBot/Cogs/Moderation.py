@@ -68,7 +68,7 @@ class Moderation:
         return pages
     @commands.command()
     @commands.guild_only()
-    async def roles(selfs, ctx:commands.Context):
+    async def roles(self, ctx:commands.Context):
         """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
         await Pages.create_new("roles", ctx)
 
@@ -170,7 +170,7 @@ class Moderation:
                     await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('MUTE')} {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
                     InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
                 else:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to mute {user.name}#{user.discriminator}")
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to mute {target.name}#{target.discriminator}")
 
     @commands.command()
     @commands.guild_only()
@@ -313,7 +313,7 @@ async def unmuteTask(modcog:Moderation):
                             await member.remove_roles(role, reason="Mute expired")
                             await GearbotLogging.logToModLog(guild, f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
                         else:
-                            await GearbotLogging.logToModLog(guild, f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but i no longer have the permissions needed to unmute this person, please remove the role manually!")
+                            await GearbotLogging.logToModLog(guild, f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
                         updated = True
                         toremove.append(userid)
                 for todo in toremove:

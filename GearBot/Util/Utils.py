@@ -44,7 +44,7 @@ def convertToSeconds(value: int, type: str):
         return value
 
 async def cleanExit(bot, trigger):
-    await GearbotLogging.logToBotlog(f"Shutdown triggered by {trigger}", log=True)
+    await GearbotLogging.logToBotlog(f"Shutdown triggered by {trigger}.", log=True)
     await bot.logout()
     await bot.close()
     bot.aiosession.close()

@@ -29,9 +29,9 @@ class Minecraft:
             info = await self.fetch_info(project_name)
             if info is False:
                 if log:
-                    await ctx.send("Data retrieval failed, seems the api is having issues, please try again later")
+                    await ctx.send("Data retrieval failed, seems like the API is having issues, please try again later.")
             else:
-                GearbotLogging.info(f"Retrieved project data for {project_name}, adding to cache")
+                GearbotLogging.info(f"Retrieved project data for {project_name}, adding to cache.")
                 self.cf_cache[project_name] = {
                     "info": info,
                     "time": datetime.datetime.utcnow()
@@ -68,16 +68,16 @@ class Minecraft:
                 return info
 
             elif reply.status is 202: #new project, wait for the api to fetch it
-                GearbotLogging.info(f"Info for {project_name} not available yet, trying again in 10s")
+                GearbotLogging.info(f"Info for {project_name} not available yet, trying again in 10 seconds.")
                 await asyncio.sleep(10)
                 return await self.fetch_info(project_name)
             elif reply.status in (400, 404):
                 return None
             elif reply.status is 500:
-                GearbotLogging.error(f"Fetching info for {project_name} failed")
+                GearbotLogging.error(f"Fetching info for {project_name} failed.")
                 return False
             else:
-                GearbotLogging.error(f"Got unexpected response code ({reply.status}) when fetching info for {project_name}")
+                GearbotLogging.error(f"Got unexpected response code ({reply.status}) when fetching info for {project_name}.")
                 return None #TODO: handle failure
 
     async def gen_cf_pages(self, ctx, project_name, log):

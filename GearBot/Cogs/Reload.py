@@ -26,8 +26,8 @@ class Reload:
         if cog in cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             self.bot.load_extension(f"Cogs.{cog}")
-            await ctx.send(f'**{cog}** has been reloaded')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}', log=True)
+            await ctx.send(f'**{cog}** has been reloaded.')
+            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}.', log=True)
         else:
             await ctx.send(f"I can't find that cog.")
 
@@ -36,7 +36,7 @@ class Reload:
         if os.path.isfile(f"Cogs/{cog}.py") or os.path.isfile(f"GearBot/Cogs/{cog}.py"):
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f"**{cog}** has been loaded!")
-            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}", log=True)
+            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}.", log=True)
         else:
             await ctx.send(f"I can't find that cog.")
 
@@ -47,7 +47,7 @@ class Reload:
             cogs.append(c.replace('Cog', ''))
         if cog in cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
-            await ctx.send(f'**{cog}** has been unloaded')
+            await ctx.send(f'**{cog}** has been unloaded.')
             await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
         else:
             await ctx.send(f"I can't find that cog.")
@@ -64,11 +64,11 @@ class Reload:
                 cogs.append(c.replace('Cog', ''))
             for cog in cogs:
                 self.bot.unload_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been unloaded')
+                GearbotLogging.info(f'{cog} has been unloaded.')
                 self.bot.load_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been loaded')
-            await GearbotLogging.logToBotlog("Hot reload complete")
-        await ctx.send("Hot reload complete")
+                GearbotLogging.info(f'{cog} has been loaded.')
+            await GearbotLogging.logToBotlog("Hot reload complete.")
+        await ctx.send("Hot reload complete.")
 
     @commands.command()
     async def pull(self, ctx):
