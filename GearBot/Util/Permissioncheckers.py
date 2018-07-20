@@ -12,6 +12,8 @@ def is_owner():
 def isServerAdmin(ctx:commands.Context):
     if ctx.guild is None:
         return False
+    if not hasattr(ctx.author, "roles"):
+        return False
     adminrole = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLE_ID")
     if adminrole != 0:
         for role in ctx.author.roles:
@@ -23,10 +25,10 @@ def isServerAdmin(ctx:commands.Context):
 def isServerMod(ctx:commands.Context):
     if ctx.guild is None:
         return False
+    if not hasattr(ctx.author, "roles"):
+        return False
     modrole = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLE_ID")
     if modrole != 0:
-        if not hasattr( ctx.author, "roles"):
-            return False
         for role in ctx.author.roles:
             if str(role.id) == str(modrole):
                 return True
