@@ -27,7 +27,7 @@ class ModLog:
 
     async def buildCache(self, guild:discord.Guild, limit = 250):
         start = time.perf_counter()
-        GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id})")
+        GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
         newCount = 0
         editCount = 0
         count = 0
@@ -35,7 +35,7 @@ class ModLog:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 async for message in channel.history(limit=limit, reverse=False):
                     if not self.running:
-                        GearbotLogging.info("Cog unloaded while still building cache, aborting")
+                        GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
                     if message.author == self.bot.user:
                         continue
@@ -51,7 +51,7 @@ class ModLog:
                         logged.save()
                         editCount = editCount + 1
                     count = count + 1
-        GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s")
+        GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s.")
 
     async def prep(self):
         for guild in self.bot.guilds:
@@ -88,7 +88,7 @@ class ModLog:
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
-                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author}#{user.discriminator} (`{user.id}`) in {channel.mention} has been removed", embed=embed)
+                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author}#{user.discriminator} (`{user.id}`) in {channel.mention} has been removed.", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         while not self.bot.STARTUP_COMPLETE:
@@ -114,7 +114,7 @@ class ModLog:
                     embed.add_field(name="Before", value=Utils.trim_message(message.content, 1024), inline=False)
                     embed.add_field(name="After", value=Utils.trim_message(event.data["content"], 1024), inline=False)
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
-                        await logChannel.send(f":pencil: Message by {user.name}#{user.discriminator} (`{user.id}`) in {channel.mention} has been edited",
+                        await logChannel.send(f":pencil: Message by {user.name}#{user.discriminator} (`{user.id}`) in {channel.mention} has been edited.",
                         embed=embed)
                     message.content = event.data["content"]
                     message.save()
@@ -130,7 +130,7 @@ class ModLog:
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
                 age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
-                await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago")
+                await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago.")
 
     async def on_member_remove(self, member:discord.Member):
         while not self.bot.STARTUP_COMPLETE:
@@ -143,7 +143,7 @@ class ModLog:
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                await logChannel.send(f":outbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has left the server")
+                await logChannel.send(f":outbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has left the server.")
 
     async def on_member_ban(self, guild, user):
         while not self.bot.STARTUP_COMPLETE:
@@ -197,14 +197,14 @@ class ModLog:
 async def cache_task(modlog:ModLog):
     while not modlog.bot.STARTUP_COMPLETE:
         await asyncio.sleep(1)
-    GearbotLogging.info("Started modlog background task")
+    GearbotLogging.info("Started modlog background task.")
     while modlog.running:
         if len(modlog.bot.to_cache) > 0:
             ctx = modlog.bot.to_cache.pop(0)
             await modlog.buildCache(ctx.guild)
-            await ctx.send("Caching complete")
+            await ctx.send("Caching complete.")
         await asyncio.sleep(1)
-    GearbotLogging.info("modlog background task terminated")
+    GearbotLogging.info("modlog background task terminated.")
 
 
 

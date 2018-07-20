@@ -68,7 +68,7 @@ async def on_message(message:discord.Message):
         bot.commandCount = bot.commandCount + 1
         if isinstance(ctx.channel, discord.TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
             try:
-                await ctx.author.send("Hey, you tried triggering a command in a channel i'm not allowed to send messages in. Please grant me permissions to reply and try again.")
+                await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
             except Exception:
                 pass #closed DMs
         else:
@@ -77,7 +77,7 @@ async def on_message(message:discord.Message):
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
-    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id})")
+    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.loadConfig(guild)
 
 
@@ -86,7 +86,7 @@ async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.NoPrivateMessage):
         await ctx.send("This command cannot be used in private messages.")
     elif isinstance(error, commands.BotMissingPermissions):
-        GearbotLogging.error(f"Encountered a permissions error while executing {ctx.command}")
+        GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}.")
         await ctx.send(error)
     elif isinstance(error, commands.DisabledCommand):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
@@ -98,9 +98,9 @@ async def on_command_error(ctx: commands.Context, error):
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"You are missing a required argument!(See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command)")
+        await ctx.send(f"You are missing a required argument!(See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
     elif isinstance(error, commands.BadArgument):
-        await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand)")
+        await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
     elif isinstance(error, commands.CommandNotFound):
         return
     else:
@@ -163,7 +163,7 @@ async def on_error(event, *args, **kwargs):
         pass
     except Exception as ex:
         GearbotLogging.error(
-            f"Failed to log to botlog, eighter discord broke or something is seriously wrong!\n{ex}")
+            f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
         GearbotLogging.error(traceback.format_exc())
 
 

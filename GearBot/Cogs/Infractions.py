@@ -21,14 +21,14 @@ class Infractions:
     async def warn(self, ctx:commands.Context, member:discord.Member, *, reason:str):
         if (ctx.author != member and member != ctx.bot.user and ctx.author.top_role > member.top_role) or ctx.guild.owner == ctx.author:
             if len(reason) > 1800:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Warning is to long, i can only store warnings up to 1800 chars")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Warning is to long, I can only store warnings up to 1800 characters.")
             else:
                 InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                 name = Utils.clean(member.name)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} warning for {name}#{member.discriminator} added")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} warning for {name}#{member.discriminator} added.")
         else:
             name = Utils.clean(member.name)
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to warn {name}#{member.discriminator}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to warn {name}#{member.discriminator}.")
 
     @commands.guild_only()
     @commands.group()

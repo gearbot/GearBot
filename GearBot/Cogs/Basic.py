@@ -39,7 +39,7 @@ class Basic:
             t1 = time.perf_counter()
             await ctx.trigger_typing()
             t2 = time.perf_counter()
-            await ctx.send(f":hourglass: Gateway ping is {round((t2 - t1) * 1000)}ms :hourglass:")
+            await ctx.send(f":hourglass: REST API ping is {round((t2 - t1) * 1000)}ms | Websocket ping is {round(self.bot.latency*1000, 2)}ms :hourglass:")
         else:
             await ctx.send(":ping_pong:")
 
@@ -94,7 +94,7 @@ class Basic:
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
         if embed is None:
-            await ctx.send("I was unable to find that message anywhere, is it somewhere i can't see?")
+            await ctx.send("I was unable to find that message anywhere, is it somewhere I can't see?")
         else:
             await ctx.send(embed=embed)
             if ctx.channel.permissions_for(ctx.me).manage_messages:
@@ -106,9 +106,9 @@ class Basic:
         """Random decision making"""
         outcome = random.randint(1, 2)
         if outcome == 1 or ("mute" in thing and "vos" in thing):
-            await ctx.send(f"Yes, you should absolutely {thing}")
+            await ctx.send(f"Yes, you should absolutely {thing}.")
         else:
-            await ctx.send(f"No you should probably not {thing}")
+            await ctx.send(f"No you should probably not {thing}.")
 
     async def init_role(self, ctx):
         pages = self.gen_role_pages(ctx.guild)
@@ -172,7 +172,7 @@ class Basic:
     async def init_help(self, ctx, query):
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
-            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"' if len(query) < 1500 else "Sorry, can't help you with that wall of text"), None, False
+            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"' if len(query) < 1500 else "Sorry, can't help you with that wall of text."), None, False
         return f"**Gearbot help 1/{len(pages)}**```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):

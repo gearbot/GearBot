@@ -37,7 +37,7 @@ async def readyBot(bot):
     await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
 
 def prepDatabase(bot):
-    GearbotLogging.info("Connecting to the database")
+    GearbotLogging.info("Connecting to the database.")
     DatabaseConnector.init()
     bot.database_connection = DatabaseConnector.connection
-    GearbotLogging.info("Database connection established")
+    GearbotLogging.info("Database connection established.")
