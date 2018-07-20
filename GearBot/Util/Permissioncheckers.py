@@ -12,6 +12,8 @@ def is_owner():
 def isServerAdmin(ctx:commands.Context):
     if ctx.guild is None:
         return False
+    if not hasattr(ctx.author, "roles"):
+        return False
     adminrole = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLE_ID")
     if adminrole != 0:
         for role in ctx.author.roles:
@@ -22,6 +24,8 @@ def isServerAdmin(ctx:commands.Context):
 
 def isServerMod(ctx:commands.Context):
     if ctx.guild is None:
+        return False
+    if not hasattr(ctx.author, "roles"):
         return False
     modrole = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLE_ID")
     if modrole != 0:
@@ -50,10 +54,15 @@ def devOnly():
         return isDev(ctx)
     return commands.check(predicate)
 
-def is_bc(ctx:commands.Context):
-    return ctx. guild is not None and ctx.guild.id == 309218657798455298
+def is_server(ctx, id):
+    return ctx.guild is not None and ctx.guild.id == id
 
 def bc_only():
     async def predicate(ctx):
-        return is_bc(ctx)
+        return is_server(ctx, 309218657798455298)
+    return commands.check(predicate)
+
+def no_testers():
+    async def predicate(ctx):
+        return not is_server(ctx, 197038439483310086)
     return commands.check(predicate)

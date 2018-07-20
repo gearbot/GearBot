@@ -35,17 +35,17 @@ def unregister(type_handler):
 async def create_new(type, ctx, **kwargs):
     text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
     message:discord.Message = await ctx.channel.send(text, embed=embed)
-    data = {
-        "type": type,
-        "page": 0,
-        "trigger": ctx.message.id,
-        "sender": ctx.author.id
-    }
-    for k, v in kwargs.items():
-        data[k] = v
-    known_messages[str(message.id)] = data
-
     if has_pages:
+        data = {
+            "type": type,
+            "page": 0,
+            "trigger": ctx.message.id,
+            "sender": ctx.author.id
+        }
+        for k, v in kwargs.items():
+            data[k] = v
+        known_messages[str(message.id)] = data
+
         await message.add_reaction(prev_emoji)
         await message.add_reaction(next_emoji)
 
@@ -83,7 +83,8 @@ def basic_pages(pages, page_num, action):
     page = pages[page_num]
     return page, page_num
 
-def paginate(input, max_lines = 20, max_chars = 1900):
+def paginate(input, max_lines = 20, max_chars = 1900, prefix = "", suffix = ""):
+    max_chars -= len(prefix) + len(suffix)
     lines = str(input).splitlines(keepends=True)
     pages = []
     page = ""
@@ -95,18 +96,18 @@ def paginate(input, max_lines = 20, max_chars = 1900):
                 words = line.split(" ")
                 for word in words:
                     if len(page) + len(word) > max_chars:
-                        pages.append(page)
+                        pages.append(f"{prefix}{page}{suffix}")
                         page = f"{word} "
                     else:
                         page += f"{word} "
             else:
-                pages.append(page)
+                pages.append(f"{prefix}{page}{suffix}")
                 page = line
                 count = 1
         else:
             page += line
         count += 1
-    pages.append(page)
+    pages.append(f"{prefix}{page}{suffix}")
     return pages
 
 def paginate_fields(input):

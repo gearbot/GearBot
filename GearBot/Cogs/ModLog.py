@@ -135,6 +135,10 @@ class ModLog:
     async def on_member_remove(self, member:discord.Member):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
+        exits = self.bot.data["forced_exits"]
+        if member.id in exits:
+            exits.remove(member.id)
+            return
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -144,28 +148,30 @@ class ModLog:
     async def on_member_ban(self, guild, user):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
+        if user.id in self.bot.data["forced_exits"]:
+            return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                await logChannel.send(
-                    f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been banned from the server.")
+                await logChannel.send(f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been banned from the server.")
+                self.bot.data["forced_exits"].append(user.id)
+
 
     async def on_member_unban(self, guild, user):
         while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
+        if user.id in self.bot.data["unbans"]:
+            return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
                 await logChannel.send(
                     f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
-
-    def Clean_Name(self, text):
-        return text.replace("@","").replace("`","")
         
     async def on_member_update(self, before, after):
-        while not self.bot.startup_done:
+        while not self.bot.STARTUP_COMPLETE:
             await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
         if channelid is not 0:
@@ -173,21 +179,18 @@ class ModLog:
             if logChannel is not None:
                 if (before.nick != after.nick and
                     after.nick != before.nick):
-                    after_clean_name = self.Clean_Name(after.name)
-                    after_clean_display_name = self.Clean_Name(after.display_name)
-                    before_clean_name = self.Clean_Name(after.name)
-                    before_clean_display_name = self.Clean_Name(before.display_name)
+                    after_clean_name = Utils.clean(after.name)
+                    after_clean_display_name = Utils.clean(after.display_name)
+                    before_clean_display_name = Utils.clean(before.display_name)
                     await logChannel.send(
-                        f':name_badge: {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **``\u200b{before_clean_display_name}``** to **``\u200b{after_clean_display_name}``**.'
+                        f'<:gearNicktag:469430037800812545> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
                     )
                 elif (before.name != after.name and
                     after.name != before.name):
-                    after_clean_name = self.Clean_Name(after.name)
-                    after_clean_display_name = self.Clean_Name(after.display_name)
-                    before_clean_name = self.Clean_Name(before.name)
-                    before_clean_display_name = self.Clean_Name(before.display_name)
+                    after_clean_name = Utils.clean(after.name)
+                    before_clean_name = Utils.clean(before.name)
                     await logChannel.send(
-                        f':name_badge: {before_clean_name}#{before.discriminator} (`{before.id}`) has changed username from **``\u200b{before_clean_name}``** to **``\u200b{after_clean_name}``**.'
+                        f'<:gearNametag:465179661769506816> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                     )
 
 

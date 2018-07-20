@@ -13,7 +13,7 @@ from discord import abc
 from discord.ext import commands
 
 import Util
-from Util import Configuration, GearbotLogging
+from Util import Configuration, GearbotLogging, Emoji
 from Util import Utils as Utils
 
 
@@ -36,6 +36,8 @@ bot.errors = 0
 async def on_ready():
     if not bot.STARTUP_COMPLETE:
         await Util.readyBot(bot)
+        Emoji.on_ready(bot)
+        Utils.on_ready(bot)
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
@@ -90,6 +92,8 @@ async def on_command_error(ctx: commands.Context, error):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest":
+            if ctx.guild.id == 197038439483310086:
+                return
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
@@ -174,7 +178,9 @@ extensions = [
     "BCVersionChecker",
     "Reload",
     "PageHandler",
-    "Minecraft"
+    "Censor",
+    "Infractions"
+    #"Minecraft"
 ]
 
 if __name__ == '__main__':
