@@ -1,18 +1,20 @@
 from Util import *
 from database import DatabaseConnector
-from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator
+from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils
 
 components = [
     Configuration,
     Converters,
     GearbotLogging,
-    Pages,
     Permissioncheckers,
     Utils,
     VersionInfo,
     DatabaseConnector,
+    Emoji,
     Confirmation,
-    HelpGenerator
+    HelpGenerator,
+    Pages,
+    InfractionUtils
 ]
 
 async def reload(bot):
@@ -24,8 +26,10 @@ async def reload(bot):
 
 async def readyBot(bot):
     await Configuration.onReady(bot)
+    Emoji.on_ready(bot)
     Confirmation.on_ready(bot)
     Pages.on_ready(bot)
+    Utils.on_ready(bot)
     bot.data = {
         "forced_exits": [],
         "unbans": []

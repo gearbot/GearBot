@@ -39,6 +39,18 @@ class CustomCommand(Model):
     class Meta:
         database = connection
 
+class Infraction(Model):
+    id = PrimaryKeyField()
+    guild_id = BigIntegerField()
+    user_id = BigIntegerField()
+    mod_id = BigIntegerField()
+    type = CharField(max_length=10, collation="utf8mb4_general_ci")
+    reason = CharField(max_length=2000, collation="utf8mb4_general_ci")
+    timestamp = TimestampField()
+
+    class Meta:
+        database = connection
+
 
 def init():
     global connection
@@ -48,5 +60,5 @@ def init():
                   host=Configuration.getMasterConfigVar("DATABASE_HOST"),
                   port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction])
     connection.close()

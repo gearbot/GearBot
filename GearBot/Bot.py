@@ -13,7 +13,7 @@ from discord import abc
 from discord.ext import commands
 
 import Util
-from Util import Configuration, GearbotLogging
+from Util import Configuration, GearbotLogging, Emoji
 from Util import Utils as Utils
 
 
@@ -36,6 +36,8 @@ bot.errors = 0
 async def on_ready():
     if not bot.STARTUP_COMPLETE:
         await Util.readyBot(bot)
+        Emoji.on_ready(bot)
+        Utils.on_ready(bot)
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
@@ -176,7 +178,8 @@ extensions = [
     "BCVersionChecker",
     "Reload",
     "PageHandler",
-    "Censor"
+    "Censor",
+    "Infractions"
     #"Minecraft"
 ]
 

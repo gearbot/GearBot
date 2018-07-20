@@ -4,6 +4,12 @@ from discord.ext import commands
 
 from Util import GearbotLogging
 
+bot = None
+
+def on_ready(actual_bot):
+    global bot
+    bot = actual_bot
+
 
 def fetchFromDisk(filename):
     try:
@@ -52,3 +58,11 @@ def trim_message(message, limit):
 
 def clean(text):
     return text.replace("@","@\u200b").replace("`", "")
+
+async def username(id):
+    user = bot.get_user(id)
+    if user is None:
+        user = await bot.get_user_info(id)
+    if user is None:
+        return "UNKNOWN USER"
+    return f"{clean(user.name)}#{user.discriminator}"

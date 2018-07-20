@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages
+from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji
 from Util.Converters import BannedMember
 
 
@@ -75,25 +75,30 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.User, *, reason="No reason given."):
+    async def kick(self, ctx, user: discord.Member, *, reason="No reason given."):
         """Kicks an user from the server."""
         self.bot.data["forced_exits"].append(user.id)
-        await ctx.guild.kick(user, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
-        await ctx.send(f":ok_hand: {user.name}#{user.discriminator} (`{user.id}`) was kicked. Reason: `{reason}`")
-        await GearbotLogging.logToModLog(ctx.guild, f":boot: {user.name}#{user.discriminator} (`{user.id}`) was kicked by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+            await ctx.guild.kick(user, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was kicked. Reason: `{reason}`")
+            await GearbotLogging.logToModLog(ctx.guild, f":boot: {user.name}#{user.discriminator} (`{user.id}`) was kicked by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Kick", reason)
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to kick {user.name}#{user.discriminator}")
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx:commands.Context, user: discord.Member, *, reason="No reason given"):
         """Bans an user from the server."""
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or await ctx.bot.is_owner(ctx.author):
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
             self.bot.data["forced_exits"].append(user.id)
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
-            await ctx.send(f":ok_hand: {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
             await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name} (`{user.id}`) was banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban ", reason)
         else:
-            await ctx.send(f":no_entry: You are not allowed to ban {user.name}#{user.discriminator}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to ban {user.name}#{user.discriminator}")
 
     @commands.command()
     @commands.guild_only()
@@ -108,11 +113,14 @@ class Moderation:
                 await ctx.send("You cannot ban that user!")
             else:
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
-                await ctx.send(f":ok_hand: {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
                 await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name}#{user.discriminator} (`{user.id}`) was force banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Fban", reason)
         else:
             await ctx.send(f":warning: {member.name} is on this server, executing regular ban command instead")
             await ctx.invoke(self.ban, member, reason=reason)
+
+
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
@@ -131,8 +139,9 @@ class Moderation:
         """Unbans an user from the server."""
         self.bot.data["unbans"].append(member.user.id)
         await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
-        await ctx.send(f":ok_hand: {member.user.name}#{member.user.discriminator} (`{member.user.id}`) has been unbanned. Reason: `{reason}`")
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {member.user.name}#{member.user.discriminator} (`{member.user.id}`) has been unbanned. Reason: `{reason}`")
         await GearbotLogging.logToModLog(ctx.guild, f"<:gearInnocent:465177981287923712> {member.user.name}#{member.user.discriminator} (`{member.user.id}`) was un-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+        InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         # This should work even if the user isn't cached
 
 
@@ -149,15 +158,19 @@ class Moderation:
             if role is None:
                 await ctx.send(f":warning: Unable to comply, someone has removed the role i was told to use, but i can still kick {target.mention} while a server admin makes a new role for me to use")
             else:
-                duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
-                until = time.time() + duration
-                await target.add_roles(role, reason=f"{reason}, as requested by {ctx.author.name}")
-                if not str(ctx.guild.id) in self.mutes:
-                    self.mutes[str(ctx.guild.id)] = dict()
-                self.mutes[str(ctx.guild.id)][str(target.id)] = until
-                await ctx.send(f"{target.display_name} has been muted")
-                Utils.saveToDisk("mutes", self.mutes)
-                await GearbotLogging.logToModLog(ctx.guild, f"<:gearMute:465177981221077003> {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
+                if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
+                    duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
+                    until = time.time() + duration
+                    await target.add_roles(role, reason=f"{reason}, as requested by {ctx.author.name}")
+                    if not str(ctx.guild.id) in self.mutes:
+                        self.mutes[str(ctx.guild.id)] = dict()
+                    self.mutes[str(ctx.guild.id)][str(target.id)] = until
+                    await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {target.display_name} has been muted")
+                    Utils.saveToDisk("mutes", self.mutes)
+                    await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('MUTE')} {target.name}#{target.discriminator} (`{target.id}`) has been muted by {ctx.author.name} for {durationNumber} {durationIdentifier}: {reason}")
+                    InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
+                else:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to mute {user.name}#{user.discriminator}")
 
     @commands.command()
     @commands.guild_only()
@@ -175,6 +188,7 @@ class Moderation:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                 await ctx.send(f"{target.display_name} has been unmuted")
                 await GearbotLogging.logToModLog(ctx.guild, f"<:gearInnocent:465177981287923712> {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
+                InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
     async def userinfo(self, ctx: commands.Context, user: str = None):
