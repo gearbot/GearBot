@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -44,30 +44,32 @@ class Basic:
             await ctx.send(":ping_pong:")
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     @Permissioncheckers.no_testers()
-    async def quote(self, ctx:commands.Context, messageid:int):
+    async def quote(self, ctx:commands.Context, message_id:int):
         """Quotes the requested message"""
         embed = None
         async with ctx.typing():
-            message = LoggedMessage.get_or_none(messageid=messageid)
+            message = LoggedMessage.get_or_none(messageid=message_id)
             if message is None:
                 for guild in self.bot.guilds:
                     for channel in guild.text_channels:
                         try:
-                            dmessage: discord.Message = await channel.get_message(messageid)
+                            dmessage: discord.Message = await channel.get_message(message_id)
                             for a in dmessage.attachments:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
                                                                messageid=message.id)
-                            message = LoggedMessage.create(messageid=messageid, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id)
+                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id)
                         except Exception as ex:
                             #wrong channel
                             pass
                         if message is not None:
                             break
             if message is not None:
+                channel = self.bot.get_channel(message.channel)
                 attachment = None
-                attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == messageid)
+                attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message_id)
                 if len(attachments) == 1:
                     attachment = attachments[0]
                 embed = discord.Embed(colour=discord.Color(0xd5fff), timestamp=datetime.utcfromtimestamp(message.timestamp))
@@ -80,8 +82,7 @@ class Basic:
                 else:
                     description = message.content
                     embed = discord.Embed(colour=discord.Color(0xd5fff), description=description, timestamp=datetime.utcfromtimestamp(message.timestamp))
-                    channel = self.bot.get_channel(message.channel)
-                    embed.add_field(name="​", value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{messageid}")
+                    embed.add_field(name="​", value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
                     if attachment is not None:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
@@ -92,10 +93,13 @@ class Basic:
                 except:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
-                embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
+                embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {message_id}")
         if embed is None:
             await ctx.send("I was unable to find that message anywhere, is it somewhere I can't see?")
         else:
+            if channel.is_nsfw() and not ctx.channel.is_nsfw():
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied")
+                return
             await ctx.send(embed=embed)
             if ctx.channel.permissions_for(ctx.me).manage_messages:
                 await ctx.message.delete()
