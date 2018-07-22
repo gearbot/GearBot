@@ -49,12 +49,6 @@ bot.errors = 0
 @bot.event
 async def on_ready():
     if not bot.STARTUP_COMPLETE:
-        GearbotLogging.info("Loading cogs...")
-        for extension in extensions:
-            try:
-                bot.load_extension("Cogs." + extension)
-            except Exception as e:
-                GearbotLogging.exception(f"Failed to load extention {extension}", e)
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
@@ -70,6 +64,13 @@ async def on_ready():
 
         bot.aiosession = aiohttp.ClientSession()
         bot.start_time = datetime.datetime.utcnow()
+        GearbotLogging.info("Loading cogs...")
+        for extension in extensions:
+            try:
+                bot.load_extension("Cogs." + extension)
+            except Exception as e:
+                GearbotLogging.exception(f"Failed to load extention {extension}", e)
+        GearbotLogging.info("Cogs loaded, startup complete")
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 

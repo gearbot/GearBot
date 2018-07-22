@@ -33,24 +33,30 @@ class ModLog:
         count = 0
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
+                logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
+                    LoggedMessage.messageid.desc()).limit(limit)
+                messages = dict()
+                for message in logged_messages:
+                    messages[message.messageid] = message
                 async for message in channel.history(limit=limit, reverse=False):
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
                     if message.author == self.bot.user:
                         continue
-                    logged = LoggedMessage.get_or_none(messageid=message.id)
-                    if logged is None:
+                    if message.id not in messages.keys():
                         LoggedMessage.create(messageid=message.id, author=message.author.id,
                                                               content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
                         for a in message.attachments:
                             LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
                         newCount = newCount + 1
-                    elif logged.content != message.content:
-                        logged.content = message.content
-                        logged.save()
-                        editCount = editCount + 1
-                    count = count + 1
+                    else:
+                        logged = messages[message.id]
+                        if logged.content != message.content:
+                            logged.content = message.content
+                            logged.save()
+                            editCount = editCount + 1
+                        count = count + 1
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s.")
 
     async def prep(self):
