@@ -24,7 +24,7 @@ async def get_infraction_pages(guild_id, query):
             longest_user = max(longest_user, len(user))
             mod = await Utils.username(inf.mod_id)
             longest_mod = max(longest_mod, len(mod))
-            out += f"{inf.id} | {user} | {mod} | {inf.timestamp} | {inf.type} | {inf.reason}\n"
+            out += f"{inf.id}  | {user} | {mod} | {inf.timestamp} | {inf.type} | {inf.reason}\n"
         prefix = f"id| user {' ' * (longest_user-4)}| moderator {' ' * (longest_mod- 9)}| timestamp           | type | reason"
         prefix = f"```\n{prefix}\n{'-' * len(prefix)}\n"
         pages = Pages.paginate(out, prefix=prefix, suffix="```")

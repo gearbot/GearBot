@@ -1,15 +1,14 @@
-from Util import *
 from database import DatabaseConnector
 from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils
 
 components = [
     Configuration,
+    DatabaseConnector,
     Converters,
     GearbotLogging,
     Permissioncheckers,
     Utils,
     VersionInfo,
-    DatabaseConnector,
     Emoji,
     Confirmation,
     HelpGenerator,

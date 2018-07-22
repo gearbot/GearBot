@@ -65,4 +65,7 @@ async def username(id):
         user = await bot.get_user_info(id)
     if user is None:
         return "UNKNOWN USER"
+    return clean_user(user)
+
+def clean_user(user):
     return f"{clean(user.name)}#{user.discriminator}"

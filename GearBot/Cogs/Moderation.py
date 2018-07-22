@@ -110,7 +110,7 @@ class Moderation:
         except BadArgument:
             user = await ctx.bot.get_user_info(user_id)
             if user == ctx.author or user == ctx.bot.user:
-                await ctx.send("You cannot ban that user!")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} You cannot ban that user!")
             else:
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
@@ -127,10 +127,10 @@ class Moderation:
     async def purge(self, ctx, msgs: int):
         """Purges up to 100 messages in this channel."""
         if msgs > 100:
-            await ctx.send("You can only purge 100 messages at a time.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You can only purge 100 messages at a time.")
         else:
             deleted = await ctx.channel.purge(limit=msgs)
-            await ctx.send(f"Deleted {(len(deleted))} message(s)!")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Deleted {(len(deleted))} message(s)!")
 
     @commands.command()
     @commands.guild_only()
@@ -152,11 +152,11 @@ class Moderation:
         """Temporary mutes someone"""
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
-            await ctx.send(f":warning: Unable to comply, you have not told me what role i can use to mute people, but i can still kick {target.mention} if you want while a server admin tells me what role i can use")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')}  Unable to comply, you have not told me what role i can use to mute people, but i can still kick {target.mention} if you want while a server admin tells me what role i can use")
         else:
             role = discord.utils.get(ctx.guild.roles, id=roleid)
             if role is None:
-                await ctx.send(f":warning: Unable to comply, someone has removed the role i was told to use, but i can still kick {target.mention} while a server admin makes a new role for me to use")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')}  Unable to comply, someone has removed the role i was told to use, but i can still kick {target.mention} while a server admin makes a new role for me to use")
             else:
                 if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
                     duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
@@ -179,15 +179,15 @@ class Moderation:
         """Lifts a mute"""
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
-            await ctx.send(f"The mute feature has been dissabled on this server, as such i cannot unmute that person")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} The mute feature has been disabled on this server, as such i cannot unmute that person")
         else:
             role = discord.utils.get(ctx.guild.roles, id=roleid)
             if role is None:
-                await ctx.send(f":warning: Unable to comply, the role i've been told to use for muting no longer exists")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Unable to comply, the role i've been told to use for muting no longer exists")
             else:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
-                await ctx.send(f"{target.display_name} has been unmuted")
-                await GearbotLogging.logToModLog(ctx.guild, f"<:gearInnocent:465177981287923712> {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
+                await ctx.send(f"{Emoji.get_chat_emoji('INNOCENT')} {target.display_name} has been unmuted")
+                await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
@@ -277,7 +277,7 @@ class Moderation:
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
                         await member.add_roles(role, reason="Member left and re-joined before mute expired")
-                        await GearbotLogging.logToModLog(member.guild, f"<:gearMute:465177981221077003> {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
+                        await GearbotLogging.logToModLog(member.guild, f"{Emoji.get_chat_emoji('MUTE')} {member.name}#{member.discriminator} (`{member.id}`) has re-joined the server before his mute expired has has been muted again")
                     else:
                         await GearbotLogging.logToModLog(member.guild, f"{member.name}#{member.discriminator} (`{member.id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute")
 

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages
+from database.DatabaseConnector import Infraction
 
 
 class Infractions:
@@ -49,6 +50,20 @@ class Infractions:
         page, page_num = Pages.basic_pages(pages, page_num, action)
         name = await Utils.username(data['query'])
         return f"**Infractions for {name}** ({page_num+1}/{len(pages)}){page}", None, page_num
+
+
+    @inf.command()
+    async def update(self, ctx:commands.Context, inf_id:int, *, reason:str):
+        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
+        if infraction is None:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Unable to find an infraction with id {inf_id} on this server")
+        else:
+            infraction.mod_id = ctx.author.id
+            infraction.reason = reason
+            infraction.save()
+            if f"{ctx.guild.id}_{infraction.user_id}" in InfractionUtils.cache.keys():
+                del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Infraction #{inf_id} has been updated.")
 
 
 def setup(bot):

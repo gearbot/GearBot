@@ -4,7 +4,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration, Confirmation
+from Util import Permissioncheckers, Configuration, Confirmation, Emoji
 from database.DatabaseConnector import CustomCommand
 
 
@@ -60,16 +60,16 @@ class CustCommands:
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Create a new command"""
         if len(trigger) == 0:
-            await ctx.send("Empty triggers, isn't that like empty promises? something you shouldn't do?")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Empty triggers, isn't that like empty promises? something you shouldn't do?")
         elif reply is None or reply == "":
-            await ctx.send("Please provide a response as well")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please provide a response as well")
         else:
             trigger = trigger.lower()
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"Command `{trigger}` has been added")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been added")
             else:
                 async def yes():
                     await ctx.send("Updating...")
@@ -87,9 +87,9 @@ class CustCommands:
         if trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
-            await ctx.send(f"Command `{trigger}` has been removed")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been removed")
         else:
-            await ctx.send(f"Unable to remove ´{trigger}` as it doesn't seem to exist")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Unable to remove ´{trigger}` as it doesn't seem to exist")
 
     @command.command()
     @commands.guild_only()
@@ -98,7 +98,7 @@ class CustCommands:
         """Sets a new reply for the specified command"""
         trigger = trigger.lower()
         if reply is None:
-            ctx.send("Please provide a response as well")
+            ctx.send(f"{Emoji.get_chat_emoji('NO')} Please provide a response as well")
         else:
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
@@ -108,7 +108,7 @@ class CustCommands:
                 command.response = reply
                 command.save()
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"Command `{trigger}` has been updated")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been updated")
 
     async def on_message(self, message: discord.Message):
         while not self.bot.STARTUP_COMPLETE:

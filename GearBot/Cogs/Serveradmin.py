@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Configuration, Permissioncheckers
+from Util import Configuration, Permissioncheckers, Emoji
 
 
 class Serveradmin:
@@ -33,19 +33,19 @@ class Serveradmin:
             await ctx.send("Please use a shorter prefix.")
         else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
-            await ctx.send(f"The server prefix is now `{new_prefix}`.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server prefix is now `{new_prefix}`.")
 
     @configure.command()
     async def adminrole(self, ctx: commands.Context, roleID):
         """Sets the server admin role"""
         Configuration.setConfigVar(ctx.guild.id, "ADMIN_ROLE_ID", roleID)
-        await ctx.send(f"The server admin role is now `{roleID}`.")
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server admin role is now `{roleID}`.")
 
     @configure.command()
     async def modrole(self, ctx: commands.Context, roleID):
         """Sets the role with moderation rights"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_ROLE_ID", roleID)
-        await ctx.send(f"The server moderation role is now `{roleID}`.")
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server moderation role is now `{roleID}`.")
 
     @configure.command()
     async def muteRole(self, ctx:commands.Context, role:discord.Role):

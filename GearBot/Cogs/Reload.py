@@ -29,7 +29,7 @@ class Reload:
             await ctx.send(f'**{cog}** has been reloaded.')
             await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}.', log=True)
         else:
-            await ctx.send(f"I can't find that cog.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
     @commands.command(hidden=True)
     async def load(self, ctx, cog: str):
@@ -38,7 +38,7 @@ class Reload:
             await ctx.send(f"**{cog}** has been loaded!")
             await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}.", log=True)
         else:
-            await ctx.send(f"I can't find that cog.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
     @commands.command(hidden=True)
     async def unload(self, ctx, cog: str):
@@ -50,7 +50,7 @@ class Reload:
             await ctx.send(f'**{cog}** has been unloaded.')
             await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
         else:
-            await ctx.send(f"I can't find that cog.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
@@ -68,7 +68,7 @@ class Reload:
                 self.bot.load_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been loaded.')
             await GearbotLogging.logToBotlog("Hot reload complete.")
-        await ctx.send("Hot reload complete.")
+        await ctx.send("{Emoji.get_chat_emoji('YES')} Hot reload complete.")
 
     @commands.command()
     async def pull(self, ctx):
@@ -78,7 +78,7 @@ class Reload:
             while p.poll() is None:
                 await asyncio.sleep(1)
             out, error = p.communicate()
-            await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
 
 def setup(bot):
     bot.add_cog(Reload(bot))
