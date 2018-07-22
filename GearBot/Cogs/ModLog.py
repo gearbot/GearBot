@@ -6,6 +6,7 @@ import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
+from peewee import IntegrityError
 
 from Util import GearbotLogging, Configuration, Permissioncheckers, Utils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
@@ -34,7 +35,7 @@ class ModLog:
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
-                    LoggedMessage.messageid.desc()).limit(limit)
+                    LoggedMessage.messageid.desc()).limit(limit*1.5)
                 messages = dict()
                 for message in logged_messages:
                     messages[message.messageid] = message
@@ -45,11 +46,19 @@ class ModLog:
                     if message.author == self.bot.user:
                         continue
                     if message.id not in messages.keys():
-                        LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                              content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
-                        for a in message.attachments:
-                            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
-                        newCount = newCount + 1
+                        try:
+                            LoggedMessage.create(messageid=message.id, author=message.author.id,
+                                                                  content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
+                            for a in message.attachments:
+                                LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
+                            newCount = newCount + 1
+                        except IntegrityError:
+                            # somehow we didn't fetch enough messages, did someone set off a nuke in the channel?
+                            logged = LoggedMessage.get(messageid=message.id)
+                            if logged.content != message.content:
+                                logged.content = message.content
+                                logged.save()
+                                editCount = editCount + 1
                     else:
                         logged = messages[message.id]
                         if logged.content != message.content:
