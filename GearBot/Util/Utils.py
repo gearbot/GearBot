@@ -69,3 +69,6 @@ async def username(id):
 
 def clean_user(user):
     return f"{clean(user.name)}#{user.discriminator}"
+
+def pad(text, length, char=' '):
+    return f"{text}{char * (length-len(text))}"
