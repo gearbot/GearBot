@@ -16,6 +16,20 @@ import Util
 from Util import Configuration, GearbotLogging, Emoji
 from Util import Utils as Utils
 
+extensions = [
+    "Basic",
+    "Admin",
+    "Moderation",
+    "Serveradmin",
+    "ModLog",
+    "CustCommands",
+    "BCVersionChecker",
+    "Reload",
+    "PageHandler",
+    "Censor",
+    "Infractions",
+    "Minecraft"
+]
 
 def prefix_callable(bot, message):
     user_id = bot.user.id
@@ -35,6 +49,12 @@ bot.errors = 0
 @bot.event
 async def on_ready():
     if not bot.STARTUP_COMPLETE:
+        GearbotLogging.info("Loading cogs...")
+        for extension in extensions:
+            try:
+                bot.load_extension("Cogs." + extension)
+            except Exception as e:
+                GearbotLogging.exception(f"Failed to load extention {extension}", e)
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
@@ -78,7 +98,7 @@ async def on_message(message:discord.Message):
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.loadConfig(guild)
+    Configuration.loadConfig(guild.id)
 
 
 @bot.event
@@ -166,23 +186,6 @@ async def on_error(event, *args, **kwargs):
             f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
         GearbotLogging.error(traceback.format_exc())
 
-
-
-extensions = [
-    "Basic",
-    "Admin",
-    "Moderation",
-    "Serveradmin",
-    "ModLog",
-    "CustCommands",
-    "BCVersionChecker",
-    "Reload",
-    "PageHandler",
-    "Censor",
-    "Infractions"
-    #"Minecraft"
-]
-
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
@@ -207,11 +210,6 @@ if __name__ == '__main__':
     else:
         token = input("Please enter your Discord token: ")
     bot.remove_command("help")
-    for extension in extensions:
-        try:
-            bot.load_extension("Cogs." + extension)
-        except Exception as e:
-            GearbotLogging.startupError(f"Failed to load extention {extension}", e)
     Util.prepDatabase(bot)
     GearbotLogging.info("Ready to go, spinning up the gears")
     bot.run(token)

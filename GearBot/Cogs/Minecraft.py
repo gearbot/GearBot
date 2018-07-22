@@ -1,12 +1,13 @@
 import asyncio
 import datetime
 import json
+from collections import OrderedDict
 
 import aiohttp
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Pages
+from Util import GearbotLogging, Pages, VersionInfo
 
 
 class Minecraft:
@@ -63,8 +64,27 @@ class Minecraft:
                 for link in parsed["links"]:
                     info["links"][link["title"]] = link["href"]
 
-                #todo: files
+                mc_versions = []
+                for k, v in parsed["versions"].items():
+                    if "Java" not in k:
+                        mc_versions.append(k)
+                sorted = VersionInfo.getSortedVersions(mc_versions)
+                map = OrderedDict()
+                for version in sorted:
+                    mod_versions_unsorted = dict()
+                    mod_versions = OrderedDict()
+                    version_list = []
+                    for v2 in parsed["versions"][version]:
+                        mod_versions_unsorted[v2["id"]] = v2
+                        version_list.append(v2["id"])
 
+                    version_list.sort()
+                    version_list.reverse()
+                    for v3 in version_list:
+                        mod_versions[v3] = mod_versions_unsorted[v3]
+
+                    map[version] = mod_versions
+                info["versions"] = map
                 return info
 
             elif reply.status is 202: #new project, wait for the api to fetch it
@@ -85,24 +105,33 @@ class Minecraft:
         if info is None:
             return None
         else:
+            latest_mc = list(info["versions"].values())[0]
+            latest_v = list(latest_mc.values())[0]
+            latest = f"**Name:** {latest_v['name']}\n**MC version:** {latest_v['version']}\n**Downloads:** {'{:,}'.format(latest_v['downloads'])}"
             fields = {
                 "Project name": info["title"],
-                "Project type": info["type"].lower(),
+                "Downloads": "{:,}".format(info["downloads"]),
+                "Latest version": latest,
                 "Project categories": "\n".join(info["categories"]),
-                "Links": "\n".join(f"[{k}]({v})" for k, v in info["links"].items()),
-                "Downloads": "{:,}".format(info["downloads"])
+                "Links": "\n".join(f"[{k}]({v})" for k, v in info["links"].items())
             }
             return Pages.paginate_fields([fields])
 
-    @commands.command()
-    async def curse(self, ctx, project_name: str):
+    @commands.group()
+    async def cf(self, ctx):
+        pass
+
+    @cf.command()
+    async def info(self, ctx, project_name:str):
         await Pages.create_new("cf", ctx, project_name=project_name)
 
     async def init_cf(self, ctx, project_name):
+        info = await self.get_info(ctx, project_name, True)
         pages = await self.gen_cf_pages(ctx, project_name, True)
         if pages is None:
             return "Unable to fetch info for that project, are you sure it exists?", None, False
         embed = discord.Embed(title=f"Curseforge info for {project_name}")
+        embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():
             embed.add_field(name=k, value=v)
         return None, embed, len(pages) > 1
