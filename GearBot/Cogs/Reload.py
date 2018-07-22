@@ -7,7 +7,7 @@ from subprocess import Popen
 from discord.ext import commands
 
 import Util
-from Util import GearbotLogging
+from Util import GearbotLogging, Emoji
 
 
 class Reload:
