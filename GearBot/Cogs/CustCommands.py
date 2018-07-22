@@ -111,8 +111,6 @@ class CustCommands:
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been updated")
 
     async def on_message(self, message: discord.Message):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if message.author.bot:
             return
         if not hasattr(message.channel, "guild") or message.channel.guild is None:

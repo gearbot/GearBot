@@ -1,4 +1,3 @@
-import asyncio
 import re
 
 import discord
@@ -14,8 +13,6 @@ class Censor:
         self.bot: commands.Bot = bot
 
     async def on_message(self, message: discord.Message):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         ctx: commands.Context = await self.bot.get_context(message)

@@ -59,8 +59,6 @@ class ModLog:
                 await self.buildCache(guild)
 
     async def on_message(self, message: discord.Message):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user:
@@ -71,8 +69,6 @@ class ModLog:
 
 
     async def on_raw_message_delete(self, data:RawMessageDeleteEvent):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
@@ -91,8 +87,6 @@ class ModLog:
                     await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author}#{user.discriminator} (`{user.id}`) in {channel.mention} has been removed.", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         message = LoggedMessage.get_or_none(messageid=event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
@@ -120,8 +114,6 @@ class ModLog:
                     message.save()
 
     async def on_member_join(self, member:discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel:discord.TextChannel = self.bot.get_channel(channelid)
@@ -133,8 +125,6 @@ class ModLog:
                 await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago.")
 
     async def on_member_remove(self, member:discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         exits = self.bot.data["forced_exits"]
         if member.id in exits:
             exits.remove(member.id)
@@ -146,8 +136,6 @@ class ModLog:
                 await logChannel.send(f":outbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has left the server.")
 
     async def on_member_ban(self, guild, user):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if user.id in self.bot.data["forced_exits"]:
             return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
@@ -159,8 +147,6 @@ class ModLog:
 
 
     async def on_member_unban(self, guild, user):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if user.id in self.bot.data["unbans"]:
             return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
@@ -171,8 +157,6 @@ class ModLog:
                     f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
         
     async def on_member_update(self, before, after):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -195,8 +179,6 @@ class ModLog:
 
 
 async def cache_task(modlog:ModLog):
-    while not modlog.bot.STARTUP_COMPLETE:
-        await asyncio.sleep(1)
     GearbotLogging.info("Started modlog background task.")
     while modlog.running:
         if len(modlog.bot.to_cache) > 0:

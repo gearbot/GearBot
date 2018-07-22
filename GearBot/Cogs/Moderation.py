@@ -268,8 +268,6 @@ class Moderation:
                     await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
 
     async def on_member_join(self, member: discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if str(member.guild.id) in self.mutes and member.id in self.mutes[str(member.guild.id)]:
             roleid = Configuration.getConfigVar(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
@@ -290,8 +288,6 @@ def setup(bot):
     bot.add_cog(Moderation(bot))
 
 async def unmuteTask(modcog:Moderation):
-    while not modcog.bot.STARTUP_COMPLETE:
-        await asyncio.sleep(1)
     GearbotLogging.info("Started unmute background task")
     skips = []
     updated = False

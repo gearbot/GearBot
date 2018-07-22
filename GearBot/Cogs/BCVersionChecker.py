@@ -107,8 +107,6 @@ def setup(bot):
     bot.add_cog(BCVersionChecker(bot))
 
 async def versionChecker(checkcog:BCVersionChecker):
-    while not checkcog.bot.STARTUP_COMPLETE:
-        await asyncio.sleep(1)
     GearbotLogging.info("Started BC version checking background task")
     session:aiohttp.ClientSession = checkcog.bot.aiosession
     reply:aiohttp.ClientResponse
