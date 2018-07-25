@@ -100,7 +100,7 @@ class ModLog:
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
                     name = Utils.clean_user(user) if hasUser else str(message.author)
-                    await logChannel.send(f":wastebasket: Message by {name} (`{user.id}`) in {channel.mention} has been removed.", embed=embed)
+                    await logChannel.send(f":wastebasket: Message by {name} (`{user.id if hasUser else 'WEBHOOK'}`) in {channel.mention} has been removed.", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         message = LoggedMessage.get_or_none(messageid=event.message_id)
