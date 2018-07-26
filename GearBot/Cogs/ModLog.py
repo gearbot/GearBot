@@ -1,5 +1,7 @@
 import asyncio
+import collections
 import datetime
+import os
 import time
 
 import discord
@@ -192,6 +194,27 @@ class ModLog:
                     await logChannel.send(
                         f'<:gearNametag:465179661769506816> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                     )
+
+    async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
+        channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
+        if channel_id is not 0:
+            message_list = dict()
+            for mid in event.message_ids:
+                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+                if message is not None:
+                    message_list[mid] = message
+            messages = collections.OrderedDict(sorted(message_list.items()))
+
+            out = ""
+            for mid, message in messages.items():
+                name = await Utils.username(message.author)
+                out += (f"{datetime.datetime.fromtimestamp(message.timestamp)} {event.guild_id} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\n")
+
+            filename = f"purged at {datetime.datetime.now()}.txt".replace(":", "-")
+            with open(filename, "w", encoding="utf-8") as file:
+                file.write(out)
+            await GearbotLogging.log_to_minor_log(self.bot.get_guild(event.guild_id), file=discord.File(filename))
+            os.remove(filename)
 
 
 async def cache_task(modlog:ModLog):
