@@ -1,7 +1,6 @@
 import asyncio
 import collections
 import datetime
-import os
 import time
 
 import discord
@@ -10,7 +9,7 @@ from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 from peewee import IntegrityError
 
-from Util import GearbotLogging, Configuration, Permissioncheckers, Utils
+from Util import GearbotLogging, Configuration, Permissioncheckers, Utils, Archive, Emoji
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -50,7 +49,7 @@ class ModLog:
                     if message.id not in messages.keys():
                         try:
                             LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                                  content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
+                                                                  content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id, server=channel.guild.id)
                             for a in message.attachments:
                                 LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
                             newCount = newCount + 1
@@ -82,7 +81,7 @@ class ModLog:
             return
         for a in message.attachments:
             LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
-        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id)
+        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id, server=message.guild.id)
 
 
     async def on_raw_message_delete(self, data:RawMessageDeleteEvent):
@@ -185,14 +184,14 @@ class ModLog:
                     after_clean_display_name = Utils.clean(after.display_name)
                     before_clean_display_name = Utils.clean(before.display_name)
                     await logChannel.send(
-                        f'<:gearNicktag:469430037800812545> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
+                        f'{Emoji.get_chat_emoji("NICKTAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
                     )
                 elif (before.name != after.name and
                     after.name != before.name):
                     after_clean_name = Utils.clean(after.name)
                     before_clean_name = Utils.clean(before.name)
                     await logChannel.send(
-                        f'<:gearNametag:465179661769506816> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                        f'{Emoji.get_chat_emoji("NAMETAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                     )
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
@@ -203,18 +202,7 @@ class ModLog:
                 message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
                 if message is not None:
                     message_list[mid] = message
-            messages = collections.OrderedDict(sorted(message_list.items()))
-
-            out = ""
-            for mid, message in messages.items():
-                name = await Utils.username(message.author)
-                out += (f"{datetime.datetime.fromtimestamp(message.timestamp)} {event.guild_id} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\n")
-
-            filename = f"purged at {datetime.datetime.now()}.txt".replace(":", "-")
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(out)
-            await GearbotLogging.log_to_minor_log(self.bot.get_guild(event.guild_id), file=discord.File(filename))
-            os.remove(filename)
+            await Archive.archive(self.bot, event.guild_id, collections.OrderedDict(sorted(message_list.items())))
 
 
 async def cache_task(modlog:ModLog):

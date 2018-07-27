@@ -15,6 +15,7 @@ class LoggedMessage(Model):
     author = BigIntegerField()
     timestamp = FloatField()
     channel = BigIntegerField()
+    server = BigIntegerField()
 
     class Meta:
         database = connection

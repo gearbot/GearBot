@@ -1,5 +1,5 @@
 from database import DatabaseConnector
-from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils
+from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils, Archive
 
 components = [
     Configuration,
@@ -13,7 +13,8 @@ components = [
     Confirmation,
     HelpGenerator,
     Pages,
-    InfractionUtils
+    InfractionUtils,
+    Archive
 ]
 
 async def reload(bot):

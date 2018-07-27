@@ -60,7 +60,7 @@ class Basic:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
                                                                messageid=message.id)
-                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id)
+                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id, server=dmessage.guild.id)
                         except Exception as ex:
                             #wrong channel
                             pass
