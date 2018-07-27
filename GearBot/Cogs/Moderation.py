@@ -125,12 +125,9 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
     async def purge(self, ctx, msgs: int):
-        """Purges up to 100 messages in this channel."""
-        if msgs > 100:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You can only purge 100 messages at a time.")
-        else:
-            deleted = await ctx.channel.purge(limit=msgs)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Deleted {(len(deleted))} message(s)!")
+        """☢ Purges up to x messages in this channel. ☢"""
+        deleted = await ctx.channel.purge(limit=msgs)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} Deleted {(len(deleted))} message(s)!")
 
     @commands.command()
     @commands.guild_only()
