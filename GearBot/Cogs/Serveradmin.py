@@ -71,7 +71,7 @@ class Serveradmin:
 
     @configure.group()
     async def modroles(self, ctx: commands.Context):
-        """Show or configure server admin roles"""
+        """Show or configure server mod roles"""
         if ctx.invoked_subcommand is self.modroles:
             roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
             if len(roles) == 0:
@@ -103,7 +103,7 @@ class Serveradmin:
 
     @configure.group()
     async def trustedroles(self, ctx: commands.Context):
-        """Show or configure server admin roles"""
+        """Show or configure server trusted roles"""
         if ctx.invoked_subcommand is self.trustedroles:
             roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
             if len(roles) == 0:
