@@ -9,13 +9,26 @@ class Serveradmin:
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot = bot
+        self.bot:commands.AutoShardedBot = bot
+        self.validate_configs()
 
     def __unload(self):
         pass
 
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.is_admin(ctx)
+
+    def validate_configs(self):
+        for guild in self.bot.guilds:
+            for type in ("TRUSTED", "MOD", "ADMIN"):
+                to_remove = []
+                roles = Configuration.getConfigVar(guild.id, type + "_ROLES")
+                for role in roles:
+                    if discord.utils.get(guild.roles, id=role) is None:
+                        to_remove.append(role)
+                for role in to_remove:
+                    roles.remove(role)
+            Configuration.saveConfig(guild.id)
 
     @commands.guild_only()
     @commands.group()
