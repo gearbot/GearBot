@@ -6,6 +6,7 @@ from Util import Configuration, Permissioncheckers, Emoji
 
 
 class Serveradmin:
+    critical = True
 
     def __init__(self, bot):
         bot.to_cache = []
@@ -183,11 +184,6 @@ class Serveradmin:
         else:
             await ctx.send(f"Automatic mute setup complete.")
 
-    @configure.command()
-    async def devRole(self, ctx:commands.Context, roleID):
-        Configuration.setConfigVar(ctx.guild.id, "DEV_ROLE", roleID)
-        await ctx.send(f"The server dev role has been set.")
-
     @configure.group()
     async def selfroles(self, ctx:commands.Context):
         """Allows adding/removing roles from the self assignable list"""
@@ -302,10 +298,104 @@ class Serveradmin:
             await ctx.send(
                 f"I cannot use {channel.mention} for logging, I do not have the required permissions in there (read_messages, send_messages and embed_links).")
 
+
+    @configure.group()
+    async def cog_overrides(self, ctx):
+        if ctx.invoked_subcommand is self.cog_overrides:
+            overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+            if len(overrides) == 0:
+                desc = "No overrides"
+            else:
+                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+            await ctx.send(embed=embed)
+
+    perm_lvls = [
+        "public",
+        "trusted",
+        "mod",
+        "admin",
+        "owner only",
+        "disabled"
+    ]
+
+    @cog_overrides.command(name="add")
+    async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
+        if cog in ctx.bot.cogs:
+            cogo = ctx.bot.cogs[cog]
+            if cogo.critical:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is a core cog that does not allow permission overrides")
+            elif perm_lvl in range(6):
+                if perm_lvl < cogo.cog_perm:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is has a minimum permission lvl of {cogo.cog_perm} ({self.perm_lvls[cogo.cog_perm]})")
+                else:
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+                    overrides[cog] = perm_lvl
+                    Configuration.saveConfig(ctx.guild.id)
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {cog} cog permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]}")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any cog by that name")
+
+    @cog_overrides.command(name="remove")
+    async def remove_cog_override(self, ctx, cog: str):
+        overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+        if cog in overrides:
+            del overrides[cog]
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Cog override for {cog} has been removed.")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a cog override for {cog} to remove.")
+
+    @configure.group()
+    async def command_overrides(self, ctx):
+        if ctx.invoked_subcommand is self.command_overrides:
+            overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+            if len(overrides) == 0:
+                desc = "No overrides"
+            else:
+                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+            await ctx.send(embed=embed)
+
+
+    @command_overrides.command(name="add")
+    async def add_command_override(self, ctx, command:str, perm_lvl:int):
+        command_object = self.bot.get_command(command)
+        if command_object is not None:
+            cog = command_object.instance
+            cog_name = command_object.cog_name
+            if cog.critical:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} core cog that does not allow permission overrides")
+            elif perm_lvl in range(6):
+                if perm_lvl < cog.cog_perm:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} cog that has a minimum permission lvl of {cog.cog_perm} ({self.perm_lvls[cog.cog_perm]})")
+                else:
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+                    overrides[command] = perm_lvl
+                    Configuration.saveConfig(ctx.guild.id)
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {command} permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any command by that name")
+
+    @command_overrides.command(name="remove")
+    async def remove_command_override(self, ctx, command:str):
+        overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+        if command in overrides:
+            del overrides[command]
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command override for {command} has been removed.")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a command override for {command} to remove.")
+
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):
-        """Base command for disabeling features"""
+        """Base command for disabling features"""
         pass
 
     @disable.command()

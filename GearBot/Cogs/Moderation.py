@@ -13,6 +13,8 @@ from Util.Converters import BannedMember
 
 
 class Moderation:
+    critical = False
+    cog_perm = 2
 
 
     def __init__(self, bot):
@@ -28,7 +30,7 @@ class Moderation:
         Pages.unregister("roles")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.is_mod(ctx)
+        return Permissioncheckers.check_permission(ctx, Permissioncheckers.is_mod(ctx))
 
 
     async def roles_init(self, ctx):

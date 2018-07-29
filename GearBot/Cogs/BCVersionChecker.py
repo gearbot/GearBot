@@ -12,6 +12,8 @@ from Util import GearbotLogging, VersionInfo, Permissioncheckers
 
 
 class BCVersionChecker:
+    critical = False
+    cog_perm = 0
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -28,6 +30,9 @@ class BCVersionChecker:
     def __unload(self):
         #cleanup
         self.running = False
+
+    async def __local_check(self, ctx):
+        return Permissioncheckers.check_permission(ctx, True)
 
     @commands.command()
     @Permissioncheckers.bc_only()

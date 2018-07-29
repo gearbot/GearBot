@@ -9,6 +9,8 @@ from database.DatabaseConnector import CustomCommand
 
 
 class CustCommands:
+    critical = False
+    cog_perm = 0
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -16,7 +18,7 @@ class CustCommands:
         self.bot.loop.create_task(self.reloadCommands())
 
     async def __local_check(self, ctx):
-        return True
+        return Permissioncheckers.check_permission(ctx, True)
 
 
     async def reloadCommands(self):
@@ -37,7 +39,6 @@ class CustCommands:
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
-    @Permissioncheckers.no_testers()
     async def command(self, ctx:commands.Context):
         """Lists all custom commands for this server, also the base command to making, updating and removing them"""
         if ctx.invoked_subcommand is None:

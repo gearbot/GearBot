@@ -7,16 +7,22 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Pages, VersionInfo
+from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers
 
 
 class Minecraft:
+    critical = False
+    cog_perm = 0
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         self.cf_cache = dict()
         self.fetching = []
         Pages.register("cf", self.init_cf, self.update_cf)
+
+
+    async def __local_check(self, ctx):
+        return Permissioncheckers.check_permission(ctx, True)
 
 
     async def get_info(self, ctx, project_name, log):

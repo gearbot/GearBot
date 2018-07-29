@@ -9,11 +9,12 @@ from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 from peewee import IntegrityError
 
-from Util import GearbotLogging, Configuration, Permissioncheckers, Utils, Archive, Emoji
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class ModLog:
+    critical = True
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -24,8 +25,6 @@ class ModLog:
     def __unload(self):
         self.running = False
 
-    async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.is_admin(ctx)
 
     async def buildCache(self, guild:discord.Guild, limit = 250):
         start = time.perf_counter()

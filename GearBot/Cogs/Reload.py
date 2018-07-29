@@ -11,6 +11,8 @@ from Util import GearbotLogging, Emoji
 
 
 class Reload:
+    critical = True
+
     def __init__(self, bot):
         self.bot:commands.Bot = bot
 
@@ -42,10 +44,7 @@ class Reload:
 
     @commands.command(hidden=True)
     async def unload(self, ctx, cog: str):
-        cogs = []
-        for c in ctx.bot.cogs:
-            cogs.append(c.replace('Cog', ''))
-        if cog in cogs:
+        if cog in ctx.bot.cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded.')
             await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
@@ -59,10 +58,7 @@ class Reload:
             utils = importlib.reload(Util)
             await utils.reload(self.bot)
             await GearbotLogging.logToBotlog("Reloading all cogs...")
-            cogs = []
-            for c in ctx.bot.cogs:
-                cogs.append(c.replace('Cog', ''))
-            for cog in cogs:
+            for cog in ctx.bot.cogs:
                 self.bot.unload_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been unloaded.')
                 self.bot.load_extension(f"Cogs.{cog}")

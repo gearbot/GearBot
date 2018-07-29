@@ -11,6 +11,8 @@ from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
 
 
 class Admin:
+    critical = True
+
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot

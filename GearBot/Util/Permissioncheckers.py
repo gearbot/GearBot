@@ -12,12 +12,15 @@ def is_owner():
 def is_trusted(ctx):
     return is_user("TRUSTED", ctx) or is_mod(ctx)
 
-def is_admin(ctx:commands.Context):
-    return is_user("ADMIN", ctx) or ctx.author == ctx.guild.owner
-
-
 def is_mod(ctx:commands.Context):
     return is_user("MOD", ctx) or is_admin(ctx)
+
+def is_admin(ctx:commands.Context):
+    return is_user("ADMIN", ctx) or is_server_owner(ctx)
+
+def is_server_owner(ctx):
+    return ctx.author == ctx.guild.owner
+
 
 def is_user(perm_type, ctx):
     if ctx.guild is None:
@@ -62,3 +65,34 @@ def no_testers():
     async def predicate(ctx):
         return not is_server(ctx, 197038439483310086)
     return commands.check(predicate)
+
+def check_permission(ctx:commands.Context, default):
+    name = ctx.command.qualified_name.split(" ")[0]
+    command_overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+    cog_overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+    cog_name = type(ctx.cog).__name__
+
+    if name in command_overrides:
+        return check_perm_lvl(ctx, command_overrides[name])
+    elif cog_name in cog_overrides:
+        return check_perm_lvl(ctx, cog_overrides[cog_name])
+    else:
+        return default
+
+def public(ctx):
+    return True
+
+def disabled(ctx):
+    return False
+
+perm_checks = [
+    public,
+    is_trusted,
+    is_mod,
+    is_admin,
+    is_server_owner,
+    disabled
+]
+
+def check_perm_lvl(ctx, lvl):
+    return perm_checks[lvl](ctx)

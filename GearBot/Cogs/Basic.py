@@ -11,6 +11,9 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class Basic:
+    critical = False
+    cog_perm = 0
+    command_min_lvl = {}
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -22,17 +25,11 @@ class Basic:
         Pages.unregister("help")
         Pages.unregister("role")
 
-    def __global_check(self, ctx):
-        return True
-
-    def __global_check_once(self, ctx):
-        return True
 
     async def __local_check(self, ctx):
-        return True
+        return Permissioncheckers.check_permission(ctx, True)
 
     @commands.command(hidden=True)
-    @Permissioncheckers.no_testers()
     async def ping(self, ctx:commands.Context):
         """Basic ping to see if the bot is still up"""
         if await self.bot.is_owner(ctx.author):
@@ -45,7 +42,6 @@ class Basic:
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    @Permissioncheckers.no_testers()
     async def quote(self, ctx:commands.Context, message_id:int):
         """Quotes the requested message"""
         embed = None
@@ -105,7 +101,6 @@ class Basic:
                 await ctx.message.delete()
 
     @commands.command()
-    @Permissioncheckers.no_testers()
     async def coinflip(self, ctx, *, thing:str = "do the thing"):
         """Random decision making"""
         outcome = random.randint(1, 2)
@@ -139,7 +134,6 @@ class Basic:
         return pages
 
     @commands.command()
-    @Permissioncheckers.no_testers()
     @commands.bot_has_permissions(embed_links=True)
     async def role(self, ctx:commands.Context, *, role:str = None):
         """Lists self assignable roles or adds/removes [role] from you"""
