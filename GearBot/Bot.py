@@ -40,7 +40,7 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
     return prefixes
 
-bot = commands.Bot(command_prefix=prefix_callable, case_insensitive=True)
+bot = commands.AutoShardedBot(command_prefix=prefix_callable, case_insensitive=True)
 bot.STARTUP_COMPLETE = False
 bot.messageCount = 0
 bot.commandCount = 0

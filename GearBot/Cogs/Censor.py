@@ -17,7 +17,7 @@ class Censor:
             return
         ctx: commands.Context = await self.bot.get_context(message)
         guild = message.guild
-        is_mod = Permissioncheckers.isServerMod(ctx)
+        is_mod = Permissioncheckers.is_mod(ctx)
         if message.author == guild.me or is_mod or message.author.id in Configuration.getConfigVar(guild.id, "IGNORED_USERS"):
             return
         guilds = Configuration.getConfigVar(message.guild.id, "INVITE_WHITELIST")

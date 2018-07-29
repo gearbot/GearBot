@@ -15,7 +15,7 @@ class Infractions:
         Pages.unregister("inf_search")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.isServerMod(ctx)
+        return Permissioncheckers.is_mod(ctx)
 
     @commands.guild_only()
     @commands.command()

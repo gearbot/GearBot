@@ -25,7 +25,7 @@ class ModLog:
         self.running = False
 
     async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.isServerAdmin(ctx)
+        return Permissioncheckers.is_admin(ctx)
 
     async def buildCache(self, guild:discord.Guild, limit = 250):
         start = time.perf_counter()

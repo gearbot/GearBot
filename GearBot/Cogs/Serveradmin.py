@@ -15,7 +15,7 @@ class Serveradmin:
         pass
 
     async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.isServerAdmin(ctx)
+        return Permissioncheckers.is_admin(ctx)
 
     @commands.guild_only()
     @commands.group()
@@ -35,17 +35,104 @@ class Serveradmin:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server prefix is now `{new_prefix}`.")
 
-    @configure.command()
-    async def adminrole(self, ctx: commands.Context, roleID):
-        """Sets the server admin role"""
-        Configuration.setConfigVar(ctx.guild.id, "ADMIN_ROLE_ID", roleID)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server admin role is now `{roleID}`.")
+    @configure.group()
+    async def adminroles(self, ctx: commands.Context):
+        """Show or configure server admin roles"""
+        if ctx.invoked_subcommand is self.adminroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+            if len(roles) == 0:
+                desc = "No admin roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
 
-    @configure.command()
-    async def modrole(self, ctx: commands.Context, roleID):
-        """Sets the role with moderation rights"""
-        Configuration.setConfigVar(ctx.guild.id, "MOD_ROLE_ID", roleID)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server moderation role is now `{roleID}`.")
+    @adminroles.command(name="add")
+    async def add_admin_role(self, ctx, *, role:discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already an admin role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now an admin role")
+
+    @adminroles.command(name="remove")
+    async def remove_admin_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not an admin role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer an admin role")
+
+
+
+    @configure.group()
+    async def modroles(self, ctx: commands.Context):
+        """Show or configure server admin roles"""
+        if ctx.invoked_subcommand is self.modroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+            if len(roles) == 0:
+                desc = "No mod roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
+
+    @modroles.command(name="add")
+    async def add_mod_role(self, ctx, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a mod role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a mod role")
+
+    @modroles.command(name="remove")
+    async def remove_mod_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a mod role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a mod role")
+
+    @configure.group()
+    async def trustedroles(self, ctx: commands.Context):
+        """Show or configure server admin roles"""
+        if ctx.invoked_subcommand is self.trustedroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+            if len(roles) == 0:
+                desc = "No trusted roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
+
+    @trustedroles.command(name="add")
+    async def add_trusted_role(self, ctx, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a trusted role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a trusted role")
+
+    @trustedroles.command(name="remove")
+    async def remove_trusted_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a trusted role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a trusted role")
+
 
     @configure.command()
     async def muteRole(self, ctx:commands.Context, role:discord.Role):

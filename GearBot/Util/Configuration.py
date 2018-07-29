@@ -11,8 +11,6 @@ master_loaded = False
 
 CONFIG_TEMPLATE = {
     "PREFIX": "!",
-    "ADMIN_ROLE_ID": 0,
-    "MOD_ROLE_ID": 0,
     "MINOR_LOGS": 0,
     "JOIN_LOGS": 0,
     "MOD_LOGS": 0,
@@ -20,7 +18,13 @@ CONFIG_TEMPLATE = {
     "DEV_ROLE": 0,
     "SELF_ROLES": [],
     "IGNORED_USERS": [],
-    "INVITE_WHITELIST": []
+    "INVITE_WHITELIST": [],
+    "ADMIN_ROLES": [],
+    "MOD_ROLES": [],
+    "TRUSTED_ROLES": [],
+    "COG_OVERRIDES": dict(),
+    "COMMAND_OVERRIDES": dict()
+
 }
 
 
@@ -56,6 +60,12 @@ def loadConfig(guild):
                         config[key] = []
                     else:
                         config[key] = CONFIG_TEMPLATE[key]
+            if "MOD_ROLE_ID" in config:
+                config["MOD_ROLES"].append(config["MOD_ROLE_ID"])
+                del config["MOD_ROLE_ID"]
+            if "ADMIN_ROLE_ID" in config:
+                config["ADMIN_ROLES"].append(config["ADMIN_ROLE_ID"])
+                del config["ADMIN_ROLE_ID"]
             SERVER_CONFIGS[guild] = config
     except FileNotFoundError:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")

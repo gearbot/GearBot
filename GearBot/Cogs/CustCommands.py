@@ -56,7 +56,7 @@ class CustCommands:
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
-    @Permissioncheckers.modOnly()
+    @Permissioncheckers.mod_only()
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Create a new command"""
         if len(trigger) == 0:
@@ -80,7 +80,7 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.modOnly()
+    @Permissioncheckers.mod_only()
     async def remove(self, ctx:commands.Context, trigger:str):
         """Removes a custom command"""
         trigger = trigger.lower()
@@ -93,7 +93,7 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.modOnly()
+    @Permissioncheckers.mod_only()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Sets a new reply for the specified command"""
         trigger = trigger.lower()

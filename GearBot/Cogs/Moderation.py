@@ -28,7 +28,7 @@ class Moderation:
         Pages.unregister("roles")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.isServerMod(ctx)
+        return Permissioncheckers.is_mod(ctx)
 
 
     async def roles_init(self, ctx):
@@ -96,7 +96,7 @@ class Moderation:
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
             await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name} (`{user.id}`) was banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
-            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban ", reason)
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to ban {user.name}#{user.discriminator}")
 
@@ -115,7 +115,7 @@ class Moderation:
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was banned. Reason: `{reason}`")
                 await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name}#{user.discriminator} (`{user.id}`) was force banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Fban", reason)
+                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
             await ctx.send(f":warning: {member.name} is on this server, executing regular ban command instead")
             await ctx.invoke(self.ban, member, reason=reason)
