@@ -138,7 +138,7 @@ class ModLog:
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
                 age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
-                await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago.")
+                await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Utils.clean_user(member)} (`{member.id}`) has joined, account created {age} ago.")
 
     async def on_member_remove(self, member:discord.Member):
         exits = self.bot.data["forced_exits"]
@@ -149,7 +149,7 @@ class ModLog:
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                await logChannel.send(f":outbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has left the server.")
+                await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Utils.clean_user(member)} (`{member.id}`) has left the server.")
 
     async def on_member_ban(self, guild, user):
         if user.id in self.bot.data["forced_exits"]:
