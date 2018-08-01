@@ -101,6 +101,21 @@ class Moderation:
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to ban {user.name}#{user.discriminator}")
+                           
+    @commands.command()
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members=True)
+    async def softban(self, ctx:commands.Context, user: discord.Member, *, reason="No reason given."):
+        """"Bans an user then unbans them afterwards."""
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+            self.bot.data["forced_exits"].append(user.id)
+            await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
+            await ctx.guild.unban(user)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was softbanned! Reason: `{reason}`")
+            await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name}#{user.discriminator} (`{user.id}`) was soft-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason)
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to softban {user.name}#{user.discriminator}")
 
     @commands.command()
     @commands.guild_only()
