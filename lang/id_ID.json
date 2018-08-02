@@ -6,13 +6,13 @@
   "quote_nsfw_refused": "Kamu meminta pesan dari kanal NSFW namun kanal ini tidak ditandai sebagai NSFW, sehingga permintaan ditolak",
   "censored_invite": "Menyensor pesan oleh {user}, kode undang `{code}` ke `{server_name}` tidak diizinkan\n```{message}```",
   "custom_command_list": "Daftar perintah kustom untuk {server_name}",
-  "custom_command_no_commands": "No custom commands have been created yet",
-  "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? something you shouldn't do?",
-  "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
-  "custom_command_added": "Command `{trigger}` has been added",
-  "custom_command_updating": "Updating...",
-  "custom_command_not_updating": "Keeping the old one",
-  "custom_command_override_confirmation": "This command already exists, do you want to replace it with this new text?",
-  "custom_command_removed": "Command `{trigger}` has been removed",
-  "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
+  "custom_command_no_commands": "Tidak ada perintah kustom yang dibuat",
+  "custom_command_empty_trigger": "Pemicu kosong, bukankah itu terlihat seperti janji kosong? Sesuatu yang tidak boleh kamu lakukan?",
+  "custom_command_empty_reply": "Kamu mau aku untuk tidak berkata apapun untuk pemicu itu? Tidak masuk akal, kalau mau menghapus pemicu yang telah ada gunakan perintah 'remove'",
+  "custom_command_added": "Perintah `{trigger}` telah ditambahkan",
+  "custom_command_updating": "Memperbarui...",
+  "custom_command_not_updating": "Menyimpan yang lama",
+  "custom_command_override_confirmation": "Perintah ini sudah ada sebelumnya, apakah kamu mau menggantinya dengan teks baru ini?",
+  "custom_command_removed": "Perintah `{trigger}` telah dihapus",
+  "custom_command_not_found": "Tidak dapat menghapus `{trigger}` karena tidak ada"
 }
