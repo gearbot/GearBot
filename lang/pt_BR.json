@@ -4,7 +4,7 @@
   "quote_not_found": "Não consegui achar esta mensagem em nenhum lugar, está em um lugar que não posso ver?",
   "quote_footer": "Enviado em #{channel} | Citação solicitada por {user} | {message_id}",
   "quote_nsfw_refused": "Sua mensagem solicitado é de um canal NSFW, mas este canal não está marcado como NSFW, citação negada.",
-  "censored_invite": "Censored message by {user}, invite code `{code}` to `{server_name}` is not allowed.\n```{message}```",
+  "censored_invite": "Mensagem censurada de {user}, convite `{code}` para `{server_name}` não é permitida.\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}.",
   "custom_command_no_commands": "No custom commands have been created yet.",
   "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? Something you shouldn't do?",
