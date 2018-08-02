@@ -4,7 +4,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration, Confirmation, Emoji
+from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator
 from database.DatabaseConnector import CustomCommand
 
 
@@ -42,7 +42,7 @@ class CustCommands:
     async def command(self, ctx:commands.Context):
         """Lists all custom commands for this server, also the base command to making, updating and removing them"""
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=f"Custom command list for {ctx.guild.name}")
+            embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
             value = ""
             if len(self.commands[ctx.guild.id].keys()) > 0:
                 for trigger in self.commands[ctx.guild.id].keys():
@@ -53,7 +53,7 @@ class CustCommands:
                 embed.add_field(name="\u200b", value=value)
                 await ctx.send(embed=embed)
             else:
-                await ctx.send("No custom commands have been created yet")
+                await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
@@ -61,23 +61,23 @@ class CustCommands:
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Create a new command"""
         if len(trigger) == 0:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Empty triggers, isn't that like empty promises? something you shouldn't do?")
+            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please provide a response as well")
+            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply')}")
         else:
             trigger = trigger.lower()
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been added")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
             else:
                 async def yes():
-                    await ctx.send("Updating...")
+                    await ctx.send(Translator.translate('updating', ctx.guild.id))
                     await ctx.invoke(self.update, trigger, reply=reply)
                 async def no():
-                    ctx.send("Keeping the old one")
-                await Confirmation.confirm(ctx, "This command already exists, do you want to replace it with this new text?", on_yes=yes , on_no=no)
+                    await ctx.send(Translator.translate('custom_command_not_updating', ctx.guild.id))
+                await Confirmation.confirm(ctx, Translator.translate('custom_command_override_confirmation', ctx.guild.id), on_yes=yes , on_no=no)
 
     @command.command()
     @commands.guild_only()
@@ -88,9 +88,9 @@ class CustCommands:
         if trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been removed")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Unable to remove ´{trigger}` as it doesn't seem to exist")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_not_found', ctx.guild.id, trigger=trigger)}")
 
     @command.command()
     @commands.guild_only()

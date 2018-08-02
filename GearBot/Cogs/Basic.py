@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -31,7 +31,7 @@ class Basic:
 
     @commands.command(hidden=True)
     async def ping(self, ctx:commands.Context):
-        """Basic ping to see if the bot is still up"""
+        """ping_help"""
         if await self.bot.is_owner(ctx.author):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
@@ -43,7 +43,7 @@ class Basic:
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
     async def quote(self, ctx:commands.Context, message_id:int):
-        """Quotes the requested message"""
+        """quote_help"""
         embed = None
         async with ctx.typing():
             message = LoggedMessage.get_or_none(messageid=message_id)
@@ -89,12 +89,12 @@ class Basic:
                 except:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
-                embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {message_id}")
+                embed.set_footer(text=Translator.translate("quote_footer", ctx.guild.id, channel=self.bot.get_channel(message.channel).name, user=Utils.clean(ctx.author.display_name), message_id=message_id))
         if embed is None:
-            await ctx.send("I was unable to find that message anywhere, is it somewhere I can't see?")
+            await ctx.send(Translator.translate("quote_not_found", ctx.guild.id))
         else:
             if channel.is_nsfw() and not ctx.channel.is_nsfw():
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('quote_nsfw_refused', ctx.guild.id)}")
                 return
             await ctx.send(embed=embed)
             if ctx.channel.permissions_for(ctx.me).manage_messages:

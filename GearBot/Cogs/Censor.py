@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, GearbotLogging, Permissioncheckers
+from Util import Configuration, GearbotLogging, Permissioncheckers, Translator
 
 INVITE_MATCHER = re.compile(r"(?:https?:\/\/)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|discordapp\.com\/invite)\/([\w|\d|-]+)")
 class Censor:
@@ -32,13 +32,15 @@ class Censor:
                 except KeyError:
                     await message.delete()
                     clean_message = await clean_content().convert(ctx, message.content)
+                    clean_name = await clean_content().convert(ctx, ctx.author.mention)
                     await GearbotLogging.log_to_minor_log(message.guild,
-                                                          f":no_entry_sign: Censored message by {message.author.name}#{message.author.discriminator}, invite code `{code}` to `DM group` is not allowed\n```{clean_message}```")
+                                                          f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name='DM group')}")
                 else:
                     if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != guild.id):
                         await message.delete()
                         clean_message = await clean_content().convert(ctx ,message.content)
-                        await GearbotLogging.log_to_minor_log(message.guild, f":no_entry_sign: Censored message by {message.author.name}#{message.author.discriminator}, invite code `{code}` to `{invite.guild.name}` is not allowed\n```{clean_message}```")
+                        clean_name = await clean_content().convert(ctx, ctx.author.mention)
+                        await GearbotLogging.log_to_minor_log(message.guild, f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=invite.guild.name)}")
 
 def setup(bot):
     bot.add_cog(Censor(bot))

@@ -23,7 +23,8 @@ CONFIG_TEMPLATE = {
     "MOD_ROLES": [],
     "TRUSTED_ROLES": [],
     "COG_OVERRIDES": dict(),
-    "COMMAND_OVERRIDES": dict()
+    "COMMAND_OVERRIDES": dict(),
+    "LANG": "en_US"
 
 }
 

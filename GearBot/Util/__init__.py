@@ -1,5 +1,5 @@
 from database import DatabaseConnector
-from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils, Archive
+from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils, Archive, Translator
 
 components = [
     Configuration,
@@ -14,7 +14,8 @@ components = [
     HelpGenerator,
     Pages,
     InfractionUtils,
-    Archive
+    Archive,
+    Translator
 ]
 
 async def reload(bot):
@@ -30,6 +31,7 @@ async def readyBot(bot):
     Confirmation.on_ready(bot)
     Pages.on_ready(bot)
     Utils.on_ready(bot)
+    Translator.on_ready()
     bot.data = {
         "forced_exits": [],
         "unbans": []
