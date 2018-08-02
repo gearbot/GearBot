@@ -6,13 +6,13 @@
   "quote_nsfw_refused": "You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied",
   "censored_invite": "Censored message by {user}, invite code `{code}` to `{server_name}` is not allowed\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}",
-  "custom_command_no_commands": "No custom commands have been created yet",
+  "custom_command_no_commands": "N-a fost creată nicio comandă personalizată",
   "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? something you shouldn't do?",
   "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
-  "custom_command_added": "Command `{trigger}` has been added",
-  "custom_command_updating": "Updating...",
-  "custom_command_not_updating": "Keeping the old one",
-  "custom_command_override_confirmation": "This command already exists, do you want to replace it with this new text?",
-  "custom_command_removed": "Command `{trigger}` has been removed",
-  "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
+  "custom_command_added": "Comanda `{trigger}` a fost adăugată",
+  "custom_command_updating": "În curs de actualizare...",
+  "custom_command_not_updating": "Cel vechi va rămâne",
+  "custom_command_override_confirmation": "Această comandă există deja, vrei să o înlocuiești cu acest text?",
+  "custom_command_removed": "Comanda `{trigger}` a fost ștearsă",
+  "custom_command_not_found": "`{trigger}`nu poate fi ștearsă deoarce se pare că nu există"
 }
