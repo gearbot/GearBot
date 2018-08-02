@@ -8,7 +8,7 @@
   "custom_command_list": "Custom command list fer {server_name}",
   "custom_command_no_commands": "No custom commands have been built yet",
   "custom_command_empty_trigger": "Empty triggers, thar be like empty promises aye? something ye shouldn't be doin'?",
-  "custom_command_empty_reply": "Ye want me t' say nothin' fer thar trigger? Thar not be makin' sense, if ye want t' remove an existing trigger use remove instead",
+  "custom_command_empty_reply": "Ye want me t' say nothin' fer that trigger? Thar not be makin' sense, if ye want t' scrap an existing trigger use remove instead",
   "custom_command_added": "Command `{trigger}` has been added",
   "custom_command_updating": "Riggin' new sails...",
   "custom_command_not_updating": "Keepin' th' old one",
