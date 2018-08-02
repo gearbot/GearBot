@@ -8,7 +8,7 @@
   "custom_command_list": "{Server_name} 의 사용자 지정 명령 목록",
   "custom_command_no_commands": "사용자 지정 목록이 만들어 지지 않았음니다",
   "custom_command_empty_trigger": "빈 트리거는 빈 약속이 아닌가요? 님이 하지 말아야 할것?",
-  "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
+  "custom_command_empty_reply": "그 트리거에 아무말도 하지 말아요? 그건 말이 안되조, 이미 만들어진 트리거를 지우고십으면 지움을 쓰세요",
   "custom_command_added": "Command `{trigger}` has been added",
   "custom_command_updating": "Updating...",
   "custom_command_not_updating": "Keeping the old one",
