@@ -12,7 +12,7 @@
   "custom_command_added": "Command `{trigger}` has been added",
   "custom_command_updating": "Updating...",
   "custom_command_not_updating": "Keeping the old one",
-  "custom_command_override_confirmation": "Este mandato ya existe, ¿quieres reemplazarlo con este nuevo texto?",
+  "custom_command_override_confirmation": "This command already exists, do you want to replace it with this new text?",
   "custom_command_removed": "Command `{trigger}` has been removed",
   "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
 }
