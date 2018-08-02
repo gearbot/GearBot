@@ -10,7 +10,7 @@
   "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? something you shouldn't do?",
   "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
   "custom_command_added": "Command `{trigger}` has been added",
-  "custom_command_updating": "Updating...",
+  "custom_command_updating": "تحديثه...",
   "custom_command_not_updating": "Keeping the old one",
   "custom_command_override_confirmation": "This command already exists, do you want to replace it with this new text?",
   "custom_command_removed": "Command `{trigger}` has been removed",
