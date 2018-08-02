@@ -34,7 +34,7 @@
   "help_no_wall_allowed": "Sorry, can't help ye wit' that wall o' text.",
   "help_title": "Gearbot help {page_num}/{pages}",
   "help_help": "Lists all commands, th' commands from a cog or info 'bout a command.",
-  "warn_help": "Adds a new warnin', th' sailor be not informed o' 'tis.",
+  "warn_help": "Adds a new warnin', th' sailor be nah informed o' 'tis.",
   "warning_to_long": "Warning be too long, I can only store warnin's up to 1800 characters.",
   "warning_added": "warnin' fer {user} added.",
   "warning_added_modlog": "{user} has been warned by {moderator}: `{reason}`",
