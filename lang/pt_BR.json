@@ -7,12 +7,12 @@
   "censored_invite": "Mensagem censurada por {user}, convite `{code}` para `{server_name}` não é permitido ```{message}```",
   "custom_command_list": "Lista de comandos personalizados para {server_name}",
   "custom_command_no_commands": "Nenhum comando personalizado foi criado ainda",
-  "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? something you shouldn't do?",
-  "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
+  "custom_command_empty_trigger": "Sem argumentos, isto não é como promessas vazias? você deveria fazer alguma coisa, não?",
+  "custom_command_empty_reply": "Você quer que eu não fale nada para isto? Isso não faz sentido, caso queira remover algo já existente, use o remove ao invés disso",
   "custom_command_added": "Comando `{trigger}` foi adicionado",
   "custom_command_updating": "Atualizando...",
   "custom_command_not_updating": "Mantendo o antigo",
   "custom_command_override_confirmation": "Este comando já existe, você deseja substituir com este novo texto?",
   "custom_command_removed": "Comando `{trigger}` foi removido",
-  "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
+  "custom_command_not_found": "Não foi possivel remover `{trigger}`, que parece não existir"
 }
