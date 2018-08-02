@@ -1,5 +1,5 @@
 {
-  "ping_help": "Basic ping to see if the bot is still up",
+  "ping_help": "普通 ping 查看 bot 是否在線",
   "quote_help": "Quotes the requested message",
   "quote_not_found": "I was unable to find that message anywhere, is it somewhere I can't see?",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
