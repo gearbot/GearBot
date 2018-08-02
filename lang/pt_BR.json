@@ -1,9 +1,9 @@
 {
-  "ping_help": "Basic ping to see if the bot is still up.",
-  "quote_help": "Quotes the requested message.",
+  "ping_help": "Um ping para ver se o bot ainda está ativo.",
+  "quote_help": "Cita a mensagem selecionada.",
   "quote_not_found": "Não consegui achar esta mensagem em nenhum lugar, está em um lugar que não posso ver?",
   "quote_footer": "Enviado em #{channel} | Citação solicitada por {user} | {message_id}",
-  "quote_nsfw_refused": "You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied.",
+  "quote_nsfw_refused": "Sua mensagem solicitado é de um canal NSFW, mas este canal não está marcado como NSFW, citação negada.",
   "censored_invite": "Censored message by {user}, invite code `{code}` to `{server_name}` is not allowed.\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}.",
   "custom_command_no_commands": "No custom commands have been created yet.",
