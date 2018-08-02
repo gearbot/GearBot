@@ -7,7 +7,7 @@
   "censored_invite": "Zensierte Nachricht von {user}, Einladungscode `{code}` zu `{server_name}` ist nicht erlaubt\n```{message}```",
   "custom_command_list": "Liste der benutzerdefinierten Befehl für {server_name}",
   "custom_command_no_commands": "Es wurden bisher noch keine benutzerdefinierten Befehle erstellt",
-  "custom_command_empty_trigger": "Empty triggers, isn't that like empty promises? something you shouldn't do?",
+  "custom_command_empty_trigger": "Leerer Auslöser, ist das nicht wie leere Versprechungen? Etwas, was man nicht tun sollte?",
   "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
   "custom_command_added": "Befehl `{trigger}` wurde hinzugefügt",
   "custom_command_updating": "Aktualisiere...",
