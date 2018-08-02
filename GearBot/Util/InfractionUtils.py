@@ -20,7 +20,7 @@ async def get_infraction_pages(guild_id, query):
         longest_user = 0
         longest_mod = 9
         longest_type = 4
-        longest_id = len(str(infs[0].id))
+        longest_id = len(str(infs[0].id)) if len(infs) > 0 else 2
         for inf in infs:
             user = await Utils.username(inf.user_id)
             longest_user = max(longest_user, len(user))

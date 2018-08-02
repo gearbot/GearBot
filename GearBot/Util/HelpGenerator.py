@@ -70,7 +70,7 @@ async def gen_cog_help(bot, ctx, cog):
 async def gen_command_help(bot, ctx, command):
     usage = ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
     sub_info = None
-    if isinstance(command, GroupMixin):
+    if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
         subcommands, longest = await gen_commands_list(bot, ctx, command.all_commands.values())
         if subcommands is not None:
             sub_info = "\nSub commands:\n"

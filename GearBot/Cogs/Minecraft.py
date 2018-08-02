@@ -7,7 +7,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers
+from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers, Translator
 
 
 class Minecraft:
@@ -15,30 +15,29 @@ class Minecraft:
     cog_perm = 0
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot: commands.Bot = bot
         self.cf_cache = dict()
         self.fetching = []
         self.running = True
         self.bot.loop.create_task(expire_cache(self))
         Pages.register("cf", self.init_cf, self.update_cf)
-        
 
     async def __local_check(self, ctx):
         return Permissioncheckers.check_permission(ctx, True)
 
-
     async def get_info(self, ctx, project_name, log):
         while project_name in self.fetching:
-            #already fetching, wait for data to arrive
+            # already fetching, wait for data to arrive
             await asyncio.sleep(1)
         if not project_name in self.cf_cache.keys():
             self.fetching.append(project_name)
             if log:
-                message = await ctx.send("<a:gearLoading:468054357724889089> Fetching info, please hold <a:gearLoading:468054357724889089>")
+                message = await ctx.send(
+                    f"<a:gearLoading:468054357724889089> {Translator.translate('fetching_info', ctx)} <a:gearLoading:468054357724889089>")
             info = await self.fetch_info(project_name)
             if info is False:
                 if log:
-                    await ctx.send("Data retrieval failed, seems like the API is having issues, please try again later.")
+                    await ctx.send(Translator.translate('cf_fetch_failed', ctx))
             else:
                 GearbotLogging.info(f"Retrieved project data for {project_name}, adding to cache.")
                 self.cf_cache[project_name] = {
@@ -50,13 +49,12 @@ class Minecraft:
                 await message.delete()
             return info
         else:
-            return self.cf_cache[project_name]["info"] 
-
+            return self.cf_cache[project_name]["info"]
 
     async def fetch_info(self, project_name):
         session: aiohttp.ClientSession = self.bot.aiosession
         async with session.get(f"https://api.cfwidget.com/mc-mods/minecraft/{project_name}") as reply:
-            if reply.status is 200: #all good, we can parse it
+            if reply.status is 200:  # all good, we can parse it
                 parsed = json.loads(await reply.text())
                 p_type = parsed["type"]
                 info = {
@@ -95,7 +93,7 @@ class Minecraft:
                 info["versions"] = map
                 return info
 
-            elif reply.status is 202: # New project, wait for the api to fetch it
+            elif reply.status is 202:  # New project, wait for the api to fetch it
                 GearbotLogging.info(f"Info for {project_name} not available yet, trying again in 10 seconds.")
                 await asyncio.sleep(10)
                 return await self.fetch_info(project_name)
@@ -105,8 +103,9 @@ class Minecraft:
                 GearbotLogging.error(f"Fetching info for {project_name} failed.")
                 return False
             else:
-                GearbotLogging.error(f"Got unexpected response code ({reply.status}) when fetching info for {project_name}.")
-                return None #TODO: handle failure
+                GearbotLogging.error(
+                    f"Got unexpected response code ({reply.status}) when fetching info for {project_name}.")
+                return None  # TODO: handle failure
 
     async def gen_cf_pages(self, ctx, project_name, log):
         info = await self.get_info(ctx, project_name, log)
@@ -115,13 +114,14 @@ class Minecraft:
         else:
             latest_mc = list(info["versions"].values())[0]
             latest_v = list(latest_mc.values())[0]
-            latest = f"**Name:** {latest_v['name']}\n**MC version:** {latest_v['version']}\n**Downloads:** {'{:,}'.format(latest_v['downloads'])}"
+            latest = Translator.translate('cf_latest', ctx, name=latest_v['name'], version=latest_v['version'],
+                                          downloads='{:,}'.format(latest_v['downloads']))
             fields = {
-                "Project name": info["title"],
-                "Downloads": "{:,}".format(info["downloads"]),
-                "Latest version": latest,
-                "Project categories": "\n".join(info["categories"]),
-                "Links": "\n".join(f"[{k}]({v})" for k, v in info["links"].items())
+                Translator.translate('cf_project_name', ctx): info["title"],
+                Translator.translate('downloads', ctx): "{:,}".format(info["downloads"]),
+                Translator.translate('latest', ctx): latest,
+                Translator.translate('project_categories', ctx): "\n".join(info["categories"]),
+                Translator.translate('links', ctx): "\n".join(f"[{k}]({v})" for k, v in info["links"].items())
             }
             return Pages.paginate_fields([fields])
 
@@ -130,19 +130,19 @@ class Minecraft:
         pass
 
     @cf.command()
-    async def info(self, ctx, project_name:str):
+    async def info(self, ctx, project_name: str):
         await Pages.create_new("cf", ctx, project_name=project_name)
 
-    @cf.command() 
-    async def latest(self, ctx, project_name:str, version:str):
+    @cf.command()
+    async def latest(self, ctx, project_name: str, version: str):
         await Pages.create_new("cf", ctx, project_name=project_name, version=version)
 
     async def init_cf(self, ctx, project_name):
         info = await self.get_info(ctx, project_name, True)
         pages = await self.gen_cf_pages(ctx, project_name, True)
         if pages is None:
-            return "Unable to fetch info for that project, are you sure it exists?", None, False
-        embed = discord.Embed(title=f"CurseForge info for {project_name}")
+            return Translator.translate('cf_not_found', ctx), None, False
+        embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=project_name))
         embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():
             embed.add_field(name=k, value=v)
@@ -151,17 +151,17 @@ class Minecraft:
     async def update_cf(self, ctx, message, page_num, action, data):
         pages = await self.gen_cf_pages(ctx, data["project_name"], False)
         if pages is None:
-            return "Unable to fetch info for that project, are you sure it exists?", None, False
-        embed = discord.Embed(title=f"CurseForge info for {data['project_name']}")
+            return Translator.translate('cf_not_found', ctx), None, False
+        embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=data['project_name']))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         for k, v in page.items():
             embed.add_field(name=k, value=v)
         return None, embed, page_num
 
 
-
 def setup(bot):
     bot.add_cog(Minecraft(bot))
+
 
 async def expire_cache(self):
     GearbotLogging.info("Started CurseForge cache cleaning task")
@@ -170,12 +170,12 @@ async def expire_cache(self):
             for cachedproject, projectinfo in self.cf_cache.items():
                 cachedtime = projectinfo["time"].minute
                 currenttime = datetime.datetime.utcnow().minute
-                if abs(cachedtime-currenttime) >= 10:
-                    self.cf_cache.pop(cachedproject) # Purging that projects cache
+                if abs(cachedtime - currenttime) >= 10:
+                    self.cf_cache.pop(cachedproject)  # Purging that projects cache
                     break
                 else:
-                    pass # Its less then 10 minutes old, not touching
+                    pass  # Its less then 10 minutes old, not touching
         else:
-            pass # We have nothing to purge
+            pass  # We have nothing to purge
 
         await asyncio.sleep(5)

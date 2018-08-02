@@ -19,7 +19,7 @@ def is_admin(ctx:commands.Context):
     return is_user("ADMIN", ctx) or is_server_owner(ctx)
 
 def is_server_owner(ctx):
-    return ctx.author == ctx.guild.owner
+    return ctx.guild is not None and ctx.author == ctx.guild.owner
 
 
 def is_user(perm_type, ctx):
@@ -68,6 +68,8 @@ def no_testers():
 
 def check_permission(ctx:commands.Context, default):
     name = ctx.command.qualified_name.split(" ")[0]
+    if ctx.guild is None:
+        return default
     command_overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
     cog_overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
     cog_name = type(ctx.cog).__name__

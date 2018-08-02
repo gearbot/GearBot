@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji
+from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator
 from Util.Converters import BannedMember
 
 
@@ -193,7 +193,7 @@ class Moderation:
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
-    async def userinfo(self, ctx: commands.Context, user: str = None):
+    async def userinfo(self, ctx: commands.Context, *, user: str = None):
         """Shows information about the chosen user"""
         if user == None:
             user = ctx.author
@@ -202,9 +202,12 @@ class Moderation:
             try:
                 member = await commands.MemberConverter().convert(ctx, user)
                 user = member
-            except:
-                user = await ctx.bot.get_user_info(int(user))
-                member = None
+            except BadArgument:
+                try:
+                    user = await ctx.bot.get_user_info(int(user))
+                    member = None
+                except discord.NotFound:
+                    await ctx.send(Translator.translate("unkown_user", ctx))
         embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar_url)

@@ -40,7 +40,7 @@ class CustCommands:
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
     async def command(self, ctx:commands.Context):
-        """Lists all custom commands for this server, also the base command to making, updating and removing them"""
+        """custom_commands_help"""
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
             value = ""
@@ -99,17 +99,17 @@ class CustCommands:
         """Sets a new reply for the specified command"""
         trigger = trigger.lower()
         if reply is None:
-            ctx.send(f"{Emoji.get_chat_emoji('NO')} Please provide a response as well")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_empty_reply', ctx)}")
         else:
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
-                await ctx.send(f":warning: This command does not exist, making it for you instead")
+                await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
                 await ctx.invoke(self.create, trigger, response=reply)
             else:
                 command.response = reply
                 command.save()
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command `{trigger}` has been updated")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id)}")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot:
