@@ -2,7 +2,7 @@
   "ping_help": "-> 핑_도음\n파일: en US.json",
   "quote_help": "요청하신 메세지를 문장으로 만듭니다",
   "quote_not_found": "그 메세지를 못찾겠어요. 보이지앟는 곳에 있나요?",
-  "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
+  "quote_footer": "#{channel} 에 보넴 | {user} 님이 문장 요청 | {message_id}",
   "quote_nsfw_refused": "You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied",
   "censored_invite": "Censored message by {user}, invite code `{code}` to `{server_name}` is not allowed\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}",
