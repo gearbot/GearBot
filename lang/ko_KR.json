@@ -9,10 +9,10 @@
   "custom_command_no_commands": "사용자 지정 목록이 만들어 지지 않았음니다",
   "custom_command_empty_trigger": "빈 트리거는 빈 약속이 아닌가요? 님이 하지 말아야 할것?",
   "custom_command_empty_reply": "그 트리거에 아무말도 하지 말아요? 그건 말이 안되조, 이미 만들어진 트리거를 지우고십으면 지움을 쓰세요",
-  "custom_command_added": "Command `{trigger}` has been added",
-  "custom_command_updating": "Updating...",
-  "custom_command_not_updating": "Keeping the old one",
-  "custom_command_override_confirmation": "This command already exists, do you want to replace it with this new text?",
-  "custom_command_removed": "Command `{trigger}` has been removed",
+  "custom_command_added": "명령 `{trigger}`가 추가 되었습니다",
+  "custom_command_updating": "업데이트중...",
+  "custom_command_not_updating": "전것을 유지합니다",
+  "custom_command_override_confirmation": "이 명령은 이미 생겼읍니다. 새로은 택스트와 교채하시겠음니까?",
+  "custom_command_removed": "명령 `{trigger}` 가 제거 되었습니다",
   "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
 }
