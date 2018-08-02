@@ -8,10 +8,10 @@
   "custom_command_list": "Liste der benutzerdefinierten Befehl für {server_name}",
   "custom_command_no_commands": "Es wurden bisher noch keine benutzerdefinierten Befehle erstellt",
   "custom_command_empty_trigger": "Leerer Auslöser, ist das nicht wie leere Versprechungen? Etwas, was man nicht tun sollte?",
-  "custom_command_empty_reply": "You want me to say nothing for that trigger? That makes no sense, if want to remove an existing trigger use remove instead",
+  "custom_command_empty_reply": "Du willst, das ich nichts für diesen Auslöser sage? Das macht keinen Sinn, wenn du stattdessen einen vorhandenen Trigger entfernen möchtest, benutze remove",
   "custom_command_added": "Befehl `{trigger}` wurde hinzugefügt",
   "custom_command_updating": "Aktualisiere...",
-  "custom_command_not_updating": "Keeping the old one",
+  "custom_command_not_updating": "Den alten behalten",
   "custom_command_override_confirmation": "Dieser Befehl existiert bereits, möchtest du es mit diesem neuen Text ersetzen?",
   "custom_command_removed": "Befehl `{trigger}` wurde entfernt",
   "custom_command_not_found": "Nicht in der Lage, `{trigger}` zu entfernen, da es anscheinend nicht existiert"
