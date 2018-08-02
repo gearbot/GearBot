@@ -14,5 +14,5 @@
   "custom_command_not_updating": "Keeping the old one",
   "custom_command_override_confirmation": "Este mandato ya existe, ¿quieres reemplazarlo con este nuevo texto?",
   "custom_command_removed": "Mandato `{trigger}` fue eliminado",
-  "custom_command_not_found": "Unable to remove `{trigger}` as it doesn't seem to exist"
+  "custom_command_not_found": "No se puede quitar `{trigger}` porque no existe"
 }
