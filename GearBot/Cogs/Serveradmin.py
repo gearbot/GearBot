@@ -332,7 +332,7 @@ class Serveradmin:
                     overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
                     overrides[cog] = perm_lvl
                     Configuration.saveConfig(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {cog} cog permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]}")
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {cog} cog permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
             else:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
         else:
@@ -427,8 +427,6 @@ class Serveradmin:
         """Disables join/leave logs"""
         Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", 0)
         await ctx.send("Join logs have been disabled.")
-
-
 
 
 def setup(bot):

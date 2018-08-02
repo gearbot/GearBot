@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages
+from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging
 from database.DatabaseConnector import Infraction
 
 
@@ -27,8 +27,10 @@ class Infractions:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} Warning is to long, I can only store warnings up to 1800 characters.")
             else:
                 InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
-                name = Utils.clean(member.name)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} warning for {name}#{member.discriminator} added.")
+                name = Utils.clean_user(member)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} warning for {name} added.")
+                aname = Utils.clean_user(ctx.author)
+                await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('WARNING')} {name} has been warned by {aname}: `{reason}`")
         else:
             name = Utils.clean(member.name)
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to warn {name}#{member.discriminator}.")

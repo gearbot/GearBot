@@ -134,7 +134,6 @@ class Minecraft:
         await Pages.create_new("cf", ctx, project_name=project_name)
 
     @cf.command() 
-    pass  ##TODO: Pages with different versioning
     async def latest(self, ctx, project_name:str, version:str):
         await Pages.create_new("cf", ctx, project_name=project_name, version=version)
 
