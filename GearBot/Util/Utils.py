@@ -53,7 +53,7 @@ async def cleanExit(bot, trigger):
 def trim_message(message, limit):
     if len(message) < limit - 3:
         return message
-    return f"{message[:limit-1]}..."
+    return f"{message[:limit-3]}..."
 
 
 def clean(text):
