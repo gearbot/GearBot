@@ -53,7 +53,7 @@ async def cleanExit(bot, trigger):
 def trim_message(message, limit):
     if len(message) < limit - 3:
         return message
-    return f"{message[:limit-1]}..."
+    return f"{message[:limit-3]}..."
 
 
 def clean(text):
@@ -65,4 +65,10 @@ async def username(id):
         user = await bot.get_user_info(id)
     if user is None:
         return "UNKNOWN USER"
+    return clean_user(user)
+
+def clean_user(user):
     return f"{clean(user.name)}#{user.discriminator}"
+
+def pad(text, length, char=' '):
+    return f"{text}{char * (length-len(text))}"

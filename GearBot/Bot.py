@@ -3,19 +3,38 @@ import datetime
 import logging
 import os
 import signal
+import subprocess
+import sys
 import time
 import traceback
 from argparse import ArgumentParser
+from subprocess import Popen
 
 import aiohttp
 import discord
 from discord import abc
 from discord.ext import commands
+from peewee import PeeweeException
 
 import Util
-from Util import Configuration, GearbotLogging, Emoji
+from Util import Configuration, GearbotLogging, Emoji, Translator
 from Util import Utils as Utils
+from database import DatabaseConnector
 
+extensions = [
+    "Basic",
+    "Admin",
+    "Moderation",
+    "Serveradmin",
+    "ModLog",
+    "CustCommands",
+    "BCVersionChecker",
+    "Reload",
+    "PageHandler",
+    "Censor",
+    "Infractions",
+    "Minecraft"
+]
 
 def prefix_callable(bot, message):
     user_id = bot.user.id
@@ -26,11 +45,12 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
     return prefixes
 
-bot = commands.Bot(command_prefix=prefix_callable, case_insensitive=True)
+bot = commands.AutoShardedBot(command_prefix=prefix_callable, case_insensitive=True)
 bot.STARTUP_COMPLETE = False
 bot.messageCount = 0
 bot.commandCount = 0
 bot.errors = 0
+bot.database_errors = 0
 
 @bot.event
 async def on_ready():
@@ -38,6 +58,7 @@ async def on_ready():
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
+        Translator.on_ready()
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
@@ -50,6 +71,13 @@ async def on_ready():
 
         bot.aiosession = aiohttp.ClientSession()
         bot.start_time = datetime.datetime.utcnow()
+        GearbotLogging.info("Loading cogs...")
+        for extension in extensions:
+            try:
+                bot.load_extension("Cogs." + extension)
+            except Exception as e:
+                GearbotLogging.exception(f"Failed to load extention {extension}", e)
+        GearbotLogging.info("Cogs loaded, startup complete")
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
@@ -78,7 +106,7 @@ async def on_message(message:discord.Message):
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.loadConfig(guild)
+    Configuration.loadConfig(guild.id)
 
 
 @bot.event
@@ -92,17 +120,18 @@ async def on_command_error(ctx: commands.Context, error):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest":
-            if ctx.guild.id == 197038439483310086:
-                return
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"You are missing a required argument!(See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
+        await ctx.send(f"You are missing a required argument! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
     elif isinstance(error, commands.BadArgument):
         await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
     elif isinstance(error, commands.CommandNotFound):
         return
+    elif isinstance(error, PeeweeException):
+        await handle_database_error()
+
     else:
         bot.errors = bot.errors + 1
         # log to logger first just in case botlog logging fails as well
@@ -138,50 +167,91 @@ async def on_command_error(ctx: commands.Context, error):
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-    # something went wrong and it might have been in on_command_error, make sure we log to the log file first
-    bot.errors = bot.errors + 1
-    GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
-    embed = discord.Embed(colour=discord.Colour(0xff0000),
-                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-    embed.set_author(name=f"Caught an error in {event}:")
-
-    embed.add_field(name="args", value=str(args))
-    embed.add_field(name="kwargs", value=str(kwargs))
-    embed.add_field(name="cause message", value=traceback._cause_message)
-    v = ""
-    for line in traceback.format_exc():
-        if len(v) + len(line) > 1024:
-            embed.add_field(name="Stacktrace", value=v)
-            v = ""
-        v = f"{v}{line}"
-    if len(v) > 0:
-        embed.add_field(name="Stacktrace", value=v)
-    await GearbotLogging.logToBotlog(embed=embed)
-    # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+    type, exception, info = sys.exc_info()
+    if isinstance(exception, PeeweeException):
+        await handle_database_error()
     try:
-        pass
+        # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+        bot.errors = bot.errors + 1
+        GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
+        embed = discord.Embed(colour=discord.Colour(0xff0000),
+                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+        embed.set_author(name=f"Caught an error in {event}:")
+
+        embed.add_field(name="args", value=str(args))
+        embed.add_field(name="kwargs", value=str(kwargs))
+        embed.add_field(name="cause message", value=traceback._cause_message)
+        v = ""
+        for line in traceback.format_exc():
+            if len(v) + len(line) > 1024:
+                embed.add_field(name="Stacktrace", value=v)
+                v = ""
+            v = f"{v}{line}"
+        if len(v) > 0:
+            embed.add_field(name="Stacktrace", value=v)
+            # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+        await GearbotLogging.logToBotlog(embed=embed)
     except Exception as ex:
         GearbotLogging.error(
             f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
         GearbotLogging.error(traceback.format_exc())
 
+async def handle_database_error():
+    GearbotLogging.error(traceback.format_exc())
+    # database trouble, notify bot owner
+    message = f"{Emoji.get_chat_emoji('WARNING')} Peewee exception caught! attempting to reconnect to the database!"
+    if bot.owner_id is None:
+        app = await bot.application_info()
+        bot.owner_id = app.owner.id
+    owner =  bot.get_user(bot.owner_id)
+    dmchannel = owner.dm_channel
+    if dmchannel is None:
+        await owner.create_dm()
+    await owner.dm_channel.send(message)
+    await GearbotLogging.logToBotlog(message)
 
+    try:
+        DatabaseConnector.init()
+        bot.database_connection = DatabaseConnector.connection
+    except:
+        # fail, trying again in 10 just in case the database is rebooting
+        await time.sleep(15)
+        try:
+            DatabaseConnector.init()
+            bot.database_connection = DatabaseConnector.connection
+        except:
+            if os.path.isfile('stage_2.txt'):
+                message = f"{Emoji.get_chat_emoji('NO')} VM reboot did not fix the problem, shutting down completely for fixes"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                with open("stage_3.txt", "w") as file:
+                    file.write("stage_3")
+                os.kill(os.getpid(), 9)
+            elif os.path.isfile('stage_1.txt'):
+                with open("stage_2.txt", "w") as file:
+                    file.write("stage_2")
+                message = f"{Emoji.get_chat_emoji('NO')} Reconnecting and bot rebooting failed, escalating to VM reboot"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                p = Popen(["stage_2_reboot"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+                time.sleep(60)
 
-extensions = [
-    "Basic",
-    "Admin",
-    "Moderation",
-    "Serveradmin",
-    "ModLog",
-    "CustCommands",
-    "BCVersionChecker",
-    "Reload",
-    "PageHandler",
-    "Censor",
-    "Infractions"
-    #"Minecraft"
-]
+            else:
+                message = f"{Emoji.get_chat_emoji('NO')} Reconnecting failed, escalating to reboot"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                with open("stage_1.txt", "w") as file:
+                    file.write("stage_1")
+                os.kill(os.getpid(), 9)
+        else:
+            message = f"{Emoji.get_chat_emoji('YES')} 2nd reconnection attempt successfully connected!"
+            await bot.get_user(bot.owner_id).dm_channel.send(message)
+            await GearbotLogging.logToBotlog(message)
+    else:
+        message = f"{Emoji.get_chat_emoji('YES')} 1st reconnection attempt successfully connected!"
+        await bot.get_user(bot.owner_id).dm_channel.send(message)
+        await GearbotLogging.logToBotlog(message)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -207,11 +277,6 @@ if __name__ == '__main__':
     else:
         token = input("Please enter your Discord token: ")
     bot.remove_command("help")
-    for extension in extensions:
-        try:
-            bot.load_extension("Cogs." + extension)
-        except Exception as e:
-            GearbotLogging.startupError(f"Failed to load extention {extension}", e)
     Util.prepDatabase(bot)
     GearbotLogging.info("Ready to go, spinning up the gears")
     bot.run(token)

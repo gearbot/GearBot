@@ -7,10 +7,12 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils, Configuration, Pages
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
 
 
 class Admin:
+    critical = True
+
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -51,7 +53,7 @@ class Admin:
             f"<:gearDiamond:433284297345073153> Gears have been spinning for {days} {'day' if days is 1 else 'days'}, {hours} {'hour' if hours is 1 else 'hours'}, {minutes} {'minute' if minutes is 1 else 'minutes'} and {seconds} {'second' if seconds is 1 else 'seconds'}\n"
             f"<:gearGold:433284297554788352> {self.bot.messageCount} messages have been processed\n"
             f"<:gearIron:433284297563045901> Number of times ks has grinded my gears (causing errors): {self.bot.errors}\n"
-            f"<:gearStone:433284297340878849> Numbers of command executed: {self.bot.commandCount}\n"
+            f"<:gearStone:433284297340878849> Numbers of commands executed: {self.bot.commandCount}\n"
             f"<:gearWood:433284297336815616> Working in {len(self.bot.guilds)} guilds\n"
             f":taco: About {tacos} tacos could have been produced and eaten in this time\n"
             f"<:todo:433693576036352024> Add more stats")
@@ -121,8 +123,10 @@ class Admin:
                     output = f'{value}{ret}'
         if output is not None:
             await Pages.create_new("eval", ctx, pages=Pages.paginate(output))
+        else:
+            await ctx.message.add_reaction(Emoji.emojis["YES"])
 
-    async def init_eval(self, ctx, pages=[]):
+    async def init_eval(self, ctx, pages):
         page = pages[0]
         num = len(pages)
         return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1

@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import datetime
 import time
 
@@ -6,12 +7,14 @@ import discord
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
+from peewee import IntegrityError
 
-from Util import GearbotLogging, Configuration, Permissioncheckers, Utils
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class ModLog:
+    critical = True
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -22,8 +25,6 @@ class ModLog:
     def __unload(self):
         self.running = False
 
-    async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.isServerAdmin(ctx)
 
     async def buildCache(self, guild:discord.Guild, limit = 250):
         start = time.perf_counter()
@@ -33,24 +34,38 @@ class ModLog:
         count = 0
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
+                logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
+                    LoggedMessage.messageid.desc()).limit(limit*1.5)
+                messages = dict()
+                for message in logged_messages:
+                    messages[message.messageid] = message
                 async for message in channel.history(limit=limit, reverse=False):
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
                     if message.author == self.bot.user:
                         continue
-                    logged = LoggedMessage.get_or_none(messageid=message.id)
-                    if logged is None:
-                        LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                              content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id)
-                        for a in message.attachments:
-                            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
-                        newCount = newCount + 1
-                    elif logged.content != message.content:
-                        logged.content = message.content
-                        logged.save()
-                        editCount = editCount + 1
-                    count = count + 1
+                    if message.id not in messages.keys():
+                        try:
+                            LoggedMessage.create(messageid=message.id, author=message.author.id,
+                                                                  content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id, server=channel.guild.id)
+                            for a in message.attachments:
+                                LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
+                            newCount = newCount + 1
+                        except IntegrityError:
+                            # somehow we didn't fetch enough messages, did someone set off a nuke in the channel?
+                            logged = LoggedMessage.get(messageid=message.id)
+                            if logged.content != message.content:
+                                logged.content = message.content
+                                logged.save()
+                                editCount = editCount + 1
+                    else:
+                        logged = messages[message.id]
+                        if logged.content != message.content:
+                            logged.content = message.content
+                            logged.save()
+                            editCount = editCount + 1
+                        count = count + 1
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s.")
 
     async def prep(self):
@@ -59,20 +74,16 @@ class ModLog:
                 await self.buildCache(guild)
 
     async def on_message(self, message: discord.Message):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user:
             return
         for a in message.attachments:
             LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
-        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id)
+        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id, server=message.guild.id)
 
 
     async def on_raw_message_delete(self, data:RawMessageDeleteEvent):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
@@ -88,11 +99,12 @@ class ModLog:
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Send in #{channel.name}")
-                    await logChannel.send(f":wastebasket: Message by {user.name if hasUser else message.author}#{user.discriminator} (`{user.id}`) in {channel.mention} has been removed.", embed=embed)
+                    name = Utils.clean_user(user) if hasUser else str(message.author)
+                    await logChannel.send(f":wastebasket: Message by {name} (`{user.id if hasUser else 'WEBHOOK'}`) in {channel.mention} has been removed.", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
+        if event.data["channel_id"] == Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"):
+            return
         message = LoggedMessage.get_or_none(messageid=event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
@@ -120,8 +132,6 @@ class ModLog:
                     message.save()
 
     async def on_member_join(self, member:discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel:discord.TextChannel = self.bot.get_channel(channelid)
@@ -130,11 +140,9 @@ class ModLog:
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
                 age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
-                await logChannel.send(f":inbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has joined, account created {age} ago.")
+                await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Utils.clean_user(member)} (`{member.id}`) has joined, account created {age} ago.")
 
     async def on_member_remove(self, member:discord.Member):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         exits = self.bot.data["forced_exits"]
         if member.id in exits:
             exits.remove(member.id)
@@ -143,11 +151,9 @@ class ModLog:
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                await logChannel.send(f":outbox_tray: {member.display_name}#{member.discriminator} (`{member.id}`) has left the server.")
+                await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Utils.clean_user(member)} (`{member.id}`) has left the server.")
 
     async def on_member_ban(self, guild, user):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if user.id in self.bot.data["forced_exits"]:
             return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
@@ -159,8 +165,6 @@ class ModLog:
 
 
     async def on_member_unban(self, guild, user):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         if user.id in self.bot.data["unbans"]:
             return
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
@@ -171,8 +175,6 @@ class ModLog:
                     f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
         
     async def on_member_update(self, before, after):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -183,20 +185,28 @@ class ModLog:
                     after_clean_display_name = Utils.clean(after.display_name)
                     before_clean_display_name = Utils.clean(before.display_name)
                     await logChannel.send(
-                        f'<:gearNicktag:469430037800812545> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
+                        f'{Emoji.get_chat_emoji("NICKTAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
                     )
                 elif (before.name != after.name and
                     after.name != before.name):
                     after_clean_name = Utils.clean(after.name)
                     before_clean_name = Utils.clean(before.name)
                     await logChannel.send(
-                        f'<:gearNametag:465179661769506816> {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                        f'{Emoji.get_chat_emoji("NAMETAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                     )
+
+    async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
+        channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
+        if channel_id is not 0:
+            message_list = dict()
+            for mid in event.message_ids:
+                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+                if message is not None:
+                    message_list[mid] = message
+            await Archive.archive(self.bot, event.guild_id, collections.OrderedDict(sorted(message_list.items())))
 
 
 async def cache_task(modlog:ModLog):
-    while not modlog.bot.STARTUP_COMPLETE:
-        await asyncio.sleep(1)
     GearbotLogging.info("Started modlog background task.")
     while modlog.running:
         if len(modlog.bot.to_cache) > 0:

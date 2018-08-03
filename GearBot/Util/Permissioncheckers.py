@@ -9,37 +9,36 @@ def is_owner():
     return commands.check(predicate)
 
 
-def isServerAdmin(ctx:commands.Context):
+def is_trusted(ctx):
+    return is_user("TRUSTED", ctx) or is_mod(ctx)
+
+def is_mod(ctx:commands.Context):
+    return is_user("MOD", ctx) or is_admin(ctx)
+
+def is_admin(ctx:commands.Context):
+    return is_user("ADMIN", ctx) or is_server_owner(ctx)
+
+def is_server_owner(ctx):
+    return ctx.guild is not None and ctx.author == ctx.guild.owner
+
+
+def is_user(perm_type, ctx):
     if ctx.guild is None:
         return False
     if not hasattr(ctx.author, "roles"):
         return False
-    adminrole = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLE_ID")
-    if adminrole != 0:
-        for role in ctx.author.roles:
-            if str(role.id) == str(adminrole):
-                return True
-    return ctx.author == ctx.guild.owner
+    roles = Configuration.getConfigVar(ctx.guild.id, f"{perm_type}_ROLES")
+    for role in ctx.author.roles:
+        if role.id in roles:
+            return True
+    return False
 
-
-def isServerMod(ctx:commands.Context):
-    if ctx.guild is None:
-        return False
-    if not hasattr(ctx.author, "roles"):
-        return False
-    modrole = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLE_ID")
-    if modrole != 0:
-        for role in ctx.author.roles:
-            if str(role.id) == str(modrole):
-                return True
-    return isServerAdmin(ctx)
-
-def modOnly():
+def mod_only():
     async def predicate(ctx):
-        return isServerMod(ctx)
+        return is_mod(ctx)
     return commands.check(predicate)
 
-def isDev(ctx:commands.Context):
+def is_dev(ctx:commands.Context):
     if ctx.guild is None:
         return False
     devrole = Configuration.getConfigVar(ctx.guild.id, "DEV_ROLE")
@@ -47,11 +46,11 @@ def isDev(ctx:commands.Context):
         for role in ctx.author.roles:
             if role.id == devrole:
                 return True
-    return isServerAdmin(ctx)
+    return is_admin(ctx)
 
 def devOnly():
     async def predicate(ctx):
-        return isDev(ctx)
+        return is_dev(ctx)
     return commands.check(predicate)
 
 def is_server(ctx, id):
@@ -66,3 +65,36 @@ def no_testers():
     async def predicate(ctx):
         return not is_server(ctx, 197038439483310086)
     return commands.check(predicate)
+
+def check_permission(ctx:commands.Context, default):
+    name = ctx.command.qualified_name.split(" ")[0]
+    if ctx.guild is None:
+        return default
+    command_overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+    cog_overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+    cog_name = type(ctx.cog).__name__
+
+    if name in command_overrides:
+        return check_perm_lvl(ctx, command_overrides[name])
+    elif cog_name in cog_overrides:
+        return check_perm_lvl(ctx, cog_overrides[cog_name])
+    else:
+        return default
+
+def public(ctx):
+    return True
+
+def disabled(ctx):
+    return False
+
+perm_checks = [
+    public,
+    is_trusted,
+    is_mod,
+    is_admin,
+    is_server_owner,
+    disabled
+]
+
+def check_perm_lvl(ctx, lvl):
+    return perm_checks[lvl](ctx)

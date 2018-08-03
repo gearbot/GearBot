@@ -6,11 +6,14 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class Basic:
+    critical = False
+    cog_perm = 0
+    command_min_lvl = {}
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -22,19 +25,13 @@ class Basic:
         Pages.unregister("help")
         Pages.unregister("role")
 
-    def __global_check(self, ctx):
-        return True
-
-    def __global_check_once(self, ctx):
-        return True
 
     async def __local_check(self, ctx):
-        return True
+        return Permissioncheckers.check_permission(ctx, True)
 
     @commands.command(hidden=True)
-    @Permissioncheckers.no_testers()
     async def ping(self, ctx:commands.Context):
-        """Basic ping to see if the bot is still up"""
+        """ping_help"""
         if await self.bot.is_owner(ctx.author):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
@@ -44,30 +41,31 @@ class Basic:
             await ctx.send(":ping_pong:")
 
     @commands.command()
-    @Permissioncheckers.no_testers()
-    async def quote(self, ctx:commands.Context, messageid:int):
-        """Quotes the requested message"""
+    @commands.bot_has_permissions(embed_links=True)
+    async def quote(self, ctx:commands.Context, message_id:int):
+        """quote_help"""
         embed = None
         async with ctx.typing():
-            message = LoggedMessage.get_or_none(messageid=messageid)
+            message = LoggedMessage.get_or_none(messageid=message_id)
             if message is None:
                 for guild in self.bot.guilds:
                     for channel in guild.text_channels:
                         try:
-                            dmessage: discord.Message = await channel.get_message(messageid)
+                            dmessage: discord.Message = await channel.get_message(message_id)
                             for a in dmessage.attachments:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
                                                                messageid=message.id)
-                            message = LoggedMessage.create(messageid=messageid, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id)
+                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id, server=dmessage.guild.id)
                         except Exception as ex:
                             #wrong channel
                             pass
                         if message is not None:
                             break
             if message is not None:
+                channel = self.bot.get_channel(message.channel)
                 attachment = None
-                attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == messageid)
+                attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message_id)
                 if len(attachments) == 1:
                     attachment = attachments[0]
                 embed = discord.Embed(colour=discord.Color(0xd5fff), timestamp=datetime.utcfromtimestamp(message.timestamp))
@@ -76,50 +74,53 @@ class Basic:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
                         else:
-                            embed.add_field(name="Attachment link", value=attachment.url)
+                            embed.add_field(name=Translator.translate("attachement_link", ctx), value=attachment.url)
                 else:
                     description = message.content
                     embed = discord.Embed(colour=discord.Color(0xd5fff), description=description, timestamp=datetime.utcfromtimestamp(message.timestamp))
-                    channel = self.bot.get_channel(message.channel)
-                    embed.add_field(name="​", value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{messageid}")
+                    embed.add_field(name="​", value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
                     if attachment is not None:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
                         else:
-                            embed.add_field(name="Attachment link", value=attachment.url)
+                            embed.add_field(name=Translator.translate("attachement_link", ctx), value=attachment.url)
                 try:
                     user = await commands.MemberConverter().convert(ctx, message.author)
                 except:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
-                embed.set_footer(text=f"Sent in #{self.bot.get_channel(message.channel).name} | Quote requested by {ctx.author.display_name} | {messageid}")
+                embed.set_footer(text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name, user=Utils.clean(ctx.author.display_name), message_id=message_id))
         if embed is None:
-            await ctx.send("I was unable to find that message anywhere, is it somewhere I can't see?")
+            await ctx.send(Translator.translate("quote_not_found", ctx))
         else:
+            if channel.is_nsfw() and not ctx.channel.is_nsfw():
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('quote_nsfw_refused', ctx)}")
+                return
             await ctx.send(embed=embed)
             if ctx.channel.permissions_for(ctx.me).manage_messages:
                 await ctx.message.delete()
 
     @commands.command()
-    @Permissioncheckers.no_testers()
-    async def coinflip(self, ctx, *, thing:str = "do the thing"):
-        """Random decision making"""
+    async def coinflip(self, ctx, *, thing:str = ""):
+        """coinflip_help"""
+        if thing == "":
+            thing = Translator.translate("coinflip_default", ctx)
         outcome = random.randint(1, 2)
         if outcome == 1 or ("mute" in thing and "vos" in thing):
-            await ctx.send(f"Yes, you should absolutely {thing}.")
+            await ctx.send(Translator.translate("coinflip_yes", ctx))
         else:
-            await ctx.send(f"No you should probably not {thing}.")
+            await ctx.send(Translator.translate("coinflip_no", ctx))
 
     async def init_role(self, ctx):
         pages = self.gen_role_pages(ctx.guild)
         page = pages[0]
-        embed = discord.Embed(title=f"{ctx.guild.name} assignable roles (1/{len(pages)})", colour=discord.Colour(0xbffdd), description=page)
+        embed = discord.Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1, page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
         return None, embed, len(pages) > 1
 
     async def update_role(self, ctx, message, page_num, action, data):
         pages = self.gen_role_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=f"{message.guild.name} assignable roles ({page_num + 1}/{len(pages)})", color=0x54d5ff, description=page)
+        embed = discord.Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=page_num + 1, page_count=len(pages)), color=0x54d5ff, description=page)
         return None, embed, page_num
 
     def gen_role_pages(self, guild:discord.Guild):
@@ -135,28 +136,28 @@ class Basic:
         return pages
 
     @commands.command()
-    @Permissioncheckers.no_testers()
     @commands.bot_has_permissions(embed_links=True)
+    @commands.guild_only()
     async def role(self, ctx:commands.Context, *, role:str = None):
-        """Lists self assignable roles or adds/removes [role] from you"""
+        """role_help"""
         if role is None:
             await Pages.create_new("role", ctx)
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
             except Exception as ex:
-                await ctx.send("Unable to find that role.")
+                await ctx.send(Translator.translate("role_not_found", ctx))
             else:
                 roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
                 if role.id in roles:
                     if role in ctx.author.roles:
                         await ctx.author.remove_roles(role)
-                        await ctx.send(f"You left the {role.name} role.")
+                        await ctx.send()
                     else:
                         await ctx.author.add_roles(role)
-                        await ctx.send(f"Welcome to the {role.name} role!")
+                        await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
                 else:
-                    await ctx.send("You are not allowed to add this role to yourself")
+                    await ctx.send(Translator.translate("role_not_allowed", ctx))
 
     # @commands.command()
     # async def test(self, ctx):
@@ -167,18 +168,20 @@ class Basic:
 
     @commands.command()
     async def help(self, ctx, *, query:str=None):
+        """help_help"""
         await Pages.create_new("help", ctx, query=query)
 
     async def init_help(self, ctx, query):
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
-            return await clean_content().convert(ctx, f'I can\'t seem to find any cog or command named "{query}"' if len(query) < 1500 else "Sorry, can't help you with that wall of text."), None, False
-        return f"**Gearbot help 1/{len(pages)}**```diff\n{pages[0]}```", None, len(pages) > 1
+            query_clean = await clean_content().convert(ctx, query)
+            return await clean_content().convert(ctx, Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=clean_content)), None, False
+        return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data["query"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**Gearbot help {page_num+1}/{len(pages)}**```diff\n{page}```", None, page_num
+        return f"**{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**```diff\n{page}```", None, page_num
 
     async def get_help_pages(self, ctx, query):
         if query is None:
@@ -191,7 +194,7 @@ class Basic:
                 layers = query.split(" ")
                 while len(layers) > 0:
                     layer = layers.pop(0)
-                    if layer in target.all_commands.keys():
+                    if hasattr(target, "all_commands") and layer in target.all_commands.keys():
                         target = target.all_commands[layer]
                     else:
                         target = None

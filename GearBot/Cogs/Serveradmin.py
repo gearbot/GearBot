@@ -2,25 +2,39 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Configuration, Permissioncheckers
+from Util import Configuration, Permissioncheckers, Emoji
 
 
 class Serveradmin:
+    critical = True
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot = bot
+        self.bot:commands.AutoShardedBot = bot
+        self.validate_configs()
 
     def __unload(self):
         pass
 
     async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.isServerAdmin(ctx)
+        return Permissioncheckers.is_admin(ctx)
+
+    def validate_configs(self):
+        for guild in self.bot.guilds:
+            for type in ("TRUSTED", "MOD", "ADMIN"):
+                to_remove = []
+                roles = Configuration.getConfigVar(guild.id, type + "_ROLES")
+                for role in roles:
+                    if discord.utils.get(guild.roles, id=role) is None:
+                        to_remove.append(role)
+                for role in to_remove:
+                    roles.remove(role)
+            Configuration.saveConfig(guild.id)
 
     @commands.guild_only()
     @commands.group()
     async def configure(self, ctx:commands.Context):
-        """Configure server specific settings"""
+        """configure_help"""
         if ctx.subcommand_passed is None:
             await ctx.send("See the subcommands (!help configure) for configurations.")
 
@@ -33,19 +47,106 @@ class Serveradmin:
             await ctx.send("Please use a shorter prefix.")
         else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
-            await ctx.send(f"The server prefix is now `{new_prefix}`.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server prefix is now `{new_prefix}`.")
 
-    @configure.command()
-    async def adminrole(self, ctx: commands.Context, roleID):
-        """Sets the server admin role"""
-        Configuration.setConfigVar(ctx.guild.id, "ADMIN_ROLE_ID", roleID)
-        await ctx.send(f"The server admin role is now `{roleID}`.")
+    @configure.group()
+    async def adminroles(self, ctx: commands.Context):
+        """Show or configure server admin roles"""
+        if ctx.invoked_subcommand is self.adminroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+            if len(roles) == 0:
+                desc = "No admin roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
 
-    @configure.command()
-    async def modrole(self, ctx: commands.Context, roleID):
-        """Sets the role with moderation rights"""
-        Configuration.setConfigVar(ctx.guild.id, "MOD_ROLE_ID", roleID)
-        await ctx.send(f"The server moderation role is now `{roleID}`.")
+    @adminroles.command(name="add")
+    async def add_admin_role(self, ctx, *, role:discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already an admin role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now an admin role")
+
+    @adminroles.command(name="remove")
+    async def remove_admin_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not an admin role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer an admin role")
+
+
+
+    @configure.group()
+    async def modroles(self, ctx: commands.Context):
+        """Show or configure server mod roles"""
+        if ctx.invoked_subcommand is self.modroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+            if len(roles) == 0:
+                desc = "No mod roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
+
+    @modroles.command(name="add")
+    async def add_mod_role(self, ctx, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a mod role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a mod role")
+
+    @modroles.command(name="remove")
+    async def remove_mod_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a mod role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a mod role")
+
+    @configure.group()
+    async def trustedroles(self, ctx: commands.Context):
+        """Show or configure server trusted roles"""
+        if ctx.invoked_subcommand is self.trustedroles:
+            roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+            if len(roles) == 0:
+                desc = "No trusted roles configured"
+            else:
+                desc = "\n".join(f"<@&{role}>" for role in roles)
+            embed = discord.Embed(title="Current admin roles", description=desc)
+            await ctx.send(embed=embed)
+
+    @trustedroles.command(name="add")
+    async def add_trusted_role(self, ctx, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+        if role.id in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a trusted role")
+        else:
+            roles.append(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a trusted role")
+
+    @trustedroles.command(name="remove")
+    async def remove_trusted_role(self, ctx, *, role: discord.Role):
+        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
+        if role.id not in roles:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a trusted role so i cannot remove it")
+        else:
+            roles.remove(role.id)
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a trusted role")
+
 
     @configure.command()
     async def muteRole(self, ctx:commands.Context, role:discord.Role):
@@ -82,11 +183,6 @@ class Serveradmin:
                 await ctx.send(message)
         else:
             await ctx.send(f"Automatic mute setup complete.")
-
-    @configure.command()
-    async def devRole(self, ctx:commands.Context, roleID):
-        Configuration.setConfigVar(ctx.guild.id, "DEV_ROLE", roleID)
-        await ctx.send(f"The server dev role has been set.")
 
     @configure.group()
     async def selfroles(self, ctx:commands.Context):
@@ -202,10 +298,104 @@ class Serveradmin:
             await ctx.send(
                 f"I cannot use {channel.mention} for logging, I do not have the required permissions in there (read_messages, send_messages and embed_links).")
 
+
+    @configure.group()
+    async def cog_overrides(self, ctx):
+        if ctx.invoked_subcommand is self.cog_overrides:
+            overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+            if len(overrides) == 0:
+                desc = "No overrides"
+            else:
+                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+            await ctx.send(embed=embed)
+
+    perm_lvls = [
+        "public",
+        "trusted",
+        "mod",
+        "admin",
+        "owner only",
+        "disabled"
+    ]
+
+    @cog_overrides.command(name="add")
+    async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
+        if cog in ctx.bot.cogs:
+            cogo = ctx.bot.cogs[cog]
+            if cogo.critical:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is a core cog that does not allow permission overrides")
+            elif perm_lvl in range(6):
+                if perm_lvl < cogo.cog_perm:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is has a minimum permission lvl of {cogo.cog_perm} ({self.perm_lvls[cogo.cog_perm]})")
+                else:
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+                    overrides[cog] = perm_lvl
+                    Configuration.saveConfig(ctx.guild.id)
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {cog} cog permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any cog by that name")
+
+    @cog_overrides.command(name="remove")
+    async def remove_cog_override(self, ctx, cog: str):
+        overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+        if cog in overrides:
+            del overrides[cog]
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Cog override for {cog} has been removed.")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a cog override for {cog} to remove.")
+
+    @configure.group()
+    async def command_overrides(self, ctx):
+        if ctx.invoked_subcommand is self.command_overrides:
+            overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+            if len(overrides) == 0:
+                desc = "No overrides"
+            else:
+                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+            await ctx.send(embed=embed)
+
+
+    @command_overrides.command(name="add")
+    async def add_command_override(self, ctx, command:str, perm_lvl:int):
+        command_object = self.bot.get_command(command)
+        if command_object is not None:
+            cog = command_object.instance
+            cog_name = command_object.cog_name
+            if cog.critical:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} core cog that does not allow permission overrides")
+            elif perm_lvl in range(6):
+                if perm_lvl < cog.cog_perm:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} cog that has a minimum permission lvl of {cog.cog_perm} ({self.perm_lvls[cog.cog_perm]})")
+                else:
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+                    overrides[command] = perm_lvl
+                    Configuration.saveConfig(ctx.guild.id)
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {command} permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any command by that name")
+
+    @command_overrides.command(name="remove")
+    async def remove_command_override(self, ctx, command:str):
+        overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
+        if command in overrides:
+            del overrides[command]
+            Configuration.saveConfig(ctx.guild.id)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command override for {command} has been removed.")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a command override for {command} to remove.")
+
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):
-        """Base command for disabeling features"""
+        """Base command for disabling features"""
         pass
 
     @disable.command()
@@ -237,8 +427,6 @@ class Serveradmin:
         """Disables join/leave logs"""
         Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", 0)
         await ctx.send("Join logs have been disabled.")
-
-
 
 
 def setup(bot):

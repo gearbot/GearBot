@@ -1,7 +1,6 @@
 import copy
 import json
 
-import discord
 from discord.ext import commands
 
 from Util import GearbotLogging
@@ -12,8 +11,6 @@ master_loaded = False
 
 CONFIG_TEMPLATE = {
     "PREFIX": "!",
-    "ADMIN_ROLE_ID": 0,
-    "MOD_ROLE_ID": 0,
     "MINOR_LOGS": 0,
     "JOIN_LOGS": 0,
     "MOD_LOGS": 0,
@@ -21,7 +18,14 @@ CONFIG_TEMPLATE = {
     "DEV_ROLE": 0,
     "SELF_ROLES": [],
     "IGNORED_USERS": [],
-    "INVITE_WHITELIST": []
+    "INVITE_WHITELIST": [],
+    "ADMIN_ROLES": [],
+    "MOD_ROLES": [],
+    "TRUSTED_ROLES": [],
+    "COG_OVERRIDES": dict(),
+    "COMMAND_OVERRIDES": dict(),
+    "LANG": "en_US"
+
 }
 
 
@@ -29,7 +33,7 @@ async def onReady(bot:commands.Bot):
     GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
     for guild in bot.guilds:
         GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
-        loadConfig(guild)
+        loadConfig(guild.id)
 
 
 def loadGlobalConfig():
@@ -46,10 +50,10 @@ def loadGlobalConfig():
         raise e
 
 
-def loadConfig(guild:discord.Guild):
+def loadConfig(guild):
     global SERVER_CONFIGS
     try:
-        with open(f'config/{guild.id}.json', 'r') as jsonfile:
+        with open(f'config/{guild}.json', 'r') as jsonfile:
             config = json.load(jsonfile)
             for key in CONFIG_TEMPLATE:
                 if key not in config:
@@ -57,13 +61,22 @@ def loadConfig(guild:discord.Guild):
                         config[key] = []
                     else:
                         config[key] = CONFIG_TEMPLATE[key]
-            SERVER_CONFIGS[guild.id] = config
+            if "MOD_ROLE_ID" in config:
+                config["MOD_ROLES"].append(config["MOD_ROLE_ID"])
+                del config["MOD_ROLE_ID"]
+            if "ADMIN_ROLE_ID" in config:
+                config["ADMIN_ROLES"].append(config["ADMIN_ROLE_ID"])
+                del config["ADMIN_ROLE_ID"]
+            SERVER_CONFIGS[guild] = config
     except FileNotFoundError:
-        GearbotLogging.info(f"No config available for {guild.name} ({guild.id}), creating a blank one.")
-        SERVER_CONFIGS[guild.id] = copy.deepcopy(CONFIG_TEMPLATE)
-        saveConfig(guild.id)
+        GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
+        SERVER_CONFIGS[guild] = copy.deepcopy(CONFIG_TEMPLATE)
+        saveConfig(guild)
 
 def getConfigVar(id, key):
+    if not id in SERVER_CONFIGS.keys():
+        GearbotLogging.info(f"Config entry requested before config was loaded for guild {id}, loading config for it")
+        loadConfig(id)
     return SERVER_CONFIGS[id][key]
 
 def getConfigVarChannel(id, key, bot:commands.Bot):
