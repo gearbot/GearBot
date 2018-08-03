@@ -42,7 +42,7 @@ class CustCommands:
     async def command(self, ctx:commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(timestamp=datetime.now(), color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
+            embed = discord.Embed(timestamp=ctx.message.created_at, color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
             value = ""
             if len(self.commands[ctx.guild.id].keys()) > 0:
                 for trigger in self.commands[ctx.guild.id].keys():
