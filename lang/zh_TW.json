@@ -1,8 +1,8 @@
 {
   "ping_help": "Basic ping to see if the bot is still up.",
   "quote_help": "Quotes the requested message.",
-  "quote_not_found": "I was unable to find that message anywhere, is it somewhere I can't see?",
-  "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
+  "quote_not_found": "我在任何地方都找不到那個消息, 是我在看不到的地方嗎？",
+  "quote_footer": "發在 #{channel} | {user} 請求的消息 | {message_id}",
   "quote_nsfw_refused": "You requested a message from an NSFW channel but this channel is not marked as NSFW, quote denied.",
   "censored_invite": "Censored message by {user}, invite code `{code}` to `{server_name}` is not allowed.\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}.",
