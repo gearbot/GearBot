@@ -105,5 +105,9 @@
   "all_roles": "Roles",
   "mute_setup": "Automatic mute role setup",
   "mute_reapply_reason": "Member left and re-joined before mute expired",
-  "mute_reapply_log": "{user} (`{user_id}`) has re-joined the server before his mute expired has has been muted again"
+  "mute_reapply_log": "{user} (`{user_id}`) has re-joined the server before his mute expired and has been muted again",
+  "mute_reapply_failed_log": "{user} (`{user_id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute",
+  "unmute_help": "Lifts a mute",
+  "configure_help": "Configure server specific settings",
+  "role_help": "Shows self-assignable roles or assigns/removes one"
 }
