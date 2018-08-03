@@ -22,7 +22,7 @@
   "attachment_link": "Attachment link",
   "coinflip_yes": "Yes, you should absolutely {thing}.",
   "coinflip_no": "Yes, you should probably not {thing}.",
-  "coinflip_default": "do the thing.",
+  "coinflip_default": "فعل الشيء.",
   "assignable_roles_help": "Lists self assignable roles or adds/removes 'role' from you.",
   "assignable_roles": "{server_name} assignable roles ({page_num}/{page_count})",
   "role_not_found": "Unable to find that role.",
