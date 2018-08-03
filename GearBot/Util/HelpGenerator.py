@@ -2,7 +2,7 @@ import collections
 
 from discord.ext.commands import CommandError, Context, GroupMixin
 
-from Util import Utils, Pages
+from Util import Utils, Pages, Translator
 
 
 async def command_list(bot, ctx:Context):
@@ -51,7 +51,7 @@ async def gen_commands_list(bot, ctx, list):
                 raise ex
         if not command.hidden and runnable:
             indicator = "\n  ↪" if isinstance(command, GroupMixin) else ""
-            command_list[command.name] = Utils.trim_message(command.short_doc, 120) + indicator
+            command_list[command.name] = Utils.trim_message(Translator.translate(command.short_doc, ctx), 120) + indicator
             if len(command.name) > longest:
                 longest = len(command.name)
     if len(command_list) > 0:
@@ -78,7 +78,7 @@ async def gen_command_help(bot, ctx, command):
                 sub_info += "  " + command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
             sub_info += f"You can get more info about a command (params and subcommands) by using '{ctx.prefix}help {command.signature} <subcommand>'\nCommands followed by ↪  have subcommands".replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
 
-    return Pages.paginate(f"{usage}\n\n{command.help}\n{'' if sub_info is None else sub_info}".replace(ctx.me.mention, f"@{ctx.me.name}"))
+    return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, ctx)}\n{'' if sub_info is None else sub_info}".replace(ctx.me.mention, f"@{ctx.me.name}"))
 
 def dict_to_pages(dict, suffix=""):
     pages = []

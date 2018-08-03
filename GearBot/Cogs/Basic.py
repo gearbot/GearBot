@@ -139,7 +139,7 @@ class Basic:
     @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
     async def role(self, ctx:commands.Context, *, role:str = None):
-        """role_left"""
+        """role_help"""
         if role is None:
             await Pages.create_new("role", ctx)
         else:

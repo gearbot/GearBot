@@ -34,7 +34,7 @@ class Serveradmin:
     @commands.guild_only()
     @commands.group()
     async def configure(self, ctx:commands.Context):
-        """Configure server specific settings"""
+        """configure_help"""
         if ctx.subcommand_passed is None:
             await ctx.send("See the subcommands (!help configure) for configurations.")
 

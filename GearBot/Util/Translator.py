@@ -25,4 +25,7 @@ def translate(key, location, **kwargs):
             lang_key = Configuration.getConfigVar(location, "LANG")
     else:
         lang_key = "en_US"
-    return LANGS[lang_key][key].format(**kwargs)
+    if key in LANGS[lang_key].keys():
+        return LANGS[lang_key][key].format(**kwargs)
+    else:
+        return key

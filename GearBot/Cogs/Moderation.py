@@ -201,7 +201,7 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason=""):
-        """Lifts a mute"""
+        """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
@@ -311,8 +311,7 @@ class Moderation:
                         await GearbotLogging.logToModLog(member.guild,
                                                          f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_reapply_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
                     else:
-                        await GearbotLogging.logToModLog(member.guild,
-                                                         f"{member.name}#{member.discriminator} (`{member.id}`) has re-joined before their mute expired but i am missing the permissions to re-apply the mute")
+                        await GearbotLogging.logToModLog(member.guild, Translator.translate('mute_reapply_failed_log', member.build.id))
 
     async def on_guild_remove(self, guild: discord.Guild):
         if guild.id in self.mutes.keys():
