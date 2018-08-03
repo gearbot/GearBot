@@ -103,6 +103,8 @@ class ModLog:
                     await logChannel.send(f":wastebasket: Message by {name} (`{user.id if hasUser else 'WEBHOOK'}`) in {channel.mention} has been removed.", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
+        if event.data["channel_id"] == Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"):
+            return
         message = LoggedMessage.get_or_none(messageid=event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))

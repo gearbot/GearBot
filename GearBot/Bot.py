@@ -3,18 +3,23 @@ import datetime
 import logging
 import os
 import signal
+import subprocess
+import sys
 import time
 import traceback
 from argparse import ArgumentParser
+from subprocess import Popen
 
 import aiohttp
 import discord
 from discord import abc
 from discord.ext import commands
+from peewee import PeeweeException
 
 import Util
 from Util import Configuration, GearbotLogging, Emoji, Translator
 from Util import Utils as Utils
+from database import DatabaseConnector
 
 extensions = [
     "Basic",
@@ -45,6 +50,7 @@ bot.STARTUP_COMPLETE = False
 bot.messageCount = 0
 bot.commandCount = 0
 bot.errors = 0
+bot.database_errors = 0
 
 @bot.event
 async def on_ready():
@@ -123,6 +129,9 @@ async def on_command_error(ctx: commands.Context, error):
         await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
     elif isinstance(error, commands.CommandNotFound):
         return
+    elif isinstance(error, PeeweeException):
+        await handle_database_error()
+
     else:
         bot.errors = bot.errors + 1
         # log to logger first just in case botlog logging fails as well
@@ -158,33 +167,91 @@ async def on_command_error(ctx: commands.Context, error):
 
 @bot.event
 async def on_error(event, *args, **kwargs):
-    # something went wrong and it might have been in on_command_error, make sure we log to the log file first
-    bot.errors = bot.errors + 1
-    GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
-    embed = discord.Embed(colour=discord.Colour(0xff0000),
-                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-    embed.set_author(name=f"Caught an error in {event}:")
-
-    embed.add_field(name="args", value=str(args))
-    embed.add_field(name="kwargs", value=str(kwargs))
-    embed.add_field(name="cause message", value=traceback._cause_message)
-    v = ""
-    for line in traceback.format_exc():
-        if len(v) + len(line) > 1024:
-            embed.add_field(name="Stacktrace", value=v)
-            v = ""
-        v = f"{v}{line}"
-    if len(v) > 0:
-        embed.add_field(name="Stacktrace", value=v)
-    await GearbotLogging.logToBotlog(embed=embed)
-    # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+    type, exception, info = sys.exc_info()
+    if isinstance(exception, PeeweeException):
+        await handle_database_error()
     try:
-        pass
+        # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+        bot.errors = bot.errors + 1
+        GearbotLogging.error(f"error in {event}\n{args}\n{kwargs}")
+        embed = discord.Embed(colour=discord.Colour(0xff0000),
+                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+        embed.set_author(name=f"Caught an error in {event}:")
+
+        embed.add_field(name="args", value=str(args))
+        embed.add_field(name="kwargs", value=str(kwargs))
+        embed.add_field(name="cause message", value=traceback._cause_message)
+        v = ""
+        for line in traceback.format_exc():
+            if len(v) + len(line) > 1024:
+                embed.add_field(name="Stacktrace", value=v)
+                v = ""
+            v = f"{v}{line}"
+        if len(v) > 0:
+            embed.add_field(name="Stacktrace", value=v)
+            # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+        await GearbotLogging.logToBotlog(embed=embed)
     except Exception as ex:
         GearbotLogging.error(
             f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
         GearbotLogging.error(traceback.format_exc())
+
+async def handle_database_error():
+    GearbotLogging.error(traceback.format_exc())
+    # database trouble, notify bot owner
+    message = f"{Emoji.get_chat_emoji('WARNING')} Peewee exception caught! attempting to reconnect to the database!"
+    if bot.owner_id is None:
+        app = await bot.application_info()
+        bot.owner_id = app.owner.id
+    owner =  bot.get_user(bot.owner_id)
+    dmchannel = owner.dm_channel
+    if dmchannel is None:
+        await owner.create_dm()
+    await owner.dm_channel.send(message)
+    await GearbotLogging.logToBotlog(message)
+
+    try:
+        DatabaseConnector.init()
+        bot.database_connection = DatabaseConnector.connection
+    except:
+        # fail, trying again in 10 just in case the database is rebooting
+        await time.sleep(15)
+        try:
+            DatabaseConnector.init()
+            bot.database_connection = DatabaseConnector.connection
+        except:
+            if os.path.isfile('stage_2.txt'):
+                message = f"{Emoji.get_chat_emoji('NO')} VM reboot did not fix the problem, shutting down completely for fixes"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                with open("stage_3.txt", "w") as file:
+                    file.write("stage_3")
+                os.kill(os.getpid(), 9)
+            elif os.path.isfile('stage_1.txt'):
+                with open("stage_2.txt", "w") as file:
+                    file.write("stage_2")
+                message = f"{Emoji.get_chat_emoji('NO')} Reconnecting and bot rebooting failed, escalating to VM reboot"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                p = Popen(["stage_2_reboot"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+                time.sleep(60)
+
+            else:
+                message = f"{Emoji.get_chat_emoji('NO')} Reconnecting failed, escalating to reboot"
+                await bot.get_user(bot.owner_id).dm_channel.send(message)
+                await GearbotLogging.logToBotlog(message)
+                with open("stage_1.txt", "w") as file:
+                    file.write("stage_1")
+                os.kill(os.getpid(), 9)
+        else:
+            message = f"{Emoji.get_chat_emoji('YES')} 2nd reconnection attempt successfully connected!"
+            await bot.get_user(bot.owner_id).dm_channel.send(message)
+            await GearbotLogging.logToBotlog(message)
+    else:
+        message = f"{Emoji.get_chat_emoji('YES')} 1st reconnection attempt successfully connected!"
+        await bot.get_user(bot.owner_id).dm_channel.send(message)
+        await GearbotLogging.logToBotlog(message)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
