@@ -1,14 +1,13 @@
 import asyncio
 import datetime
+import json
 import logging
 import os
 import signal
-import subprocess
 import sys
 import time
 import traceback
 from argparse import ArgumentParser
-from subprocess import Popen
 
 import aiohttp
 import discord
@@ -97,7 +96,7 @@ async def on_message(message:discord.Message):
         if isinstance(ctx.channel, discord.TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
             try:
                 await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
-            except Exception:
+            except discord.Forbidden:
                 pass #closed DMs
         else:
             await bot.invoke(ctx)
@@ -216,7 +215,7 @@ async def handle_database_error():
         bot.database_connection = DatabaseConnector.connection
     except:
         # fail, trying again in 10 just in case the database is rebooting
-        await time.sleep(15)
+        time.sleep(15)
         try:
             DatabaseConnector.init()
             bot.database_connection = DatabaseConnector.connection
@@ -234,7 +233,11 @@ async def handle_database_error():
                 message = f"{Emoji.get_chat_emoji('NO')} Reconnecting and bot rebooting failed, escalating to VM reboot"
                 await bot.get_user(bot.owner_id).dm_channel.send(message)
                 await GearbotLogging.logToBotlog(message)
-                p = Popen(["stage_2_reboot"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+                data = {'type': 'reboot'}
+                async with aiohttp.ClientSession(headers={'Content-Type': 'application/json',
+                                                          'Authorization': f'Bearer {Configuration.getMasterConfigVar("DO_TOKEN")}'}) as session:
+                    await session.post(f'https://api.digitalocean.com/v2/droplets/{Configuration.getMasterConfigVar("DO_ID")}/actions',
+                                            data=json.dumps(data), timeout=30)
                 time.sleep(60)
 
             else:
