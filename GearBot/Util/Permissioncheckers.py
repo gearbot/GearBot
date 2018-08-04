@@ -13,10 +13,10 @@ def is_trusted(ctx):
     return is_user("TRUSTED", ctx) or is_mod(ctx)
 
 def is_mod(ctx:commands.Context):
-    return is_user("MOD", ctx) or is_admin(ctx)
+    return is_user("MOD", ctx) or ctx.channel.permissions_for(ctx.author).ban_members or is_admin(ctx)
 
 def is_admin(ctx:commands.Context):
-    return is_user("ADMIN", ctx) or is_server_owner(ctx)
+    return is_user("ADMIN", ctx) or ctx.channel.permissions_for(ctx.author).administrator
 
 def is_server_owner(ctx):
     return ctx.guild is not None and ctx.author == ctx.guild.owner
