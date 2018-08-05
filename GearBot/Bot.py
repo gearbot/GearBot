@@ -132,7 +132,7 @@ async def on_command_error(ctx: commands.Context, error):
     elif isinstance(error, commands.DisabledCommand):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest":
+        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.getConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE"):
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)

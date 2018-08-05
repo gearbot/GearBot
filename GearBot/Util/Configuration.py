@@ -24,7 +24,8 @@ CONFIG_TEMPLATE = {
     "TRUSTED_ROLES": [],
     "COG_OVERRIDES": dict(),
     "COMMAND_OVERRIDES": dict(),
-    "LANG": "en_US"
+    "LANG": "en_US",
+    "PERM_DENIED_MESSAGE": True
 
 }
 

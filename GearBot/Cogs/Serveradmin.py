@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Configuration, Permissioncheckers, Emoji
+from Util import Configuration, Permissioncheckers, Emoji, Translator
 
 
 class Serveradmin:
@@ -390,6 +390,11 @@ class Serveradmin:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command override for {command} has been removed.")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a command override for {command} to remove.")
+
+    @configure.command()
+    async def perm_denied_message(self, ctx, value:bool):
+        Configuration.setConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE", value)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
 
     @commands.group()

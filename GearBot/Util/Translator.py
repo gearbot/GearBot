@@ -39,6 +39,8 @@ def translate(key, location, **kwargs):
     if key in LANGS[lang_key].keys():
         return LANGS[lang_key][key].format(**kwargs)
     else:
+        if key in LANGS["en_US"].keys():
+            return LANGS["en_US"][key].format(**kwargs)
         return key
 
 
