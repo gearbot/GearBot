@@ -227,7 +227,7 @@ class Serveradmin:
     @invite_whitelist.command(name="remove")
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
         current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
-        if server in current:
+        if server not in current:
             await ctx.send("This server was not whitelisted.")
         else:
             current.remove(server)
