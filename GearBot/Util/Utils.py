@@ -1,5 +1,6 @@
 import json
 
+from discord import NotFound
 from discord.ext import commands
 
 from Util import GearbotLogging
@@ -62,9 +63,10 @@ def clean(text):
 async def username(id):
     user = bot.get_user(id)
     if user is None:
-        user = await bot.get_user_info(id)
-    if user is None:
-        return "UNKNOWN USER"
+        try:
+            user = await bot.get_user_info(id)
+        except NotFound:
+            return "UNKNOWN USER"
     return clean_user(user)
 
 def clean_user(user):

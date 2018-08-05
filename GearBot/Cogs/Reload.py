@@ -58,7 +58,10 @@ class Reload:
             utils = importlib.reload(Util)
             await utils.reload(self.bot)
             await GearbotLogging.logToBotlog("Reloading all cogs...")
+            temp = []
             for cog in ctx.bot.cogs:
+                temp.append(cog)
+            for cog in temp:
                 self.bot.unload_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been unloaded.')
                 self.bot.load_extension(f"Cogs.{cog}")
