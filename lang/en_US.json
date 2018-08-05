@@ -111,5 +111,8 @@
   "configure_help": "Configure server specific settings",
   "role_help": "Shows self-assignable roles or assigns/removes one",
   "configure_perm_msg_enabled": "I will let people know when they are missing permissions to run a command",
-  "configure_perm_msg_disabled": "I will silently ignore people who are missing permissions to run a command"
+  "configure_perm_msg_disabled": "I will silently ignore people who are missing permissions to run a command",
+  "lang_help": "Sets the language for GearBot to use",
+  "lang_changed": "Language has been set to {lang}",
+  "lang_unknown": "Sadly i don't know that language yet"
 }

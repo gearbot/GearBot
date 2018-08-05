@@ -397,6 +397,18 @@ class Serveradmin:
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
 
+    @configure.command()
+    async def language(self, ctx, lang_code:str = None):
+        """language_help"""
+        if lang_code is None:
+            await ctx.send(f"See https://crowdin.com/project/gearbot for all available languages and their translation statuses")
+        else:
+            if lang_code in Translator.LANGS:
+                Configuration.setConfigVar(ctx.guild.id, "LANG", lang_code)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=lang_code)}")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('lang_unknown', ctx.guild.id)}")
+
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):
