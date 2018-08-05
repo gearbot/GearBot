@@ -31,7 +31,7 @@ async def readyBot(bot):
     Confirmation.on_ready(bot)
     Pages.on_ready(bot)
     Utils.on_ready(bot)
-    Translator.on_ready()
+    Translator.on_ready(bot)
     bot.data = {
         "forced_exits": [],
         "unbans": []

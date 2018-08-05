@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from argparse import ArgumentParser
+from asyncio import CancelledError
 
 import aiohttp
 import discord
@@ -57,7 +58,7 @@ async def on_ready():
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
-        Translator.on_ready()
+        Translator.on_ready(bot)
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
@@ -76,9 +77,22 @@ async def on_ready():
                 bot.load_extension("Cogs." + extension)
             except Exception as e:
                 GearbotLogging.exception(f"Failed to load extention {extension}", e)
-        GearbotLogging.info("Cogs loaded, startup complete")
+        GearbotLogging.info("Cogs loaded")
+
+        if Configuration.getMasterConfigVar("CROWDIN_KEY") is not None:
+            bot.loop.create_task(translation_task())
+
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
+
+async def translation_task():
+    while not bot.is_closed():
+        await Translator.upload()
+        await Translator.update()
+        try:
+            await asyncio.sleep(6*60*60)
+        except CancelledError:
+            pass # bot shutting down
 
 async def keepDBalive():
     while not bot.is_closed():
