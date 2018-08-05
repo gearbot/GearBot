@@ -68,7 +68,7 @@ class Reload:
                 GearbotLogging.info(f'{cog} has been loaded.')
             await GearbotLogging.logToBotlog("Hot reload complete.")
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} Hot reload complete.")
-        await Translator.upload_file()
+        await Translator.upload()
 
     @commands.command()
     async def pull(self, ctx):
