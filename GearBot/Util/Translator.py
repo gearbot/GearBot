@@ -71,8 +71,8 @@ async def update():
                             data = {
                                 "language": filename[:-5]
                             }
-                            if os.path.isfile("lang/{filename}"):
-                                os.remove("lang/{filename}")
+                            if os.path.isfile(f"lang/{filename}"):
+                                os.remove(f"lang/{filename}")
                             os.rename(f"temp/{entry.filename}", f"lang/{filename}")
                         os.remove("temp")
                     load_translations()
