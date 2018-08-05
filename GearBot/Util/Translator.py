@@ -61,20 +61,17 @@ async def update():
                         file.write(data)
                     with zipfile.ZipFile("zip.zip", "r") as archive:
                         if os.path.isdir("temp"):
-                            os.remove("temp")
+                            os.rmdir("temp")
                         os.mkdir("temp")
                         archive.extractall("temp")
                         for entry in archive.filelist:
                             if not entry.filename.endswith(".json"):
                                 continue
                             filename =entry.filename[-10:]
-                            data = {
-                                "language": filename[:-5]
-                            }
                             if os.path.isfile(f"lang/{filename}"):
                                 os.remove(f"lang/{filename}")
                             os.rename(f"temp/{entry.filename}", f"lang/{filename}")
-                        os.remove("temp")
+                        os.rmdir("temp")
                     load_translations()
                     await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
             else:

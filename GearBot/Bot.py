@@ -87,8 +87,26 @@ async def on_ready():
 
 async def translation_task():
     while not bot.is_closed():
-        await Translator.upload()
-        await Translator.update()
+        try:
+            await Translator.upload()
+            await Translator.update()
+        except Exception as ex:
+            GearbotLogging.error("Something went wrong during translation updates")
+            GearbotLogging.error(traceback.format_exc())
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            embed.set_author(name="Something went wrong in the BC version checker task:")
+            embed.add_field(name="Exception", value=str(ex))
+            v = ""
+            for line in traceback.format_exc().splitlines():
+                if len(v) + len(line) >= 1024:
+                    embed.add_field(name="Stacktrace", value=v)
+                    v = ""
+                v = f"{v}\n{line}"
+            if len(v) > 0:
+                embed.add_field(name="Stacktrace", value=v)
+            await GearbotLogging.logToBotlog(embed=embed)
+
         try:
             await asyncio.sleep(6*60*60)
         except CancelledError:
