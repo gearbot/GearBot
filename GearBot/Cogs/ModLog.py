@@ -98,7 +98,7 @@ class ModLog:
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                    embed.set_footer(text=f"Send in #{channel.name}")
+                    embed.set_footer(text=f"Sent in #{channel.name}")
                     name = Utils.clean_user(user) if hasUser else str(message.author)
                     await logChannel.send(f":wastebasket: Message by {name} (`{user.id if hasUser else 'WEBHOOK'}`) in {channel.mention} has been removed.", embed=embed)
 
@@ -122,7 +122,7 @@ class ModLog:
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                    embed.set_footer(text=f"Send in #{channel.name}")
+                    embed.set_footer(text=f"Sent in #{channel.name}")
                     embed.add_field(name="Before", value=Utils.trim_message(message.content, 1024), inline=False)
                     embed.add_field(name="After", value=Utils.trim_message(event.data["content"], 1024), inline=False)
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
