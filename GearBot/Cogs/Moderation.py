@@ -42,7 +42,7 @@ class Moderation:
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name) + " roles", color=0x54d5ff)
+        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
         embed.add_field(name="\u200b", value=page["roles"], inline=True)
         embed.add_field(name="\u200b", value=page["ids"], inline=True)
         return None, embed, page_num
