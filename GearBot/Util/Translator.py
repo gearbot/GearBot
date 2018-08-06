@@ -61,17 +61,19 @@ async def update():
                     with open("zip.zip", "wb") as file:
                         file.write(data)
                     with zipfile.ZipFile("zip.zip", "r") as archive:
-                        if os.path.isdir("temp"):
-                            shutil.rmtree("temp", ignore_errors=True)
-                        os.mkdir("temp")
+                        tempdir = os.path.abspath("temp")
+                        if os.path.isdir(tempdir):
+                            shutil.rmtree(tempdir, ignore_errors=True)
+                        os.mkdir(tempdir)
                         archive.extractall("temp")
                         for entry in archive.filelist:
                             if not entry.filename.endswith(".json"):
                                 continue
                             filename =entry.filename[-10:]
-                            if os.path.isfile(f"lang/{filename}"):
-                                os.remove(f"lang/{filename}")
-                            os.rename(f"temp/{entry.filename}", f"lang/{filename}")
+                            if os.path.isfile(os.path.abspath(f"lang/{filename}")):
+                                os.remove(os.path.abspath(f"lang/{filename}"))
+                            archive.extract(entry, tempdir)
+                            os.rename(os.path.abspath(f"temp/{entry.filename}"), os.path.abspath(f"lang/{filename}"))
                             shutil.rmtree("temp", ignore_errors=True)
                     load_translations()
                     await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
