@@ -88,14 +88,13 @@ async def on_ready():
 async def translation_task():
     while not bot.is_closed():
         try:
-            await Translator.upload()
             await Translator.update()
         except Exception as ex:
             GearbotLogging.error("Something went wrong during translation updates")
             GearbotLogging.error(traceback.format_exc())
             embed = discord.Embed(colour=discord.Colour(0xff0000),
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-            embed.set_author(name="Something went wrong in the BC version checker task:")
+            embed.set_author(name="Something went wrong during translation updates")
             embed.add_field(name="Exception", value=str(ex))
             v = ""
             for line in traceback.format_exc().splitlines():

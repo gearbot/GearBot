@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import shutil
 import threading
 import zipfile
 
@@ -61,7 +62,7 @@ async def update():
                         file.write(data)
                     with zipfile.ZipFile("zip.zip", "r") as archive:
                         if os.path.isdir("temp"):
-                            os.rmdir("temp")
+                            shutil.rmtree("temp", ignore_errors=True)
                         os.mkdir("temp")
                         archive.extractall("temp")
                         for entry in archive.filelist:
@@ -71,7 +72,7 @@ async def update():
                             if os.path.isfile(f"lang/{filename}"):
                                 os.remove(f"lang/{filename}")
                             os.rename(f"temp/{entry.filename}", f"lang/{filename}")
-                        os.rmdir("temp")
+                            shutil.rmtree("temp", ignore_errors=True)
                     load_translations()
                     await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
             else:
