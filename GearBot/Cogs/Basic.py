@@ -152,7 +152,7 @@ class Basic:
                 if role.id in roles:
                     if role in ctx.author.roles:
                         await ctx.author.remove_roles(role)
-                        await ctx.sendTranslator.translate("role_left", ctx, role_name=role.name)
+                        await ctx.send(Translator.translate("role_left", ctx, role_name=role.name))
                     else:
                         await ctx.author.add_roles(role)
                         await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
