@@ -21,10 +21,15 @@ class PageHandler:
             pass
         if payload.emoji.id == Pages.prev_id:
             if await Pages.update(self.bot, message , "PREV", payload.user_id):
-                await message.remove_reaction(Pages.prev_emoji, user)
+                try:
+                    await message.remove_reaction(Pages.prev_emoji, user)
+                except discord.Forbidden:
+                    pass
         elif payload.emoji.id == Pages.next_id:
             if await Pages.update(self.bot, message, "NEXT", payload.user_id):
-                await message.remove_reaction(Pages.next_emoji, user)
-
+                try:
+                    await message.remove_reaction(Pages.next_emoji, user)
+                except discord.Forbidden:
+                    pass
 def setup(bot):
     bot.add_cog(PageHandler(bot))
