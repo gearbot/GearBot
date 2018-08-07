@@ -107,9 +107,9 @@ class Basic:
             thing = Translator.translate("coinflip_default", ctx)
         outcome = random.randint(1, 2)
         if outcome == 1 or ("mute" in thing and "vos" in thing):
-            await ctx.send(Translator.translate("coinflip_yes", ctx))
+            await ctx.send(Translator.translate("coinflip_yes", ctx, thing=thing))
         else:
-            await ctx.send(Translator.translate("coinflip_no", ctx))
+            await ctx.send(Translator.translate("coinflip_no", ctx, thing=thing))
 
     async def init_role(self, ctx):
         pages = self.gen_role_pages(ctx.guild)
