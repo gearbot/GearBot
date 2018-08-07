@@ -100,7 +100,7 @@ class ModLog:
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Sent in #{channel.name}")
                     name = Utils.clean_user(user) if hasUser else str(message.author)
-                    await logChannel.send(f":wastebasket: {Translator.translate('message_removed', message.channel.guild.id, user=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}", embed=embed)
+                    await logChannel.send(f":wastebasket: {Translator.translate('message_removed', channel.guild.id, user=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         if event.data["channel_id"] == Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"):
