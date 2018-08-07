@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 from peewee import IntegrityError
 
-from Util import GearbotLogging, Configuration, Utils, Archive, Emoji
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -100,7 +100,7 @@ class ModLog:
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Sent in #{channel.name}")
                     name = Utils.clean_user(user) if hasUser else str(message.author)
-                    await logChannel.send(f":wastebasket: Message by {name} (`{user.id if hasUser else 'WEBHOOK'}`) in {channel.mention} has been removed.", embed=embed)
+                    await logChannel.send(f":wastebasket: {Translator.translate('message_removed', channel.guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}", embed=embed)
 
     async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
         if event.data["channel_id"] == Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"):
@@ -118,15 +118,15 @@ class ModLog:
                         #prob just pinned
                         return
                     if message.content is None or message.content == "":
-                        message.content = "<no content>"
+                        message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                    embed.set_footer(text=f"Sent in #{channel.name}")
-                    embed.add_field(name="Before", value=Utils.trim_message(message.content, 1024), inline=False)
-                    embed.add_field(name="After", value=Utils.trim_message(event.data["content"], 1024), inline=False)
+                    embed.set_footer(text=Translator.translate('sent_in', channel.guild.id, channel= f"#{channel.name}"))
+                    embed.add_field(name=Translator.translate('before', channel.guild.id), value=Utils.trim_message(message.content, 1024), inline=False)
+                    embed.add_field(name=Translator.translate('after', channel.guild.id), value=Utils.trim_message(event.data["content"], 1024), inline=False)
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
-                        await logChannel.send(f":pencil: Message by {user.name}#{user.discriminator} (`{user.id}`) in {channel.mention} has been edited.",
+                        await logChannel.send(f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
                         embed=embed)
                     message.content = event.data["content"]
                     message.save()
@@ -139,8 +139,8 @@ class ModLog:
                 dif = (datetime.datetime.utcnow() - member.created_at)
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
-                age = (f"{dif.days} days") if dif.days > 0 else f"{hours} hours, {minutes} mins"
-                await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Utils.clean_user(member)} (`{member.id}`) has joined, account created {age} ago.")
+                age = (Translator.translate('days', member.guild.id, days=dif.days)) if dif.days > 0 else Translator.translate('hours', member.guild.id, days=hours, minutes=minutes)
+                await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
     async def on_member_remove(self, member:discord.Member):
         exits = self.bot.data["forced_exits"]
@@ -151,7 +151,7 @@ class ModLog:
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
-                await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Utils.clean_user(member)} (`{member.id}`) has left the server.")
+                await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
         if user.id in self.bot.data["forced_exits"]:

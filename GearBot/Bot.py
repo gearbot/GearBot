@@ -8,6 +8,7 @@ import sys
 import time
 import traceback
 from argparse import ArgumentParser
+from asyncio import CancelledError
 
 import aiohttp
 import discord
@@ -57,7 +58,7 @@ async def on_ready():
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
-        Translator.on_ready()
+        Translator.on_ready(bot)
         bot.loop.create_task(keepDBalive()) # ping DB every hour so it doesn't run off
 
         #shutdown handler for clean exit on linux
@@ -76,9 +77,39 @@ async def on_ready():
                 bot.load_extension("Cogs." + extension)
             except Exception as e:
                 GearbotLogging.exception(f"Failed to load extention {extension}", e)
-        GearbotLogging.info("Cogs loaded, startup complete")
+        GearbotLogging.info("Cogs loaded")
+
+        if Configuration.getMasterConfigVar("CROWDIN_KEY") is not None:
+            bot.loop.create_task(translation_task())
+
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
+
+async def translation_task():
+    while not bot.is_closed():
+        try:
+            await Translator.update()
+        except Exception as ex:
+            GearbotLogging.error("Something went wrong during translation updates")
+            GearbotLogging.error(traceback.format_exc())
+            embed = discord.Embed(colour=discord.Colour(0xff0000),
+                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            embed.set_author(name="Something went wrong during translation updates")
+            embed.add_field(name="Exception", value=str(ex))
+            v = ""
+            for line in traceback.format_exc().splitlines():
+                if len(v) + len(line) >= 1024:
+                    embed.add_field(name="Stacktrace", value=v)
+                    v = ""
+                v = f"{v}\n{line}"
+            if len(v) > 0:
+                embed.add_field(name="Stacktrace", value=v)
+            await GearbotLogging.logToBotlog(embed=embed)
+
+        try:
+            await asyncio.sleep(6*60*60)
+        except CancelledError:
+            pass # bot shutting down
 
 async def keepDBalive():
     while not bot.is_closed():
@@ -118,7 +149,7 @@ async def on_command_error(ctx: commands.Context, error):
     elif isinstance(error, commands.DisabledCommand):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest":
+        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.getConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE"):
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)

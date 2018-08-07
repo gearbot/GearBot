@@ -7,7 +7,7 @@ from subprocess import Popen
 from discord.ext import commands
 
 import Util
-from Util import GearbotLogging, Emoji
+from Util import GearbotLogging, Emoji, Translator
 
 
 class Reload:
@@ -58,13 +58,17 @@ class Reload:
             utils = importlib.reload(Util)
             await utils.reload(self.bot)
             await GearbotLogging.logToBotlog("Reloading all cogs...")
+            temp = []
             for cog in ctx.bot.cogs:
+                temp.append(cog)
+            for cog in temp:
                 self.bot.unload_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been unloaded.')
                 self.bot.load_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been loaded.')
             await GearbotLogging.logToBotlog("Hot reload complete.")
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} Hot reload complete.")
+        await Translator.upload()
 
     @commands.command()
     async def pull(self, ctx):

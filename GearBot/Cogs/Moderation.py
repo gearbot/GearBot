@@ -42,7 +42,7 @@ class Moderation:
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name) + " roles", color=0x54d5ff)
+        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
         embed.add_field(name="\u200b", value=page["roles"], inline=True)
         embed.add_field(name="\u200b", value=page["ids"], inline=True)
         return None, embed, page_num
@@ -184,15 +184,18 @@ class Moderation:
             else:
                 if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
                     duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
-                    until = time.time() + duration
-                    await target.add_roles(role, reason=f"{reason}, as requested by {ctx.author.name}")
-                    if not str(ctx.guild.id) in self.mutes:
-                        self.mutes[str(ctx.guild.id)] = dict()
-                    self.mutes[str(ctx.guild.id)][str(target.id)] = until
-                    await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{durationNumber} {durationIdentifier}')}")
-                    Utils.saveToDisk("mutes", self.mutes)
-                    await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{durationNumber} {durationIdentifier}', reason=reason)}")
-                    InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
+                    if duration > 0:
+                        until = time.time() + duration
+                        await target.add_roles(role, reason=f"{reason}, as requested by {ctx.author.name}")
+                        if not str(ctx.guild.id) in self.mutes:
+                            self.mutes[str(ctx.guild.id)] = dict()
+                        self.mutes[str(ctx.guild.id)][str(target.id)] = until
+                        await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{durationNumber} {durationIdentifier}')}")
+                        Utils.saveToDisk("mutes", self.mutes)
+                        await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{durationNumber} {durationIdentifier}', reason=reason)}")
+                        InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason)
+                    else:
+                        await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{durationNumber} {durationIdentifier}')} {Emoji.get_chat_emoji('WHAT')}")
                 else:
                     await ctx.send(
                         f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_not_allowed', ctx.guild.id, user=target)}")

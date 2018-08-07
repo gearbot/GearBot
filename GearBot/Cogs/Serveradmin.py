@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Configuration, Permissioncheckers, Emoji
+from Util import Configuration, Permissioncheckers, Emoji, Translator
 
 
 class Serveradmin:
@@ -227,7 +227,7 @@ class Serveradmin:
     @invite_whitelist.command(name="remove")
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
         current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
-        if server in current:
+        if server not in current:
             await ctx.send("This server was not whitelisted.")
         else:
             current.remove(server)
@@ -391,6 +391,23 @@ class Serveradmin:
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a command override for {command} to remove.")
 
+    @configure.command()
+    async def perm_denied_message(self, ctx, value:bool):
+        Configuration.setConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE", value)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+
+    @configure.command()
+    async def language(self, ctx, lang_code:str = None):
+        """language_help"""
+        if lang_code is None:
+            await ctx.send(f"See https://crowdin.com/project/gearbot for all available languages and their translation statuses")
+        else:
+            if lang_code in Translator.LANGS:
+                Configuration.setConfigVar(ctx.guild.id, "LANG", lang_code)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=lang_code)}")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('lang_unknown', ctx.guild.id)}")
 
     @commands.group()
     @commands.guild_only()
