@@ -1,7 +1,7 @@
 import discord
 from discord import utils
 
-from Util import Utils
+from Util import Utils, Emoji, Translator
 
 page_handlers = dict()
 
@@ -45,9 +45,11 @@ async def create_new(type, ctx, **kwargs):
         for k, v in kwargs.items():
             data[k] = v
         known_messages[str(message.id)] = data
-
-        await message.add_reaction(prev_emoji)
-        await message.add_reaction(next_emoji)
+        try:
+            await message.add_reaction(prev_emoji)
+            await message.add_reaction(next_emoji)
+        except discord.Forbidden:
+            await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms')} {Emoji.get_chat_emoji('WARNING')}")
 
     if len(known_messages.keys()) > 500:
         del known_messages[list(known_messages.keys())[0]]

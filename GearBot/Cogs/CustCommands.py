@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -109,7 +108,7 @@ class CustCommands:
                 command.response = reply
                 command.save()
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id)}")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot:

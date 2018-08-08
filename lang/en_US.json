@@ -125,5 +125,6 @@
   "days": "{days} days",
   "hours": "{hours} hours, {minutes} minutes",
   "join_logging": "{user} (`{user_id}`) has joined, account created {age} ago.",
-  "leave_logging": "{user} (`{user_id}`) has left the server."
+  "leave_logging": "{user} (`{user_id}`) has left the server.",
+  "paginator_missing_perms": "I am missing the permissions to add {prev} and {next} emoji for page navigation, please grant me reaction and external emoji permissions and try again."
 }

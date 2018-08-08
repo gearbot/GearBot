@@ -139,7 +139,7 @@ class ModLog:
                 dif = (datetime.datetime.utcnow() - member.created_at)
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
-                age = (Translator.translate('days', member.guild.id, days=dif.days)) if dif.days > 0 else Translator.translate('hours', member.guild.id, days=hours, minutes=minutes)
+                age = (Translator.translate('days', member.guild.id, days=dif.days)) if dif.days > 0 else Translator.translate('hours', member.guild.id, hours=hours, minutes=minutes)
                 await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
     async def on_member_remove(self, member:discord.Member):
