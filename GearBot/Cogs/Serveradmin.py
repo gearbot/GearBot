@@ -1,8 +1,66 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument
 
 from Util import Configuration, Permissioncheckers, Emoji, Translator
+
+
+class ServerHolder(object):
+    sid = None
+    name = None
+
+    def __init__(self, sid):
+        self.id = sid
+        self.name = sid
+
+async def add_item(ctx, item, item_type, list_name="roles"):
+    roles = Configuration.getConfigVar(ctx.guild.id, f"{item_type}_{list_name}".upper())
+    sname = list_name[:-1] if list_name[-1:] == "s" else list_name
+    if item.id in roles:
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'already_{item_type}_{sname}', ctx, item=item.name)}")
+    else:
+        roles.append(item.id)
+        Configuration.saveConfig(ctx.guild.id)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
+
+
+async def remove_item(ctx, item, item_type, list_name="roles"):
+    roles = Configuration.getConfigVar(ctx.guild.id, f"{item_type}_{list_name}".upper())
+    sname = list_name[:-1] if list_name[-1:] == "s" else list_name
+    if item.id not in roles:
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'was_no_{item_type}_{sname}', ctx, item=item.name)}")
+    else:
+        roles.remove(item.id)
+        Configuration.saveConfig(ctx.guild.id)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_removed', ctx, item=item.name)}")
+
+
+async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>"):
+    items = Configuration.getConfigVar(ctx.guild.id, f"{item_type}_{list_name}".upper())
+    if len(items) == 0:
+        desc = Translator.translate(f"no_{item_type}_{list_name}", ctx)
+    else:
+        desc = "\n".join(wrapper.format(item=item) for item in items)
+    embed = discord.Embed(title=Translator.translate(f"current_{item_type}_{list_name}", ctx), description=desc)
+    await ctx.send(embed=embed)
+
+
+async def set_log_channel(ctx, channel, log_type, permissions=None):
+    if permissions is None:
+        permissions = ["read_messages", "send_messages"]
+    channel_permissions = channel.permissions_for(ctx.guild.get_member(ctx.bot.user.id))
+    if all(getattr(channel_permissions, perm) for perm in permissions):
+        Configuration.setConfigVar(ctx.guild.id, f"{log_type}_LOGS".upper(), channel.id)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {log_type}_log_channel_set", channel=channel.mention)
+        return True
+    else:
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_perms_in_channel', ctx, perms1=', '.join(permissions[:-1]), perms2=permissions[-1:])}")
+        return False
+
 
 
 class Serveradmin:
@@ -42,138 +100,81 @@ class Serveradmin:
     async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
         """Sets or show the server prefix"""
         if new_prefix is None:
-            await ctx.send(f"The current server prefix is `{Configuration.getConfigVar(ctx.guild.id, 'PREFIX')}`")
+            await ctx.send("{Translator.translate('current_server_prefix', ctx, prefix=Configuration.getConfigVar(ctx.guild.id, 'PREFIX'))}")
         elif len(new_prefix) > 25:
-            await ctx.send("Please use a shorter prefix.")
+            await ctx.send()
         else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} The server prefix is now `{new_prefix}`.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('prefix_set', ctx, new_prefix=new_prefix)}")
 
-    @configure.group()
-    async def adminroles(self, ctx: commands.Context):
+    @configure.group(aliases=["adminroles"])
+    async def admin_roles(self, ctx: commands.Context):
         """Show or configure server admin roles"""
-        if ctx.invoked_subcommand is self.adminroles:
-            roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
-            if len(roles) == 0:
-                desc = "No admin roles configured"
-            else:
-                desc = "\n".join(f"<@&{role}>" for role in roles)
-            embed = discord.Embed(title="Current admin roles", description=desc)
-            await ctx.send(embed=embed)
+        if ctx.invoked_subcommand is self.admin_roles:
+            await list_list(ctx, 'admin')
 
-    @adminroles.command(name="add")
+    @admin_roles.command(name="add")
     async def add_admin_role(self, ctx, *, role:discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
-        if role.id in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already an admin role")
-        else:
-            roles.append(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now an admin role")
+        await add_item(ctx, role, 'admin')
 
-    @adminroles.command(name="remove")
+    @admin_roles.command(name="remove")
     async def remove_admin_role(self, ctx, *, role: discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "ADMIN_ROLES")
-        if role.id not in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not an admin role so i cannot remove it")
-        else:
-            roles.remove(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer an admin role")
+        await remove_item(ctx, role, 'admin')
 
-
-
-    @configure.group()
-    async def modroles(self, ctx: commands.Context):
+    @configure.group(aliases=["modroles"])
+    async def mod_roles(self, ctx: commands.Context):
         """Show or configure server mod roles"""
-        if ctx.invoked_subcommand is self.modroles:
-            roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
-            if len(roles) == 0:
-                desc = "No mod roles configured"
-            else:
-                desc = "\n".join(f"<@&{role}>" for role in roles)
-            embed = discord.Embed(title="Current admin roles", description=desc)
-            await ctx.send(embed=embed)
+        if ctx.invoked_subcommand is self.mod_roles:
+            await list_list(ctx, 'mod')
 
-    @modroles.command(name="add")
-    async def add_mod_role(self, ctx, role: discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
-        if role.id in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a mod role")
-        else:
-            roles.append(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a mod role")
+    @mod_roles.command(name="add")
+    async def add_mod_role(self, ctx, *,  role: discord.Role):
+        await add_item(ctx, role, 'mod')
 
-    @modroles.command(name="remove")
+    @mod_roles.command(name="remove")
     async def remove_mod_role(self, ctx, *, role: discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "MOD_ROLES")
-        if role.id not in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a mod role so i cannot remove it")
-        else:
-            roles.remove(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a mod role")
+        await remove_item(ctx, role, 'mod')
 
-    @configure.group()
-    async def trustedroles(self, ctx: commands.Context):
+    @configure.group(aliases=["trustedroles"])
+    async def trusted_roles(self, ctx: commands.Context):
         """Show or configure server trusted roles"""
-        if ctx.invoked_subcommand is self.trustedroles:
-            roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
-            if len(roles) == 0:
-                desc = "No trusted roles configured"
-            else:
-                desc = "\n".join(f"<@&{role}>" for role in roles)
-            embed = discord.Embed(title="Current admin roles", description=desc)
-            await ctx.send(embed=embed)
+        if ctx.invoked_subcommand is self.trusted_roles:
+            await list_list(ctx, 'trusted')
 
-    @trustedroles.command(name="add")
-    async def add_trusted_role(self, ctx, role: discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
-        if role.id in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` is already a trusted role")
-        else:
-            roles.append(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is now a trusted role")
+    @trusted_roles.command(name="add")
+    async def add_trusted_role(self, ctx, *, role: discord.Role):
+        await add_item(ctx, role, 'trusted')
 
-    @trustedroles.command(name="remove")
+    @trusted_roles.command(name="remove")
     async def remove_trusted_role(self, ctx, *, role: discord.Role):
-        roles = Configuration.getConfigVar(ctx.guild.id, "TRUSTED_ROLES")
-        if role.id not in roles:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} `{role.name}` was not a trusted role so i cannot remove it")
-        else:
-            roles.remove(role.id)
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} `{role.name}` is no longer a trusted role")
+        await remove_item(ctx, role, 'trusted')
 
-
-    @configure.command()
-    async def muteRole(self, ctx:commands.Context, role:discord.Role):
+    @configure.command(aliases=["muterole"])
+    async def mute_role(self, ctx:commands.Context, role:discord.Role):
         """Sets what role to use for mutes"""
         guild:discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:
-            await ctx.send("I require the 'manage_roles' permission to be able to add the role to people.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx)}")
             return
         if not guild.me.top_role > role:
-            await ctx.send(f"I need a role that is higher then the {role.mention} role to be able to add it to people.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx, role=role.mention)}")
             return
         Configuration.setConfigVar(ctx.guild.id, "MUTE_ROLE", int(role.id))
-        await ctx.send(f"{role.mention} will now be used for muting people, denying send permissions for the role.")
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_role_confirmation', ctx, role=role.mention)}")
         failed = []
         for channel in guild.text_channels:
             try:
-                await channel.set_permissions(role, reason="Automatic mute role setup", send_messages=False, add_reactions=False)
+                await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
             except discord.Forbidden as ex:
                 failed.append(channel.mention)
         for channel in guild.voice_channels:
             try:
-                await channel.set_permissions(role, reason="Automatic mute role setup", speak=False, connect=False)
+                await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
             except discord.Forbidden as ex:
-                failed.append(f"Voice channel {channel.name}")
+                failed.append(Translator.translate('voice_channel', ctx, channel=channel.name))
         if len(failed) > 0:
-            message = f"I was unable to configure muting in the following channels, there probably is an explicit deny on that channel for 'manage channel' on those channels or their category (if they are synced) for one of my roles (includes everyone role). Please make sure I can manage those channels and run this command again or deny the `send_messages` and `add_reactions` permissions for {role.mention} manually.\n"
+            message = f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_setup_failures', ctx, role=role.mention)}\n"
             for fail in failed:
                 if len(message) + len(fail) > 2048:
                     await ctx.send(message)
@@ -182,121 +183,67 @@ class Serveradmin:
             if len(message) > 0:
                 await ctx.send(message)
         else:
-            await ctx.send(f"Automatic mute setup complete.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_setup_complete', ctx)}")
 
-    @configure.group()
-    async def selfroles(self, ctx:commands.Context):
+    @configure.group(aliases=["selfroles"])
+    async def self_roles(self, ctx:commands.Context):
         """Allows adding/removing roles from the self assignable list"""
-        if ctx.subcommand_passed is None:
-            await ctx.send("Assignable roles")
+        if ctx.invoked_subcommand is self.self_roles:
+            await list_list(ctx, 'self')
 
-    @selfroles.command()
-    async def add(self, ctx:commands.Context, role:discord.Role):
-        current = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
-        if role.id in current:
-            await ctx.send("This role is already assignable.")
-        else:
-            current.append(role.id)
-            Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
-            await ctx.send(f"The {role.name} role is now assignable.")
+    @self_roles.command()
+    async def add(self, ctx:commands.Context, *, role:discord.Role):
+        await add_item(ctx, role, 'self')
 
-    @selfroles.command()
-    async def remove(self, ctx:commands.Context, role:discord.Role):
-        current = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
-        if role.id not in current:
-            await ctx.send("This wasn't assignable.")
-        else:
-            current.remove(role.id)
-            Configuration.setConfigVar(ctx.guild.id, "SELF_ROLES", current)
-            await ctx.send(f"The {role.name} role is now no longer assignable.")
+    @self_roles.command()
+    async def remove(self, ctx:commands.Context, *, role:discord.Role):
+        await remove_item(ctx, role, 'self')
 
     @configure.group()
     async def invite_whitelist(self, ctx: commands.Context):
         """Allows adding/removing servers from the invite whitelist, only enforced when there are servers on the list"""
+        if ctx.invoked_subcommand is self.invite_whitelist:
+            await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}")
 
     @invite_whitelist.command(name="add")
     async def add_to_whitelist(self, ctx: commands.Context, server:int):
-        current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
-        if server in current:
-            await ctx.send("This server is already whitelisted.")
-        else:
-            current.append(server)
-            Configuration.setConfigVar(ctx.guild.id, "INVITE_WHITELIST", current)
-            await ctx.send(f"Server {server} is now whitelisted.")
+        await add_item(ctx, ServerHolder(server), "invite", list_name="whitelist")
 
     @invite_whitelist.command(name="remove")
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
-        current = Configuration.getConfigVar(ctx.guild.id, "INVITE_WHITELIST")
-        if server not in current:
-            await ctx.send("This server was not whitelisted.")
-        else:
-            current.remove(server)
-            Configuration.setConfigVar(ctx.guild.id, "INVITE_WHITELIST", current)
-            await ctx.send(f"Server {server} is no longer whitelisted.")
+        await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist")
 
-    @configure.group()
-    async def ignoredUsers(self, ctx):
+    @configure.group(aliases=["ignoredUsers"])
+    async def ignored_users(self, ctx):
         """Configures users to ignore for edit/delete logs (like bots spamming the logs with edits"""
-        pass
+        await list_list(ctx, "ignored", "users", "<@{item}>")
 
-    @ignoredUsers.command(name="add")
+    @ignored_users.command(name="add")
     async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
-        current = Configuration.getConfigVar(ctx.guild.id, "IGNORED_USERS")
-        if user.id in current:
-            await ctx.send("This user is already ignored.")
-        else:
-            current.append(user.id)
-            Configuration.setConfigVar(ctx.guild.id, "IGNORED_USERS", current)
-            await ctx.send("I will now no longer log this user's edited/deleted messages.")
+        await add_item(ctx, user, "ignored", "users")
 
-    @ignoredUsers.command(name="remove")
+    @ignored_users.command(name="remove")
     async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
-        current = Configuration.getConfigVar(ctx.guild.id, "IGNORED_USERS")
-        if user.id not in current:
-            await ctx.send("This user was not on my ignore list.")
-        else:
-            current.remove(user.id)
-            Configuration.setConfigVar(ctx.guild.id, "IGNORED_USERS", current)
-            await ctx.send("I will now no longer ignore this user's edited/deleted messages.")
+        await remove_item(ctx, user, "ignored", "users")
 
     @configure.command()
     async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Sets the logging channel for join/leave logs"""
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages:
-            Configuration.setConfigVar(ctx.guild.id, "JOIN_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for join logs")
-        else:
-            await ctx.send(
-                f"I cannot use {channel.mention} for logging, I do not have the required permissions in there (read_messages, send_messages).")
+
 
     @configure.command()
     async def modLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Sets the logging channel for modlogs (mute/kick/ban/...)"""
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages:
-            Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for mod logs")
-        else:
-            await ctx.send(
-                f"I cannot use {channel.mention} for logging, I do not have the required permissions in there (read_messages, send_messages).")
+        await set_log_channel(ctx, channel, "mod")
 
     @configure.command()
     async def minorLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Sets the logging channel for minor logs (edit/delete)"""
-        if channel is None:
-            raise BadArgument("Missing channel")
-        permissions = channel.permissions_for(ctx.guild.get_member(self.bot.user.id))
-        if permissions.read_messages and permissions.send_messages and permissions.embed_links:
-            old = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
-            Configuration.setConfigVar(ctx.guild.id, "MINOR_LOGS", channel.id)
-            await ctx.send(f"{channel.mention} will now be used for minor logs.")
-            if old == 0:
-                await ctx.send(f"Caching recent messages for logging...")
-                self.bot.to_cache.append(ctx)
-        else:
-            await ctx.send(
-                f"I cannot use {channel.mention} for logging, I do not have the required permissions in there (read_messages, send_messages and embed_links).")
+        old = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
+        new = await set_log_channel(ctx, channel, "minor")
+        if old == 0 and new:
+            await ctx.send(Translator.translate('minor_log_caching_start', ctx))
+            self.bot.to_cache.append(ctx)
 
 
     @configure.group()
@@ -304,10 +251,10 @@ class Serveradmin:
         if ctx.invoked_subcommand is self.cog_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
             if len(overrides) == 0:
-                desc = "No overrides"
+                desc = Translator.translate('no_overrides', ctx)
             else:
-                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
-            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
     perm_lvls = [
@@ -324,19 +271,19 @@ class Serveradmin:
         if cog in ctx.bot.cogs:
             cogo = ctx.bot.cogs[cog]
             if cogo.critical:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is a core cog that does not allow permission overrides")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
             elif perm_lvl in range(6):
                 if perm_lvl < cogo.cog_perm:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {cog} cog is has a minimum permission lvl of {cogo.cog_perm} ({self.perm_lvls[cogo.cog_perm]})")
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=cogo.cog_perm, min_lvl_name=Translator.translate(f'perm_lvl_{cogo.cog_perm}', ctx)})}")
                 else:
                     overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
                     overrides[cog] = perm_lvl
                     Configuration.saveConfig(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {cog} cog permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_applied', ctx, cog=cog, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
             else:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('invalid_override_lvl', ctx)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any cog by that name")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_not_found', ctx)}")
 
     @cog_overrides.command(name="remove")
     async def remove_cog_override(self, ctx, cog: str):
@@ -344,19 +291,19 @@ class Serveradmin:
         if cog in overrides:
             del overrides[cog]
             Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Cog override for {cog} has been removed.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_removed', ctx, cog=cog)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a cog override for {cog} to remove.")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_override_not_found', ctx, cog=cog)}")
 
     @configure.group()
     async def command_overrides(self, ctx):
         if ctx.invoked_subcommand is self.command_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
             if len(overrides) == 0:
-                desc = "No overrides"
+                desc = Translator.translate('no_overrides', ctx)
             else:
-                desc = "\n".join(f"{k}: {v} ({self.perm_lvls[v]})" for k, v in overrides.items())
-            embed = discord.Embed(color=6008770, title="Command overrides", description=desc)
+                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')]})" for k, v in overrides.items())
+            embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
 

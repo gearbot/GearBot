@@ -65,7 +65,7 @@ class ModLog:
                             logged.content = message.content
                             logged.save()
                             editCount = editCount + 1
-                        count = count + 1
+                    count = count + 1
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s.")
 
     async def prep(self):
