@@ -253,7 +253,7 @@ class Serveradmin:
             if len(overrides) == 0:
                 desc = Translator.translate('no_overrides', ctx)
             else:
-                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')]})" for k, v in overrides.items())
+                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')})" for k, v in overrides.items())
             embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
@@ -274,7 +274,7 @@ class Serveradmin:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
             elif perm_lvl in range(6):
                 if perm_lvl < cogo.cog_perm:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=cogo.cog_perm, min_lvl_name=Translator.translate(f'perm_lvl_{cogo.cog_perm}', ctx)})}")
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=cogo.cog_perm, min_lvl_name=Translator.translate(f'perm_lvl_{cogo.cog_perm}', ctx))}")
                 else:
                     overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
                     overrides[cog] = perm_lvl
@@ -302,7 +302,7 @@ class Serveradmin:
             if len(overrides) == 0:
                 desc = Translator.translate('no_overrides', ctx)
             else:
-                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')]})" for k, v in overrides.items())
+                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')})" for k, v in overrides.items())
             embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 

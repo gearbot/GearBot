@@ -190,5 +190,5 @@
   "cog_not_found": "I can't find any cog by that name",
   "cog_override_removed": "Cog override for {cog} has been removed.",
   "cog_override_not_found": "I don't have a cog override for {cog} to remove.",
-  "command_overrides": "Command overrides",
+  "command_overrides": "Command overrides"
 }
