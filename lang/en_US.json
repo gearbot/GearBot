@@ -67,7 +67,7 @@
   "ban_confirmation": "{user} (`{user_id}`) was banned. Reason: `{reason}`",
   "ban_log": "{user} (`{user_id}`) was banned by {moderator} (`{moderator_id}`). Reason: `{reason}`",
   "ban_not_allowed": "You are not allowed to ban {user}",
-  "foreban_help": "Bans a user even if they are not in the server",
+  "forceban_help": "Bans a user even if they are not in the server",
   "forceban_confirmation": "{user} (`{user.id}`) was force banned. Reason: `{reason}`",
   "forceban_log": "{user} (`{user_id}`) was force banned by {moderator} (`{moderator_id}`). Reason: `{reason}`",
   "forced_ban": "Forced ban",
