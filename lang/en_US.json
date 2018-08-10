@@ -155,7 +155,7 @@
   "was_no_self_role": "`{item}` was not a self-assignable role so I cannot remove it.",
   "self_role_removed": "`{item}` is no longer a self-assignable role.",
   "mute_missing_perm": "I require the `manage_roles` permission to be able to add the role to people.",
-  "mute_role_to_high": "I need a role that is higher then the {role} role to be able to add it to people.",
+  "mute_role_to_high": "I need a role that is higher than the {role} role to be able to add it to people.",
   "mute_role_confirmation": "{role} will now be used for muting people, denying send permissions for the role.",
   "voice_channel": "Voice channel {channel}",
   "mute_setup_failures": "I was unable to configure muting in the following channels, there probably is an explicit deny on that channel for `manage channel` on those channels or their category (if they are synced) for one of my roles (includes everyone role). Please make sure I can manage those channels and run this command again or deny the `send_messages` and `add_reactions` permissions for {role} manually.",
