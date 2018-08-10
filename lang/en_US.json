@@ -178,7 +178,7 @@
   "no_overrides": "No overrides",
   "cog_overrides": "Cog overrides:",
   "core_cog_no_override": "The {cog} cog is a core cog that does not allow permission overrides.",
-  "cog_min_perm_violation": " The {cog} cog is has a minimum permission lvl of {min_lvl} ({min_lvl_name})",
+  "cog_min_perm_violation": "The {cog} cog has a minimum permission lvl of {min_lvl} ({min_lvl_name})",
   "perm_lvl_0": "public",
   "perm_lvl_1": "trusted",
   "perm_lvl_2": "mod",
