@@ -121,7 +121,7 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def forceban(self, ctx: commands.Context, user_id: int, *, reason=""):
-        """purge_help"""
+        """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         try:
