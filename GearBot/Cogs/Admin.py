@@ -136,5 +136,17 @@ class Admin:
         page, page_num = Pages.basic_pages(pages, page_num, action)
         return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, page_num
 
+
+    @commands.command(hidden=True)
+    async def post_info(self, ctx, name):
+        await ctx.message.delete()
+        await ctx.send(file=discord.File(f"{name}.png"))
+        with open(f"{name}.txt", "r") as file:
+            for page in Pages.paginate("".join(file.readlines()), 500, 2000):
+                await ctx.send(page)
+
+
+
+
 def setup(bot):
     bot.add_cog(Admin(bot))
