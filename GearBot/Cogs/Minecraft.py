@@ -117,7 +117,7 @@ class Minecraft:
             latest = Translator.translate('cf_latest', ctx, name=latest_v['name'], version=latest_v['version'],
                                           downloads='{:,}'.format(latest_v['downloads']))
             fields = {
-                Translator.translate('cf_project_name', ctx): info["title"],
+                Translator.translate('project_name', ctx): info["title"],
                 Translator.translate('downloads', ctx): "{:,}".format(info["downloads"]),
                 Translator.translate('latest', ctx): latest,
                 Translator.translate('project_categories', ctx): "\n".join(info["categories"]),

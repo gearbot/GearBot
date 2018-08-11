@@ -175,7 +175,7 @@ class Basic:
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
             query_clean = await clean_content().convert(ctx, query)
-            return await clean_content().convert(ctx, Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=clean_content)), None, False
+            return await clean_content().convert(ctx, Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=query_clean)), None, False
         return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
