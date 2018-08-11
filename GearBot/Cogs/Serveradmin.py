@@ -100,9 +100,9 @@ class Serveradmin:
     async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
         """Sets or show the server prefix"""
         if new_prefix is None:
-            await ctx.send("{Translator.translate('current_server_prefix', ctx, prefix=Configuration.getConfigVar(ctx.guild.id, 'PREFIX'))}")
+            await ctx.send(f"{Translator.translate('current_server_prefix', ctx, prefix=Configuration.getConfigVar(ctx.guild.id, 'PREFIX'))}")
         elif len(new_prefix) > 25:
-            await ctx.send()
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('prefix_too_long', ctx)}")
         else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('prefix_set', ctx, new_prefix=new_prefix)}")

@@ -145,7 +145,7 @@ class Moderation:
     async def purge(self, ctx, msgs: int):
         """purge_help"""
         if msgs > 1000:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_to_big', ctx.guild.id)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_big', ctx.guild.id)}")
         else:
             deleted = await ctx.channel.purge(limit=msgs)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}")
