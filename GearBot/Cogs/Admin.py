@@ -139,10 +139,11 @@ class Admin:
 
     @commands.command(hidden=True)
     async def post_info(self, ctx, name):
-        await ctx.message.delete()
-        await ctx.send(file=discord.File(f"{name}.png"))
         with open(f"{name}.txt", "r") as file:
-            for page in Pages.paginate("".join(file.readlines()), 500, 2000):
+            pages =  Pages.paginate("".join(file.readlines()), 500, 2000)
+            await ctx.channel.purge(limit=len(pages) + 2)
+            await ctx.send(file=discord.File(f"{name}.png"))
+            for page in pages:
                 await ctx.send(page)
 
 
