@@ -167,7 +167,7 @@
   "was_no_invite_whitelist": "`{item}` was not on the whitelist.",
   "invite_whitelist_removed": "`{item}` is no longer a whitelisted server. Invites leading ot this server will be removed when posted.",
   "no_ignored_users": "No ignored users configured, I will log edits and deletions by all users.",
-  "current_ignored_users": "Current user I will not log edits and deleted messages for:",
+  "current_ignored_users": "Current users I will not log edits and deleted messages for:",
   "already_ignored_user": "`{item}` is already on my ignore list.",
   "ignored_user_added": "I will no longer log edits and deleted messages from `{item}`",
   "was_no_ignored_user": "I was not ignoring `{item}` as he was not on the list.",
