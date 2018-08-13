@@ -51,16 +51,20 @@ class Moderation:
         pages = []
         current_roles = ""
         current_ids = ""
+        role_list = dict()
         for role in guild.roles:
-            if len(current_roles + f"<@&{role.id}>\n\n") > 300:
+            role_list[role.name] = role.id
+        for r in sorted(role_list.keys()):
+            role = role_list[r]
+            if len(current_roles + f"<@&{role}>\n\n") > 300:
                 pages.append({
                     "roles": current_roles,
                     "ids": current_ids
                 })
                 current_ids = ""
                 current_roles = ""
-            current_roles += f"<@&{role.id}>\n\n"
-            current_ids += str(role.id) + "\n\n"
+            current_roles += f"<@&{role}>\n\n"
+            current_ids += str(role) + "\n\n"
         pages.append({
             "roles": current_roles,
             "ids": current_ids
@@ -81,7 +85,7 @@ class Moderation:
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         self.bot.data["forced_exits"].append(user.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
                 await ctx.guild.kick(user,
                                      reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
