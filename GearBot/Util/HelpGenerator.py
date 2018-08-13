@@ -68,6 +68,8 @@ async def gen_cog_help(bot, ctx, cog):
     return [output]
 
 async def gen_command_help(bot, ctx, command):
+    if ctx.prefix is None:
+        ctx.prefix = ""
     usage = ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
     sub_info = None
     if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):

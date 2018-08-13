@@ -216,7 +216,8 @@ class Serveradmin:
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """Configures users to ignore for edit/delete logs (like bots spamming the logs with edits"""
-        await list_list(ctx, "ignored", "users", "<@{item}>")
+        if ctx.invoked_subcommand is self.ignored_users:
+            await list_list(ctx, "ignored", "users", "<@{item}>")
 
     @ignored_users.command(name="add")
     async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
