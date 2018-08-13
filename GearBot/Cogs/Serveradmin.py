@@ -54,7 +54,7 @@ async def set_log_channel(ctx, channel, log_type, permissions=None):
     channel_permissions = channel.permissions_for(ctx.guild.get_member(ctx.bot.user.id))
     if all(getattr(channel_permissions, perm) for perm in permissions):
         Configuration.setConfigVar(ctx.guild.id, f"{log_type}_LOGS".upper(), channel.id)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {log_type}_log_channel_set", channel=channel.mention)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{log_type}_log_channel_set', ctx, channel=channel.mention)}")
         return True
     else:
         await ctx.send(
@@ -229,6 +229,7 @@ class Serveradmin:
     @configure.command()
     async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Sets the logging channel for join/leave logs"""
+        await set_log_channel(ctx, channel, "join")
 
 
     @configure.command()
