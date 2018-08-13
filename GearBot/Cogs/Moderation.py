@@ -106,7 +106,7 @@ class Moderation:
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
                 self.bot.data["forced_exits"].append(user.id)
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
