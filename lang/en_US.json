@@ -54,7 +54,7 @@
   "links": "Links",
   "cf_not_found": "Unable to fetch info for that project, are you sure it exists?",
   "cf_info_title": "CurseForge info for {project_name}",
-  "roles": "{server_name} roles",
+  "roles": "{server_name} roles ({page_num}/{pages})",
   "no_reason": "No reason given.",
   "kick_help": "Kicks a user from the server.",
   "kick_unable": "Unable to kick {user} as I do not have a higher role than them.",

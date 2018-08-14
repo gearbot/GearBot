@@ -80,7 +80,7 @@ def basic_pages(pages, page_num, action):
         page_num += 1
     if page_num < 0:
         page_num = len(pages) - 1
-    if page_num == len(pages):
+    if page_num >= len(pages):
         page_num = 0
     page = pages[page_num]
     return page, page_num

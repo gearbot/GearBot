@@ -34,42 +34,21 @@ class Moderation:
     async def roles_init(self, ctx):
         pages = self.gen_roles_pages(ctx.guild)
         page = pages[0]
-        embed = discord.Embed(title=Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
-        embed.add_field(name="\u200b", value=page["roles"], inline=True)
-        embed.add_field(name="\u200b", value=page["ids"], inline=True)
-        return None, embed, len(pages) > 1
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1
 
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
-        embed.add_field(name="\u200b", value=page["roles"], inline=True)
-        embed.add_field(name="\u200b", value=page["ids"], inline=True)
-        return None, embed, page_num
+        return f"**{Translator.translate('roles', message.guild.id, server_name=ctx.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
-    def gen_roles_pages(self, guild: discord.Guild):
-        pages = []
-        current_roles = ""
-        current_ids = ""
+    @staticmethod
+    def gen_roles_pages(guild: discord.Guild):
         role_list = dict()
+        longest_name = 1
         for role in guild.roles:
-            role_list[role.name] = role.id
-        for r in sorted(role_list.keys()):
-            role = role_list[r]
-            if len(current_roles + f"<@&{role}>\n\n") > 300:
-                pages.append({
-                    "roles": current_roles,
-                    "ids": current_ids
-                })
-                current_ids = ""
-                current_roles = ""
-            current_roles += f"<@&{role}>\n\n"
-            current_ids += str(role) + "\n\n"
-        pages.append({
-            "roles": current_roles,
-            "ids": current_ids
-        })
-        return pages
+            role_list[f"{role.name} - {role.id}"] = role
+            longest_name = max(longest_name, len(role.name))
+        return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in sorted(role_list.keys())))
 
     @commands.command()
     @commands.guild_only()
