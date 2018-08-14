@@ -38,6 +38,7 @@ class Infractions:
     @commands.guild_only()
     @commands.group()
     async def inf(self, ctx:commands.Context):
+        """inf_help"""
         pass
 
     @inf.command()

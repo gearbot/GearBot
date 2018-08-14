@@ -250,6 +250,7 @@ class Serveradmin:
 
     @configure.group()
     async def cog_overrides(self, ctx):
+        """cog_overrides_help"""
         if ctx.invoked_subcommand is self.cog_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
             if len(overrides) == 0:
@@ -299,6 +300,7 @@ class Serveradmin:
 
     @configure.group()
     async def command_overrides(self, ctx):
+        """command_overrides_help"""
         if ctx.invoked_subcommand is self.command_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
             if len(overrides) == 0:
@@ -342,6 +344,7 @@ class Serveradmin:
 
     @configure.command()
     async def perm_denied_message(self, ctx, value:bool):
+        """perm_denied_message_help"""
         Configuration.setConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE", value)
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
@@ -381,12 +384,12 @@ class Serveradmin:
         await ctx.send("Minor logs have been disabled.")
 
 
-
     @disable.command(name="modLogChannel")
     async def disablemodLogChannel(self, ctx: commands.Context):
         """Disables the modlogs (mute/kick/ban/...)"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", 0)
         await ctx.send("Mod logs have been disabled.")
+
 
     @disable.command(name="joinLogChannel")
     async def disablejoinLogChannel(self, ctx: commands.Context):
