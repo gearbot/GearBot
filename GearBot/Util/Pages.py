@@ -3,9 +3,9 @@ from discord import utils
 
 from Util import Utils, Emoji, Translator
 
-page_handlers = dict()
+page_handlers = {}
 
-known_messages = dict()
+known_messages = {}
 
 prev_id = 465582003669041163
 next_id = 465582003677298708
@@ -115,20 +115,20 @@ def paginate(input, max_lines = 20, max_chars = 1900, prefix = "", suffix = ""):
 def paginate_fields(input):
     pages = []
     for page in input:
-        page_fields = dict()
+        page_fields = {}
         for name, content in page.items():
             page_fields[name] = paginate(content, max_chars=1024)
         pages.append(page_fields)
     real_pages = []
     for page in pages:
         page_count = 0
-        page_fields = dict()
+        page_fields = {}
         for name, parts in page.items():
             base_name = name
             if len(parts) is 1:
                 if page_count + len(name) + len(parts[0]) > 4000:
                     real_pages.append(page_fields)
-                    page_fields = dict()
+                    page_fields = {}
                     page_count = 0
                 page_fields[name] = parts[0]
                 page_count += len(name) + len(parts[0])
@@ -138,7 +138,7 @@ def paginate_fields(input):
                     name = f"{base_name} ({i+1}/{len(parts)})"
                     if page_count + len(name) + len(part) > 3000:
                         real_pages.append(page_fields)
-                        page_fields = dict()
+                        page_fields = {}
                         page_count = 0
                     page_fields[name] = part
                     page_count += len(name) + len(part)

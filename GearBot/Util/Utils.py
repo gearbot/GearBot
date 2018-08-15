@@ -17,7 +17,7 @@ def fetchFromDisk(filename):
         with open(f"{filename}.json") as file:
             return json.load(file)
     except FileNotFoundError:
-        return dict()
+        return {}
 
 def saveToDisk(filename, dict):
     with open(f"{filename}.json", "w") as file:

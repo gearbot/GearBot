@@ -65,7 +65,7 @@ async def on_ready():
         try:
             for signame in ('SIGINT', 'SIGTERM'):
                 asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                        lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
+                                                            lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
         except Exception:
             pass #doesn't work on windows
 
@@ -117,20 +117,19 @@ async def keepDBalive():
         await asyncio.sleep(3600)
 
 @bot.event
-async def on_message(message:discord.Message):
+async def on_message(message: discord.Message):
     if message.author.bot:
         return
     bot.messageCount = bot.messageCount + 1
-    ctx:commands.Context = await bot.get_context(message)
+    ctx: commands.Context = await bot.get_context(message)
     if ctx.command is not None:
         bot.commandCount = bot.commandCount + 1
         if isinstance(ctx.channel, discord.TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
             try:
-                await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
+                return await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
             except discord.Forbidden:
                 pass #closed DMs
-        else:
-            await bot.invoke(ctx)
+        await bot.invoke(ctx)
 
 
 @bot.event
@@ -142,57 +141,56 @@ async def on_guild_join(guild: discord.Guild):
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.NoPrivateMessage):
-        await ctx.send("This command cannot be used in private messages.")
-    elif isinstance(error, commands.BotMissingPermissions):
+        return await ctx.send("This command cannot be used in private messages.")
+    if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}.")
-        await ctx.send(error)
-    elif isinstance(error, commands.DisabledCommand):
-        await ctx.send("Sorry. This command is disabled and cannot be used.")
-    elif isinstance(error, commands.CheckFailure):
+        return await ctx.send(error)
+    if isinstance(error, commands.DisabledCommand):
+        return await ctx.send("Sorry. This command is disabled and cannot be used.")
+    if isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.getConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE"):
-            await ctx.send(":lock: You do not have the required permissions to run this command")
-    elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send(error)
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"You are missing a required argument! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
-    elif isinstance(error, commands.CommandNotFound):
+            return await ctx.send(":lock: You do not have the required permissions to run this command")
+    if isinstance(error, commands.CommandOnCooldown):
+        return await ctx.send(error)
+    if isinstance(error, commands.MissingRequiredArgument):
+        return await ctx.send(f"You are missing a required argument! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
+    if isinstance(error, commands.BadArgument):
+        return await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
+    if isinstance(error, commands.CommandNotFound):
         return
-    elif isinstance(error, PeeweeException):
-        await handle_database_error()
+    if isinstance(error, PeeweeException):
+        return await handle_database_error()
 
-    else:
-        bot.errors = bot.errors + 1
-        # log to logger first just in case botlog logging fails as well
-        GearbotLogging.exception(f"Command execution failed:\n"
-                                 f"    Command: {ctx.command}\n"
-                                 f"    Message: {ctx.message.content}\n"
-                                 f"    Channel: {'Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name}\n"
-                                 f"    Sender: {ctx.author.name}#{ctx.author.discriminator}\n"
-                                 f"    Exception: {error}", error.original)
-        # notify caller
-        await ctx.send(":rotating_light: Something went wrong while executing that command :rotating_light:")
+    bot.errors = bot.errors + 1
+    # log to logger first just in case botlog logging fails as well
+    GearbotLogging.exception(f"Command execution failed:\n"
+                             f"    Command: {ctx.command}\n"
+                             f"    Message: {ctx.message.content}\n"
+                             f"    Channel: {'Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name}\n"
+                             f"    Sender: {ctx.author.name}#{ctx.author.discriminator}\n"
+                             f"    Exception: {error}", error.original)
+    # notify caller
+    await ctx.send(":rotating_light: Something went wrong while executing that command :rotating_light:")
 
-        embed = discord.Embed(colour=discord.Colour(0xff0000),
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+    embed = discord.Embed(colour=discord.Colour(0xff0000),
+                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
-        embed.set_author(name="Command execution failed:")
-        embed.add_field(name="Command", value=ctx.command)
-        embed.add_field(name="Original message", value=Utils.trim_message(ctx.message.content, 1024))
-        embed.add_field(name="Channel",
-                        value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
-        embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
-        embed.add_field(name="Exception", value=error.original)
-        v = ""
-        for line in traceback.format_tb(error.original.__traceback__):
-            if len(v) + len(line) > 1024:
-                embed.add_field(name="Stacktrace", value=v)
-                v = ""
-            v = f"{v}\n{line}"
-        if len(v) > 0:
+    embed.set_author(name="Command execution failed:")
+    embed.add_field(name="Command", value=ctx.command)
+    embed.add_field(name="Original message", value=Utils.trim_message(ctx.message.content, 1024))
+    embed.add_field(name="Channel",
+                    value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
+    embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
+    embed.add_field(name="Exception", value=error.original)
+    v = ""
+    for line in traceback.format_tb(error.original.__traceback__):
+        if len(v) + len(line) > 1024:
             embed.add_field(name="Stacktrace", value=v)
-        await GearbotLogging.logToBotlog(embed=embed)
+            v = ""
+        v = f"{v}\n{line}"
+    if len(v) > 0:
+        embed.add_field(name="Stacktrace", value=v)
+    await GearbotLogging.logToBotlog(embed=embed)
 
 
 @bot.event
@@ -234,7 +232,7 @@ async def handle_database_error():
     if bot.owner_id is None:
         app = await bot.application_info()
         bot.owner_id = app.owner.id
-    owner =  bot.get_user(bot.owner_id)
+    owner = bot.get_user(bot.owner_id)
     dmchannel = owner.dm_channel
     if dmchannel is None:
         await owner.create_dm()
@@ -317,4 +315,3 @@ if __name__ == '__main__':
     GearbotLogging.info("GearBot shutting down, cleaning up")
     bot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
-

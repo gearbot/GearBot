@@ -3,7 +3,7 @@ from datetime import datetime
 from Util import Pages, Utils
 from database.DatabaseConnector import Infraction
 
-cache = dict()
+cache = {}
 
 def add_infraction(guild_id, user_id, mod_id, type, reason):
     Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason, timestamp=datetime.now())
