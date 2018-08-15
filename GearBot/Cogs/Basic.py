@@ -74,7 +74,7 @@ class Basic:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
                         else:
-                            embed.add_field(name=Translator.translate("attachement_link", ctx), value=attachment.url)
+                            embed.add_field(name=Translator.translate("attachment_link", ctx), value=attachment.url)
                 else:
                     description = message.content
                     embed = discord.Embed(colour=discord.Color(0xd5fff), description=description, timestamp=datetime.utcfromtimestamp(message.timestamp))
