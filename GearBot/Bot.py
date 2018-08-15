@@ -244,7 +244,7 @@ async def handle_database_error():
         bot.database_connection = DatabaseConnector.connection
     except:
         # fail, trying again in 10 just in case the database is rebooting
-        time.sleep(15)
+        await asyncio.sleep(15)
         try:
             DatabaseConnector.init()
             bot.database_connection = DatabaseConnector.connection
@@ -266,8 +266,8 @@ async def handle_database_error():
                 async with aiohttp.ClientSession(headers={'Content-Type': 'application/json',
                                                           'Authorization': f'Bearer {Configuration.getMasterConfigVar("DO_TOKEN")}'}) as session:
                     await session.post(f'https://api.digitalocean.com/v2/droplets/{Configuration.getMasterConfigVar("DO_ID")}/actions',
-                                            data=json.dumps(data), timeout=30)
-                time.sleep(60)
+                                       data=json.dumps(data), timeout=30)
+                await asyncio.sleep(60)
 
             else:
                 message = f"{Emoji.get_chat_emoji('NO')} Reconnecting failed, escalating to reboot"
