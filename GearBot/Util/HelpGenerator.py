@@ -6,7 +6,7 @@ from Util import Utils, Pages, Translator
 
 
 async def command_list(bot, ctx:Context):
-    command_tree = dict()
+    command_tree = {}
     longest = 0
     for cog in bot.cogs:
         commands, l = await cog_commands(bot, ctx, cog)
@@ -35,7 +35,7 @@ async def cog_commands(bot, ctx, cog):
 
 async def gen_commands_list(bot, ctx, list):
     longest = 0
-    command_list = dict()
+    command_list = {}
     for command in list:
         try:
             runnable = await command.can_run(ctx)

@@ -10,7 +10,7 @@ import requests
 
 from Util import Configuration, GearbotLogging, Emoji
 
-LANGS = dict()
+LANGS = {}
 bot = None
 
 def on_ready(bot_in):

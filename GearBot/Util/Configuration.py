@@ -5,8 +5,8 @@ from discord.ext import commands
 
 from Util import GearbotLogging
 
-MASTER_CONFIG = dict()
-SERVER_CONFIGS = dict()
+MASTER_CONFIG = {}
+SERVER_CONFIGS = {}
 master_loaded = False
 
 CONFIG_TEMPLATE = {
@@ -22,8 +22,8 @@ CONFIG_TEMPLATE = {
     "ADMIN_ROLES": [],
     "MOD_ROLES": [],
     "TRUSTED_ROLES": [],
-    "COG_OVERRIDES": dict(),
-    "COMMAND_OVERRIDES": dict(),
+    "COG_OVERRIDES": {},
+    "COMMAND_OVERRIDES": {},
     "LANG": "en_US",
     "PERM_DENIED_MESSAGE": True
 
