@@ -15,7 +15,7 @@ class ServerHolder(object):
 async def add_item(ctx, item, item_type, list_name="roles"):
     roles = Configuration.getConfigVar(ctx.guild.id, f"{item_type}_{list_name}".upper())
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
-    if item.id == ctx.guild.default_role.id:
+    if item == ctx.guild.default_role:
         return await ctx.send(
             f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'default_role_forbidden', ctx)}")
     if item.id in roles:
