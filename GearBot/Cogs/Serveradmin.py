@@ -54,7 +54,7 @@ async def set_log_channel(ctx, channel, log_type, permissions=None):
     channel_permissions = channel.permissions_for(ctx.guild.get_member(ctx.bot.user.id))
     if all(getattr(channel_permissions, perm) for perm in permissions):
         Configuration.setConfigVar(ctx.guild.id, f"{log_type}_LOGS".upper(), channel.id)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {log_type}_log_channel_set", channel=channel.mention)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{log_type}_log_channel_set', ctx, channel=channel.mention)}")
         return True
     else:
         await ctx.send(
@@ -100,9 +100,9 @@ class Serveradmin:
     async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
         """Sets or show the server prefix"""
         if new_prefix is None:
-            await ctx.send("{Translator.translate('current_server_prefix', ctx, prefix=Configuration.getConfigVar(ctx.guild.id, 'PREFIX'))}")
+            await ctx.send(f"{Translator.translate('current_server_prefix', ctx, prefix=Configuration.getConfigVar(ctx.guild.id, 'PREFIX'))}")
         elif len(new_prefix) > 25:
-            await ctx.send()
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('prefix_too_long', ctx)}")
         else:
             Configuration.setConfigVar(ctx.guild.id, "PREFIX", new_prefix)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('prefix_set', ctx, new_prefix=new_prefix)}")
@@ -216,7 +216,8 @@ class Serveradmin:
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """Configures users to ignore for edit/delete logs (like bots spamming the logs with edits"""
-        await list_list(ctx, "ignored", "users", "<@{item}>")
+        if ctx.invoked_subcommand is self.ignored_users:
+            await list_list(ctx, "ignored", "users", "<@{item}>")
 
     @ignored_users.command(name="add")
     async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
@@ -229,6 +230,7 @@ class Serveradmin:
     @configure.command()
     async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
         """Sets the logging channel for join/leave logs"""
+        await set_log_channel(ctx, channel, "join")
 
 
     @configure.command()
@@ -248,6 +250,7 @@ class Serveradmin:
 
     @configure.group()
     async def cog_overrides(self, ctx):
+        """cog_overrides_help"""
         if ctx.invoked_subcommand is self.cog_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
             if len(overrides) == 0:
@@ -297,6 +300,7 @@ class Serveradmin:
 
     @configure.group()
     async def command_overrides(self, ctx):
+        """command_overrides_help"""
         if ctx.invoked_subcommand is self.command_overrides:
             overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
             if len(overrides) == 0:
@@ -340,6 +344,7 @@ class Serveradmin:
 
     @configure.command()
     async def perm_denied_message(self, ctx, value:bool):
+        """perm_denied_message_help"""
         Configuration.setConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE", value)
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
@@ -379,12 +384,12 @@ class Serveradmin:
         await ctx.send("Minor logs have been disabled.")
 
 
-
     @disable.command(name="modLogChannel")
     async def disablemodLogChannel(self, ctx: commands.Context):
         """Disables the modlogs (mute/kick/ban/...)"""
         Configuration.setConfigVar(ctx.guild.id, "MOD_LOGS", 0)
         await ctx.send("Mod logs have been disabled.")
+
 
     @disable.command(name="joinLogChannel")
     async def disablejoinLogChannel(self, ctx: commands.Context):

@@ -34,38 +34,21 @@ class Moderation:
     async def roles_init(self, ctx):
         pages = self.gen_roles_pages(ctx.guild)
         page = pages[0]
-        embed = discord.Embed(title=Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
-        embed.add_field(name="\u200b", value=page["roles"], inline=True)
-        embed.add_field(name="\u200b", value=page["ids"], inline=True)
-        return None, embed, len(pages) > 1
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1
 
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=Translator.translate('roles', message.guild.id, server_name=ctx.guild.name), color=0x54d5ff)
-        embed.add_field(name="\u200b", value=page["roles"], inline=True)
-        embed.add_field(name="\u200b", value=page["ids"], inline=True)
-        return None, embed, page_num
+        return f"**{Translator.translate('roles', message.guild.id, server_name=ctx.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
-    def gen_roles_pages(self, guild: discord.Guild):
-        pages = []
-        current_roles = ""
-        current_ids = ""
+    @staticmethod
+    def gen_roles_pages(guild: discord.Guild):
+        role_list = dict()
+        longest_name = 1
         for role in guild.roles:
-            if len(current_roles + f"<@&{role.id}>\n\n") > 300:
-                pages.append({
-                    "roles": current_roles,
-                    "ids": current_ids
-                })
-                current_ids = ""
-                current_roles = ""
-            current_roles += f"<@&{role.id}>\n\n"
-            current_ids += str(role.id) + "\n\n"
-        pages.append({
-            "roles": current_roles,
-            "ids": current_ids
-        })
-        return pages
+            role_list[f"{role.name} - {role.id}"] = role
+            longest_name = max(longest_name, len(role.name))
+        return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in sorted(role_list.keys())))
 
     @commands.command()
     @commands.guild_only()
@@ -81,7 +64,7 @@ class Moderation:
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         self.bot.data["forced_exits"].append(user.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
                 await ctx.guild.kick(user,
                                      reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
@@ -102,7 +85,7 @@ class Moderation:
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
                 self.bot.data["forced_exits"].append(user.id)
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
@@ -131,9 +114,9 @@ class Moderation:
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                 delete_message_days=0)
             await ctx.send(
-                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), reason=reason)}")
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, reason=reason)}")
             await GearbotLogging.logToModLog(ctx.guild,
-                                             f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                             f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('forced_ban', ctx.guild.id), reason)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id)}")
@@ -145,7 +128,7 @@ class Moderation:
     async def purge(self, ctx, msgs: int):
         """purge_help"""
         if msgs > 1000:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_to_big', ctx.guild.id)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_big', ctx.guild.id)}")
         else:
             deleted = await ctx.channel.purge(limit=msgs)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}")
@@ -287,7 +270,7 @@ class Moderation:
                         inline=True)
         embed.add_field(name=Translator.translate('vip_features', ctx), value=guild_features, inline=True)
         if ctx.guild.icon_url != "":
-            embed.add_field(name=Translator.translate('server_icon_url', ctx), value=f"[{Translator.translate('server_icon_url', ctx)}](ctx.guild.icon_url)", inline=True)
+            embed.add_field(name=Translator.translate('server_icon', ctx), value=f"[{Translator.translate('server_icon', ctx)}](ctx.guild.icon_url)", inline=True)
         embed.add_field(name=Translator.translate('all_roles', ctx), value=", ".join(role_list), inline=True) #todo paginate
         await ctx.send(embed=embed)
 

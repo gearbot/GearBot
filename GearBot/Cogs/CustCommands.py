@@ -103,7 +103,7 @@ class CustCommands:
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
-                await ctx.invoke(self.create, trigger, response=reply)
+                await ctx.invoke(self.create, trigger, reply=reply)
             else:
                 command.response = reply
                 command.save()

@@ -118,9 +118,9 @@ async def keepDBalive():
 
 @bot.event
 async def on_message(message:discord.Message):
-    bot.messageCount = bot.messageCount + 1
     if message.author.bot:
         return
+    bot.messageCount = bot.messageCount + 1
     ctx:commands.Context = await bot.get_context(message)
     if ctx.command is not None:
         bot.commandCount = bot.commandCount + 1

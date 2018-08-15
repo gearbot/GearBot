@@ -49,7 +49,7 @@ async def create_new(type, ctx, **kwargs):
             await message.add_reaction(prev_emoji)
             await message.add_reaction(next_emoji)
         except discord.Forbidden:
-            await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms', ctx)} {Emoji.get_chat_emoji('WARNING')}")
+            await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms', ctx, prev=Emoji.get_chat_emoji('LEFT'), next=Emoji.get_chat_emoji('RIGHT'))} {Emoji.get_chat_emoji('WARNING')}")
 
     if len(known_messages.keys()) > 500:
         del known_messages[list(known_messages.keys())[0]]
@@ -80,7 +80,7 @@ def basic_pages(pages, page_num, action):
         page_num += 1
     if page_num < 0:
         page_num = len(pages) - 1
-    if page_num == len(pages):
+    if page_num >= len(pages):
         page_num = 0
     page = pages[page_num]
     return page, page_num
