@@ -263,7 +263,7 @@ class Moderation:
         embed.add_field(name=Translator.translate('members', ctx), value=ctx.guild.member_count, inline=True)
         embed.add_field(name=Translator.translate('text_channels', ctx), value=str(len(ctx.guild.text_channels)), inline=True)
         embed.add_field(name=Translator.translate('voice_channels', ctx), value=str(len(ctx.guild.voice_channels)), inline=True)
-        embed.add_field(name=Translator.translate('total_channels', ctx), value=str(len(ctx.guild.text_channels) + len(ctx.guild.voice_channels)),
+        embed.add_field(name=Translator.translate('total_channel', ctx), value=str(len(ctx.guild.text_channels) + len(ctx.guild.voice_channels)),
                         inline=True)
         embed.add_field(name=Translator.translate('created_at', ctx),
                         value=f"{guild_made} ({(ctx.message.created_at - ctx.guild.created_at).days} days ago)",
