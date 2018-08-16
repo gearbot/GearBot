@@ -270,7 +270,7 @@ class Moderation:
                         inline=True)
         embed.add_field(name=Translator.translate('vip_features', ctx), value=guild_features, inline=True)
         if ctx.guild.icon_url != "":
-            embed.add_field(name=Translator.translate('server_icon', ctx), value=f"[{Translator.translate('server_icon', ctx)}](ctx.guild.icon_url)", inline=True)
+            embed.add_field(name=Translator.translate('server_icon', ctx), value=f"[{Translator.translate('server_icon', ctx)}]({ctx.guild.icon_url})", inline=True)
         embed.add_field(name=Translator.translate('all_roles', ctx), value=", ".join(role_list), inline=True) #todo paginate
         await ctx.send(embed=embed)
 
