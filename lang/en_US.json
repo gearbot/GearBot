@@ -165,7 +165,7 @@
   "already_invite_whitelist": "`{item}` is already on the invite whitelist.",
   "invite_whitelist_added": "`{item}` is now a whitelisted server. Invites leading to this server will not be removed when posted.",
   "was_no_invite_whitelist": "`{item}` was not on the whitelist.",
-  "invite_whitelist_removed": "`{item}` is no longer a whitelisted server. Invites leading ot this server will be removed when posted.",
+  "invite_whitelist_removed": "`{item}` is no longer a whitelisted server. Invites leading to this server will be removed when posted.",
   "no_ignored_users": "No ignored users configured, I will log edits and deletions by all users.",
   "current_ignored_users": "Current users I will not log edits and deleted messages for:",
   "already_ignored_user": "`{item}` is already on my ignore list.",
