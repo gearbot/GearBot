@@ -25,8 +25,9 @@ CONFIG_TEMPLATE = {
     "COG_OVERRIDES": dict(),
     "COMMAND_OVERRIDES": dict(),
     "LANG": "en_US",
-    "PERM_DENIED_MESSAGE": True
-
+    "PERM_DENIED_MESSAGE": True,
+    "COMMAND_PEOPLE": dict(),
+    "PERM_OVERRIDES": dict()
 }
 
 
@@ -50,12 +51,22 @@ def loadGlobalConfig():
         print(e)
         raise e
 
+def migrate(config, t):
+    for name, value in config[f"{t}_OVERRIDES"]:
+        if value >=4 :
+            config[f"{t}_OVERRIDES"][name] = value + 1
 
 def loadConfig(guild):
     global SERVER_CONFIGS
     try:
         with open(f'config/{guild}.json', 'r') as jsonfile:
             config = json.load(jsonfile)
+
+            #migrating to inject specific people permissions lvl
+            if "COMMAND_PEOPLE" not in config:
+                migrate(config, "COG")
+                migrate(config, "COMMAND")
+
             for key in CONFIG_TEMPLATE:
                 if key not in config:
                     if CONFIG_TEMPLATE[key] == []:

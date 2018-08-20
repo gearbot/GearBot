@@ -11,9 +11,12 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class Basic:
-    critical = False
-    cog_perm = 0
-    command_min_lvl = {}
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {}
+    }
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -27,7 +30,7 @@ class Basic:
 
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
     @commands.command(hidden=True)
     async def ping(self, ctx:commands.Context):

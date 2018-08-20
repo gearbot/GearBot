@@ -5,7 +5,6 @@ from Util import Pages
 
 
 class PageHandler:
-    critical = True
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot

@@ -13,8 +13,12 @@ from Util.Converters import BannedMember
 
 
 class Moderation:
-    critical = False
-    cog_perm = 2
+    permissions = {
+        "min": 2,
+        "max": 6,
+        "required": 2,
+        "commands": {}
+    }
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -29,7 +33,7 @@ class Moderation:
         Pages.unregister("roles")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, Permissioncheckers.is_mod(ctx))
+        return Permissioncheckers.check_permission(ctx)
 
     async def roles_init(self, ctx):
         pages = self.gen_roles_pages(ctx.guild)

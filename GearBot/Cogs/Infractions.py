@@ -6,8 +6,12 @@ from database.DatabaseConnector import Infraction
 
 
 class Infractions:
-    critical = False
-    cog_perm = 2
+    permissions = {
+        "min": 2,
+        "max": 6,
+        "required": 2,
+        "commands": {}
+    }
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -17,7 +21,7 @@ class Infractions:
         Pages.unregister("inf_search")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, Permissioncheckers.is_mod(ctx))
+        return Permissioncheckers.check_permission(ctx)
 
     @commands.guild_only()
     @commands.command()

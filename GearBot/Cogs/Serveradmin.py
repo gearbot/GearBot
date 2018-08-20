@@ -65,9 +65,25 @@ async def set_log_channel(ctx, channel, log_type, permissions=None):
         return False
 
 
+def gen_override_strings(ctx, perm_dict, prefix = ""):
+    output = ""
+    for command, d in perm_dict["commands"].items():
+        lvl = d["required"]
+        if lvl > -1:
+            output += f"{prefix} {command}: {lvl} ({Translator.translate(f'perm_lvl_{lvl}', ctx)})\n"
+        if len(d["commands"].keys()) > 0:
+            output += gen_override_strings(ctx, d, f"{prefix} {command}")
+    return output
+
 
 class Serveradmin:
-    critical = True
+    permissions = {
+        "min": 3,
+        "max": 5,
+        "required": 3,
+        "commands": {
+        }
+    }
 
     def __init__(self, bot):
         bot.to_cache = []
@@ -78,7 +94,7 @@ class Serveradmin:
         pass
 
     async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.is_admin(ctx)
+        return Permissioncheckers.check_permission(ctx)
 
     def validate_configs(self):
         for guild in self.bot.guilds:
@@ -255,35 +271,41 @@ class Serveradmin:
     async def cog_overrides(self, ctx):
         """cog_overrides_help"""
         if ctx.invoked_subcommand is self.cog_overrides:
-            overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
-            if len(overrides) == 0:
+            overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+            desc = ""
+            for k, v in overrides.items():
+                lvl = v["required"]
+                if lvl >= 0:
+                    desc += f"{k}: {lvl} ({Translator.translate(f'perm_lvl_{lvl}', ctx)})\n"
+            if desc == "":
                 desc = Translator.translate('no_overrides', ctx)
-            else:
-                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')})" for k, v in overrides.items())
             embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
-
-    perm_lvls = [
-        "public",
-        "trusted",
-        "mod",
-        "admin",
-        "owner only",
-        "disabled"
-    ]
 
     @cog_overrides.command(name="add")
     async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
         if cog in ctx.bot.cogs:
             cogo = ctx.bot.cogs[cog]
-            if cogo.critical:
+            if not hasattr(cogo, "permissions"):
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
-            elif perm_lvl in range(6):
-                if perm_lvl < cogo.cog_perm:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=cogo.cog_perm, min_lvl_name=Translator.translate(f'perm_lvl_{cogo.cog_perm}', ctx))}")
+            elif perm_lvl in range(7):
+                min_lvl = cogo.permissions["min"]
+                max_lvl = cogo.permissions["max"]
+                if perm_lvl < min_lvl:
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=min_lvl, min_lvl_name=Translator.translate(f'perm_lvl_{min_lvl}', ctx))}")
+                elif perm_lvl > max_lvl:
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_max_perm_violation', ctx, cog=cog, max_lvl=max_lvl, max_lvl_name=Translator.translate(f'perm_lvl_{max_lvl}', ctx))}")
                 else:
-                    overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
-                    overrides[cog] = perm_lvl
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+                    if cog not in overrides:
+                        overrides[cog] = {
+                            "required": perm_lvl,
+                            "commands": {},
+                            "people": []
+                        }
+                    else:
+                        overrides[cog]["required"] = perm_lvl
                     Configuration.saveConfig(ctx.guild.id)
                     await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_applied', ctx, cog=cog, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
             else:
@@ -293,9 +315,9 @@ class Serveradmin:
 
     @cog_overrides.command(name="remove")
     async def remove_cog_override(self, ctx, cog: str):
-        overrides = Configuration.getConfigVar(ctx.guild.id, "COG_OVERRIDES")
+        overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
         if cog in overrides:
-            del overrides[cog]
+            overrides[cog]["required"] = -1
             Configuration.saveConfig(ctx.guild.id)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_removed', ctx, cog=cog)}")
         else:
@@ -305,45 +327,80 @@ class Serveradmin:
     async def command_overrides(self, ctx):
         """command_overrides_help"""
         if ctx.invoked_subcommand is self.command_overrides:
-            overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
-            if len(overrides) == 0:
-                desc = Translator.translate('no_overrides', ctx)
-            else:
-                desc = "\n".join(f"{k}: {v} ({Translator.translate(f'perm_lvl_{v}')})" for k, v in overrides.items())
-            embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx), description=desc)
+            overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+            embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx))
+            has_overrides = False
+            for cog in self.bot.cogs:
+                if cog in overrides:
+                    out = gen_override_strings(ctx, overrides[cog])
+                    if out != "":
+                        has_overrides = True
+                        embed.add_field(name=cog, value=out)
+            if not has_overrides:
+                embed.description = Translator.translate('no_overrides', ctx)
             await ctx.send(embed=embed)
 
-
-    @command_overrides.command(name="add")
+    @command_overrides.command(name="set", aliases=["add"])
     async def add_command_override(self, ctx, command:str, perm_lvl:int):
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.instance
             cog_name = command_object.cog_name
-            if cog.critical:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} core cog that does not allow permission overrides")
-            elif perm_lvl in range(6):
-                if perm_lvl < cog.cog_perm:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} The {command} command is part of the {cog_name} cog that has a minimum permission lvl of {cog.cog_perm} ({self.perm_lvls[cog.cog_perm]})")
+            if not hasattr(cog, "permissions"):
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
+            elif perm_lvl in range(7):
+                perm_dict = Permissioncheckers.get_perm_dict(command.split(" "), cog.permissions)
+                if perm_lvl < perm_dict["min"]:
+                    lvl = cog.permissions['min']
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
+                elif perm_lvl > perm_dict["max"]:
+                    lvl = cog.permissions['max']
+                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_max_perm_violation', ctx, command=command, max_lvl=lvl, max_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
                 else:
-                    overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
-                    overrides[command] = perm_lvl
+                    overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+                    if cog_name not in overrides:
+                        overrides[cog_name] = {
+                            "required": perm_lvl,
+                            "commands": {},
+                            "people": []
+                        }
+                    override = overrides[cog_name]
+                    parts = command.split(" ")
+                    while len(parts) > 0:
+                        part = parts.pop(0)
+                        if not part in override["commands"]:
+                            override["commands"][part] = override = {
+                                "required": -1,
+                                "commands": {},
+                                "people": []
+                            }
+                        else:
+                            override = override["commands"][part]
+                    override["required"] = perm_lvl
                     Configuration.saveConfig(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} The {command} permission lvl is now set at {perm_lvl} ({self.perm_lvls[perm_lvl]})")
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_confirmation', ctx, command=command, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
             else:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} Please specify a permissions value of 0 (public), 1 (trusted), 2 (mod), 3 (admin), 4 (server owner only) or 5 (disabled)")
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('invalid_override_lvl', ctx)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find any command by that name")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_not_found', ctx)}")
 
     @command_overrides.command(name="remove")
     async def remove_command_override(self, ctx, command:str):
-        overrides = Configuration.getConfigVar(ctx.guild.id, "COMMAND_OVERRIDES")
-        if command in overrides:
-            del overrides[command]
-            Configuration.saveConfig(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Command override for {command} has been removed.")
-        else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} I don't have a command override for {command} to remove.")
+        command_object = self.bot.get_command(command)
+        if command_object is not None:
+            cog = command_object.instance
+            cog_name = command_object.cog_name
+            overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+            found = False
+            if cog_name in overrides:
+                override = Permissioncheckers.get_perm_dict(command.split(" "), overrides[cog_name], True)
+                if override is not None:
+                    found = True
+                    override["required"] = -1
+                    Configuration.saveConfig(ctx.guild.id)
+                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_removed', ctx, command=command)}")
+            if not found:
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_override_not_found', ctx, command=command)}")
 
     @configure.command()
     async def perm_denied_message(self, ctx, value:bool):

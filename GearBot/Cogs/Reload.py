@@ -11,7 +11,6 @@ from Util import GearbotLogging, Emoji, Translator
 
 
 class Reload:
-    critical = True
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot

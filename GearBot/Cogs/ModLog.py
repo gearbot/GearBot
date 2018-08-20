@@ -14,7 +14,6 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class ModLog:
-    critical = True
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot

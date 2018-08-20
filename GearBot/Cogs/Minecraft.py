@@ -11,8 +11,12 @@ from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers, Transla
 
 
 class Minecraft:
-    critical = False
-    cog_perm = 0
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {}
+    }
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -23,7 +27,7 @@ class Minecraft:
         Pages.register("cf", self.init_cf, self.update_cf)
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
     async def get_info(self, ctx, project_name, log):
         while project_name in self.fetching:

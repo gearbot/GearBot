@@ -8,7 +8,6 @@ from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, 
 
 INVITE_MATCHER = re.compile(r"(?:https?:\/\/)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|discordapp\.com\/invite)\/([\w|\d|-]+)", flags=re.IGNORECASE)
 class Censor:
-    critical = True
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot

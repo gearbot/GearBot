@@ -8,8 +8,21 @@ from database.DatabaseConnector import CustomCommand
 
 
 class CustCommands:
-    critical = False
-    cog_perm = 0
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {
+            "command|commands": {
+                "required": -1,
+                "commands": {
+                    "create|add|new": {"required": 2, "min": 2, "max": 6},
+                    "remove": {"required": 2, "min": 2, "max": 6},
+                    "update": {"required": 2, "min": 2, "max": 6},
+                }
+            }
+        }
+    }
 
     def __init__(self, bot):
         self.bot:commands.Bot = bot
@@ -17,7 +30,7 @@ class CustCommands:
         self.bot.loop.create_task(self.reloadCommands())
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
 
     async def reloadCommands(self):
@@ -56,7 +69,6 @@ class CustCommands:
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
     async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Create a new command"""
         if len(trigger) == 0:
@@ -80,7 +92,6 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
     async def remove(self, ctx:commands.Context, trigger:str):
         """Removes a custom command"""
         trigger = trigger.lower()
@@ -93,7 +104,6 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Sets a new reply for the specified command"""
         trigger = trigger.lower()
