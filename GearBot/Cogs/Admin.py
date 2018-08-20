@@ -144,6 +144,10 @@ class Admin:
             for page in pages:
                 await ctx.send(page)
 
+    @commands.command()
+    async def migrate_configs(self, ctx):
+        Configuration.migrate_configs(self.bot)
+
 
 
 
