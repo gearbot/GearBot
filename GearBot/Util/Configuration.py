@@ -93,6 +93,8 @@ def loadConfig(guild):
                 if key not in config:
                     if CONFIG_TEMPLATE[key] == []:
                         config[key] = []
+                    elif CONFIG_TEMPLATE[key] == {}:
+                        config[key] = dict()
                     else:
                         config[key] = CONFIG_TEMPLATE[key]
             if "MOD_ROLE_ID" in config:
