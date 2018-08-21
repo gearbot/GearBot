@@ -17,7 +17,7 @@ from discord.ext import commands
 from peewee import PeeweeException
 
 import Util
-from Util import Configuration, GearbotLogging, Emoji, Translator
+from Util import Configuration, GearbotLogging, Emoji, Translator, DocUtils
 from Util import Utils as Utils
 from database import DatabaseConnector
 
@@ -81,6 +81,8 @@ async def on_ready():
 
         if Configuration.getMasterConfigVar("CROWDIN_KEY") is not None:
             bot.loop.create_task(translation_task())
+
+        await DocUtils.update_docs(bot)
 
         bot.STARTUP_COMPLETE = True
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))

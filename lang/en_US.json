@@ -213,5 +213,6 @@
   "softban_confirmation": "{user} (`{user_id}`) was softbanned. Reason: `{reason}`",
   "softban_log": "{user} (`{user_id}`) was softbanned by {moderator} (`{moderator_id}`). Reason: `{reason}`",
   "softban_not_allowed": "You are not allowed to softban {user}.",
-  "configure_mute_help": "Sets what role to use for muting people"
+  "configure_mute_help": "Sets what role to use for muting people",
+  "help_footer": "You can get more info about a command (params and subcommands) by using '{prefix}help {signature} <subcommand>'\nCommands followed by ↪  have subcommands"
 }
