@@ -108,16 +108,22 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def softban(self, ctx:commands.Context, user: discord.Member, *, reason="No reason given."):
-        """"Bans an user then unbans them afterwards."""
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or ctx.guild.owner == ctx.author:
-            self.bot.data["forced_exits"].append(user.id)
-            await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
-            await ctx.guild.unban(user)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {user.name}#{user.discriminator} (`{user.id}`) was softbanned! Reason: `{reason}`")
-            await GearbotLogging.logToModLog(ctx.guild, f":door: {user.name}#{user.discriminator} (`{user.id}`) was soft-banned by {ctx.author.name}#{ctx.author.discriminator}. Reason: `{reason}`")
-            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason)
+        """softban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
+            if ctx.me.top_role > user.top_role:
+                self.bot.data["forced_exits"].append(user.id)
+                self.bot.data["unbans"].append(user.id)
+                await ctx.guild.ban(user, reason=f"softban - Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
+                await ctx.guild.unban(user)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
+                await GearbotLogging.logToModLog(ctx.guild, f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason)
+            else:
+                await ctx.send(Translator.translate('softban_unable', ctx.guild.id, user=Utils.clean_user(user)))
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} You are not allowed to softban {user.name}#{user.discriminator}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('softban_not_allowed', ctx.guild.id, user=user)}")
 
     @commands.command()
     @commands.guild_only()

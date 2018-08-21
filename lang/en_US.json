@@ -207,5 +207,11 @@
   "command_override_confirmation": "The `{command}` permission lvl is now set at {perm_lvl} ({perm_lvl_name})",
   "command_not_found": "I can't find any command by that name",
   "command_override_removed": "Command override for `{command}` has been removed.",
-  "command_override_not_found": "I don't have a command override for `{command}` to remove."
+  "command_override_not_found": "I don't have a command override for `{command}` to remove.",
+  "softban_help": "Soft bans a user from the server (ban, removes last day of messages and unbans).",
+  "softban_unable": "Unable to softban {user} as I do not have a higher role than them.",
+  "softban_confirmation": "{user} (`{user_id}`) was softbanned. Reason: `{reason}`",
+  "softban_log": "{user} (`{user_id}`) was softbanned by {moderator} (`{moderator_id}`). Reason: `{reason}`",
+  "softban_not_allowed": "You are not allowed to softban {user}.",
+  "configure_mute_help": "Sets what role to use for muting people"
 }
