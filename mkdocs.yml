@@ -1,0 +1,6 @@
+site_name: GearBot
+nav:
+  - Home: 'index.md'
+  - Guides:
+      - Quickstart: 'Guides/quickstart.md'
+      - Advanced permissions: 'Guides/permissions.md'

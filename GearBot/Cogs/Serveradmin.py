@@ -174,7 +174,6 @@ class Serveradmin:
         if role == ctx.guild.default_role:
             return await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'default_role_forbidden', ctx)}")
-        """Sets what role to use for mutes"""
         guild:discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:

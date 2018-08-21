@@ -110,5 +110,6 @@ modtester/
 gearbox/
 .gradle/
 config/
+site/
 
 !lang/*
