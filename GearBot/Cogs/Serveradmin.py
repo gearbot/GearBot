@@ -170,6 +170,10 @@ class Serveradmin:
 
     @configure.command(aliases=["muterole"])
     async def mute_role(self, ctx:commands.Context, role:discord.Role):
+        """Prevent usage of @everyone as the mute role"""
+        if role == ctx.guild.default_role:
+            return await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'default_role_forbidden', ctx)}")
         """Sets what role to use for mutes"""
         guild:discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
