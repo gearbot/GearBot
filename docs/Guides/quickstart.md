@@ -9,7 +9,7 @@ If GearBot has been on the server before it will continue on where it left of be
 To run any configuration commands you need permission lvl 3 (admin) or higher, see the advanced guide for details, for now it's enough to know that by default you have this if you are the server owner or have a role with the"administrator" permission enabled. If all people who you want to be able to reconfigure GearBot have admin perms, and all moderators have ban permissions: Congrats you are done for this bit and can skip ahead!
 
 #**Prefix**
-GearBots default prefix is ``!`` but this is one used by many bots, if you have any other bots that also reply to this you can give GearBot a new prefix (if you are a lvl 3 (admin) person, see the [Advanced permissions guide](Permissions.md))!
+GearBots default prefix is ``!`` but this is one used by many bots, if you have any other bots that also reply to this you can give GearBot a new prefix (if you are a lvl 3 (admin) person, see the [Advanced permissions guide](permissions.md))!
 It will also respond to you mentioning him (``@GearBot#7326``) instead of using ``!`` regardless of his configured server prefix.
 
 Anyways, here's the command, just replace ``<prefix>`` with what you want GearBot to respond to (unless you want GearBot to respond to ``<prefix>``, if so that's fine, don't replace it):
