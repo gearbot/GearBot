@@ -107,3 +107,12 @@ async def log_to_minor_log(guild, message=None, embed=None, file=None):
         if perms.send_messages:
             await minor_log.send(message, embed=embed, file=file)
 
+async def message_owner(bot, message):
+    if bot.owner_id is None:
+        app = await bot.application_info()
+        bot.owner_id = app.owner.id
+    owner =  bot.get_user(bot.owner_id)
+    dm_channel = owner.dm_channel
+    if dm_channel is None:
+        await owner.create_dm()
+    await owner.dm_channel.send(message)
