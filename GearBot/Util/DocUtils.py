@@ -61,8 +61,8 @@ async def update_site(bot):
         error = f"{error.decode('utf-8')}\n{err.decode('utf-8')}"
         GearbotLogging.info("Site update output")
         if error == "\n":
-            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')}```")
+            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output}```")
         else:
-            message = f"{Emoji.get_chat_emoji('NO')} Website update failed, script output:```yaml\n{output.decode('utf-8')} \n``` script error output:```yaml\n{error.decode('utf-8')} \n```"
+            message = f"{Emoji.get_chat_emoji('NO')} Website update failed, script output:```yaml\n{output} \n``` script error output:```yaml\n{error} \n```"
             await GearbotLogging.logToBotlog(message)
             await GearbotLogging.message_owner(bot, message)
