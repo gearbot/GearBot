@@ -55,14 +55,11 @@ async def send_buffer(channel, buffer):
 async def update_site(bot):
     if os.path.isfile(f"./site-updater.sh") and platform.system().lower() != "windows":
         await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
-        output, error = await Utils.execute(["chmod +x site-updater.sh"])
-        out, err = await Utils.execute(["./site-updater.sh"])
-        output = f"{output.decode('utf-8')}\n{out.decode('utf-8')}"
-        error = f"{error.decode('utf-8')}\n{err.decode('utf-8')}"
+        code, output, error = await Utils.execute(["chmod +x site-updater.sh && ./site-updater.sh"])
         GearbotLogging.info("Site update output")
-        if error == "\n":
-            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output}```")
+        if code is 0:
+            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')} ```")
         else:
-            message = f"{Emoji.get_chat_emoji('NO')} Website update failed, script output:```yaml\n{output} \n``` script error output:```yaml\n{error} \n```"
+            message = f"{Emoji.get_chat_emoji('NO')} Website update failed with code {code}\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{error.decode('utf-8')} ```"
             await GearbotLogging.logToBotlog(message)
             await GearbotLogging.message_owner(bot, message)

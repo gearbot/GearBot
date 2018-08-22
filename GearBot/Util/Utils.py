@@ -83,4 +83,5 @@ async def execute(command):
     p = Popen(command, cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while p.poll() is None:
         await asyncio.sleep(1)
-    return p.communicate()
+    out, error = p.communicate()
+    return p.returncode, out, error
