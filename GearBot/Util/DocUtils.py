@@ -61,8 +61,8 @@ async def send_buffer(channel, buffer):
 async def update_site():
     if os.path.isfile(f"./site-updater.sh") and platform.system().lower() != "windows":
         await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
-        p = Popen(["site-updater.sh"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+        p = Popen(["./site-updater.sh"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
         while p.poll() is None:
             await asyncio.sleep(1)
         out, error = p.communicate()
-        await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{out.decode('utf-8')}```")
+        await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated")
