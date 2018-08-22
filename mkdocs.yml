@@ -1,4 +1,6 @@
 site_name: GearBot
+theme:
+   name: spacelab
 nav:
   - Home: 'index.md'
   - Commands: 'commands.md'
