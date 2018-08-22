@@ -1,4 +1,8 @@
+import asyncio
 import json
+import os
+import subprocess
+from subprocess import Popen
 
 from discord import NotFound
 from discord.ext import commands
@@ -74,3 +78,9 @@ def clean_user(user):
 
 def pad(text, length, char=' '):
     return f"{text}{char * (length-len(text))}"
+
+async def execute(command):
+    p = Popen(command, cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while p.poll() is None:
+        await asyncio.sleep(1)
+    return p.communicate()
