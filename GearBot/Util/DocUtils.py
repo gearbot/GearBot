@@ -14,11 +14,10 @@ image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
 
 async def update_docs(bot):
     await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
-    if await sync_guides(bot):
-        await update_site()
+    await sync_guides(bot)
+    await update_site()
 
 async def sync_guides(bot):
-    synced = False
     category = bot.get_channel(Configuration.getMasterConfigVar("GUIDES"))
     if category is not None:
         guide_hashes = Utils.fetchFromDisk("guide_hashes")
@@ -31,7 +30,6 @@ async def sync_guides(bot):
                     if not name in guide_hashes or guide_hashes[name] != h:
                         GearbotLogging.info(f"Guide {name} is outdated, updating...")
                         guide_hashes[name] = h
-                        synced = True
                         with open(f"docs/Guides/{name}.md", 'r') as file:
                             buffer = ""
                             await channel.purge()
@@ -50,7 +48,6 @@ async def sync_guides(bot):
             else:
                 GearbotLogging.info(f"Found guide channel {name} but file for it!")
         Utils.saveToDisk("guide_hashes", guide_hashes)
-        return synced
 
 async def send_buffer(channel, buffer):
     pages = Pages.paginate(buffer, max_lines=500)
