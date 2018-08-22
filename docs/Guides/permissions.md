@@ -3,6 +3,7 @@ Permissions is useful to control who can tell GearBot to do certain things and u
 
 #**Different permission levels**
 GearBot have different permission levels and are classified like this:
+```
 ╔════╦═════════════════╦═══════════════════════════════════════════════════╗
 ║ Nr ║      Name       ║                    Requirement                    ║
 ╠════╬═════════════════╬═══════════════════════════════════════════════════╣
@@ -14,6 +15,7 @@ GearBot have different permission levels and are classified like this:
 ║  5 ║ Server owner    ║ The person who owns the server                    ║
 ║  6 ║ Disabled        ║ Perm level nobody can get, used to disable stuff  ║
 ╚════╩═════════════════╩═══════════════════════════════════════════════════╝
+```
 If a command or Cog has a certain permission level it means that the user needs to have the requirement for that level in order to use it.
 
 #**Change the permissions for a Cog**
