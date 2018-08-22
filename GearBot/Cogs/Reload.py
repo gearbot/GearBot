@@ -1,13 +1,10 @@
-import asyncio
 import importlib
 import os
-import subprocess
-from subprocess import Popen
 
 from discord.ext import commands
 
 import Util
-from Util import GearbotLogging, Emoji, Translator, DocUtils
+from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils
 
 
 class Reload:
@@ -74,11 +71,12 @@ class Reload:
     async def pull(self, ctx):
         """Pulls from github so an upgrade can be performed without full restart"""
         async with ctx.typing():
-            p = Popen(["git pull origin master"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
-            while p.poll() is None:
-                await asyncio.sleep(1)
-            out, error = p.communicate()
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
+            code, out, error = await Utils.execute(["git pull origin master"])
+            if code is 0:
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}```")
+            else:
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}\n{error.decode('utf-8')}```")
 
 def setup(bot):
     bot.add_cog(Reload(bot))

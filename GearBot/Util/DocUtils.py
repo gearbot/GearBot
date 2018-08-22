@@ -4,8 +4,9 @@ import platform
 import re
 
 import discord
+from discord.ext.commands import GroupMixin
 
-from Util import Configuration, Utils, Pages, GearbotLogging, Emoji
+from Util import Configuration, Utils, Pages, GearbotLogging, Emoji, Permissioncheckers, Translator
 
 image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
 
@@ -13,6 +14,7 @@ async def update_docs(bot):
     await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
     await sync_guides(bot)
     await update_site(bot)
+    generate_command_list(bot)
 
 async def sync_guides(bot):
     category = bot.get_channel(Configuration.getMasterConfigVar("GUIDES"))
@@ -63,3 +65,24 @@ async def update_site(bot):
             message = f"{Emoji.get_chat_emoji('NO')} Website update failed with code {code}\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{error.decode('utf-8')} ```"
             await GearbotLogging.logToBotlog(message)
             await GearbotLogging.message_owner(bot, message)
+
+def generate_command_list(bot):
+    excluded = [
+        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload"
+    ]
+    page = ""
+    for cog in bot.cogs:
+        if cog not in excluded:
+            page += f"#{cog}\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
+            for command in bot.get_cog_commands(cog):
+                page += gen_command_listing(command)
+            page += "\n\n"
+    with open("docs/commands.md", "w") as file:
+        file.write(page)
+
+def gen_command_listing(command):
+    listing = f"|{command.qualified_name}|{Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']}|{Translator.translate(command.short_doc, None)}|\n"
+    if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
+        for c in command.all_commands.values():
+            listing += gen_command_listing(c)
+    return listing

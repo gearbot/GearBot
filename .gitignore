@@ -111,5 +111,6 @@ gearbox/
 .gradle/
 config/
 site/
+docs/commands.md
 
 !lang/*
