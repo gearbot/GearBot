@@ -57,10 +57,10 @@ async def update_site(bot):
         await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
         output, error = await Utils.execute(["chmod +x site-updater.sh"])
         out, err = await Utils.execute(["./site-updater.sh"])
-        output += f"\n{out}"
-        error += f"\n{err}"
+        output = f"{output.decode('utf-8')}\n{out.decode('utf-8')}"
+        error = f"{error.decode('utf-8')}\n{err.decode('utf-8')}"
         GearbotLogging.info("Site update output")
-        if error == "":
+        if error == "\n":
             await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')}```")
         else:
             message = f"{Emoji.get_chat_emoji('NO')} Website update failed, script output:```yaml\n{output.decode('utf-8')} \n``` script error output:```yaml\n{error.decode('utf-8')} \n```"
