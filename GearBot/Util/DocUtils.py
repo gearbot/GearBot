@@ -58,7 +58,7 @@ async def update_site(bot):
         code, output, error = await Utils.execute(["chmod +x site-updater.sh && ./site-updater.sh"])
         GearbotLogging.info("Site update output")
         if code is 0:
-            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')} ```")
+            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')}\n{error.decode('utf-8')}```")
         else:
             message = f"{Emoji.get_chat_emoji('NO')} Website update failed with code {code}\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{error.decode('utf-8')} ```"
             await GearbotLogging.logToBotlog(message)
