@@ -18,6 +18,7 @@ bot.user_messages = 0
 bot.bot_messages = 0
 bot.self_messages = 0
 bot.commandCount = 0
+bot.custom_command_count = 0
 bot.errors = 0
 bot.database_errors = 0
 

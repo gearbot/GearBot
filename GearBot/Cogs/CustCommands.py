@@ -128,7 +128,7 @@ class CustCommands:
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
                     await message.channel.send(self.commands[message.guild.id][trigger])
-                    self.bot.commandCount = self.bot.commandCount + 1
+                    self.bot.custom_command_count += 1
 
 
 
