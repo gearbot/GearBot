@@ -42,6 +42,8 @@ def prefix_callable(bot, message):
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
+        info = await bot.application_info()
+        await GearbotLogging.logToBotlog(message=f"Spinning up the gears!")
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
@@ -72,6 +74,7 @@ async def on_ready(bot):
         await DocUtils.update_docs(bot)
 
         bot.STARTUP_COMPLETE = True
+        await GearbotLogging.logToBotlog(message=f"All gears at full speed, {info.name} ready to go!")
     await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
 

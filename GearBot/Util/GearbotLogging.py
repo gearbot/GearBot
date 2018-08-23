@@ -61,7 +61,7 @@ async def onReady(bot:commands.Bot, channelID):
     if BOT_LOG_CHANNEL is None:
         logger.error("Logging channel is misconfigured, aborting startup!")
         await bot.logout()
-    info = await bot.application_info()
+
     if len(startupErrors) > 0:
         await logToBotlog(f":rotating_light: Caught {len(startupErrors)} {'exceptions' if len(startupErrors) > 1 else 'exception'} during startup.")
         for error in startupErrors:
@@ -81,8 +81,7 @@ async def onReady(bot:commands.Bot, channelID):
             if len(stacktrace) > 0:
                 embed.add_field(name="Stacktrace", value=stacktrace)
             await logToBotlog(embed=embed)
-    if not bot.STARTUP_COMPLETE:
-        await logToBotlog(message=f"The gears are turning, {info.name} ready!")
+
 
 
 

@@ -7,15 +7,6 @@ from discord.ext import commands
 
 import Util
 from Util import Configuration, GearbotLogging, GlobalHandlers
-import logging
-import os
-from argparse import ArgumentParser
-
-import discord
-from discord.ext import commands
-
-import Util
-from Util import Configuration, GearbotLogging, GlobalHandlers
 
 
 def prefix_callable(bot, message):

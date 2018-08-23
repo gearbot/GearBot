@@ -17,7 +17,11 @@ class Moderation:
         "min": 2,
         "max": 6,
         "required": 2,
-        "commands": {}
+        "commands": {
+            "userinfo": {"required": 2, "min": 0, "max": 6},
+            "serverinfo": {"required": 2, "min": 0, "max": 6},
+            "roles": {"required": 2, "min": 0, "max": 6},
+        }
     }
 
     def __init__(self, bot):
