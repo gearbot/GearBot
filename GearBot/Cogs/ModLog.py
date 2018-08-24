@@ -70,7 +70,7 @@ class ModLog:
     async def prep(self):
         for guild in self.bot.guilds:
             if Configuration.getConfigVar(guild.id, "MINOR_LOGS") is not 0:
-                await self.buildCache(guild)
+                self.bot.loop.create_task(self.buildCache(guild))
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
