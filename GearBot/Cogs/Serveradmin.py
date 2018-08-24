@@ -363,7 +363,7 @@ class Serveradmin:
                     overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
                     if cog_name not in overrides:
                         overrides[cog_name] = {
-                            "required": perm_lvl,
+                            "required": -1,
                             "commands": {},
                             "people": []
                         }
