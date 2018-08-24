@@ -167,7 +167,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         GearbotLogging.exception(f"Command execution failed:\n"
                                  f"    Command: {ctx.command}\n"
                                  f"    Message: {ctx.message.content}\n"
-                                 f"    Channel: {'Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else ctx.channel.name}\n"
+                                 f"    Channel: {'Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else ctx.channel.name}\n"
                                  f"    Sender: {ctx.author.name}#{ctx.author.discriminator}\n"
                                  f"    Exception: {error}", error.original)
         # notify caller
@@ -180,7 +180,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         embed.add_field(name="Command", value=ctx.command)
         embed.add_field(name="Original message", value=Utils.trim_message(ctx.message.content, 1024))
         embed.add_field(name="Channel",
-                        value='Private Message' if isinstance(ctx.channel, abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
+                        value='Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
         embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
         embed.add_field(name="Exception", value=error.original)
         v = ""
