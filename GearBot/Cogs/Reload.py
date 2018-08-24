@@ -34,7 +34,8 @@ class Reload:
         if os.path.isfile(f"Cogs/{cog}.py") or os.path.isfile(f"GearBot/Cogs/{cog}.py"):
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f"**{cog}** has been loaded!")
-            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}.", log=True)
+            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}.")
+            GearbotLogging.info(f"{cog} has been loaded")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
@@ -44,16 +45,19 @@ class Reload:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded.')
             await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
+            GearbotLogging.info(f"{cog} has been unloaded")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
         async with ctx.typing():
-            await GearbotLogging.logToBotlog("Hot reload in progress...")
+            message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
+            ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
+            GearbotLogging.info("Initiating hot reload")
             utils = importlib.reload(Util)
             await utils.reload(self.bot)
-            await GearbotLogging.logToBotlog("Reloading all cogs...")
+            GearbotLogging.info("Reloading all cogs...")
             temp = []
             for cog in ctx.bot.cogs:
                 temp.append(cog)
@@ -63,7 +67,9 @@ class Reload:
                 self.bot.load_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been loaded.')
             await GearbotLogging.logToBotlog("Hot reload complete.")
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} Hot reload complete.")
+            m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
+            await message.edit(content=m)
+        await ctx_message.edit(content=m)
         await Translator.upload()
         await DocUtils.update_docs(ctx.bot)
 

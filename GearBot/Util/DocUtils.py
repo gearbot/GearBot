@@ -11,10 +11,11 @@ from Util import Configuration, Utils, Pages, GearbotLogging, Emoji, Permissionc
 image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
 
 async def update_docs(bot):
-    await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
+    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
     await sync_guides(bot)
-    await update_site(bot)
     generate_command_list(bot)
+    await update_site(bot)
+    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Documentation updated")
 
 async def sync_guides(bot):
     category = bot.get_channel(Configuration.getMasterConfigVar("GUIDES"))
@@ -56,15 +57,15 @@ async def send_buffer(channel, buffer):
 
 async def update_site(bot):
     if os.path.isfile(f"./site-updater.sh") and platform.system().lower() != "windows":
-        await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
+        log_message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
         code, output, error = await Utils.execute(["chmod +x site-updater.sh && ./site-updater.sh"])
         GearbotLogging.info("Site update output")
         if code is 0:
-            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')}\n{error.decode('utf-8')}```")
+            message = f"{Emoji.get_chat_emoji('YES')} Website updated:```yaml\n{output.decode('utf-8')}\n{error.decode('utf-8')}```"
         else:
             message = f"{Emoji.get_chat_emoji('NO')} Website update failed with code {code}\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{error.decode('utf-8')} ```"
-            await GearbotLogging.logToBotlog(message)
             await GearbotLogging.message_owner(bot, message)
+        await log_message.edit(content=message)
 
 def generate_command_list(bot):
     excluded = [

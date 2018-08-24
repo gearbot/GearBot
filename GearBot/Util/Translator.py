@@ -81,11 +81,12 @@ async def update():
                 await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
 async def upload():
+    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
     t = threading.Thread(target=upload_file)
     t.start()
     while t.is_alive():
         await asyncio.sleep(1)
-    await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Translations file has been uploaded")
+    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Translations file has been uploaded")
 
 def upload_file():
     data = {'files[master/lang/en_US.json]': open('lang/en_US.json', 'r')}

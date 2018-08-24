@@ -64,7 +64,7 @@ class Moderation:
         """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
         await Pages.create_new("roles", ctx)
 
-    @commands.command()
+    @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, user: discord.Member, *, reason=""):
@@ -86,7 +86,7 @@ class Moderation:
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('kick_not_allowed', ctx.guild.id, user=user)}")
 
-    @commands.command()
+    @commands.command(aliases=["👉 🚪"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx: commands.Context, user: discord.Member, *, reason=""):

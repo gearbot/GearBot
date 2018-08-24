@@ -85,10 +85,8 @@ async def onReady(bot:commands.Bot, channelID):
 
 
 
-async def logToBotlog(message = None, embed = None, log = True):
-    await BOT_LOG_CHANNEL.send(content=message, embed=embed)
-    if log:
-        info(message)
+async def logToBotlog(message = None, embed = None):
+    return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
 
 async def logToModLog(guild, message=None, embed=None):
     modlog:discord.TextChannel = guild.get_channel(Configuration.getConfigVar(guild.id, "MOD_LOGS"))

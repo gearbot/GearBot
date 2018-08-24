@@ -25,8 +25,7 @@ class ModLog:
         self.running = False
 
 
-    async def buildCache(self, guild:discord.Guild, limit = 250):
-        start = time.perf_counter()
+    async def buildCache(self, guild:discord.Guild, limit = 500, startup=False):
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
         newCount = 0
         editCount = 0
@@ -38,7 +37,7 @@ class ModLog:
                 messages = dict()
                 for message in logged_messages:
                     messages[message.messageid] = message
-                async for message in channel.history(limit=limit, reverse=False):
+                async for message in channel.history(limit=limit, reverse=False, before=self.cache_message if startup else None):
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
@@ -65,12 +64,22 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
-        GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count}) in {time.perf_counter() - start }s.")
+                    if count % 50 is 0:
+                        await asyncio.sleep(0)
+        GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
+        if startup:
+            self.to_cache -= 1
+            if self.to_cache is 0:
+                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {round(time.perf_counter() - self.cache_start, 2)}s")
 
     async def prep(self):
+        self.cache_message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
+        self.to_cache = 0
         for guild in self.bot.guilds:
             if Configuration.getConfigVar(guild.id, "MINOR_LOGS") is not 0:
-                self.bot.loop.create_task(self.buildCache(guild))
+                self.to_cache += 1
+                self.bot.loop.create_task(self.buildCache(guild, startup=True))
+        self.cache_start = time.perf_counter()
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
