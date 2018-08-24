@@ -66,7 +66,7 @@ class Reload:
                 GearbotLogging.info(f'{cog} has been unloaded.')
                 self.bot.load_extension(f"Cogs.{cog}")
                 GearbotLogging.info(f'{cog} has been loaded.')
-            await GearbotLogging.logToBotlog("Hot reload complete.")
+            GearbotLogging.info("Hot reload complete.")
             m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
             await message.edit(content=m)
         await ctx_message.edit(content=m)
