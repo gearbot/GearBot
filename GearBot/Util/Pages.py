@@ -1,5 +1,4 @@
 import discord
-from discord import utils
 
 from Util import Utils, Emoji, Translator
 
@@ -7,17 +6,7 @@ page_handlers = dict()
 
 known_messages = dict()
 
-prev_id = 465582003669041163
-next_id = 465582003677298708
-
-prev_emoji = None
-next_emoji = None
-
-
 def on_ready(bot):
-    global prev_emoji, next_emoji
-    prev_emoji = utils.get(bot.emojis, id=prev_id)
-    next_emoji = utils.get(bot.emojis, id=next_id)
     load_from_disc()
 
 
@@ -46,8 +35,8 @@ async def create_new(type, ctx, **kwargs):
             data[k] = v
         known_messages[str(message.id)] = data
         try:
-            await message.add_reaction(prev_emoji)
-            await message.add_reaction(next_emoji)
+            await message.add_reaction(Emoji.get_emoji('LEFT'))
+            await message.add_reaction(Emoji.get_emoji('RIGHT'))
         except discord.Forbidden:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms', ctx, prev=Emoji.get_chat_emoji('LEFT'), next=Emoji.get_chat_emoji('RIGHT'))} {Emoji.get_chat_emoji('WARNING')}")
 

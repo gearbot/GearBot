@@ -11,3 +11,7 @@ def on_ready(bot):
 def get_chat_emoji(name):
     emoji = emojis[name]
     return f"<:{emoji.name}:{emoji.id}>"
+
+def get_emoji(name):
+    #TODO: fall back to unicode if not found
+    return emojis[name]

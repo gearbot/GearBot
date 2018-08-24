@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Pages
+from Util import Pages, Emoji
 
 
 class PageHandler:
@@ -18,17 +18,18 @@ class PageHandler:
             message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
         except discord.NotFound:
             pass
-        if payload.emoji.id == Pages.prev_id:
-            if await Pages.update(self.bot, message , "PREV", payload.user_id):
-                try:
-                    await message.remove_reaction(Pages.prev_emoji, user)
-                except discord.Forbidden:
-                    pass
-        elif payload.emoji.id == Pages.next_id:
-            if await Pages.update(self.bot, message, "NEXT", payload.user_id):
-                try:
-                    await message.remove_reaction(Pages.next_emoji, user)
-                except discord.Forbidden:
-                    pass
+        else:
+            if payload.emoji.id == Emoji.get_emoji('LEFT').id:
+                if await Pages.update(self.bot, message , "PREV", payload.user_id):
+                    try:
+                        await message.remove_reaction(Emoji.get_emoji('LEFT'), user)
+                    except discord.Forbidden:
+                        pass
+            elif payload.emoji.id == Emoji.get_emoji('RIGHT').id:
+                if await Pages.update(self.bot, message, "NEXT", payload.user_id):
+                    try:
+                        await message.remove_reaction(Emoji.get_emoji('RIGHT'), user)
+                    except discord.Forbidden:
+                        pass
 def setup(bot):
     bot.add_cog(PageHandler(bot))
