@@ -64,22 +64,29 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
-                    if count % 50 is 0:
+                    if count % 25 is 0:
                         await asyncio.sleep(0)
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
-        if startup:
-            self.to_cache -= 1
-            if self.to_cache is 0:
-                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {round(time.perf_counter() - self.cache_start, 2)}s")
 
     async def prep(self):
         self.cache_message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
-        self.to_cache = 0
+        self.to_cache = []
         for guild in self.bot.guilds:
             if Configuration.getConfigVar(guild.id, "MINOR_LOGS") is not 0:
-                self.to_cache += 1
-                self.bot.loop.create_task(self.buildCache(guild, startup=True))
+                self.to_cache.append(guild)
+        for i in range(min(3, len(self.bot.guilds))):
+            self.bot.loop.create_task(self.startup_cache())
         self.cache_start = time.perf_counter()
+
+    async def startup_cache(self):
+        while self.to_cache is not None:
+            if len(self.to_cache) > 0:
+                guild = self.to_cache.pop()
+                await self.buildCache(guild, startup=True)
+            else:
+                self.to_cache = None
+                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {round(time.perf_counter() - self.cache_start, 2)}s")
+
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
