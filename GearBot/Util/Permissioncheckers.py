@@ -83,14 +83,15 @@ def get_perm_dict(pieces, perm_dict, strict=False):
     found = True
     while len(pieces) > 0 and found:
         found = False
-        for entry, value in perm_dict["commands"].items():
-            if pieces[0] in entry.split("|"):
-                perm_dict = value
-                pieces.pop(0)
-                found = True
-                break
-        if not found and len(pieces) > 0 and strict:
-            return None
+        if "commands" in perm_dict.keys():
+            for entry, value in perm_dict["commands"].items():
+                if pieces[0] in entry.split("|"):
+                    perm_dict = value
+                    pieces.pop(0)
+                    found = True
+                    break
+            if not found and len(pieces) > 0 and strict:
+                return None
     return perm_dict
 
 def get_user_lvl(ctx:commands.Context):
