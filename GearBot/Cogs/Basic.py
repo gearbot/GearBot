@@ -1,3 +1,4 @@
+import asyncio
 import random
 import time
 from datetime import datetime
@@ -6,7 +7,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -22,11 +23,14 @@ class Basic:
         self.bot:commands.Bot = bot
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
+        self.running = True
+        self.bot.loop.create_task(self.taco_eater())
 
     def __unload(self):
         #cleanup
         Pages.unregister("help")
         Pages.unregister("role")
+        self.running = False
 
 
     async def __local_check(self, ctx):
@@ -213,6 +217,14 @@ class Basic:
         if role.id in roles:
             roles.remove(role.id)
             Configuration.saveConfig(role.guild.id)
+
+    async def taco_eater(self):
+        """A person can eat a taco every 5 mins, we run every 5s"""
+        GearbotLogging.info("Time to start munching on some 🌮")
+        while self.running:
+            self.bot.eaten += len(self.bot.users) / 60
+            await asyncio.sleep(5)
+        GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
 def setup(bot):
     bot.add_cog(Basic(bot))
