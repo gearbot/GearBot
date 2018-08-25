@@ -83,6 +83,7 @@ class ModLog:
             if len(self.to_cache) > 0:
                 guild = self.to_cache.pop()
                 await self.buildCache(guild, startup=True)
+                await asyncio.sleep(0)
             else:
                 self.to_cache = None
                 await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {round(time.perf_counter() - self.cache_start, 2)}s")
