@@ -46,7 +46,7 @@ def translate(key, location, **kwargs):
 
 
 async def update():
-    await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
+    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
     project_key = Configuration.getMasterConfigVar("CROWDIN_KEY")
     session: aiohttp.ClientSession = bot.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?key={project_key}&json",) as reply:
@@ -76,9 +76,9 @@ async def update():
                             os.rename(os.path.abspath(f"temp/{entry.filename}"), os.path.abspath(f"lang/{filename}"))
                             shutil.rmtree("temp", ignore_errors=True)
                     load_translations()
-                    await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
+                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
             else:
-                await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
+                await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
 async def upload():
     message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
