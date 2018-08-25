@@ -7,4 +7,5 @@ nav:
   - Guides:
       - Quickstart: 'Guides/quickstart.md'
       - Self assignable roles: 'Guides/selfroles.md'
+      - Custom Commands: 'Guides/custom_commands.md'
       - Advanced permissions: 'Guides/permissions.md'
