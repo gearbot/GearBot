@@ -65,12 +65,17 @@ def trim_message(message, limit):
 def clean(text):
     return text.replace("@","@\u200b").replace("`", "")
 
+known_invalid_users = []
+
 async def username(id):
+    if id in known_invalid_users:
+        return "UNKNOWN USER"
     user = bot.get_user(id)
     if user is None:
         try:
             user = await bot.get_user_info(id)
         except NotFound:
+            known_invalid_users.append(id)
             return "UNKNOWN USER"
     return clean_user(user)
 
