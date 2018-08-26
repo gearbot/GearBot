@@ -15,6 +15,13 @@ bot = None
 def on_ready(actual_bot):
     global bot
     bot = actual_bot
+    bot.loop.create_task(cache_nuke())
+
+async def cache_nuke():
+    while not bot.is_closed():
+        known_invalid_users.clear()
+        user_cache.clear()
+        await asyncio.sleep(5*60)
 
 
 def fetchFromDisk(filename):
