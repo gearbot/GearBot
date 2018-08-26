@@ -154,7 +154,7 @@ class ModLog:
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel:discord.TextChannel = self.bot.get_channel(channelid)
-            if logChannel is not None:
+            if logChannel is not None and logChannel.permissions_for(member.guild.me).send_messages:
                 dif = (datetime.datetime.utcnow() - member.created_at)
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
@@ -169,7 +169,7 @@ class ModLog:
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
-            if logChannel is not None:
+            if logChannel is not None and logChannel.permissions_for(member.guild.me).send_messages:
                 await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
