@@ -66,14 +66,18 @@ def clean(text):
     return text.replace("@","@\u200b").replace("`", "")
 
 known_invalid_users = []
+user_cache = {}
 
 async def username(id):
     if id in known_invalid_users:
         return "UNKNOWN USER"
+    if id in user_cache:
+        return user_cache[id]
     user = bot.get_user(id)
     if user is None:
         try:
             user = await bot.get_user_info(id)
+            user_cache[id] = user
         except NotFound:
             known_invalid_users.append(id)
             return "UNKNOWN USER"
