@@ -340,11 +340,20 @@ class Moderation:
     async def user(self, ctx, user:str, amount=100):
         user = await Utils.conver_to_id(ctx, user)
         if user is not None:
+            count = self.archive_count
+            self.archive_count += 1
+            GearbotLogging.info(
+                f"[Archive {count}] Archive collection initializing, target user: {user.name} ({user.id}), requested amount: {amount}")
+            start = time.perf_counter()
             channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
             if channel_id is not 0:
+                GearbotLogging.info(f"[Archive {count}] All checks passed, collecting messages")
                 messages = LoggedMessage.select().where(
                     (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid).limit(amount)
+                GearbotLogging.info(
+                    f"[Archive {count}] Message collection complete, collected {len(messages)} in {time.perf_counter() - start}, handing over to shipping for shipping")
                 await Archive.ship_messages(ctx, messages)
+                GearbotLogging.info(f"[Archive {count}] Archive shipped!")
             else:
                 await ctx.send("Please enable edit logs so i can archive users")
         else:
