@@ -36,4 +36,4 @@ async def ship_messages(ctx, messages, filename="Message archive.txt", count=0):
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(filename))
         os.remove(filename)
     else:
-        await ctx.send(f"{Emoji.get_chat_emoji('WARN')} {Translator.translate('archive_empty', ctx)}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_empty', ctx)}")
