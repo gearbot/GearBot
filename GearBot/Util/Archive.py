@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 
 import discord
 
@@ -24,9 +25,12 @@ async def pack_messages(messages):
         out += f"{datetime.datetime.fromtimestamp(message.timestamp)} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\n"
     return out
 
-async def ship_messages(ctx, messages, filename="Message archive.txt"):
+async def ship_messages(ctx, messages, filename="Message archive.txt", count=0):
     if len(messages) > 0:
+        GearbotLogging.info(f"[Archive {count}] Receved messages, starting to pack!")
+        start = time.perf_counter()
         out = await pack_messages(messages)
+        GearbotLogging.info(f"[Archive {count}] Archive packed in {time.perf_counter() - start}!")
         with open(filename, "w", encoding="utf-8") as file:
             file.write(out)
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(filename))

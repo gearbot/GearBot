@@ -32,6 +32,7 @@ class Moderation:
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
         Pages.register("roles", self.roles_init, self.roles_update)
+        self.archive_count = 0
 
     def __unload(self):
         Utils.saveToDisk("mutes", self.mutes)
@@ -313,14 +314,22 @@ class Moderation:
 
     @archive.command()
     async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
+        count = self.archive_count
+        self.archive_count +=1
+        start = time.perf_counter()
         if channel is None:
             channel = ctx.message.channel
+        GearbotLogging.info(f"[Archive {count}] Archive collection initializing, target channel: {channel.name} ({channel.id}), requested amount: {amount}")
         channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
         if channel_id is not 0:
             permissions = channel.permissions_for(ctx.author)
             if permissions.read_messages and permissions.read_message_history:
+                GearbotLogging.info(f"[Archive {count}] All checks passed, collecting messages")
                 messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid).limit(amount)
-                await Archive.ship_messages(ctx, messages)
+                GearbotLogging.info(
+                    f"[Archive {count}] Message collection complete, collected {len(messages)} in {time.perf_counter() - start}, handing over to shipping for shipping")
+                await Archive.ship_messages(ctx, messages, count=count)
+                GearbotLogging.info(f"[Archive {count}] Archive shipped!")
             else:
                 ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms')}")
         else:
