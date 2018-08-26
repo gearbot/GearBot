@@ -249,7 +249,7 @@ class Moderation:
             try:
                 user = member = await commands.MemberConverter().convert(ctx, user)
             except BadArgument:
-                duser = Utils.conver_to_id(user)
+                duser = Utils.conver_to_id(ctx, user)
                 if duser is not None:
                     user = await ctx.bot.get_user_info(duser)
                     member = None
