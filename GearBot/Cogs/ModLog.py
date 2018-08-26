@@ -222,7 +222,8 @@ class ModLog:
                 message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
                 if message is not None:
                     message_list[mid] = message
-            await Archive.archive(self.bot, event.guild_id, collections.OrderedDict(sorted(message_list.items())))
+            if len(message_list) > 0:
+                await Archive.archive_purge(self.bot, event.guild_id, collections.OrderedDict(sorted(message_list.items())))
 
 
 async def cache_task(modlog:ModLog):
