@@ -222,6 +222,6 @@
   "lvl4_help": "Allows adding/removing people to lvl 4 permission lvl for a command",
   "purged_log": "Archived {count} purged messages from {channel}",
   "archived_count": "Archived {count} messages.",
-  "archive_empty": "I tried to make you an archive but couldn't find any messages, either there are none, they where send way to long before edit logs on this server where enabled, or they are somewhere i couldn't see them",
+  "archive_empty": "I tried to make you an archive but couldn't find any messages, either there are none, send too long before edit logs on this server where enabled, or there just are are no messages for me to archive",
   "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied."
 }
