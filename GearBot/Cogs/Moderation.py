@@ -313,6 +313,9 @@ class Moderation:
 
     @archive.command()
     async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
+        if amount > 5000:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
+            return
         if channel is None:
             channel = ctx.message.channel
         channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
@@ -329,6 +332,9 @@ class Moderation:
 
     @archive.command()
     async def user(self, ctx, user:str, amount=100):
+        if amount > 5000:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
+            return
         user = await Utils.conver_to_id(ctx, user)
         if user is not None:
             channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")

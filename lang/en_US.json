@@ -223,5 +223,6 @@
   "purged_log": "Archived {count} purged messages from {channel}",
   "archived_count": "Archived {count} messages.",
   "archive_empty": "I tried to make you an archive but couldn't find any messages, either there are none, send too long before edit logs on this server where enabled, or there just are are no messages for me to archive",
-  "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied."
+  "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied.",
+  "archive_too_much": "I get it, you like reading old conversations, good for you. But do you really need more then 5000 messages? You might want to try a good book instead."
 }
