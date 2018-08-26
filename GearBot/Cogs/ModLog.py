@@ -110,11 +110,14 @@ class ModLog:
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
                 logChannel:discord.TextChannel = self.bot.get_channel(channelid)
-                if logChannel is not None and message.content != None and message.content != "":
+                attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == data.message_id)
+                if logChannel is not None:
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                           description=message.content)
                     embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Sent in #{channel.name}")
+                    if len(attachments) > 0:
+                        embed.add_field(name=Translator.translate('attachment_link', logChannel.guild), value="\n".join(attachment.url for attachment in attachments))
                     name = Utils.clean_user(user) if hasUser else str(message.author)
                     await logChannel.send(f":wastebasket: {Translator.translate('message_removed', channel.guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}", embed=embed)
 
