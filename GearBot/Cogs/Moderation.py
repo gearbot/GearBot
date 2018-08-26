@@ -8,8 +8,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator
+from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
+    Archive
 from Util.Converters import BannedMember
+from database.DatabaseConnector import LoggedMessage
 
 
 class Moderation:
@@ -303,6 +305,25 @@ class Moderation:
             embed.add_field(name=Translator.translate('server_icon', ctx), value=f"[{Translator.translate('server_icon', ctx)}]({ctx.guild.icon_url})", inline=True)
         embed.add_field(name=Translator.translate('all_roles', ctx), value=", ".join(role_list), inline=True) #todo paginate
         await ctx.send(embed=embed)
+
+    @commands.group()
+    async def archive(self, ctx):
+        pass
+
+    @archive.command()
+    async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
+        if channel is None:
+            channel = ctx.message.channel
+        channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
+        if channel_id is not 0:
+            permissions = channel.permissions_for(ctx.author)
+            if permissions.read_messages and permissions.read_message_history:
+                messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid).limit(amount)
+                await Archive.ship_messages(ctx, messages)
+            else:
+                ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms')}")
+        else:
+            pass
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
