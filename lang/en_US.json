@@ -214,5 +214,10 @@
   "softban_log": "{user} (`{user_id}`) was softbanned by {moderator} (`{moderator_id}`). Reason: `{reason}`",
   "softban_not_allowed": "You are not allowed to softban {user}.",
   "configure_mute_help": "Sets what role to use for muting people",
-  "help_footer": "You can get more info about a command (params and subcommands) by using '{prefix}help {signature} <subcommand>'\nCommands followed by ↪  have subcommands"
+  "help_footer": "You can get more info about a command (params and subcommands) by using '{prefix}help {signature} <subcommand>'\nCommands followed by ↪  have subcommands",
+  "lvl4_added": "{member} now has permission lvl 4 for the `{command}` command",
+  "already_had_lvl4": "{member} already had lvl 4 permissions for the `{command}` command",
+  "lvl4_removed": "{member} no longer has permission lvl 4 for the `{command}` command",
+  "did_not_have_lvl4": "{member} did not have lvl 4 permissions for the `{command}` command",
+  "lvl4_help": "Allows adding/removing people to lvl 4 permission lvl for a command"
 }
