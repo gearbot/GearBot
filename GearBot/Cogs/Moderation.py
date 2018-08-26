@@ -343,7 +343,7 @@ class Moderation:
             count = self.archive_count
             self.archive_count += 1
             GearbotLogging.info(
-                f"[Archive {count}] Archive collection initializing, target user: {user.name} ({user.id}), requested amount: {amount}")
+                f"[Archive {count}] Archive collection initializing, target user: {user}, requested amount: {amount}")
             start = time.perf_counter()
             channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
             if channel_id is not 0:
