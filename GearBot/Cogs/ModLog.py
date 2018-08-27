@@ -92,7 +92,7 @@ class ModLog:
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0 or message.author == self.bot.user:
+        if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0:
             return
         for a in message.attachments:
             LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
@@ -105,7 +105,7 @@ class ModLog:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
-            if hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS"):
+            if (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")) or user.id == channel.guild.me.id:
                 return
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
@@ -138,13 +138,15 @@ class ModLog:
                         return
                     if message.content is None or message.content == "":
                         message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
-                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                    embed.set_author(name=user.name if hasUser else message.author,
-                                     icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                    embed.set_footer(text=Translator.translate('sent_in', channel.guild.id, channel= f"#{channel.name}"))
-                    embed.add_field(name=Translator.translate('before', channel.guild.id), value=Utils.trim_message(message.content, 1024), inline=False)
-                    embed.add_field(name=Translator.translate('after', channel.guild.id), value=Utils.trim_message(event.data["content"], 1024), inline=False)
-                    if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")):
+                    if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS") or user.id == channel.guild.me.id) :
+                        embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+                        embed.set_author(name=user.name if hasUser else message.author,
+                                         icon_url=user.avatar_url if hasUser else EmptyEmbed)
+                        embed.set_footer(text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
+                        embed.add_field(name=Translator.translate('before', channel.guild.id),
+                                        value=Utils.trim_message(message.content, 1024), inline=False)
+                        embed.add_field(name=Translator.translate('after', channel.guild.id),
+                                        value=Utils.trim_message(event.data["content"], 1024), inline=False)
                         await logChannel.send(f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
                         embed=embed)
                     message.content = event.data["content"]
