@@ -67,14 +67,18 @@ def no_testers():
     return commands.check(predicate)
 
 def check_permission(ctx:commands.Context):
-    overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
-    cog_name = type(ctx.cog).__name__
-    required = -1
-    if cog_name in overrides:
-        required = get_required(ctx, overrides[cog_name])
-    if required == -1:
-        required = get_required(ctx, ctx.cog.permissions)
-    return get_user_lvl(ctx) >= (ctx.cog.permissions["required"] if required == -1 else required)
+    if ctx.guild is None:
+        return 0 >= get_required(ctx, ctx.cog.permissions)
+    else:
+        overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+        cog_name = type(ctx.cog).__name__
+        required = -1
+        if cog_name in overrides:
+            required = get_required(ctx, overrides[cog_name])
+        if required == -1:
+            required = get_required(ctx, ctx.cog.permissions)
+        return get_user_lvl(ctx) >= (ctx.cog.permissions["required"] if required == -1 else required)
+
 
 def get_required(ctx, perm_dict):
     return get_perm_dict(ctx.message.content[len(ctx.prefix):].split(" "), perm_dict)["required"]
