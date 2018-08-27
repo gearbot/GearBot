@@ -26,6 +26,12 @@ async def pack_messages(messages):
 
 async def ship_messages(ctx, messages, filename="Message archive.txt"):
     if len(messages) > 0:
+        message_list = dict()
+        for message in messages:
+            message_list[message.messageid] = message
+        messages = []
+        for mid, message in sorted(message_list.items()):
+            messages.append(message)
         out = await pack_messages(messages)
         with open(filename, "w", encoding="utf-8") as file:
             file.write(out)

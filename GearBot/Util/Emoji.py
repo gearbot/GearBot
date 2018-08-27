@@ -24,10 +24,12 @@ BACKUPS= {
         "IRON": "⚙",
         "STONE": "⚙",
         "WOOD": "⚙",
-        "TODO": "📋"
+        "TODO": "📋",
+        "TACO": "🌮",
+        "WRENCH": "🔧"
     }
 def on_ready(bot):
-    for name, eid in Configuration.getMasterConfigVar("EMOJI").items():
+    for name, eid in Configuration.getMasterConfigVar("EMOJI", {}).items():
         emojis[name] = utils.get(bot.emojis, id=eid)
 
 def get_chat_emoji(name):

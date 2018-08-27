@@ -20,36 +20,67 @@ class Basic:
     }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot: commands.Bot = bot
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
 
     def __unload(self):
-        #cleanup
+        # cleanup
         Pages.unregister("help")
         Pages.unregister("role")
         self.running = False
 
-
     async def __local_check(self, ctx):
         return Permissioncheckers.check_permission(ctx)
 
+    @commands.command()
+    async def about(self, ctx):
+        uptime = datetime.utcnow() - self.bot.start_time
+        hours, remainder = divmod(int(uptime.total_seconds()), 3600)
+        days, hours = divmod(hours, 24)
+        minutes, seconds = divmod(remainder, 60)
+        tacos = "{:,}".format(round(self.bot.eaten))
+        user_messages = "{:,}".format(self.bot.user_messages)
+        bot_messages = "{:,}".format(self.bot.bot_messages)
+        self_messages = "{:,}".format(self.bot.self_messages)
+        total = "{:,}".format(sum(len(guild.members) for guild in self.bot.guilds))
+        unique = "{:,}".format(len(self.bot.users))
+        embed = discord.Embed(colour=discord.Colour(0x00cea2),
+                              timestamp=datetime.utcfromtimestamp(time.time()),
+                              description=f"{Emoji.get_chat_emoji('DIAMOND')} Gears have been spinning for {days} {'day' if days is 1 else 'days'}, {hours} {'hour' if hours is 1 else 'hours'}, {minutes} {'minute' if minutes is 1 else 'minutes'} and {seconds} {'second' if seconds is 1 else 'seconds'}\n"
+                                          f"{Emoji.get_chat_emoji('GOLD')} I received {user_messages} user messages and {bot_messages} bot messages ({self_messages} were my own) so far\n"
+                                          f"{Emoji.get_chat_emoji('IRON')} Number of times people grinded my gears: {self.bot.errors}\n"
+                                          f"{Emoji.get_chat_emoji('STONE')} {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
+                                          f"{Emoji.get_chat_emoji('WOOD')} Working in {len(self.bot.guilds)} guilds\n"
+                                          f"{Emoji.get_chat_emoji('INNOCENT')} With a total of {total} users ({unique} unique)\n"
+                                          f":taco: Together they could have eaten {tacos} tacos in this time\n"
+                                          f"{Emoji.get_chat_emoji('TODO')} Add more stats")
+
+
+        embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")
+        embed.add_field(name=f"Website", value="[Click here](https://gearbot.aenterprise.info)")
+        embed.add_field(name=f"Github", value="[Click here](https://github.com/AEnterprise/GearBot)")
+        embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+
+        await ctx.send(embed=embed)
+
     @commands.command(hidden=True)
-    async def ping(self, ctx:commands.Context):
+    async def ping(self, ctx: commands.Context):
         """ping_help"""
         if await self.bot.is_owner(ctx.author):
             t1 = time.perf_counter()
             await ctx.trigger_typing()
             t2 = time.perf_counter()
-            await ctx.send(f":hourglass: REST API ping is {round((t2 - t1) * 1000)}ms | Websocket ping is {round(self.bot.latency*1000, 2)}ms :hourglass:")
+            await ctx.send(
+                f":hourglass: REST API ping is {round((t2 - t1) * 1000)}ms | Websocket ping is {round(self.bot.latency*1000, 2)}ms :hourglass:")
         else:
             await ctx.send(":ping_pong:")
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    async def quote(self, ctx:commands.Context, message_id:int):
+    async def quote(self, ctx: commands.Context, message_id: int):
         """quote_help"""
         embed = None
         async with ctx.typing():
@@ -63,9 +94,12 @@ class Basic:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
                                                                messageid=message.id)
-                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content, author=dmessage.author.id, timestamp = dmessage.created_at.timestamp(), channel=channel.id, server=dmessage.guild.id)
+                            message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
+                                                           author=dmessage.author.id,
+                                                           timestamp=dmessage.created_at.timestamp(),
+                                                           channel=channel.id, server=dmessage.guild.id)
                         except Exception as ex:
-                            #wrong channel
+                            # wrong channel
                             pass
                         if message is not None:
                             break
@@ -75,7 +109,8 @@ class Basic:
                 attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message_id)
                 if len(attachments) == 1:
                     attachment = attachments[0]
-                embed = discord.Embed(colour=discord.Color(0xd5fff), timestamp=datetime.utcfromtimestamp(message.timestamp))
+                embed = discord.Embed(colour=discord.Color(0xd5fff),
+                                      timestamp=datetime.utcfromtimestamp(message.timestamp))
                 if message.content is None or message.content == "":
                     if attachment is not None:
                         if attachment.isImage:
@@ -84,8 +119,10 @@ class Basic:
                             embed.add_field(name=Translator.translate("attachment_link", ctx), value=attachment.url)
                 else:
                     description = message.content
-                    embed = discord.Embed(colour=discord.Color(0xd5fff), description=description, timestamp=datetime.utcfromtimestamp(message.timestamp))
-                    embed.add_field(name="​", value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
+                    embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
+                                          timestamp=datetime.utcfromtimestamp(message.timestamp))
+                    embed.add_field(name="​",
+                                    value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
                     if attachment is not None:
                         if attachment.isImage:
                             embed.set_image(url=attachment.url)
@@ -96,7 +133,9 @@ class Basic:
                 except:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
-                embed.set_footer(text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name, user=Utils.clean(ctx.author.display_name), message_id=message_id))
+                embed.set_footer(
+                    text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name,
+                                              user=Utils.clean(ctx.author.display_name), message_id=message_id))
         if embed is None:
             await ctx.send(Translator.translate("quote_not_found", ctx))
         else:
@@ -108,7 +147,7 @@ class Basic:
                 await ctx.message.delete()
 
     @commands.command()
-    async def coinflip(self, ctx, *, thing:str = ""):
+    async def coinflip(self, ctx, *, thing: str = ""):
         """coinflip_help"""
         if thing == "":
             thing = Translator.translate("coinflip_default", ctx)
@@ -121,16 +160,20 @@ class Basic:
     async def init_role(self, ctx):
         pages = self.gen_role_pages(ctx.guild)
         page = pages[0]
-        embed = discord.Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1, page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
+        embed = discord.Embed(
+            title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
+                                       page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
         return None, embed, len(pages) > 1
 
     async def update_role(self, ctx, message, page_num, action, data):
         pages = self.gen_role_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=page_num + 1, page_count=len(pages)), color=0x54d5ff, description=page)
+        embed = discord.Embed(
+            title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=page_num + 1,
+                                       page_count=len(pages)), color=0x54d5ff, description=page)
         return None, embed, page_num
 
-    def gen_role_pages(self, guild:discord.Guild):
+    def gen_role_pages(self, guild: discord.Guild):
         pages = []
         current_roles = ""
         roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
@@ -145,7 +188,7 @@ class Basic:
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
-    async def role(self, ctx:commands.Context, *, role:str = None):
+    async def role(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
         if role is None:
             await Pages.create_new("role", ctx)
@@ -172,9 +215,8 @@ class Basic:
     #         await ctx.send(message)
     #    await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
 
-
     @commands.command()
-    async def help(self, ctx, *, query:str=None):
+    async def help(self, ctx, *, query: str = None):
         """help_help"""
         await Pages.create_new("help", ctx, query=query)
 
@@ -182,8 +224,10 @@ class Basic:
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
             query_clean = await clean_content().convert(ctx, query)
-            return await clean_content().convert(ctx, Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=query_clean)), None, False
-        return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(pages) > 1
+            return await clean_content().convert(ctx, Translator.translate(
+                "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=query_clean)), None, False
+        return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(
+            pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data["query"])
@@ -211,8 +255,7 @@ class Basic:
 
         return None
 
-
-    async def on_guild_role_delete(self, role:discord.Role):
+    async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
         if role.id in roles:
             roles.remove(role.id)
@@ -225,6 +268,7 @@ class Basic:
             self.bot.eaten += len(self.bot.users) / 60
             await asyncio.sleep(5)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
+
 
 def setup(bot):
     bot.add_cog(Basic(bot))

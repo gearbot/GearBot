@@ -308,6 +308,7 @@ class Moderation:
         await ctx.send(embed=embed)
 
     @commands.group()
+    @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
         await ctx.trigger_typing()
 
@@ -322,7 +323,7 @@ class Moderation:
         if channel_id is not 0:
             permissions = channel.permissions_for(ctx.author)
             if permissions.read_messages and permissions.read_message_history:
-                messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid).limit(amount)
+                messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid.desc()).limit(amount)
                 await Archive.ship_messages(ctx, messages)
             else:
                 ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms')}")
@@ -340,7 +341,7 @@ class Moderation:
             channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
             if channel_id is not 0:
                 messages = LoggedMessage.select().where(
-                    (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid).limit(amount)
+                    (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
                 await Archive.ship_messages(ctx, messages)
             else:
                 await ctx.send("Please enable edit logs so i can archive users")
