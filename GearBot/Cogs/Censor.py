@@ -16,7 +16,7 @@ async def censor(ctx, code, server_name):
         clean_name = Utils.clean_user(ctx.message.author)
         await GearbotLogging.log_to_minor_log(ctx.message.guild,
                                               f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name)}")
-    except discord.Forbidden:
+    except discord.NotFound:
         pass # we failed? guess we lost the race
 
 
