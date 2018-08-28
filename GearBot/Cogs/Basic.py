@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import time
 from datetime import datetime
 
@@ -10,6 +11,7 @@ from discord.ext.commands import clean_content
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
+JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channels/\d*/(\d*)/(\d*)")
 
 class Basic:
     permissions = {
@@ -80,31 +82,96 @@ class Basic:
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    async def quote(self, ctx: commands.Context, message_id: int):
+    async def quote(self, ctx: commands.Context, *, message_info=""):
         """quote_help"""
-        embed = None
+        message_id = None
+        channel_id = None
+        if "-" in message_info:
+            parts = message_info.split("-")
+            if len(parts) is 2:
+                try:
+                    channel_id = int(parts[0].strip(" "))
+                    message_id = int(parts[1].strip(" "))
+                except ValueError:
+                    pass
+        else:
+            result = JUMP_LINK_MATCHER.match(message_info)
+            if result is not None:
+                channel_id = result.group(1)
+                message_id = result.group(2)
+            else:
+                try:
+                    message_id = int(message_info)
+                except ValueError:
+                    pass
+        error = None
+        dmessage = None
         async with ctx.typing():
             message = LoggedMessage.get_or_none(messageid=message_id)
             if message is None:
-                for guild in self.bot.guilds:
-                    for channel in guild.text_channels:
+                if channel_id is None:
+                    for channel in ctx.guild.text_channels:
                         try:
-                            dmessage: discord.Message = await channel.get_message(message_id)
-                            for a in dmessage.attachments:
-                                LoggedAttachment.get_or_create(id=a.id, url=a.url,
+                            permissions = channel.permissions_for(ctx.guild.me)
+                            if permissions.read_messages and permissions.read_message_history:
+                                dmessage = await channel.get_message(message_id)
+                                message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
+                                                               author=dmessage.author.id,
+                                                               timestamp=dmessage.created_at.timestamp(),
+                                                               channel=channel.id, server=dmessage.guild.id)
+                                for a in dmessage.attachments:
+                                    LoggedAttachment.get_or_create(id=a.id, url=a.url,
                                                                isImage=(a.width is not None or a.width is 0),
                                                                messageid=message.id)
+                                break
+                        except discord.NotFound:
+                            pass
+                    if message is None:
+                        error = Translator.translate('quote_missing_channel', ctx)
+                else:
+                    channel = self.bot.get_channel(channel_id)
+                    if channel is None:
+                        error = Translator.translate('quote_invalid_format', ctx)
+                    else:
+                        try:
+                            dmessage: discord.Message = await channel.get_message(message_id)
+                        except discord.NotFound as ex:
+                            # wrong channel
+                            pass
+                        else:
                             message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
                                                            author=dmessage.author.id,
                                                            timestamp=dmessage.created_at.timestamp(),
                                                            channel=channel.id, server=dmessage.guild.id)
-                        except Exception as ex:
-                            # wrong channel
-                            pass
-                        if message is not None:
-                            break
+                            for a in dmessage.attachments:
+                                LoggedAttachment.get_or_create(id=a.id, url=a.url,
+                                                               isImage=(a.width is not None or a.width is 0),
+                                                               messageid=message.id)
+
             if message is not None:
                 channel = self.bot.get_channel(message.channel)
+                #validate message still exists
+                if dmessage is None:
+                    try:
+                        dmessage = await channel.get_message(message_id)
+                    except discord.NotFound:
+                        error = Translator.translate("quote_not_found", ctx)
+                if dmessage is not None:
+                    #validate user is allowed to quote
+                    member = channel.guild.get_member(ctx.author.id)
+                    if member is None:
+                        error = Translator.translate("quote_not_visible_to_user", ctx)
+                    else:
+                        permissions = channel.permissions_for(member)
+                        if not (permissions.read_message_history and permissions.read_message_history):
+                            error = Translator.translate("quote_not_visible_to_user", ctx)
+            elif error is None:
+                error = Translator.translate("quote_not_found", ctx)
+
+        if error is None:
+            if channel.is_nsfw() and not ctx.channel.is_nsfw():
+                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('quote_nsfw_refused', ctx)}")
+            else:
                 attachment = None
                 attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message_id)
                 if len(attachments) == 1:
@@ -128,23 +195,18 @@ class Basic:
                             embed.set_image(url=attachment.url)
                         else:
                             embed.add_field(name=Translator.translate("attachment_link", ctx), value=attachment.url)
-                try:
-                    user = await commands.MemberConverter().convert(ctx, message.author)
-                except:
+                user = channel.guild.get_member(message.author)
+                if user is None:
                     user = await ctx.bot.get_user_info(message.author)
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(
                     text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name,
                                               user=Utils.clean(ctx.author.display_name), message_id=message_id))
-        if embed is None:
-            await ctx.send(Translator.translate("quote_not_found", ctx))
+                await ctx.send(embed=embed)
+                if ctx.channel.permissions_for(ctx.me).manage_messages:
+                    await ctx.message.delete()
         else:
-            if channel.is_nsfw() and not ctx.channel.is_nsfw():
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('quote_nsfw_refused', ctx)}")
-                return
-            await ctx.send(embed=embed)
-            if ctx.channel.permissions_for(ctx.me).manage_messages:
-                await ctx.message.delete()
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {error}")
 
     @commands.command()
     async def coinflip(self, ctx, *, thing: str = ""):
