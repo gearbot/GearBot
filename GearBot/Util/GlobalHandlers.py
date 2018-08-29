@@ -143,7 +143,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
     if isinstance(error, commands.NoPrivateMessage):
         await ctx.send("This command cannot be used in private messages.")
     elif isinstance(error, commands.BotMissingPermissions):
-        GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}.")
+        GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
     elif isinstance(error, commands.DisabledCommand):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
