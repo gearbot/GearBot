@@ -103,6 +103,8 @@ class ModLog:
         message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
+            if channel.guild is None:
+                return
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
             if (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")) or user.id == channel.guild.me.id:
@@ -127,6 +129,8 @@ class ModLog:
         message = LoggedMessage.get_or_none(messageid=event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
+            if channel.guild is None:
+                return
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
@@ -206,14 +210,14 @@ class ModLog:
                     after_clean_display_name = Utils.clean(after.display_name)
                     before_clean_display_name = Utils.clean(before.display_name)
                     await logChannel.send(
-                        f'{Emoji.get_chat_emoji("NICKTAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
+                        f'{Emoji.get_chat_emoji("NICKTAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
                     )
                 elif (before.name != after.name and
                     after.name != before.name):
                     after_clean_name = Utils.clean(after.name)
                     before_clean_name = Utils.clean(before.name)
                     await logChannel.send(
-                        f'{Emoji.get_chat_emoji("NAMETAG")} {after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                        f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                     )
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
