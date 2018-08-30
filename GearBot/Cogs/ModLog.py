@@ -64,7 +64,7 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
-                    if count % 50 is 0:
+                    if count % 75 is 0:
                         await asyncio.sleep(0)
         GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
 
@@ -87,7 +87,7 @@ class ModLog:
             else:
                 self.to_cache = None
                 minutes, seconds = divmod(round(time.perf_counter() - self.cache_start), 60)
-                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes}min, {seconds}")
+                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
 
 
     async def on_message(self, message: discord.Message):

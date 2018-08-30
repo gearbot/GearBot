@@ -28,7 +28,8 @@ extensions = [
     "PageHandler",
     "Censor",
     "Infractions",
-    "Minecraft"
+    "Minecraft",
+    "DMMessages"
 ]
 
 def prefix_callable(bot, message):
