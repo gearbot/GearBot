@@ -110,7 +110,7 @@ class ModLog:
                 return
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
-            if (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS")) or user.id == channel.guild.me.id:
+            if not hasUser or user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS") or user.id == channel.guild.me.id:
                 return
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
