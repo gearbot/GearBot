@@ -10,7 +10,7 @@ class DMMessages:
 
 
     async def on_message(self, message: discord.Message):
-        if message.guild is not None or len(message.content) > 1800:
+        if message.guild is not None or len(message.content) > 1800 or message.author.id == self.bot.user.id:
             return
         if not message.content.startswith("!"):
             channel = self.bot.get_channel(Configuration.getMasterConfigVar("inbox", 0))
