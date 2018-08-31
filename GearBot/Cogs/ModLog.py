@@ -79,6 +79,7 @@ class ModLog:
         self.cache_start = time.perf_counter()
 
     async def startup_cache(self):
+        await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
         while self.to_cache is not None:
             if len(self.to_cache) > 0:
                 guild = self.to_cache.pop()
@@ -88,6 +89,7 @@ class ModLog:
                 self.to_cache = None
                 minutes, seconds = divmod(round(time.perf_counter() - self.cache_start), 60)
                 await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
+                await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
 
     async def on_message(self, message: discord.Message):

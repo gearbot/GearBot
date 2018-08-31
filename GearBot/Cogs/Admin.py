@@ -152,6 +152,9 @@ class Admin:
     async def migrate_configs(self, ctx):
         Configuration.migrate_configs(self.bot)
 
+    @commands.command()
+    async def set_presence(self, ctx, name):
+        await self.bot.change_presence(status=name, activity=ctx.me.activity)
 
 
 

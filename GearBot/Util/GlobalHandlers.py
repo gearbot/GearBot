@@ -44,6 +44,7 @@ def prefix_callable(bot, message):
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
+        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="dnd")
         await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
         info = await bot.application_info()
         await GearbotLogging.logToBotlog(message="Spinning up the gears!")
@@ -78,7 +79,9 @@ async def on_ready(bot):
 
         bot.STARTUP_COMPLETE = True
         await GearbotLogging.logToBotlog(message=f"All turning gears at full speed, {info.name} ready to go!")
-    await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
+        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
+    else:
+        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
 
 
