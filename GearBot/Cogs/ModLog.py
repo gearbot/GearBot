@@ -185,10 +185,11 @@ class ModLog:
     async def on_member_ban(self, guild, user):
         if user.id in self.bot.data["forced_exits"]:
             return
-        async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=5):
-            if entry.target == user:
-                InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "Manual ban" if entry.reason is None else entry.reason)
-                break
+        if guild.me.guild_permissions.view_audit_log:
+            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=5):
+                if entry.target == user:
+                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "Manual ban" if entry.reason is None else entry.reason)
+                    break
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -201,11 +202,12 @@ class ModLog:
         if user.id in self.bot.data["unbans"]:
             return
         else:
-            async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=5):
-                if entry.target == user:
-                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban", "Manual unban")
-                    break
-            channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
+            if guild.me.guild_permissions.view_audit_log:
+                async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=5):
+                    if entry.target == user:
+                        InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban", "Manual unban")
+                        break
+                channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
             if channelid is not 0:
                 logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 if logChannel is not None:
