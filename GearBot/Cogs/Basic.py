@@ -13,6 +13,7 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channels/\d*/(\d*)/(\d*)")
 
+
 class Basic:
     permissions = {
         "min": 0,
@@ -59,7 +60,6 @@ class Basic:
                                           f"{Emoji.get_chat_emoji('INNOCENT')} With a total of {total} users ({unique} unique)\n"
                                           f":taco: Together they could have eaten {tacos} tacos in this time\n"
                                           f"{Emoji.get_chat_emoji('TODO')} Add more stats")
-
 
         embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")
         embed.add_field(name=f"Website", value="[Click here](https://gearbot.aenterprise.info)")
@@ -121,8 +121,8 @@ class Basic:
                                                                channel=channel.id, server=dmessage.guild.id)
                                 for a in dmessage.attachments:
                                     LoggedAttachment.get_or_create(id=a.id, url=a.url,
-                                                               isImage=(a.width is not None or a.width is 0),
-                                                               messageid=message.id)
+                                                                   isImage=(a.width is not None or a.width is 0),
+                                                                   messageid=message.id)
                                 break
                         except discord.NotFound:
                             pass
@@ -150,14 +150,14 @@ class Basic:
 
             if message is not None:
                 channel = self.bot.get_channel(message.channel)
-                #validate message still exists
+                # validate message still exists
                 if dmessage is None:
                     try:
                         dmessage = await channel.get_message(message_id)
                     except discord.NotFound:
                         error = Translator.translate("quote_not_found", ctx)
                 if dmessage is not None:
-                    #validate user is allowed to quote
+                    # validate user is allowed to quote
                     member = channel.guild.get_member(ctx.author.id)
                     if member is None:
                         error = Translator.translate("quote_not_visible_to_user", ctx)
@@ -225,7 +225,7 @@ class Basic:
         embed = discord.Embed(
             title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
                                        page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
-        return None, embed, len(pages) > 1
+        return None, embed, len(pages) > 1, (Emoji.get_emoji(str(i + 1)) for i in range(10 if len(page) > 0 else len(page.splitlines()) / 2))
 
     async def update_role(self, ctx, message, page_num, action, data):
         pages = self.gen_role_pages(message.guild)
@@ -236,16 +236,15 @@ class Basic:
         return None, embed, page_num
 
     def gen_role_pages(self, guild: discord.Guild):
-        pages = []
-        current_roles = ""
         roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+        current_roles = ""
+        count = 1
         for role in roles:
-            if len(current_roles + f"<@&{role}>\n\n") > 300:
-                pages.append(current_roles)
-                current_roles = ""
-            current_roles += f"<@&{role}>\n\n"
-        pages.append(current_roles)
-        return pages
+            current_roles += f"{count}) <@&{role}>\n\n"
+            count += 1
+            if count > 10:
+                count = 1
+        return Pages.paginate(current_roles, max_lines=20)
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
@@ -262,12 +261,15 @@ class Basic:
             else:
                 roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
                 if role.id in roles:
-                    if role in ctx.author.roles:
-                        await ctx.author.remove_roles(role)
-                        await ctx.send(Translator.translate("role_left", ctx, role_name=role.name))
-                    else:
-                        await ctx.author.add_roles(role)
-                        await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
+                    try:
+                        if role in ctx.author.roles:
+                            await ctx.author.remove_roles(role)
+                            await ctx.send(Translator.translate("role_left", ctx, role_name=role.name))
+                        else:
+                            await ctx.author.add_roles(role)
+                            await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
+                    except discord.Forbidden:
+                        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', ctx, role=role.name)}")
                 else:
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
@@ -289,7 +291,7 @@ class Basic:
             return await clean_content().convert(ctx, Translator.translate(
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=query_clean)), None, False
         return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(
-            pages) > 1
+            pages) > 1, []
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data["query"])
@@ -330,6 +332,33 @@ class Basic:
             self.bot.eaten += len(self.bot.users) / 60
             await asyncio.sleep(5)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
+
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
+        if guild.me.id == payload.user_id:
+            return
+        if str(payload.message_id) in Pages.known_messages:
+            info = Pages.known_messages[str(payload.message_id)]
+            if info["type"] == "role":
+                for i in range(10):
+                    if payload.emoji.name == Emoji.get_emoji(str(i + 1)):
+                        roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+                        role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
+                        member = guild.get_member(payload.user_id)
+                        channel = self.bot.get_channel(payload.channel_id)
+                        try:
+                            if role in member.roles:
+                                await member.remove_roles(role)
+                                await channel.send(f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}")
+                            else:
+                                await member.add_roles(role)
+                                await channel.send(Translator.translate(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}"))
+                        except discord.Forbidden:
+                            await channel.send(
+                                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}")
+                        break
 
 
 def setup(bot):

@@ -11,6 +11,8 @@ class PageHandler:
 
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
         user = guild.get_member(payload.user_id)
         if guild.me.id == payload.user_id:
             return

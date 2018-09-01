@@ -150,7 +150,7 @@ class Minecraft:
         embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():
             embed.add_field(name=k, value=v)
-        return None, embed, len(pages) > 1
+        return None, embed, len(pages) > 1, []
 
     async def update_cf(self, ctx, message, page_num, action, data):
         pages = await self.gen_cf_pages(ctx, data["project_name"], False)

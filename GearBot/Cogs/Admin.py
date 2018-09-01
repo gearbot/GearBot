@@ -131,7 +131,7 @@ class Admin:
     async def init_eval(self, ctx, pages):
         page = pages[0]
         num = len(pages)
-        return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1
+        return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1, []
 
     async def update_eval(self, ctx, message, page_num, action, data):
         pages = data["pages"]

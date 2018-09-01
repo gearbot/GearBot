@@ -31,7 +31,7 @@ class Moderation:
         bot.mutes = self.mutes = Utils.fetchFromDisk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
-        Pages.register("roles", self.roles_init, self.roles_update)
+        Pages.register("roles", self.roles_init, self.roles_update), []
 
     def __unload(self):
         Utils.saveToDisk("mutes", self.mutes)
