@@ -100,11 +100,11 @@ class Moderation:
                 self.bot.data["forced_exits"].append(user.id)
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                     delete_message_days=0)
+                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('YES')} {Translator.translate('ban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
                 await GearbotLogging.logToModLog(ctx.guild,
                                                  f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
             else:
                 await ctx.send(Translator.translate('ban_unable', ctx.guild.id, user=Utils.clean_user(user)))
         else:
@@ -142,6 +142,7 @@ class Moderation:
             member = await commands.MemberConverter().convert(ctx, str(user_id))
         except BadArgument:
             user = await ctx.bot.get_user_info(user_id)
+            self.bot.data["forced_exits"].append(user.id)
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                 delete_message_days=0)
             await ctx.send(
