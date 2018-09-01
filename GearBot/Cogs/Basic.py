@@ -223,7 +223,7 @@ class Basic:
         pages = self.gen_role_pages(ctx.guild)
         page = pages[0]
         emoji = []
-        for i in range(10 if len(pages) > 1 else len(page.splitlines()) / 2):
+        for i in range(10 if len(pages) > 1 else round(len(page.splitlines()) / 2)):
             emoji.append(Emoji.get_emoji(str(i + 1)))
         embed = discord.Embed(
             title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
