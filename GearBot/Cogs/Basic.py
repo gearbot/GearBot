@@ -342,26 +342,34 @@ class Basic:
             return
         if guild.me.id == payload.user_id:
             return
-        if str(payload.message_id) in Pages.known_messages:
-            info = Pages.known_messages[str(payload.message_id)]
-            if info["type"] == "role":
-                for i in range(10):
-                    if payload.emoji.name == Emoji.get_emoji(str(i + 1)):
-                        roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
-                        role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
-                        member = guild.get_member(payload.user_id)
-                        channel = self.bot.get_channel(payload.channel_id)
-                        try:
-                            if role in member.roles:
-                                await member.remove_roles(role)
-                                await channel.send(f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}")
-                            else:
-                                await member.add_roles(role)
-                                await channel.send(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}")
-                        except discord.Forbidden:
-                            await channel.send(
-                                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}")
-                        break
+        try:
+            message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
+        except discord.NotFound:
+            pass
+        else:
+            if str(payload.message_id) in Pages.known_messages:
+                info = Pages.known_messages[str(payload.message_id)]
+                if info["type"] == "role":
+                    for i in range(10):
+                        e = Emoji.get_emoji(str(i + 1))
+                        if payload.emoji.name == e:
+                            roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+                            role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
+                            member = guild.get_member(payload.user_id)
+                            channel = self.bot.get_channel(payload.channel_id)
+                            try:
+                                if role in member.roles:
+                                    await member.remove_roles(role)
+                                    await channel.send(f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}", delete_after=10)
+                                else:
+                                    await member.add_roles(role)
+                                    await channel.send(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}", delete_after=10)
+                            except discord.Forbidden:
+                                await channel.send(
+                                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}")
+                            if channel.permissions_for(guild.me).manage_messages:
+                                await message.remove_reaction(e, member)
+                            break
 
 
 def setup(bot):
