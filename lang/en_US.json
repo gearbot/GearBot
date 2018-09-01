@@ -227,5 +227,7 @@
   "archive_too_much": "I get it, you like reading old conversations, good for you. But do you really need more than 5000 messages? You might want to try a good book instead.",
   "quote_invalid_format": "I'm sorry but I have no clue where you want me to go look for a message with that info. Please try again providing me the info in one of the following formats: `<jumplink>` (can be acquired clicking by 'copy link' in the 3 dotted menu on a message), `<messageid>` (only works if that server has edit logs enabled) or `<messageid>-<channelid>` (can be acquired by holding shift when clicking 'copy id' on the message menu)",
   "quote_missing_channel": "It seems you only gave me a message-id, but i can't find that message, could you please provide a channel-id as well by holding shift when copying the id or providing a jumplink?",
-  "quote_not_visible_to_user": "Found the message! But it's in a really, really amazing super secret place with lots of security guards. And they told me i couldn't take it with me, not even when I told them it was for you, something about you not being allowed in there either."
+  "quote_not_visible_to_user": "Found the message! But it's in a really, really amazing super secret place with lots of security guards. And they told me i couldn't take it with me, not even when I told them it was for you, something about you not being allowed in there either.",
+  "manual_ban_log": "{user} (`{user_id}`) was banned by manually banned by someone.",
+  "manual_unban_log": "{user} (`{user_id}`) was banned by manually unbanned by someone."
 }

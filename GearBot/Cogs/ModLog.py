@@ -176,6 +176,19 @@ class ModLog:
         if member.id in exits:
             exits.remove(member.id)
             return
+        if member.guild.me.guild_permissions.view_audit_log:
+            async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
+                if member.joined_at > entry.created_at:
+                    break
+                if entry.target == member:
+                    if entry.reason is None:
+                        reason = Translator.translate("no_reason", member.guild.id)
+                    else:
+                        reason = entry.reason
+                    InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
+                    await GearbotLogging.logToModLog(member.guild,
+                                                     f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                    return
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -186,16 +199,18 @@ class ModLog:
         if user.id in self.bot.data["forced_exits"]:
             return
         if guild.me.guild_permissions.view_audit_log:
-            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=5):
+            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=2):
                 if entry.target == user:
-                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "Manual ban" if entry.reason is None else entry.reason)
-                    break
-        channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
-        if channelid is not 0:
-            logChannel: discord.TextChannel = self.bot.get_channel(channelid)
-            if logChannel is not None:
-                await logChannel.send(f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been banned from the server.")
-                self.bot.data["forced_exits"].append(user.id)
+                    if entry.reason is None:
+                        reason = Translator.translate("no_reason", guild.id)
+                    else:
+                        reason = entry.reason
+                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "No reason given." if entry.reason is None else entry.reason)
+                    await GearbotLogging.logToModLog(guild,
+                                                     f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                    return
+        await GearbotLogging.logToModLog(guild, f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+        self.bot.data["forced_exits"].append(user.id)
 
 
     async def on_member_unban(self, guild, user):
@@ -203,16 +218,14 @@ class ModLog:
             return
         else:
             if guild.me.guild_permissions.view_audit_log:
-                async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=5):
+                async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
                     if entry.target == user:
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban", "Manual unban")
-                        break
-                channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
-            if channelid is not 0:
-                logChannel: discord.TextChannel = self.bot.get_channel(channelid)
-                if logChannel is not None:
-                    await logChannel.send(
-                        f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
+                        await GearbotLogging.logToModLog(guild,
+                                                         f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
+                        return
+            await GearbotLogging.logToModLog(guild,
+                                             f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         
     async def on_member_update(self, before, after):
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
