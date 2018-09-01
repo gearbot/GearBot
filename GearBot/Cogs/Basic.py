@@ -222,10 +222,13 @@ class Basic:
     async def init_role(self, ctx):
         pages = self.gen_role_pages(ctx.guild)
         page = pages[0]
+        emoji = []
+        for i in range(10 if len(page) > 0 else len(page.splitlines()) / 2):
+            emoji.append(Emoji.get_emoji(str(i + 1)))
         embed = discord.Embed(
             title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
                                        page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
-        return None, embed, len(pages) > 1, (Emoji.get_emoji(str(i + 1)) for i in range(10 if len(page) > 0 else len(page.splitlines()) / 2))
+        return None, embed, len(pages) > 1, emoji
 
     async def update_role(self, ctx, message, page_num, action, data):
         pages = self.gen_role_pages(message.guild)
