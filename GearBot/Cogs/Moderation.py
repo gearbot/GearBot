@@ -179,7 +179,6 @@ class Moderation:
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('unban_confirmation', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, reason=reason)}")
         await GearbotLogging.logToModLog(ctx.guild,
                                          f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unban_log', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
-        # This should work even if the user isn't cached
 
     @commands.command()
     @commands.guild_only()

@@ -79,7 +79,7 @@ async def username(id):
     if id in known_invalid_users:
         return "UNKNOWN USER"
     if id in user_cache:
-        return user_cache[id]
+        return clean_user(user_cache[id])
     user = bot.get_user(id)
     if user is None:
         try:
@@ -91,7 +91,7 @@ async def username(id):
     return clean_user(user)
 
 def clean_user(user):
-    return f"{clean(user.name)}#{user.discriminator}"
+    return f"{user.name}#{user.discriminator}"
 
 def pad(text, length, char=' '):
     return f"{text}{char * (length-len(text))}"

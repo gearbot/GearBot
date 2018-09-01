@@ -4,12 +4,13 @@ import datetime
 import time
 
 import discord
+from discord import AuditLogAction
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 from peewee import IntegrityError
 
-from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
@@ -184,6 +185,10 @@ class ModLog:
     async def on_member_ban(self, guild, user):
         if user.id in self.bot.data["forced_exits"]:
             return
+        async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=5):
+            if entry.target == user:
+                InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "Manual ban" if entry.reason is None else entry.reason)
+                break
         channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
@@ -195,12 +200,17 @@ class ModLog:
     async def on_member_unban(self, guild, user):
         if user.id in self.bot.data["unbans"]:
             return
-        channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
-        if channelid is not 0:
-            logChannel: discord.TextChannel = self.bot.get_channel(channelid)
-            if logChannel is not None:
-                await logChannel.send(
-                    f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
+        else:
+            async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=5):
+                if entry.target == user:
+                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban", "Manual unban")
+                    break
+            channelid = Configuration.getConfigVar(guild.id, "MOD_LOGS")
+            if channelid is not 0:
+                logChannel: discord.TextChannel = self.bot.get_channel(channelid)
+                if logChannel is not None:
+                    await logChannel.send(
+                        f":rotating_light: {user.name}#{user.discriminator} (`{user.id}`) has been unbanned from the server.")
         
     async def on_member_update(self, before, after):
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
