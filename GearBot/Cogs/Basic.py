@@ -1,10 +1,14 @@
 import asyncio
+import os
 import random
 import re
 import time
 from datetime import datetime
 
+import aiohttp
 import discord
+import numpy
+from PIL import Image
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
@@ -21,6 +25,8 @@ class Basic:
         "required": 0,
         "commands": {}
     }
+    EMOJI_MATCHER = re.compile(r'<:(.+):([0-9]+)>')
+    CDN_URL = 'https://twemoji.maxcdn.com/2/72x72/{}.png'
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -28,6 +34,7 @@ class Basic:
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
+        self.jumbo_num = 0
 
     def __unload(self):
         # cleanup
@@ -321,6 +328,44 @@ class Basic:
                     return await HelpGenerator.gen_command_help(self.bot, ctx, target)
 
         return None
+
+    @commands.command()
+    async def jumbo(self, ctx, *, emojis: str):
+        """Jumbos an emoji to 128x128 size"""
+        to_send = None
+        self.jumbo_num += 1
+        num = self.jumbo_num
+        e_list = []
+        async with ctx.typing():
+            for emoji in emojis.split(' '):
+                if self.EMOJI_MATCHER.match(emoji):
+                    match = self.EMOJI_MATCHER.match(emoji)
+                    if match is not None:
+                        eid = match.group(2)
+                        session: aiohttp.ClientSession = self.bot.aiosession
+                        async with session.get(f'https://cdn.discordapp.com/emojis/{eid}.png?size=128') as r:
+                            if not os.path.isdir("emoji"):
+                                os.mkdir("emoji")
+                            with open (f"emoji/{eid}.png", "wb") as file:
+                                file.write(await r.read())
+                                e_list.append(f"emoji/{eid}.png")
+            if len(e_list) > 0:
+                list_im = e_list
+                imgs = [Image.open(i) for i in list_im]
+                # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
+                min_shape = sorted([(numpy.sum(i.size), i.size) for i in imgs])[0][1]
+                imgs_comb = numpy.hstack((numpy.asarray(i.resize(min_shape)) for i in imgs))
+                imgs_comb = Image.fromarray(imgs_comb)
+                imgs_comb.save(f"emoji/jumbo{num}.png")
+                to_send = True
+
+
+            if to_send is not None:
+                await ctx.send(file=discord.File(open(f"emoji/jumbo{num}.png", "rb"), filename="emoji.png"))
+                os.remove(f"emoji/jumbo{num}.png")
+                for e in e_list:
+                    os.remove(e)
+
 
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
