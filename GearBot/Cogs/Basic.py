@@ -26,6 +26,8 @@ class Basic:
     }
     EMOJI_MATCHER = re.compile(r'<:(.+):([0-9]+)>')
     CDN_URL = 'https://twemoji.maxcdn.com/2/72x72/{}.png'
+    EMOJI_LOCKS = []
+    jumbo_num = 0
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -33,7 +35,6 @@ class Basic:
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
-        self.jumbo_num = 0
 
     def __unload(self):
         # cleanup
@@ -342,12 +343,15 @@ class Basic:
                     if match is not None:
                         eid = match.group(2)
                         session: aiohttp.ClientSession = self.bot.aiosession
-                        async with session.get(f'https://cdn.discordapp.com/emojis/{eid}.png?size=128') as r:
-                            if not os.path.isdir("emoji"):
-                                os.mkdir("emoji")
-                            with open (f"emoji/{eid}.png", "wb") as file:
-                                file.write(await r.read())
-                                e_list.append(f"emoji/{eid}.png")
+                        e_name = f"emoji/{eid}.png"
+                        if e_name not in self.EMOJI_LOCKS:
+                            async with session.get(f'https://cdn.discordapp.com/emojis/{eid}.png?size=128') as r:
+                                if not os.path.isdir("emoji"):
+                                    os.mkdir("emoji")
+                                with open (e_name, "wb") as file:
+                                    file.write(await r.read())
+                        self.EMOJI_LOCKS.append(e_name)
+                        e_list.append(e_name)
             if len(e_list) > 0:
                 list_im = e_list
                 originals = [Image.open(i) for i in list_im]
@@ -362,10 +366,12 @@ class Basic:
                 to_send = True
 
 
-            if to_send is not None:
-                await ctx.send(file=discord.File(open(f"emoji/jumbo{num}.png", "rb"), filename="emoji.png"))
-                os.remove(f"emoji/jumbo{num}.png")
-                for e in e_list:
+        if to_send is not None:
+            await ctx.send(file=discord.File(open(f"emoji/jumbo{num}.png", "rb"), filename="emoji.png"))
+            os.remove(f"emoji/jumbo{num}.png")
+            for e in e_list:
+                self.EMOJI_LOCKS.remove(e)
+                if e not in self.EMOJI_LOCKS and os.path.isfile(e):
                     os.remove(e)
 
 
