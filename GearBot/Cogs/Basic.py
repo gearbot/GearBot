@@ -53,7 +53,7 @@ class Basic:
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
                               description=f"{Emoji.get_chat_emoji('DIAMOND')} Gears have been spinning for {days} {'day' if days is 1 else 'days'}, {hours} {'hour' if hours is 1 else 'hours'}, {minutes} {'minute' if minutes is 1 else 'minutes'} and {seconds} {'second' if seconds is 1 else 'seconds'}\n"
-                                          f"{Emoji.get_chat_emoji('GOLD')} I received {user_messages} user messages and {bot_messages} bot messages ({self_messages} were my own)\n"
+                                          f"{Emoji.get_chat_emoji('GOLD')} I received {user_messages} user messages, {bot_messages} bot messages ({self_messages} were mine)\n"
                                           f"{Emoji.get_chat_emoji('IRON')} Number of times people grinded my gears: {self.bot.errors}\n"
                                           f"{Emoji.get_chat_emoji('STONE')} {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
                                           f"{Emoji.get_chat_emoji('WOOD')} Working in {len(self.bot.guilds)} guilds\n"
