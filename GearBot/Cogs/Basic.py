@@ -7,7 +7,6 @@ from datetime import datetime
 
 import aiohttp
 import discord
-import numpy
 from PIL import Image
 from discord.ext import commands
 from discord.ext.commands import clean_content
@@ -331,7 +330,7 @@ class Basic:
 
     @commands.command()
     async def jumbo(self, ctx, *, emojis: str):
-        """Jumbos an emoji to 128x128 size"""
+        """Jumbo emoji"""
         to_send = None
         self.jumbo_num += 1
         num = self.jumbo_num
@@ -351,12 +350,15 @@ class Basic:
                                 e_list.append(f"emoji/{eid}.png")
             if len(e_list) > 0:
                 list_im = e_list
-                imgs = [Image.open(i) for i in list_im]
-                # pick the image which is the smallest, and resize the others to match it (can be arbitrary image shape here)
-                min_shape = sorted([(numpy.sum(i.size), i.size) for i in imgs])[0][1]
-                imgs_comb = numpy.hstack((numpy.asarray(i.resize(min_shape)) for i in imgs))
-                imgs_comb = Image.fromarray(imgs_comb)
-                imgs_comb.save(f"emoji/jumbo{num}.png")
+                originals = [Image.open(i) for i in list_im]
+                resized = [i.resize((i.size[0] * round(128 / i.size[1]), i.size[1] * round(128 / i.size[1]))) for i in originals]
+                widths, heights = zip(*(i.size for i in resized))
+                result = Image.new('RGBA', (sum(widths), max(heights)))
+                offset = 0
+                for im in resized:
+                    result.paste(im, (offset, 0))
+                    offset += im.size[0]
+                result.save(f"emoji/jumbo{num}.png")
                 to_send = True
 
 

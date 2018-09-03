@@ -10,7 +10,6 @@ discord.py==1.0.0a1551+g00a659c
 idna==2.7
 idna-ssl==1.1.0
 multidict==4.3.1
-numpy==1.15.1
 peewee==3.6.4
 Pillow==5.2.0
 pycparser==2.18
