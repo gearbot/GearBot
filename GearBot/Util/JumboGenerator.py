@@ -6,7 +6,6 @@ import aiohttp
 import discord
 from PIL import Image
 
-CDN_URL = 'https://twemoji.maxcdn.com/2/72x72/{}.png'
 EMOJI_LOCKS = []
 JUMBO_NUM = 0
 JUMBO_TARGET_SIZE = 128
@@ -14,9 +13,9 @@ JUMBO_PADDING = 6
 
 
 class EmojiHandler:
-    def __init__(self, extension, matcher, link, has_frames=False):
+    def __init__(self, extension, link, matcher=None, has_frames=False):
         self.extension = extension
-        self.matcher = re.compile(matcher)
+        self.matcher = matcher
         self.link = link
         self.has_frames = has_frames
 
@@ -24,7 +23,7 @@ class EmojiHandler:
         match = self.matcher.match(text)
         if match is None:
             return text, None
-        return text[match.end(0):], match.group(1)
+        return "".join([text[match.end(0):], match.group(1)]), match.group(2)
 
     async def fetch(self, eid, session: aiohttp.ClientSession):
         if eid not in EMOJI_LOCKS:
@@ -50,9 +49,21 @@ class EmojiHandler:
             os.remove(file_name)
 
 
+class TwermojiHandler(EmojiHandler):
+    def __init__(self):
+        super().__init__("png", 'https://twemoji.maxcdn.com/2/72x72/{eid}.{extension}')
+        self.has_frames = False
+
+    def match(self, text):
+        char = text[0]
+        print(char)
+        return text[1:], '-'.join(char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
+
+
 HANDLERS = [
-    EmojiHandler("png", '(?:[^<]*)<:(?:[^:]+):([0-9]+)>', "https://cdn.discordapp.com/emojis/{eid}.{extension}"),
-    EmojiHandler("gif", '(?:[^<]*)<a:(?:[^:]+):([0-9]+)>', "https://cdn.discordapp.com/emojis/{eid}.{extension}"),
+    EmojiHandler("png", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<:(?:[^:]+):([0-9]+)>')),
+    EmojiHandler("gif", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<a:(?:[^:]+):([0-9]+)>')),
+    TwermojiHandler()
 ]
 
 
@@ -77,14 +88,13 @@ class JumboGenerator:
         self.cleanup()
 
     def build_list(self):
-        while len(self.text) > 0:
+        prev = 0
+        while 0 < len(self.text) != prev:
             for handler in HANDLERS:
                 self.text, eid = handler.match(self.text)
-                if eid is not None:
+                if eid is not None and eid != "":
                     self.e_list.append((eid, handler))
                     break
-            else:
-                break
 
     async def fetch_all(self):
         for eid, handler in self.e_list:
