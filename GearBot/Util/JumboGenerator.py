@@ -94,11 +94,12 @@ class JumboGenerator:
             await asyncio.wait_for(self.build(), timeout=60)
         except asyncio.TimeoutError:
             await self.ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', self.ctx)}")
-        if len(self.e_list) > 0:
-            await self.send()
-            self.cleanup()
         else:
-            await self.ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('jumbo_no_emoji', self.ctx)}")
+            if len(self.e_list) > 0:
+                await self.send()
+                self.cleanup()
+            else:
+                await self.ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('jumbo_no_emoji', self.ctx)}")
 
     async def prep(self):
         prev = 0
