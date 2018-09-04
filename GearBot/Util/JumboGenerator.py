@@ -34,9 +34,8 @@ class EmojiHandler:
 
     def get_image(self, eid, frame=None):
         image = Image.open(f"emoji/{eid}.{self.extension}")
-        image.resize((round(image.size[0] * JUMBO_TARGET_SIZE / image.size[1]),
-                      round(image.size[1] * JUMBO_TARGET_SIZE / image.size[1])))
-        return image
+        return image.resize((round(image.size[0] * (JUMBO_TARGET_SIZE / image.size[1])),
+                      round(image.size[1] * (JUMBO_TARGET_SIZE / image.size[1]))))
 
     @staticmethod
     def get_frame_count(eid):
@@ -56,7 +55,6 @@ class TwermojiHandler(EmojiHandler):
 
     def match(self, text):
         char = text[0]
-        print(char)
         return text[1:], '-'.join(char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
 
 
@@ -85,16 +83,17 @@ class JumboGenerator:
         await self.fetch_all()
         self.build()
         await self.send()
-        self.cleanup()
+        # self.cleanup()
 
     def build_list(self):
         prev = 0
-        while 0 < len(self.text) != prev:
-            for handler in HANDLERS:
-                self.text, eid = handler.match(self.text)
-                if eid is not None and eid != "":
-                    self.e_list.append((eid, handler))
-                    break
+        for part in self.text.split(" "):
+            while 0 < len(part) != prev:
+                for handler in HANDLERS:
+                    part, eid = handler.match(part)
+                    if eid is not None and eid != "":
+                        self.e_list.append((eid, handler))
+                        break
 
     async def fetch_all(self):
         for eid, handler in self.e_list:
@@ -104,11 +103,15 @@ class JumboGenerator:
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
 
         emoji_count = len(self.e_list)
-        square = math.sqrt(emoji_count)
-        columns = int(square)
-        rows = int(emoji_count / columns)
-        if emoji_count > rows * columns:
-            rows += 1
+        if emoji_count > 5:
+            square = math.sqrt(emoji_count)
+            columns = int(square)
+            rows = int(emoji_count / columns)
+            if emoji_count > rows * columns:
+                rows += 1
+        else:
+            columns = emoji_count
+            rows = 1
 
         #todo: animated handling
 
