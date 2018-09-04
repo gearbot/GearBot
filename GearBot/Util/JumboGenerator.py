@@ -1,3 +1,4 @@
+import asyncio
 import math
 import os
 import re
@@ -5,6 +6,8 @@ import re
 import aiohttp
 import discord
 from PIL import Image
+
+from Util import Translator, Emoji
 
 EMOJI_LOCKS = []
 JUMBO_NUM = 0
@@ -80,10 +83,13 @@ class JumboGenerator:
 
     async def generate(self):
         self.build_list()
-        await self.fetch_all()
-        self.build()
+        try:
+            await asyncio.wait_for(self.fetch_all(), timeout=20)
+            await asyncio.wait_for(self.build(), timeout=60)
+        except asyncio.TimeoutError:
+            await self.ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', self.ctx)}")
         await self.send()
-        # self.cleanup()
+        self.cleanup()
 
     def build_list(self):
         prev = 0
@@ -99,7 +105,7 @@ class JumboGenerator:
         for eid, handler in self.e_list:
             await handler.fetch(eid, self.ctx.bot.aiosession)
 
-    def build(self):
+    async def build(self):
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
 
         emoji_count = len(self.e_list)
