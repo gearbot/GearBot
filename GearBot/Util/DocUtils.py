@@ -69,7 +69,7 @@ async def update_site(bot):
 
 def generate_command_list(bot):
     excluded = [
-        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload"
+        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages"
     ]
     page = ""
     for cog in bot.cogs:

@@ -9,6 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
+from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channels/\d*/(\d*)/(\d*)")
@@ -19,7 +20,14 @@ class Basic:
         "min": 0,
         "max": 6,
         "required": 0,
-        "commands": {}
+        "commands": {
+            "jumbo": {
+                "required": 2,
+                "min": 0,
+                "max": 6,
+                "commands": {}
+            }
+        }
     }
 
     def __init__(self, bot):
@@ -272,7 +280,8 @@ class Basic:
                             await ctx.author.add_roles(role)
                             await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
                     except discord.Forbidden:
-                        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', ctx, role=role.name)}")
+                        await ctx.send(
+                            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', ctx, role=role.name)}")
                 else:
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
@@ -292,7 +301,8 @@ class Basic:
         if pages is None:
             query_clean = await clean_content().convert(ctx, query)
             return await clean_content().convert(ctx, Translator.translate(
-                "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx, query=query_clean)), None, False, []
+                "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
+                query=query_clean)), None, False, []
         return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(
             pages) > 1, []
 
@@ -321,6 +331,11 @@ class Basic:
                     return await HelpGenerator.gen_command_help(self.bot, ctx, target)
 
         return None
+
+    @commands.command()
+    async def jumbo(self, ctx, *, emojis: str):
+        """Jumbo emoji"""
+        await JumboGenerator(ctx, emojis).generate()
 
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
@@ -360,10 +375,14 @@ class Basic:
                             try:
                                 if role in member.roles:
                                     await member.remove_roles(role)
-                                    await channel.send(f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}", delete_after=10)
+                                    await channel.send(
+                                        f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}",
+                                        delete_after=10)
                                 else:
                                     await member.add_roles(role)
-                                    await channel.send(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}", delete_after=10)
+                                    await channel.send(
+                                        f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}",
+                                        delete_after=10)
                             except discord.Forbidden:
                                 await channel.send(
                                     f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}")
