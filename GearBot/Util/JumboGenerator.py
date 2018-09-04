@@ -31,9 +31,12 @@ class EmojiHandler:
     async def fetch(self, eid, session: aiohttp.ClientSession):
         if eid not in EMOJI_LOCKS:
             async with session.get(self.link.format(eid=eid, extension=self.extension)) as r:
+                if r.status is not 200:
+                    return False
                 with open(f"emoji/{eid}.{self.extension}", "wb") as file:
                     file.write(await r.read())
         EMOJI_LOCKS.append(eid)
+        return True
 
     def get_image(self, eid, frame=None):
         image = Image.open(f"emoji/{eid}.{self.extension}")
@@ -52,19 +55,23 @@ class EmojiHandler:
 
 
 class TwermojiHandler(EmojiHandler):
-    def __init__(self):
+    def __init__(self, count):
         super().__init__("png", 'https://twemoji.maxcdn.com/2/72x72/{eid}.{extension}')
         self.has_frames = False
+        self.count = count
 
     def match(self, text):
-        char = text[0]
-        return text[1:], '-'.join(char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
+        char = text[:self.count]
+        return text[self.count:], '-'.join(char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
 
 
 HANDLERS = [
     EmojiHandler("png", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<:(?:[^:]+):([0-9]+)>')),
     EmojiHandler("gif", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<a:(?:[^:]+):([0-9]+)>')),
-    TwermojiHandler()
+    TwermojiHandler(4),
+    TwermojiHandler(3),
+    TwermojiHandler(2),
+    TwermojiHandler(1),
 ]
 
 
@@ -82,9 +89,8 @@ class JumboGenerator:
             os.mkdir("emoji")
 
     async def generate(self):
-        self.build_list()
         try:
-            await asyncio.wait_for(self.fetch_all(), timeout=20)
+            await asyncio.wait_for(self.prep(), timeout=20)
             await asyncio.wait_for(self.build(), timeout=60)
         except asyncio.TimeoutError:
             await self.ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', self.ctx)}")
@@ -94,19 +100,18 @@ class JumboGenerator:
         else:
             await self.ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('jumbo_no_emoji', self.ctx)}")
 
-    def build_list(self):
+    async def prep(self):
         prev = 0
         for part in self.text.split(" "):
             while 0 < len(part) != prev:
                 for handler in HANDLERS:
-                    part, eid = handler.match(part)
-                    if eid is not None and eid != "":
+                    new_part, eid = handler.match(part)
+                    if eid is not None and eid != "" and await handler.fetch(eid, self.ctx.bot.aiosession):
                         self.e_list.append((eid, handler))
+                        part = new_part
                         break
 
-    async def fetch_all(self):
-        for eid, handler in self.e_list:
-            await handler.fetch(eid, self.ctx.bot.aiosession)
+
 
     async def build(self):
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
