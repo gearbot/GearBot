@@ -112,7 +112,7 @@ class JumboGenerator:
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
 
         emoji_count = len(self.e_list)
-        if emoji_count > 5:
+        if emoji_count > 8:
             square = math.sqrt(emoji_count)
             columns = int(square)
             rows = int(emoji_count / columns)
