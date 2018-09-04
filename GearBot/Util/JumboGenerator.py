@@ -88,8 +88,11 @@ class JumboGenerator:
             await asyncio.wait_for(self.build(), timeout=60)
         except asyncio.TimeoutError:
             await self.ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', self.ctx)}")
-        await self.send()
-        self.cleanup()
+        if len(self.e_list) > 0:
+            await self.send()
+            self.cleanup()
+        else:
+            await self.ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('jumbo_no_emoji', self.ctx)}")
 
     def build_list(self):
         prev = 0
@@ -109,7 +112,7 @@ class JumboGenerator:
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
 
         emoji_count = len(self.e_list)
-        if emoji_count > 5:
+        if emoji_count > 8:
             square = math.sqrt(emoji_count)
             columns = int(square)
             rows = int(emoji_count / columns)
@@ -121,21 +124,23 @@ class JumboGenerator:
 
         #todo: animated handling
 
-        result = Image.new('RGBA', (size * columns, size * rows))
+        if emoji_count > 0:
+            result = Image.new('RGBA', (size * columns, size * rows))
 
-        count = 0
-        for eid, handler in self.e_list:
-            x = count % columns
-            y = math.floor(count / columns)
-            image = handler.get_image(eid)
-            result.paste(image, (round((x * size) + (size / 2) - (image.size[0] / 2)), round(y * size + JUMBO_PADDING)))
-            count += 1
+            count = 0
+            for eid, handler in self.e_list:
+                x = count % columns
+                y = math.floor(count / columns)
+                image = handler.get_image(eid)
+                result.paste(image, (round((x * size) + (size / 2) - (image.size[0] / 2)), round(y * size + JUMBO_PADDING)))
+                count += 1
 
-        result.save(f"emoji/jumbo{self.number}.png")
+            result.save(f"emoji/jumbo{self.number}.png")
 
 
     async def send(self):
         await self.ctx.send(file=discord.File(open(f"emoji/jumbo{self.number}.png", "rb"), filename="emoji.png"))
+
 
     def cleanup(self):
         for eid, handler in self.e_list:
