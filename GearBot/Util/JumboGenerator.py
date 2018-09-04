@@ -105,6 +105,7 @@ class JumboGenerator:
         prev = 0
         for part in self.text.split(" "):
             while 0 < len(part) != prev:
+                prev = len(part)
                 for handler in HANDLERS:
                     new_part, eid = handler.match(part)
                     if eid is not None and eid != "" and await handler.fetch(eid, self.ctx.bot.aiosession):
