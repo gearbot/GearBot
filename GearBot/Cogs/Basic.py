@@ -1,18 +1,15 @@
 import asyncio
-import math
-import os
 import random
 import re
 import time
 from datetime import datetime
 
-import aiohttp
 import discord
-from PIL import Image
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
+from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channels/\d*/(\d*)/(\d*)")
@@ -25,13 +22,7 @@ class Basic:
         "required": 0,
         "commands": {}
     }
-    EMOJI_MATCHER = re.compile('(?:[^<]*)<:([^:]+):([0-9]+)>')
-    ANIMATED_MATCHER = re.compile('(?:[^<]*)<a:([^:]+):([0-9]+)>')
-    CDN_URL = 'https://twemoji.maxcdn.com/2/72x72/{}.png'
-    EMOJI_LOCKS = []
-    jumbo_num = 0
-    JUMBO_TARGET_SIZE = 128
-    JUMBO_PADDING = 6
+
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
@@ -336,78 +327,14 @@ class Basic:
     @commands.command()
     async def jumbo(self, ctx, *, emojis: str):
         """Jumbo emoji"""
-        try:
-            await asyncio.wait_for(self._jumbo(ctx, emojis), timeout=60)
-        except asyncio.TimeoutError:
-            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', ctx)}")
-
-    @staticmethod
-    def get_eid(matcher, text):
-        match = matcher.match(text)
-        if match is not None:
-            return match.group(2)
-        return None
-
-    async def _jumbo(self, ctx, emojis):
-        to_send = None
-        self.jumbo_num += 1
-        num = self.jumbo_num
-        async with ctx.typing():
-            e_list = []
-            while len(emojis) > 0:
-                match = self.EMOJI_MATCHER.match(emojis)
-                if match is not None:
-                    e_list.append(f"{match.group(2)}.png")
-                    emojis = emojis[match.end(0):]
-
-                else:
-                    match = self.ANIMATED_MATCHER.match(emojis)
-                    if match is not None:
-                        e_list.append(f"{match.group(2)}.gif")
-                        emojis = emojis[match.end(0):]
-                    else:
-                        break
-
-            if len(e_list) > 0:
-                for emoji in e_list:
-                    session: aiohttp.ClientSession = self.bot.aiosession
-                    if emoji not in self.EMOJI_LOCKS:
-                        async with session.get(f'https://cdn.discordapp.com/emojis/{emoji}') as r:
-                            if not os.path.isdir("emoji"):
-                                os.mkdir("emoji")
-                            with open (f"emoji/{emoji}", "wb") as file:
-                                file.write(await r.read())
-                    self.EMOJI_LOCKS.append(emoji)
-
-                emoji_count = len(e_list)
-                square = math.sqrt(emoji_count)
-                columns = int(square)
-                rows = int(emoji_count / columns)
-                if emoji_count > rows * columns:
-                    rows += 1
-
-                originals = [Image.open(f"emoji/{i}") for i in e_list]
-                size = self.JUMBO_TARGET_SIZE + self.JUMBO_PADDING*2
-                resized = [i.resize((round(i.size[0] * self.JUMBO_TARGET_SIZE / i.size[1]), round(i.size[1] * self.JUMBO_TARGET_SIZE / i.size[1]))) for i in originals]
-                result = Image.new('RGBA', (size * columns, size * rows))
-                count = 0
-                for im in resized:
-                    x = count % columns
-                    y = math.floor(count / columns)
-                    result.paste(im, (round((x * size) + (size/2) - (im.size[0]/2)), round(y * size + self.JUMBO_PADDING)))
-                    count += 1
-                result.save(f"emoji/jumbo{num}.png")
-                to_send = True
+        # try:
+        #     await asyncio.wait_for(self._jumbo(ctx, emojis), timeout=60)
+        # except asyncio.TimeoutError:
+        #     await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', ctx)}")
+        await JumboGenerator(ctx, emojis).generate()
 
 
-        if to_send is not None:
-            await ctx.send(file=discord.File(open(f"emoji/jumbo{num}.png", "rb"), filename="emoji.png"))
-            os.remove(f"emoji/jumbo{num}.png")
-            for e in e_list:
-                self.EMOJI_LOCKS.remove(e)
-                file_name = f"emoji/{e}"
-                if e not in self.EMOJI_LOCKS and os.path.isfile(file_name) and False:
-                    os.remove(file_name)
+
 
 
     async def on_guild_role_delete(self, role: discord.Role):
