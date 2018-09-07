@@ -125,7 +125,7 @@ async def on_message(bot, message:discord.Message):
         return
     ctx: commands.Context = await bot.get_context(message)
     bot.user_messages += 1
-    if ctx.command is not None:
+    if ctx.valid and ctx.command is not None:
         bot.commandCount = bot.commandCount + 1
         if isinstance(ctx.channel, discord.TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
             try:
@@ -157,10 +157,12 @@ async def on_command_error(bot, ctx: commands.Context, error):
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"You are missing a required argument! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
+        param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
     elif isinstance(error, commands.BadArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
-        await ctx.send(f"{Translator.translate('bad_argument', ctx, )}")
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
     elif isinstance(error, commands.CommandNotFound):
         return
     elif isinstance(error, PeeweeException):
