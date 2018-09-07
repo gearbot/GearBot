@@ -76,7 +76,7 @@ known_invalid_users = []
 user_cache = {}
 
 async def username(id):
-    user = get_user(id)
+    user = await get_user(id)
     if user is None:
         return "UNKNOWN USER"
     return clean_user(user)
