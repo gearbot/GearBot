@@ -76,10 +76,16 @@ known_invalid_users = []
 user_cache = {}
 
 async def username(id):
-    if id in known_invalid_users:
+    user = get_user(id)
+    if user is None:
         return "UNKNOWN USER"
+    return clean_user(user)
+
+async def get_user(id):
+    if id in known_invalid_users:
+        return None
     if id in user_cache:
-        return clean_user(user_cache[id])
+        return user_cache[id]
     user = bot.get_user(id)
     if user is None:
         try:
@@ -87,8 +93,8 @@ async def username(id):
             user_cache[id] = user
         except NotFound:
             known_invalid_users.append(id)
-            return "UNKNOWN USER"
-    return clean_user(user)
+            return None
+    return user
 
 def clean_user(user):
     return f"{user.name}#{user.discriminator}"

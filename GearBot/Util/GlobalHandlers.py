@@ -159,7 +159,8 @@ async def on_command_error(bot, ctx: commands.Context, error):
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(f"You are missing a required argument! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this command).")
     elif isinstance(error, commands.BadArgument):
-        await ctx.send(f"Invalid argument given! (See {ctx.prefix}help {ctx.command.qualified_name} for info on how to use this commmand).")
+        param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
+        await ctx.send(f"{Translator.translate('bad_argument', ctx, )}")
     elif isinstance(error, commands.CommandNotFound):
         return
     elif isinstance(error, PeeweeException):

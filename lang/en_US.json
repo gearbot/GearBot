@@ -231,5 +231,6 @@
   "manual_ban_log": "{user} (`{user_id}`) was manually banned by someone.",
   "manual_unban_log": "{user} (`{user_id}`) was manually unbanned by someone.",
   "jumbo_timeout": "Whoa there, I'm not sure what kind of emojis those are but something got clogged up and things timed out, please try again or report this on the support server if it keeps happening.",
-  "jumbo_no_emoji": "There are no emojis in that message I could jumbo"
+  "jumbo_no_emoji": "There are no emojis in that message I could jumbo",
+  "bad_argument": "Failed to parse `{value}` as a `{type}`: {error}"
 }
