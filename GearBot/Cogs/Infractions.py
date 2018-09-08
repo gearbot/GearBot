@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator
-from Util.Converters import UserID
+from Util.Converters import UserID, Reason
 from database.DatabaseConnector import Infraction
 
 
@@ -26,7 +26,7 @@ class Infractions:
 
     @commands.guild_only()
     @commands.command()
-    async def warn(self, ctx:commands.Context, member:discord.Member, *, reason:str):
+    async def warn(self, ctx:commands.Context, member:discord.Member, *, reason:Reason):
         """warn_help"""
         if (ctx.author != member and member != ctx.bot.user and ctx.author.top_role > member.top_role) or ctx.guild.owner == ctx.author:
             if len(reason) > 1800:

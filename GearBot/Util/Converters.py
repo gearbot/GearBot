@@ -29,3 +29,11 @@ class UserID(commands.Converter):
         if user is None:
             raise commands.BadArgument(f"Unable to convert `{argument}` to a userid")
         return user.id
+
+EMOJI_MATCHER = re.compile('<a*:([^:]+):(?:[0-9]+)>')
+
+class Reason(commands.Converter):
+    async def convert(self, ctx, argument):
+        for match in EMOJI_MATCHER.finditer(argument):
+            argument = argument.replace(match.group(0), f":{match.group(1)}:")
+        return argument
