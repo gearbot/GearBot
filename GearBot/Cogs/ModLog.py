@@ -17,7 +17,7 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 class ModLog:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot: commands.Bot = bot
         self.bot.loop.create_task(self.prep())
         self.bot.loop.create_task(cache_task(self))
         self.running = True
@@ -25,8 +25,7 @@ class ModLog:
     def __unload(self):
         self.running = False
 
-
-    async def buildCache(self, guild:discord.Guild, limit = 500, startup=False):
+    async def buildCache(self, guild: discord.Guild, limit=500, startup=False):
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
         newCount = 0
         editCount = 0
@@ -34,11 +33,12 @@ class ModLog:
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
-                    LoggedMessage.messageid.desc()).limit(limit*1.5)
+                    LoggedMessage.messageid.desc()).limit(limit * 1.5)
                 messages = dict()
                 for message in logged_messages:
                     messages[message.messageid] = message
-                async for message in channel.history(limit=limit, reverse=False, before=self.cache_message if startup else None):
+                async for message in channel.history(limit=limit, reverse=False,
+                                                     before=self.cache_message if startup else None):
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
@@ -47,9 +47,12 @@ class ModLog:
                     if message.id not in messages.keys():
                         try:
                             LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                                  content=message.content, timestamp = message.created_at.timestamp(), channel=channel.id, server=channel.guild.id)
+                                                 content=message.content, timestamp=message.created_at.timestamp(),
+                                                 channel=channel.id, server=channel.guild.id)
                             for a in message.attachments:
-                                LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
+                                LoggedAttachment.create(id=a.id, url=a.url,
+                                                        isImage=(a.width is not None or a.width is 0),
+                                                        messageid=message.id)
                             newCount = newCount + 1
                         except IntegrityError:
                             # somehow we didn't fetch enough messages, did someone set off a nuke in the channel?
@@ -67,10 +70,12 @@ class ModLog:
                     count = count + 1
                     if count % 75 is 0:
                         await asyncio.sleep(0)
-        GearbotLogging.info(f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
+        GearbotLogging.info(
+            f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
 
     async def prep(self):
-        self.cache_message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
+        self.cache_message = await GearbotLogging.logToBotlog(
+            f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
         self.to_cache = []
         for guild in self.bot.guilds:
             if Configuration.getConfigVar(guild.id, "MINOR_LOGS") is not 0:
@@ -89,9 +94,9 @@ class ModLog:
             else:
                 self.to_cache = None
                 minutes, seconds = divmod(round(time.perf_counter() - self.cache_start), 60)
-                await self.cache_message.edit(content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
+                await self.cache_message.edit(
+                    content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
                 await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
-
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
@@ -99,11 +104,13 @@ class ModLog:
         if Configuration.getConfigVar(message.guild.id, "MINOR_LOGS") is 0:
             return
         for a in message.attachments:
-            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0), messageid=message.id)
-        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content, timestamp=message.created_at.timestamp(), channel=message.channel.id, server=message.guild.id)
+            LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
+                                    messageid=message.id)
+        LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
+                             timestamp=message.created_at.timestamp(), channel=message.channel.id,
+                             server=message.guild.id)
 
-
-    async def on_raw_message_delete(self, data:RawMessageDeleteEvent):
+    async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None:
             channel: discord.TextChannel = self.bot.get_channel(data.channel_id)
@@ -111,23 +118,28 @@ class ModLog:
                 return
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
-            if not hasUser or user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS") or user.id == channel.guild.me.id:
+            if not hasUser or user.id in Configuration.getConfigVar(channel.guild.id,
+                                                                    "IGNORED_USERS") or user.id == channel.guild.me.id:
                 return
             channelid = Configuration.getConfigVar(channel.guild.id, "MINOR_LOGS")
             if channelid is not 0:
-                logChannel:discord.TextChannel = self.bot.get_channel(channelid)
+                logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == data.message_id)
                 if logChannel is not None:
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                           description=message.content)
-                    embed.set_author(name=user.name if hasUser else message.author, icon_url=user.avatar_url if hasUser else EmptyEmbed)
+                    embed.set_author(name=user.name if hasUser else message.author,
+                                     icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(text=f"Sent in #{channel.name}")
                     if len(attachments) > 0:
-                        embed.add_field(name=Translator.translate('attachment_link', logChannel.guild), value="\n".join(attachment.url for attachment in attachments))
+                        embed.add_field(name=Translator.translate('attachment_link', logChannel.guild),
+                                        value="\n".join(attachment.url for attachment in attachments))
                     name = Utils.clean_user(user) if hasUser else str(message.author)
-                    await logChannel.send(f":wastebasket: {Translator.translate('message_removed', channel.guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}", embed=embed)
+                    await logChannel.send(
+                        f":wastebasket: {Translator.translate('message_removed', channel.guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}",
+                        embed=embed)
 
-    async def on_raw_message_edit(self, event:RawMessageUpdateEvent):
+    async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
         if event.data["channel_id"] == Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"):
             return
         message = LoggedMessage.get_or_none(messageid=event.message_id)
@@ -142,36 +154,45 @@ class ModLog:
                 logChannel: discord.TextChannel = self.bot.get_channel(channelid)
                 if logChannel is not None:
                     if message.content == event.data["content"]:
-                        #prob just pinned
+                        # prob just pinned
                         return
                     if message.content is None or message.content == "":
                         message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
-                    if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id, "IGNORED_USERS") or user.id == channel.guild.me.id) :
+                    if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id,
+                                                                              "IGNORED_USERS") or user.id == channel.guild.me.id):
                         embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                         embed.set_author(name=user.name if hasUser else message.author,
                                          icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                        embed.set_footer(text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
+                        embed.set_footer(
+                            text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
                         embed.add_field(name=Translator.translate('before', channel.guild.id),
                                         value=Utils.trim_message(message.content, 1024), inline=False)
                         embed.add_field(name=Translator.translate('after', channel.guild.id),
                                         value=Utils.trim_message(event.data["content"], 1024), inline=False)
-                        await logChannel.send(f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
-                        embed=embed)
+                        await logChannel.send(
+                            f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
+                            embed=embed)
                     message.content = event.data["content"]
                     message.save()
 
-    async def on_member_join(self, member:discord.Member):
+    async def on_member_join(self, member: discord.Member):
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
-            logChannel:discord.TextChannel = self.bot.get_channel(channelid)
+            logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None and logChannel.permissions_for(member.guild.me).send_messages:
                 dif = (datetime.datetime.utcnow() - member.created_at)
                 minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
                 hours, minutes = divmod(minutes, 60)
-                age = (Translator.translate('days', member.guild.id, days=dif.days)) if dif.days > 0 else Translator.translate('hours', member.guild.id, hours=hours, minutes=minutes)
-                await logChannel.send(f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
+                age = (Translator.translate('days', member.guild.id,
+                                            days=dif.days)) if dif.days > 0 else Translator.translate('hours',
+                                                                                                      member.guild.id,
+                                                                                                      hours=hours,
+                                                                                                      minutes=minutes)
+                await logChannel.send(
+                    f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
-    async def on_member_remove(self, member:discord.Member):
+    async def on_member_remove(self, member: discord.Member):
+        if member.id == self.bot.user.id: return
         exits = self.bot.data["forced_exits"]
         if member.id in exits:
             exits.remove(member.id)
@@ -193,9 +214,11 @@ class ModLog:
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None and logChannel.permissions_for(member.guild.me).send_messages:
-                await logChannel.send(f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
+                await logChannel.send(
+                    f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
+        if user.id == self.bot.user.id: return
         if user.id in self.bot.data["forced_exits"]:
             return
         if guild.me.guild_permissions.view_audit_log:
@@ -205,13 +228,14 @@ class ModLog:
                         reason = Translator.translate("no_reason", guild.id)
                     else:
                         reason = entry.reason
-                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban", "No reason given." if entry.reason is None else entry.reason)
+                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
+                                                   "No reason given." if entry.reason is None else entry.reason)
                     await GearbotLogging.logToModLog(guild,
                                                      f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                     return
-        await GearbotLogging.logToModLog(guild, f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+        await GearbotLogging.logToModLog(guild,
+                                         f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         self.bot.data["forced_exits"].append(user.id)
-
 
     async def on_member_unban(self, guild, user):
         if user.id in self.bot.data["unbans"]:
@@ -220,47 +244,71 @@ class ModLog:
             if guild.me.guild_permissions.view_audit_log:
                 async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
                     if entry.target == user:
-                        InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban", "Manual unban")
+                        InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
+                                                       "Manual unban")
                         await GearbotLogging.logToModLog(guild,
                                                          f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
                         return
             await GearbotLogging.logToModLog(guild,
                                              f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
-        
+
     async def on_member_update(self, before, after):
         channelid = Configuration.getConfigVar(after.guild.id, "MINOR_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
             if logChannel is not None:
+                guild = logChannel.guild
+                log_message = ""
+                audit_log = guild.me.guild_permissions.view_audit_log
+                # nickname changes
                 if (before.nick != after.nick and
-                    after.nick != before.nick):
+                        after.nick != before.nick):
                     after_clean_name = Utils.clean(after.name)
                     after_clean_display_name = Utils.clean(after.display_name)
                     before_clean_display_name = Utils.clean(before.display_name)
-                    await logChannel.send(
-                        f'{Emoji.get_chat_emoji("NICKTAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.'
-                    )
+                    log_message += f'{Emoji.get_chat_emoji("NICKTAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.\n'
+                # username changes
                 elif (before.name != after.name and
-                    after.name != before.name):
+                      after.name != before.name):
                     after_clean_name = Utils.clean(after.name)
                     before_clean_name = Utils.clean(before.name)
-                    await logChannel.send(
-                        f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
-                    )
+                    log_message += f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                # role changes
+                if len(before.roles) != len(after.roles):
+                    if audit_log:
+                        entry = (await guild.audit_logs(action=discord.AuditLogAction.member_role_update,
+                                                        limit=1).flatten())[0]
+                        removed = entry.changes.before.roles
+                        added = entry.changes.after.roles
+                        for role in removed:
+                            log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}"
+                        for role in added:
+                            log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}"
+                    else:
+                        for role in before.roles:
+                            if role not in after.roles:
+                                log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
+                        for role in after.roles:
+                            if role not in before.roles:
+                                log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
+                if log_message != "":
+                    await logChannel.send(log_message)
 
-    async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
-        channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
-        if channel_id is not 0:
-            message_list = dict()
-            for mid in event.message_ids:
-                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
-                if message is not None:
-                    message_list[mid] = message
-            if len(message_list) > 0:
-                await Archive.archive_purge(self.bot, event.guild_id, collections.OrderedDict(sorted(message_list.items())))
+
+async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
+    channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
+    if channel_id is not 0:
+        message_list = dict()
+        for mid in event.message_ids:
+            message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+            if message is not None:
+                message_list[mid] = message
+        if len(message_list) > 0:
+            await Archive.archive_purge(self.bot, event.guild_id,
+                                        collections.OrderedDict(sorted(message_list.items())))
 
 
-async def cache_task(modlog:ModLog):
+async def cache_task(modlog: ModLog):
     GearbotLogging.info("Started modlog background task.")
     while modlog.running:
         if len(modlog.bot.to_cache) > 0:
@@ -269,7 +317,6 @@ async def cache_task(modlog:ModLog):
             await ctx.send("Caching complete.")
         await asyncio.sleep(1)
     GearbotLogging.info("modlog background task terminated.")
-
 
 
 def setup(bot):

@@ -236,5 +236,7 @@
   "missing_arg": "You are missing a required command argument: `{arg}`",
   "command_usage": "Command usage: `{usage}`",
   "role_removed": "The `{role}` role was removed from `{user}`",
-  "role_removed_by": "The `{role}` was removed from `{user}` by `{moderator}`"
+  "role_removed_by": "The `{role}` was removed from `{user}` (`{user_id}`) by `{moderator}` (`{moderator_id}`)",
+  "role_added": "The `{role}` role was added to `{user}`",
+  "role_added_by": "The `{role}` was added to `{user}` (`{user_id}`) by `{moderator}` (`{moderator_id}`)"
 }
