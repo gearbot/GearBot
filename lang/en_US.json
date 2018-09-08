@@ -238,7 +238,7 @@
   "role_removed": "The `{role}` role was removed from {user}",
   "role_removed_by": "The `{role}` was removed from {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
   "role_added": "The `{role}` role was added to {user}",
-  "role_added_by": "The `{role}` rol was added to {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
+  "role_added_by": "The `{role}` role was added to {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
   "nickname_changed": "{user} (`{user_id}`) has changed nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
   "own_nickname_changed": "{user} (`{user_id}`) has changed their own nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
   "mod_nickname_changed": "{user} (`{user_id}`) had their nickname changed from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`** by {moderator} (`{moderator_id}`)",
