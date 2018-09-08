@@ -296,9 +296,12 @@ class ModLog:
                     log_message += f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
                 # role changes
                 if len(before.roles) != len(after.roles):
+                    entry = None
                     if audit_log:
-                        entry = (await guild.audit_logs(action=discord.AuditLogAction.member_role_update,
-                                                        limit=1).flatten())[0]
+                        async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
+                            if e.target.id == before.id:
+                                entry = e
+                    if entry is not None:
                         removed = entry.changes.before.roles
                         added = entry.changes.after.roles
                         for role in removed:
