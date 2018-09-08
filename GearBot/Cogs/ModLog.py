@@ -291,14 +291,17 @@ class ModLog:
                 # username changes
                 elif (before.name != after.name and
                       after.name != before.name):
-                    after_clean_name = Utils.clean(after.name)
-                    before_clean_name = Utils.clean(before.name)
-                    log_message += f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                    before_clean_name = Utils.clean_user(before)
+                    after_clean_name = Utils.clean_user(after)
+                    log_message += f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}"
                 # role changes
                 if len(before.roles) != len(after.roles):
+                    entry = None
                     if audit_log:
-                        entry = (await guild.audit_logs(action=discord.AuditLogAction.member_role_update,
-                                                        limit=1).flatten())[0]
+                        async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
+                            if e.target.id == before.id:
+                                entry = e
+                    if entry is not None:
                         removed = entry.changes.before.roles
                         added = entry.changes.after.roles
                         for role in removed:

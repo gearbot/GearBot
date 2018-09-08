@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive
-from Util.Converters import BannedMember, UserID
+from Util.Converters import BannedMember, UserID, Reason
 from database.DatabaseConnector import LoggedMessage
 
 
@@ -69,13 +69,13 @@ class Moderation:
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.Member, *, reason=""):
+    async def kick(self, ctx, user: discord.Member, *, reason:Reason=""):
         """kick_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        self.bot.data["forced_exits"].append(user.id)
         if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
+                self.bot.data["forced_exits"].append(user.id)
                 await ctx.guild.kick(user,
                                      reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
                 await ctx.send(
@@ -91,7 +91,7 @@ class Moderation:
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: commands.Context, user: discord.Member, *, reason=""):
+    async def ban(self, ctx: commands.Context, user: discord.Member, *, reason:Reason=""):
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -109,11 +109,11 @@ class Moderation:
                 await ctx.send(Translator.translate('ban_unable', ctx.guild.id, user=Utils.clean_user(user)))
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('ban_not_allowed', ctx.guild.id, user=user)}")
-            
+
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def softban(self, ctx:commands.Context, user: discord.Member, *, reason="No reason given."):
+    async def softban(self, ctx:commands.Context, user: discord.Member, *, reason:Reason=""):
         """softban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -134,7 +134,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason=""):
+    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason:Reason=""):
         """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -169,7 +169,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def unban(self, ctx, member: BannedMember, *, reason=""):
+    async def unban(self, ctx, member: BannedMember, *, reason:Reason=""):
         """unban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -185,7 +185,7 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int, durationIdentifier: str, *,
-                   reason=""):
+                   reason:Reason=""):
         """mute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -218,7 +218,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason=""):
+    async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason:Reason=""):
         """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
