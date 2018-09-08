@@ -234,5 +234,7 @@
   "jumbo_no_emoji": "There are no emojis in that message I could jumbo",
   "bad_argument": "Failed to parse the `{type}` param: `{error}`",
   "missing_arg": "You are missing a required command argument: `{arg}`",
-  "command_usage": "Command usage: `{usage}`"
+  "command_usage": "Command usage: `{usage}`",
+  "role_removed": "The `{role}` role was removed from `{user}`",
+  "role_removed_by": "The `{role}` was removed from `{user}` by `{moderator}`"
 }
