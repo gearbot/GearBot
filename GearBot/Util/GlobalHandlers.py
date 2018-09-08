@@ -202,20 +202,50 @@ async def on_command_error(bot, ctx: commands.Context, error):
 
 
 async def on_error(bot, event, *args, **kwargs):
+    arg_info = ""
+    for arg in list(args):
+        if hasattr(arg, "__dict__"):
+            arg_info += str(arg.__dict__)
+        elif hasattr(arg, "__slots__"):
+            items = dict()
+            for slot in arg.__slots__:
+                items[slot] = getattr(arg, slot)
+            arg_info += f"{slot}: {str(items)}\n"
+        else:
+            arg_info += str(arg)
+        arg_info += "\n"
+    if arg_info == "":
+        arg_info = "No arguments"
+
+    kwarg_info = ""
+    for name, arg in dict(**kwargs).items():
+        kwarg_info += f"{name}: "
+        if hasattr(arg, "__dict__"):
+            kwarg_info += str(arg.__dict__)
+        elif hasattr(arg, "__slots__"):
+            items = dict()
+            for slot in arg.__slots__:
+                items[slot] = getattr(arg, slot)
+                kwarg_info += str(items)
+        else:
+            kwarg_info += str(arg)
+        kwarg_info += "\n"
+    if kwarg_info == "":
+        kwarg_info = "No keyword arguments"
     type, exception, info = sys.exc_info()
     if isinstance(exception, PeeweeException):
         await handle_database_error(bot)
     try:
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
         bot.errors = bot.errors + 1
-        GearbotLogging.error(f"error in {event}\n{args.__dict__}\n{kwargs.__dict__}")
+        GearbotLogging.error(f"error in {event}\n{arg_info}\n{kwarg_info}")
         embed = discord.Embed(colour=discord.Colour(0xff0000),
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
         embed.set_author(name=f"Caught an error in {event}:")
 
-        embed.add_field(name="args", value=str(args.__dict__))
-        embed.add_field(name="kwargs", value=str(kwargs.__dict__))
+        embed.add_field(name="args", value=str(arg_info))
+        embed.add_field(name="kwargs", value=str(kwarg_info))
         embed.add_field(name="cause message", value=traceback._cause_message)
         v = ""
         for line in traceback.format_exc():
@@ -225,7 +255,7 @@ async def on_error(bot, event, *args, **kwargs):
             v = f"{v}{line}"
         if len(v) > 0:
             embed.add_field(name="Stacktrace", value=v)
-            # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking donwn the bot (and if we ended here it might have even been due to trying to log to botlog
+            # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking down the bot (and if we ended here it might have even been due to trying to log to botlog
         await GearbotLogging.logToBotlog(embed=embed)
     except Exception as ex:
         GearbotLogging.error(
