@@ -291,9 +291,9 @@ class ModLog:
                 # username changes
                 elif (before.name != after.name and
                       after.name != before.name):
-                    after_clean_name = Utils.clean(after.name)
-                    before_clean_name = Utils.clean(before.name)
-                    log_message += f'{Emoji.get_chat_emoji("NAMETAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed username from **`\u200b{before_clean_name}#{after.discriminator}`** to **`\u200b{after_clean_name}#{after.discriminator}`**.'
+                    before_clean_name = Utils.clean_user(before)
+                    after_clean_name = Utils.clean_user(after)
+                    log_message += f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}"
                 # role changes
                 if len(before.roles) != len(after.roles):
                     entry = None
