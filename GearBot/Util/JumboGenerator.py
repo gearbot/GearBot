@@ -111,6 +111,7 @@ class JumboGenerator:
                     if eid is not None and eid != "" and await handler.fetch(eid, self.ctx.bot.aiosession):
                         self.e_list.append((eid, handler))
                         part = new_part
+                        prev = 0
                         break
 
 

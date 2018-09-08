@@ -28,4 +28,4 @@ class UserID(commands.Converter):
             pass
         if user is None:
             raise commands.BadArgument(f"Unable to convert `{argument}` to a userid")
-        return user
+        return user.id

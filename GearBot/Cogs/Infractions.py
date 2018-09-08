@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator
+from Util.Converters import UserID
 from database.DatabaseConnector import Infraction
 
 
@@ -46,7 +47,7 @@ class Infractions:
         pass
 
     @inf.command()
-    async def search(self, ctx:commands.Context, query:int):
+    async def search(self, ctx:commands.Context, query:UserID):
         """inf_search_help"""
         await Pages.create_new("inf_search", ctx, guild_id=ctx.guild.id, query=query)
 

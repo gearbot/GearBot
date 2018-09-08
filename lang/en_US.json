@@ -234,5 +234,18 @@
   "jumbo_no_emoji": "There are no emojis in that message I could jumbo",
   "bad_argument": "Failed to parse the `{type}` param: `{error}`",
   "missing_arg": "You are missing a required command argument: `{arg}`",
-  "command_usage": "Command usage: `{usage}`"
+  "command_usage": "Command usage: `{usage}`",
+  "role_removed": "The `{role}` role was removed from {user}",
+  "role_removed_by": "The `{role}` was removed from {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
+  "role_added": "The `{role}` role was added to {user}",
+  "role_added_by": "The `{role}` was added to {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
+  "nickname_changed": "{user} (`{user_id}`) has changed nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
+  "own_nickname_changed": "{user} (`{user_id}`) has changed their own nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
+  "mod_nickname_changed": "{user} (`{user_id}`) had their nickname changed from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`** by {moderator} (`{moderator_id}`)",
+  "unknown_nickname_added": "{user} (`{user_id}`) has added a nickname: **`\u200b{after}\u200b`**",
+  "own_nickname_added": "{user} (`{user_id}`) has given themselves a nickname: **`\u200b{after}\u200b`**",
+  "mod_nickname_added": "{user} (`{user_id}`) got a nickname from {moderator} (`{moderator_id}`): **`\u200b{after}\u200b`**",
+  "unknown_nickname_removed": "{user} (`{user_id}`) removed their nickname: **`\u200b{before}\u200b`**",
+  "own_nickname_removed": "{user} (`{user_id}`) has removed their nickname: **`\u200b{before}\u200b`**",
+  "mod_nickname_removed": "{user} (`{user_id}`) got their nickname removed by {moderator} (`{moderator_id}`): **`\u200b{before}\u200b`**"
 }

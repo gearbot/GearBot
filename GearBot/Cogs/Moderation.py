@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive
-from Util.Converters import BannedMember
+from Util.Converters import BannedMember, UserID
 from database.DatabaseConnector import LoggedMessage
 
 
@@ -134,7 +134,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def forceban(self, ctx: commands.Context, user_id: int, *, reason=""):
+    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason=""):
         """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
