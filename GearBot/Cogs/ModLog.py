@@ -263,10 +263,31 @@ class ModLog:
                 # nickname changes
                 if (before.nick != after.nick and
                         after.nick != before.nick):
-                    after_clean_name = Utils.clean(after.name)
-                    after_clean_display_name = Utils.clean(after.display_name)
-                    before_clean_display_name = Utils.clean(before.display_name)
-                    log_message += f'{Emoji.get_chat_emoji("NICKTAG")} \u200b{after_clean_name}#{after.discriminator} (`{after.id}`) has changed nickname from **`\u200b{before_clean_display_name}`** to **`\u200b{after_clean_display_name}`**.\n'
+                    name = Utils.clean_user(after)
+                    before_clean = "" if before.nick is None else Utils.clean(before.nick)
+                    after_clean = "" if after.nick is None else Utils.clean(after.nick)
+                    entry = None
+                    if audit_log:
+                        async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
+                            if e.target.id == before.id and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
+                                entry = e
+                    if before.nick is None:
+                        type = "added"
+                    elif after.nick is None:
+                        type = "removed"
+                    else:
+                        type = "changed"
+                    mod_name = ""
+                    mod_id = ""
+                    if entry is None:
+                        actor = "unknown"
+                    elif entry.target.id == entry.user.id:
+                        actor = "own"
+                    else:
+                        mod_name = Utils.clean_user(entry.user)
+                        mod_id=entry.user.id
+                        actor = "mod"
+                    log_message += f"{Emoji.get_chat_emoji('NICKTAG')} {Translator.translate(f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)}\n"
                 # username changes
                 elif (before.name != after.name and
                       after.name != before.name):

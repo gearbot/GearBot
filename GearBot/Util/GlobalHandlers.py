@@ -78,7 +78,7 @@ async def on_ready(bot):
         await DocUtils.update_docs(bot)
 
         bot.STARTUP_COMPLETE = True
-        await GearbotLogging.logToBotlog(message=f"All turning gears at full speed, {info.name} ready to go!")
+        await GearbotLogging.logToBotlog(message=f"All gears turning at full speed, {info.name} ready to go!")
         await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
     else:
         await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
