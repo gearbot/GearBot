@@ -36,7 +36,9 @@ BACKUPS = {
     "7": "7⃣",
     "8": "8⃣",
     "9": "9⃣",
-    "10": "🔟"
+    "10": "🔟",
+    "role_add": "🛫",
+    "role_remove": "🛬"
 }
 
 
@@ -46,11 +48,7 @@ def on_ready(bot):
 
 
 def get_chat_emoji(name):
-    if name in emojis:
-        emoji = emojis[name]
-        return f"<:{emoji.name}:{emoji.id}>"
-    else:
-        return BACKUPS[name]
+    return str(get_emoji(name))
 
 
 def get_emoji(name):
