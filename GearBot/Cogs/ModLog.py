@@ -296,10 +296,20 @@ class ModLog:
                     log_message += f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}"
                 # role changes
                 if len(before.roles) != len(after.roles):
+                    removed = []
+                    added = []
+                    for role in before.roles:
+                        if role not in after.roles:
+                            removed.append(role)
+
+                    for role in after.roles:
+                        if role not in before.roles:
+                            added.append(role)
+
                     entry = None
                     if audit_log:
                         async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
-                            if e.target.id == before.id:
+                            if e.target.id == before.id and all(role in e.changes.before.roles for role in removed) and all(role in e.changes.after.roles for role in added):
                                 entry = e
                     if entry is not None:
                         removed = entry.changes.before.roles
@@ -309,12 +319,11 @@ class ModLog:
                         for role in added:
                             log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}"
                     else:
-                        for role in before.roles:
-                            if role not in after.roles:
-                                log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
-                        for role in after.roles:
-                            if role not in before.roles:
-                                log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
+                        for role in removed:
+                            log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
+                        for role in added:
+                            log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}"
+
                 if log_message != "":
                     await logChannel.send(log_message)
 
