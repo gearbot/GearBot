@@ -110,6 +110,8 @@ def loadConfig(guild):
         saveConfig(guild)
 
 def getConfigVar(id, key):
+    if id is None:
+        raise ValueError("Where is this coming from?")
     if not id in SERVER_CONFIGS.keys():
         GearbotLogging.info(f"Config entry requested before config was loaded for guild {id}, loading config for it")
         loadConfig(id)
