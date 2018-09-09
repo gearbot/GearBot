@@ -145,7 +145,7 @@ class Minecraft:
         info = await self.get_info(ctx, project_name, True)
         pages = await self.gen_cf_pages(ctx, project_name, True)
         if pages is None:
-            return Translator.translate('cf_not_found', ctx), None, False
+            return Translator.translate('cf_not_found', ctx), None, False, []
         embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=project_name))
         embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():

@@ -21,12 +21,6 @@ class Basic:
         "max": 6,
         "required": 0,
         "commands": {
-            "jumbo": {
-                "required": 2,
-                "min": 0,
-                "max": 6,
-                "commands": {}
-            }
         }
     }
 

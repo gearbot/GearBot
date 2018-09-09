@@ -328,17 +328,17 @@ class ModLog:
                     await logChannel.send(log_message)
 
 
-async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
-    channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
-    if channel_id is not 0:
-        message_list = dict()
-        for mid in event.message_ids:
-            message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
-            if message is not None:
-                message_list[mid] = message
-        if len(message_list) > 0:
-            await Archive.archive_purge(self.bot, event.guild_id,
-                                        collections.OrderedDict(sorted(message_list.items())))
+    async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
+        channel_id = Configuration.getConfigVar(event.guild_id, "MINOR_LOGS")
+        if channel_id is not 0:
+            message_list = dict()
+            for mid in event.message_ids:
+                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+                if message is not None:
+                    message_list[mid] = message
+            if len(message_list) > 0:
+                await Archive.archive_purge(self.bot, event.guild_id,
+                                            collections.OrderedDict(sorted(message_list.items())))
 
 
 async def cache_task(modlog: ModLog):
