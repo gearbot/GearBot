@@ -12,7 +12,7 @@ from Util import Translator, Emoji
 EMOJI_LOCKS = []
 JUMBO_NUM = 0
 JUMBO_TARGET_SIZE = 128
-JUMBO_PADDING = 6
+JUMBO_PADDING = 4
 
 
 class EmojiHandler:
@@ -142,8 +142,7 @@ class JumboGenerator:
                 count += 1
             if left is 0:
                 mode = "TRIANGLE"
-                rows = count - 1
-                columns = count
+                columns = rows = count - 1
 
         #todo: animated handling
 
