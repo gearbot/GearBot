@@ -106,7 +106,7 @@ class EmojiIterator:
                         self.height = (count * 2) - 1
                         self.row_size = 1
                         break
-                if left is 0 or (left is -1 and count % 2 == 0):
+                if left is 0:
                     self.mode = "TRIANGLE"
                     self.width = self.height = count
                     self.row_size = 1
