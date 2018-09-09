@@ -74,6 +74,107 @@ HANDLERS = [
     TwermojiHandler(1),
 ]
 
+class EmojiIterator:
+    def __init__(self, emoji):
+        self.emoji = emoji
+        self.mode = "LINE"
+        self.count = -1
+        self.x = -1
+        self.y = 0
+
+        emoji_count = len(emoji)
+        self.width = emoji_count
+        self.height = 1
+
+        if emoji_count >= 3:
+            if emoji_count % 2 == 0:
+                side = round(math.sqrt(emoji_count))
+                if side * side == emoji_count:
+                    self.mode = "RECTANGLE"
+                    self.width = self.height = side
+            elif emoji_count >= 8:
+                left = emoji_count
+                count = 0
+                sum = 0
+                while left > 0:
+                    count += 1
+                    left -= count
+                    sum += count
+                    if (sum - count) == left:
+                        self.mode = "DIAMOND"
+                        self.width = count
+                        self.height = (count * 2) - 1
+                        self.row_size = 1
+                        break
+                if left is 0 or (left is -1 and count % 2 == 0):
+                    self.mode = "TRIANGLE"
+                    self.width = self.height = count
+                    self.row_size = 1
+
+            if self.mode == "LINE" and emoji_count > 8:
+                self.mode = "RECTANGLE"
+                a = math.ceil(math.sqrt(emoji_count))
+                while emoji_count % a != 0:
+                    a -= 1
+                b = int(emoji_count / a)
+                self.width = max(a, b)
+                self.height = min(a, b)
+
+            if emoji_count > 8 and self.height is 1:
+                self.mode = "CROSS"
+                self.height = self.width = math.ceil(emoji_count / 2)
+
+
+
+    @property
+    def size(self):
+        return self.width, self.height
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.count + 1 >= len(self.emoji):
+            raise StopIteration
+
+        self.count += 1
+        self.x += 1
+
+        size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
+        eid, handler = self.emoji[self.count]
+        image = handler.get_image(eid)
+        image_offset = math.floor((size / 2) - (image.size[0] / 2))
+
+        if self.mode == "LINE":
+            return image, (self.x * size + image_offset, 0)
+        elif self.mode == "RECTANGLE":
+            self.limit_line(self.width)
+            return image, (self.x * size + image_offset, self.y * size)
+        elif self.mode == "TRIANGLE" or self.mode == "DIAMOND":
+            if self.x >= self.row_size:
+                self.row_size += (1 if self.count < len(self.emoji)/2 or self.mode == "TRIANGLE" else -1)
+                self.next_line()
+            row_offset = (self.width - self.row_size) * size / 2
+            x_offset = math.floor(row_offset + (self.x * size))
+            y_offset = self.y * size
+            return image, (x_offset + image_offset, y_offset)
+        elif self.mode == "CROSS":
+            line_limit = self.width if (math.floor(self.height/2)-1 == self.y) else 1
+            self.limit_line(line_limit)
+            modifier = 0 if math.floor(self.height/2)-1 == self.y else self.width / 2
+            x_offset = math.floor((self.x + modifier - 1) * size)
+            y_offset = math.floor(self.y * size)
+            return image, (x_offset + image_offset, y_offset)
+
+    def limit_line(self, limit):
+        if self.x >= limit:
+            self.next_line()
+
+    def next_line(self):
+        self.x = 0
+        self.y += 1
+
+
 
 class JumboGenerator:
 
@@ -117,62 +218,14 @@ class JumboGenerator:
 
 
     async def build(self):
-        size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
-
-        emoji_count = len(self.e_list)
-
-
-        if emoji_count > 8:
-            mode = "LINE"
-            square = math.sqrt(emoji_count)
-            columns = rows = round(square)
-            if emoji_count > rows * columns:
-                rows += 1
-        else:
-            columns = emoji_count
-            rows = 1
-            mode = "LINE"
-
-        # do we have the right amount for a triangle?
-        if emoji_count > 3:
-            left = emoji_count
-            count = 1
-            while left > 0:
-                left -= count
-                count += 1
-            if left is 0:
-                mode = "TRIANGLE"
-                columns = rows = count - 1
-
         #todo: animated handling
-
-        if emoji_count > 0:
-            result = Image.new('RGBA', (size * columns, size * rows))
-
-            if mode == "TRIANGLE":
-                row_size = 1
-                row_count = 0
-                column_count = 0
-                for eid, handler in self.e_list:
-                    row_offset = (columns - row_size) * size / 2
-                    x_offset = math.floor(row_offset + (row_count * size))
-                    y_offset = column_count * size
-                    image = handler.get_image(eid)
-                    result.paste(image, (x_offset, y_offset))
-                    row_count += 1
-                    if row_count == row_size:
-                        row_count = 0
-                        row_size += 1
-                        column_count += 1
-            else:
-                count = 0
-                for eid, handler in self.e_list:
-                    x = count % columns
-                    y = math.floor(count / columns)
-                    image = handler.get_image(eid)
-                    result.paste(image, (round((x * size) + (size / 2) - (image.size[0] / 2)), round(y * size + JUMBO_PADDING)))
-                    count += 1
-
+        if len(self.e_list) > 0:
+            iterator = EmojiIterator(self.e_list)
+            size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
+            result = Image.new('RGBA', (size * iterator.width, size * iterator.height))
+            print(iterator.mode)
+            for info in iterator:
+                result.paste(*info)
             result.save(f"emoji/jumbo{self.number}.png")
 
 
