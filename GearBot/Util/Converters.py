@@ -5,7 +5,6 @@ from discord.ext import commands
 
 from Util import Utils
 
-ID_MATCHER = re.compile("<@([0-9]+)>")
 
 class BannedMember(commands.Converter):
     async def convert(self, ctx, argument):
@@ -15,6 +14,7 @@ class BannedMember(commands.Converter):
             raise commands.BadArgument("Not a valid previously-banned member.")
         return entity
 
+ID_MATCHER = re.compile("<@!?([0-9]+)>")
 
 class UserID(commands.Converter):
     async def convert(self, ctx, argument):
@@ -27,7 +27,7 @@ class UserID(commands.Converter):
         except ValueError:
             pass
         if user is None:
-            raise commands.BadArgument(f"Unable to convert `{argument}` to a userid")
+            raise commands.BadArgument(f"Unable to convert '{Utils.clean_user(argument)}' to a userid")
         return user.id
 
 EMOJI_MATCHER = re.compile('<a*:([^:]+):(?:[0-9]+)>')
