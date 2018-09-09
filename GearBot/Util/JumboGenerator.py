@@ -120,28 +120,59 @@ class JumboGenerator:
         size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
 
         emoji_count = len(self.e_list)
+
+
         if emoji_count > 8:
+            mode = "LINE"
             square = math.sqrt(emoji_count)
-            columns = int(square)
-            rows = int(emoji_count / columns)
+            columns = rows = round(square)
             if emoji_count > rows * columns:
                 rows += 1
         else:
             columns = emoji_count
             rows = 1
+            mode = "LINE"
+
+        # do we have the right amount for a triangle?
+        if emoji_count > 3:
+            left = emoji_count
+            count = 1
+            while left > 0:
+                left -= count
+                count += 1
+            if left is 0:
+                mode = "TRIANGLE"
+                rows = count - 1
+                columns = count
 
         #todo: animated handling
 
         if emoji_count > 0:
             result = Image.new('RGBA', (size * columns, size * rows))
 
-            count = 0
-            for eid, handler in self.e_list:
-                x = count % columns
-                y = math.floor(count / columns)
-                image = handler.get_image(eid)
-                result.paste(image, (round((x * size) + (size / 2) - (image.size[0] / 2)), round(y * size + JUMBO_PADDING)))
-                count += 1
+            if mode == "TRIANGLE":
+                row_size = 1
+                row_count = 0
+                column_count = 0
+                for eid, handler in self.e_list:
+                    row_offset = (columns - row_size) * size / 2
+                    x_offset = math.floor(row_offset + (row_count * size))
+                    y_offset = column_count * size
+                    image = handler.get_image(eid)
+                    result.paste(image, (x_offset, y_offset))
+                    row_count += 1
+                    if row_count == row_size:
+                        row_count = 0
+                        row_size += 1
+                        column_count += 1
+            else:
+                count = 0
+                for eid, handler in self.e_list:
+                    x = count % columns
+                    y = math.floor(count / columns)
+                    image = handler.get_image(eid)
+                    result.paste(image, (round((x * size) + (size / 2) - (image.size[0] / 2)), round(y * size + JUMBO_PADDING)))
+                    count += 1
 
             result.save(f"emoji/jumbo{self.number}.png")
 
