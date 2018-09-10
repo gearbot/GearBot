@@ -3,6 +3,7 @@ import logging
 import sys
 import time
 import traceback
+from logging.handlers import TimedRotatingFileHandler
 
 import discord
 from discord.ext import commands
@@ -11,8 +12,8 @@ from Util import Configuration
 
 logger = logging.getLogger('gearbot')
 def init_logger():
-    logger.setLevel(logging.INFO)
-    handler = logging.FileHandler(filename='gearbot.log', encoding='utf-8', mode='a+')
+    logger.setLevel(logging.DEBUG)
+    handler = TimedRotatingFileHandler(filename='discord.log', encoding='utf-8', when="midnight", backupCount=7)
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
     handler = logging.StreamHandler(stream=sys.stdout)
