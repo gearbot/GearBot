@@ -33,7 +33,7 @@ class Admin:
     async def upgrade(self, ctx):
         await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
         await GearbotLogging.logToBotlog(f"Upgrade initiated by {ctx.author.name}")
-        await GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
+        GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
         file = open("upgradeRequest", "w")
         file.write("upgrade requested")
         file.close()
