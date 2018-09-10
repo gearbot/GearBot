@@ -198,18 +198,28 @@ class ModLog:
             exits.remove(member.id)
             return
         if member.guild.me.guild_permissions.view_audit_log:
-            async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
-                if member.joined_at > entry.created_at:
-                    break
-                if entry.target == member:
-                    if entry.reason is None:
-                        reason = Translator.translate("no_reason", member.guild.id)
-                    else:
-                        reason = entry.reason
-                    InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
-                    await GearbotLogging.logToModLog(member.guild,
-                                                     f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
-                    return
+            try:
+                async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
+                    if member.joined_at > entry.created_at:
+                        break
+                    if entry.target == member:
+                        if entry.reason is None:
+                            reason = Translator.translate("no_reason", member.guild.id)
+                        else:
+                            reason = entry.reason
+                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
+                        await GearbotLogging.logToModLog(member.guild,
+                                                         f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                        return
+            except discord.Forbidden:
+                perm_info = ""
+                permissions = member.guild.me.guild_permissions
+                items = dict()
+                for slot in permissions.__slots__:
+                    items[slot] = getattr(permissions, slot)
+                perm_info += str(items)
+                await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('WARNING')} Tried to fetch audit log for {member.guild.name} ({member.guild.id}) but got denied even though it said i have access, guild permissions: ```{perm_info}```")
+
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
         if channelid is not 0:
             logChannel: discord.TextChannel = self.bot.get_channel(channelid)
