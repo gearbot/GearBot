@@ -238,7 +238,7 @@ async def on_error(bot, event, *args, **kwargs):
     try:
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
         bot.errors = bot.errors + 1
-        GearbotLogging.error(f"error in {event}\n{arg_info}\n{kwarg_info}")
+        GearbotLogging.error(f"error in {event}\n{arg_info}\n{kwarg_info}\ncause message: {traceback._cause_message},\nstacktrace:\n\n{traceback.format_exc()}")
         embed = discord.Embed(colour=discord.Colour(0xff0000),
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
