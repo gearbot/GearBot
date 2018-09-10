@@ -212,12 +212,8 @@ class ModLog:
                                                          f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
             except discord.Forbidden:
-                perm_info = ""
                 permissions = member.guild.me.guild_permissions
-                items = dict()
-                for slot in permissions.__slots__:
-                    items[slot] = getattr(permissions, slot)
-                perm_info += str(items)
+                perm_info =", ".join(f"{name}: {value}" for name, value in permissions)
                 await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('WARNING')} Tried to fetch audit log for {member.guild.name} ({member.guild.id}) but got denied even though it said i have access, guild permissions: ```{perm_info}```")
 
         channelid = Configuration.getConfigVar(member.guild.id, "JOIN_LOGS")
