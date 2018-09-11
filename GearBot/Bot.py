@@ -1,7 +1,5 @@
-import logging
 import os
 from argparse import ArgumentParser
-from logging.handlers import TimedRotatingFileHandler
 
 import discord
 from discord.ext import commands
@@ -55,12 +53,6 @@ if __name__ == '__main__':
     parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
     parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
     parser.add_argument("--token", help="Specify your Discord token")
-
-    logger = logging.getLogger('discord')
-    logger.setLevel(logging.INFO)
-    handler = TimedRotatingFileHandler(filename='discord.log', encoding='utf-8', when="midnight", backupCount=7)
-    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-    logger.addHandler(handler)
 
     GearbotLogging.init_logger()
 
