@@ -44,7 +44,7 @@ class Moderation:
     async def roles_init(self, ctx):
         pages = self.gen_roles_pages(ctx.guild)
         page = pages[0]
-        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1, []
 
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild)
