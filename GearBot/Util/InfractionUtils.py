@@ -11,12 +11,14 @@ def add_infraction(guild_id, user_id, mod_id, type, reason):
                       timestamp=datetime.now())
     if f"{guild_id}_{user_id}" in cache.keys():
         del cache[f"{guild_id}_{user_id}"]
+    if f"{guild_id}_{None}" in cache.keys():
+        del cache[f"{guild_id}_{None}"]
 
 
 async def get_infraction_pages(guild_id, query):
     if f"{guild_id}_{query}" not in cache.keys():
         if query is None:
-            infs = Infraction.select().order_by(Infraction.id.desc()).limit(25)
+            infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
         else:
             infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
                     (Infraction.user_id == query) | (Infraction.mod_id == query))).order_by(Infraction.id.desc())
