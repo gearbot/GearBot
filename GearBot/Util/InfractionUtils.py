@@ -5,15 +5,20 @@ from database.DatabaseConnector import Infraction
 
 cache = dict()
 
+
 def add_infraction(guild_id, user_id, mod_id, type, reason):
-    Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason, timestamp=datetime.now())
+    Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
+                      timestamp=datetime.now())
     if f"{guild_id}_{user_id}" in cache.keys():
         del cache[f"{guild_id}_{user_id}"]
 
 
 async def get_infraction_pages(guild_id, query):
     if f"{guild_id}_{query}" not in cache.keys():
-        infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
+        if query is None:
+            infs = Infraction.select().order_by(Infraction.id.desc()).limit(25)
+        else:
+            infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
                     (Infraction.user_id == query) | (Infraction.mod_id == query))).order_by(Infraction.id.desc())
 
         out = ""
