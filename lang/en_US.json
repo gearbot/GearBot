@@ -248,5 +248,6 @@
   "unknown_nickname_removed": "{user} (`{user_id}`) removed their nickname: **`\u200b{before}\u200b`**",
   "own_nickname_removed": "{user} (`{user_id}`) has removed their nickname: **`\u200b{before}\u200b`**",
   "mod_nickname_removed": "{user} (`{user_id}`) got their nickname removed by {moderator} (`{moderator_id}`): **`\u200b{before}\u200b`**",
-  "username_changed": "{after} (`{user_id}`) has changed username from **`{before}`** to **`{after}`**."
+  "username_changed": "{after} (`{user_id}`) has changed username from **`{before}`** to **`{after}`**.",
+  "recent_infractions": "Recent infractions"
 }
