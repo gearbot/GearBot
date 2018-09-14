@@ -13,7 +13,7 @@ from discord.ext import commands
 from peewee import PeeweeException
 
 import Util
-from Util import Configuration, Emoji, Utils, Translator, GearbotLogging, DocUtils
+from Util import Configuration, Emoji, Utils, Translator, GearbotLogging, DocUtils, Pages
 from database import DatabaseConnector
 
 extensions = [
@@ -169,98 +169,31 @@ async def on_command_error(bot, ctx: commands.Context, error):
         await handle_database_error(bot)
 
     else:
-        bot.errors = bot.errors + 1
-        # log to logger first just in case botlog logging fails as well
-        GearbotLogging.exception(f"Command execution failed:\n"
-                                 f"    Command: {ctx.command}\n"
-                                 f"    Message: {ctx.message.content}\n"
-                                 f"    Channel: {'Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else ctx.channel.name}\n"
-                                 f"    Sender: {ctx.author.name}#{ctx.author.discriminator}\n"
-                                 f"    Exception: {error}", error.original)
+        await handle_exception("Command execution failed", bot, error.original, ctx=ctx)
         # notify caller
         await ctx.send(":rotating_light: Something went wrong while executing that command :rotating_light:")
 
-        embed = discord.Embed(colour=discord.Colour(0xff0000),
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
-        embed.set_author(name="Command execution failed:")
-        embed.add_field(name="Command", value=ctx.command)
-        embed.add_field(name="Original message", value=Utils.trim_message(ctx.message.content, 1024))
-        embed.add_field(name="Channel",
-                        value='Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else f"{ctx.channel.name} ({ctx.channel.id})")
-        embed.add_field(name="Sender", value=f"{ctx.author.name}#{ctx.author.discriminator}")
-        embed.add_field(name="Exception", value=error.original)
-        v = ""
-        for line in traceback.format_tb(error.original.__traceback__):
-            if len(v) + len(line) > 1024:
-                embed.add_field(name="Stacktrace", value=v)
-                v = ""
-            v = f"{v}\n{line}"
-        if len(v) > 0:
-            embed.add_field(name="Stacktrace", value=v)
-        await GearbotLogging.logToBotlog(embed=embed)
 
+def extract_info(o):
+    info = ""
+    if hasattr(o, "__dict__"):
+        info += str(o.__dict__)
+    elif hasattr(o, "__slots__"):
+        items = dict()
+        for slot in o.__slots__:
+            try:
+                items[slot] = getattr(o, slot)
+            except AttributeError:
+                pass
+        info += str(items)
+    else:
+        info += str(o) + " "
+    return info
 
 async def on_error(bot, event, *args, **kwargs):
-    arg_info = ""
-    for arg in list(args):
-        if hasattr(arg, "__dict__"):
-            arg_info += str(arg.__dict__)
-        elif hasattr(arg, "__slots__"):
-            items = dict()
-            for slot in arg.__slots__:
-                items[slot] = getattr(arg, slot)
-            arg_info += f"{slot}: {str(items)}\n"
-        else:
-            arg_info += str(arg)
-        arg_info += "\n"
-    if arg_info == "":
-        arg_info = "No arguments"
-
-    kwarg_info = ""
-    for name, arg in dict(**kwargs).items():
-        kwarg_info += f"{name}: "
-        if hasattr(arg, "__dict__"):
-            kwarg_info += str(arg.__dict__)
-        elif hasattr(arg, "__slots__"):
-            items = dict()
-            for slot in arg.__slots__:
-                items[slot] = getattr(arg, slot)
-                kwarg_info += str(items)
-        else:
-            kwarg_info += str(arg)
-        kwarg_info += "\n"
-    if kwarg_info == "":
-        kwarg_info = "No keyword arguments"
-    type, exception, info = sys.exc_info()
-    if isinstance(exception, PeeweeException):
-        await handle_database_error(bot)
-    try:
-        # something went wrong and it might have been in on_command_error, make sure we log to the log file first
-        bot.errors = bot.errors + 1
-        GearbotLogging.error(f"error in {event}\n{arg_info}\n{kwarg_info}\ncause message: {traceback._cause_message},\nstacktrace:\n\n{traceback.format_exc()}")
-        embed = discord.Embed(colour=discord.Colour(0xff0000),
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-        embed.set_author(name=f"Caught an error in {event}:")
-
-        embed.add_field(name="args", value=str(arg_info))
-        embed.add_field(name="kwargs", value=str(kwarg_info))
-        embed.add_field(name="cause message", value=traceback._cause_message)
-        v = ""
-        for line in traceback.format_exc():
-            if len(v) + len(line) > 1024:
-                embed.add_field(name="Stacktrace", value=v)
-                v = ""
-            v = f"{v}{line}"
-        if len(v) > 0:
-            embed.add_field(name="Stacktrace", value=v)
-            # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking down the bot (and if we ended here it might have even been due to trying to log to botlog
-        await GearbotLogging.logToBotlog(embed=embed)
-    except Exception as ex:
-        GearbotLogging.error(
-            f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
-        GearbotLogging.error(traceback.format_exc())
+    t, exception, info = sys.exc_info()
+    await handle_exception("Event handler failure", bot, exception, event, args=args, kwargs=kwargs)
 
 async def handle_database_error(bot):
     GearbotLogging.error(traceback.format_exc())
@@ -314,3 +247,106 @@ async def handle_database_error(bot):
         message = f"{Emoji.get_chat_emoji('YES')} 1st reconnection attempt successfully connected!"
         await GearbotLogging.message_owner(bot, message)
         await GearbotLogging.logToBotlog(message)
+
+
+
+async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, args = (), kwargs = dict()):
+    bot.errors = bot.errors + 1
+
+    embed = discord.Embed(colour=discord.Colour(0xff0000),
+                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+    # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+    lines = [
+        "\n===========================================EXCEPTION CAUGHT, DUMPING ALL AVAILABLE INFO===========================================",
+        f"Type: {exception_type}"
+    ]
+
+    arg_info = ""
+    for arg in list(args):
+        arg_info += extract_info(arg) + "\n"
+    if arg_info == "":
+        arg_info = "No arguments"
+
+    kwarg_info = ""
+    for name, arg in dict(**kwargs).items():
+        kwarg_info += "{}: {}\n".format(name, extract_info(arg))
+    if kwarg_info == "":
+        kwarg_info = "No keyword arguments"
+
+    lines.append("======================Exception======================")
+    lines.append(f"{str(exception)} ({type(exception)})")
+
+    lines.append("======================ARG INFO======================")
+    lines.append(arg_info)
+
+    lines.append("======================KWARG INFO======================")
+    lines.append(kwarg_info)
+
+    lines.append("======================STACKTRACE======================")
+    tb = "".join(traceback.format_tb(exception.__traceback__))
+    lines.append(tb)
+
+    if message is None and event is not None and hasattr(event, "message"):
+        message = event.message
+
+    if message is None and ctx is not None:
+        message = ctx.message
+
+    if message is not None and hasattr(message, "content"):
+        lines.append("======================ORIGINAL MESSAGE======================")
+        lines.append(message.content)
+        if message.content is None or message.content == "":
+            content = "<no content>"
+        else:
+            content = message.content
+        embed.add_field(name="Original message", value=content, inline=False)
+
+        lines.append("======================ORIGINAL MESSAGE (DETAILED)======================")
+        lines.append(extract_info(message))
+
+    if event is not None:
+        lines.append("======================EVENT NAME======================")
+        lines.append(event)
+        embed.add_field(name="Event", value=event)
+
+
+    if ctx is not None:
+        lines.append("======================COMMAND INFO======================")
+
+        lines.append(f"Command: {ctx.command}")
+        embed.add_field(name="Command", value=ctx.command)
+
+        channel_name = 'Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
+        lines.append(f"Channel: {channel_name}")
+        embed.add_field(name="Channel", value=channel_name, inline=False)
+
+        sender = f"{ctx.author.name}#{ctx.author.discriminator} (`{ctx.author.id}`)"
+        lines.append(f"Sender: {sender}")
+        embed.add_field(name="Sender", value=sender, inline=False)
+
+    lines.append("===========================================DATA DUMP COMPLETE===========================================")
+    GearbotLogging.error("\n".join(lines))
+
+
+    if isinstance(exception, PeeweeException):
+        await handle_database_error(bot)
+
+    #nice embed for info on discord
+
+
+    embed.set_author(name=exception_type)
+    embed.add_field(name="Exception", value=f"{str(exception)} (`{type(exception)}`)", inline=False)
+    parts = Pages.paginate(tb, max_chars=1024)
+    num = 1
+    for part in parts:
+        embed.add_field(name=f"Traceback {num}/{len(parts)}", value=part)
+        num += 1
+
+    # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking down the bot (and if we ended here it might have even been due to trying to log to botlog
+    try:
+        await GearbotLogging.logToBotlog(embed=embed)
+    except Exception as ex:
+        GearbotLogging.error(
+            f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")
+        GearbotLogging.error(traceback.format_exc())
