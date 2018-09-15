@@ -21,17 +21,17 @@ class UserID(commands.Converter):
     async def convert(self, ctx, argument):
         user = None
         match = ID_MATCHER.match(argument)
-        if match is None:
+        if match is not None:
+            argument = match.group(1)
+        else:
             try:
                 user = await UserConverter().convert(ctx, argument)
             except commands.BadArgument:
-                raise commands.BadArgument(f"Unable to convert '{Utils.clean(argument)}' to a userid")
-        else:
-            argument = match.group(1)
-            try:
-                user = await Utils.get_user(int(argument, base=10))
-            except ValueError:
-                pass
+                try:
+                    user = await Utils.get_user(int(argument, base=10))
+                except ValueError:
+                    pass
+
         if user is None:
             raise commands.BadArgument(f"Unable to convert '{Utils.clean(argument)}' to a userid")
         return user.id
