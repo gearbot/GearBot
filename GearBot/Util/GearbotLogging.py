@@ -15,11 +15,12 @@ logger = logging.getLogger('gearbot')
 dlogger = logging.getLogger('discord')
 def init_logger():
     logger.setLevel(logging.DEBUG)
-    dlogger.setLevel(logging.INFO)
+    dlogger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 
     handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setLevel(logging.INFO)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     dlogger.addHandler(handler)
@@ -28,8 +29,13 @@ def init_logger():
         os.mkdir("logs")
     handler = TimedRotatingFileHandler(filename='logs/gearbot.log', encoding='utf-8', when="midnight", backupCount=30)
     handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
     dlogger.addHandler(handler)
     logger.addHandler(handler)
+
+
+    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="midnight", backupCount=7)
+    dlogger.addHandler(handler)
 
 BOT_LOG_CHANNEL:discord.TextChannel
 
