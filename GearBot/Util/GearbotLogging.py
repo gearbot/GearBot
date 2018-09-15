@@ -34,7 +34,7 @@ def init_logger():
     logger.addHandler(handler)
 
 
-    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="midnight", backupCount=7)
+    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="4h", backupCount=30)
     dlogger.addHandler(handler)
 
 BOT_LOG_CHANNEL:discord.TextChannel
