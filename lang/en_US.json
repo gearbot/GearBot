@@ -241,6 +241,7 @@
   "role_added_by": "The `{role}` role was added to {user} (`{user_id}`) by {moderator} (`{moderator_id}`)",
   "nickname_changed": "{user} (`{user_id}`) has changed nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
   "own_nickname_changed": "{user} (`{user_id}`) has changed their own nickname from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
+  "unknown_nickname_changed": "{user} (`{user_id}`) has changed nicknames from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`**",
   "mod_nickname_changed": "{user} (`{user_id}`) had their nickname changed from **`\u200b{before}\u200b`** to **`\u200b{after}\u200b`** by {moderator} (`{moderator_id}`)",
   "unknown_nickname_added": "{user} (`{user_id}`) has added a nickname: **`\u200b{after}\u200b`**",
   "own_nickname_added": "{user} (`{user_id}`) has given themselves a nickname: **`\u200b{after}\u200b`**",
