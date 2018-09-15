@@ -150,4 +150,4 @@ def save_to_disc():
 
 def load_from_disc():
     global known_messages
-    known_messages = Utils.fetchFromDisk("known_messages")
+    known_messages = Utils.fetch_from_disk("known_messages")

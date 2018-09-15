@@ -29,7 +29,7 @@ async def reload(bot):
     await readyBot(bot)
 
 async def readyBot(bot):
-    await Configuration.onReady(bot)
+    await Configuration.on_ready(bot)
     Emoji.on_ready(bot)
     Confirmation.on_ready(bot)
     Pages.on_ready(bot)
@@ -39,7 +39,7 @@ async def readyBot(bot):
         "forced_exits": [],
         "unbans": []
     }
-    await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
+    await GearbotLogging.onReady(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 
 def prepDatabase(bot):
     GearbotLogging.info("Connecting to the database.")

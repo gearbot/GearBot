@@ -241,7 +241,7 @@ class Basic:
         return None, embed, page_num
 
     def gen_role_pages(self, guild: discord.Guild):
-        roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+        roles = Configuration.get_var(guild.id, "SELF_ROLES")
         current_roles = ""
         count = 1
         for role in roles:
@@ -264,7 +264,7 @@ class Basic:
             except Exception as ex:
                 await ctx.send(Translator.translate("role_not_found", ctx))
             else:
-                roles = Configuration.getConfigVar(ctx.guild.id, "SELF_ROLES")
+                roles = Configuration.get_var(ctx.guild.id, "SELF_ROLES")
                 if role.id in roles:
                     try:
                         if role in ctx.author.roles:
@@ -332,10 +332,10 @@ class Basic:
         await JumboGenerator(ctx, emojis).generate()
 
     async def on_guild_role_delete(self, role: discord.Role):
-        roles = Configuration.getConfigVar(role.guild.id, "SELF_ROLES")
+        roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
         if role.id in roles:
             roles.remove(role.id)
-            Configuration.saveConfig(role.guild.id)
+            Configuration.save(role.guild.id)
 
     async def taco_eater(self):
         """A person can eat a taco every 5 mins, we run every 5s"""
@@ -362,7 +362,7 @@ class Basic:
                     for i in range(10):
                         e = Emoji.get_emoji(str(i + 1))
                         if payload.emoji.name == e:
-                            roles = Configuration.getConfigVar(guild.id, "SELF_ROLES")
+                            roles = Configuration.get_var(guild.id, "SELF_ROLES")
                             role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
                             member = guild.get_member(payload.user_id)
                             channel = self.bot.get_channel(payload.channel_id)

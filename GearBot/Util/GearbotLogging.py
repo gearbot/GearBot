@@ -1,8 +1,6 @@
-import datetime
 import logging
 import os
 import sys
-import time
 import traceback
 from logging.handlers import TimedRotatingFileHandler
 
@@ -11,103 +9,91 @@ from discord.ext import commands
 
 from Util import Configuration
 
-logger = logging.getLogger('gearbot')
-dlogger = logging.getLogger('discord')
+LOGGER = logging.getLogger('gearbot')
+DISCORD_LOGGER = logging.getLogger('discord')
+
+
+BOT_LOG_CHANNEL:discord.TextChannel
+STARTUP_ERRORS = []
+BOT:commands.AutoShardedBot = None
+
+
 def init_logger():
-    logger.setLevel(logging.DEBUG)
-    dlogger.setLevel(logging.DEBUG)
+    LOGGER.setLevel(logging.DEBUG)
+    DISCORD_LOGGER.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.setLevel(logging.INFO)
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    dlogger.addHandler(handler)
+    LOGGER.addHandler(handler)
+    DISCORD_LOGGER.addHandler(handler)
 
     if not os.path.isdir("logs"):
         os.mkdir("logs")
     handler = TimedRotatingFileHandler(filename='logs/gearbot.log', encoding='utf-8', when="midnight", backupCount=30)
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
-    dlogger.addHandler(handler)
-    logger.addHandler(handler)
+    DISCORD_LOGGER.addHandler(handler)
+    LOGGER.addHandler(handler)
 
 
-    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="4h", backupCount=30)
-    dlogger.addHandler(handler)
-
-BOT_LOG_CHANNEL:discord.TextChannel
-
-startupErrors = []
-
-
-def info(message):
-    logger.info(message)
-
-
-def warn(message):
-    logger.warning(message)
-
-
-def error(message):
-    logger.error(message)
-
-def exception(message, error):
-    logger.error(message)
-    trace = ""
-    logger.error(str(error))
-    for line in traceback.format_tb(error.__traceback__):
-        trace = f"{trace}\n{line}"
-    logger.error(trace)
-
-
-# for errors during startup before the bot fully loaded and can't log to botlog yet
-def startupError(message, error):
-    logger.exception(message)
-    startupErrors.append({
-        "message": message,
-        "exception": error,
-        "stacktrace": traceback.format_exc().splitlines()
-    })
-
+    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="midnight", backupCount=7)
+    DISCORD_LOGGER.addHandler(handler)
 
 
 async def onReady(bot:commands.Bot, channelID):
-    global BOT_LOG_CHANNEL
+    global BOT_LOG_CHANNEL, BOT
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
-        logger.error("Logging channel is misconfigured, aborting startup!")
+        LOGGER.error("==========================Logging channel is misconfigured, aborting startup!==========================")
         await bot.logout()
 
-    if len(startupErrors) > 0:
-        await logToBotlog(f":rotating_light: Caught {len(startupErrors)} {'exceptions' if len(startupErrors) > 1 else 'exception'} during startup.")
-        for error in startupErrors:
-            embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-            embed.set_author(name=error["message"])
-
-            embed.add_field(name="Exception", value=error["exception"])
-            stacktrace = ""
-            while len(error["stacktrace"]) > 0:
-                partial = error["stacktrace"].pop(0)
-                if len(stacktrace) + len(partial) > 1024:
-                    embed.add_field(name="Stacktrace", value=stacktrace)
-                    stacktrace = ""
-                stacktrace = f"{stacktrace}\n{partial}"
-            if len(stacktrace) > 0:
-                embed.add_field(name="Stacktrace", value=stacktrace)
-            await logToBotlog(embed=embed)
+    if len(STARTUP_ERRORS) > 0:
+        await bot_log(
+            f":rotating_light: Caught {len(STARTUP_ERRORS)} {'exceptions' if len(STARTUP_ERRORS) > 1 else 'exception'} during startup.")
+        for e in STARTUP_ERRORS:
+            await e
 
 
+def info(message):
+    LOGGER.info(message)
 
 
-async def logToBotlog(message = None, embed = None):
-    return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
+def warn(message):
+    LOGGER.warning(message)
+
+
+def error(message):
+    LOGGER.error(message)
+
+def exception(message, error):
+    LOGGER.error(message)
+    trace = ""
+    LOGGER.error(str(error))
+    for line in traceback.format_tb(error.__traceback__):
+        trace = f"{trace}\n{line}"
+    LOGGER.error(trace)
+
+
+async def bot_log(message = None, embed = None):
+    if BOT_LOG_CHANNEL is not None:
+        return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
+    else:
+        STARTUP_ERRORS.append(bot_log(message, embed))
+
+async def log_to(guild_id, type, message=None, embed=None, file=None):
+    channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+    for info in channels.values():
+        if type in info["TYPES"]:
+            channel = BOT.get_channel(info["ID"])
+            if channel is not None:
+                await channel.send(message, embed=embed, file=file)
+
 
 async def logToModLog(guild, message=None, embed=None):
-    modlog:discord.TextChannel = guild.get_channel(Configuration.getConfigVar(guild.id, "MOD_LOGS"))
+    modlog:discord.TextChannel = guild.get_channel(Configuration.get_var(guild.id, "MOD_LOGS"))
     if modlog is not None:
         perms = modlog.permissions_for(guild.me)
         if perms.send_messages:
@@ -116,7 +102,7 @@ async def logToModLog(guild, message=None, embed=None):
 
 
 async def log_to_minor_log(guild, message=None, embed=None, file=None):
-    minor_log:discord.TextChannel = guild.get_channel(Configuration.getConfigVar(guild.id, "MINOR_LOGS"))
+    minor_log:discord.TextChannel = guild.get_channel(Configuration.get_var(guild.id, "MINOR_LOGS"))
     if minor_log is not None:
         perms = minor_log.permissions_for(guild.me)
         if perms.send_messages:

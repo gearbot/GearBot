@@ -2,11 +2,11 @@ from peewee import *
 
 from Util import Configuration
 
-connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"),
-                  user=Configuration.getMasterConfigVar("DATABASE_USER"),
-                  password=Configuration.getMasterConfigVar("DATABASE_PASS"),
-                  host=Configuration.getMasterConfigVar("DATABASE_HOST"),
-                  port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
+connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
+                           user=Configuration.get_master_var("DATABASE_USER"),
+                           password=Configuration.get_master_var("DATABASE_PASS"),
+                           host=Configuration.get_master_var("DATABASE_HOST"),
+                           port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
 
 
 class LoggedMessage(Model):
@@ -55,11 +55,11 @@ class Infraction(Model):
 
 def init():
     global connection
-    connection = MySQLDatabase(Configuration.getMasterConfigVar("DATABASE_NAME"),
-                  user=Configuration.getMasterConfigVar("DATABASE_USER"),
-                  password=Configuration.getMasterConfigVar("DATABASE_PASS"),
-                  host=Configuration.getMasterConfigVar("DATABASE_HOST"),
-                  port=Configuration.getMasterConfigVar("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
+    connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
+                               user=Configuration.get_master_var("DATABASE_USER"),
+                               password=Configuration.get_master_var("DATABASE_PASS"),
+                               host=Configuration.get_master_var("DATABASE_HOST"),
+                               port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
     connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction])
     connection.close()

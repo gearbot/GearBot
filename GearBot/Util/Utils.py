@@ -24,11 +24,13 @@ async def cache_nuke():
         await asyncio.sleep(5*60)
 
 
-def fetchFromDisk(filename):
+def fetch_from_disk(filename, alternative=None):
     try:
         with open(f"{filename}.json") as file:
             return json.load(file)
     except FileNotFoundError:
+        if alternative is not None:
+            fetch_from_disk(alternative)
         return dict()
 
 def saveToDisk(filename, dict):
@@ -57,7 +59,7 @@ def convertToSeconds(value: int, type: str):
         return value
 
 async def cleanExit(bot, trigger):
-    await GearbotLogging.logToBotlog(f"Shutdown triggered by {trigger}.")
+    await GearbotLogging.bot_log(f"Shutdown triggered by {trigger}.")
     await bot.logout()
     await bot.close()
     bot.aiosession.close()

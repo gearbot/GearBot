@@ -32,9 +32,9 @@ def translate(key, location, **kwargs):
         if hasattr(location, "guild"):
             location = location.guild
         if location is not None and hasattr(location, "id"):
-            lang_key = Configuration.getConfigVar(location.id, "LANG")
+            lang_key = Configuration.get_var(location.id, "LANG")
         else:
-            lang_key = Configuration.getConfigVar(location, "LANG")
+            lang_key = Configuration.get_var(location, "LANG")
     else:
         lang_key = "en_US"
     if key in LANGS[lang_key].keys():
@@ -46,12 +46,12 @@ def translate(key, location, **kwargs):
 
 
 async def update():
-    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
-    project_key = Configuration.getMasterConfigVar("CROWDIN_KEY")
+    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
+    project_key = Configuration.get_master_var("CROWDIN_KEY")
     session: aiohttp.ClientSession = bot.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?key={project_key}&json",) as reply:
         if reply.status is not 200:
-            await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('WARNING')} Crowdin api error, got response code {reply.status}")
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('WARNING')} Crowdin api error, got response code {reply.status}")
         else:
             response  = await reply.json()
             if response["success"]["status"] == "built": # only update translations if we actually got a new build, should be every time though unless this runs 2x within 30 mins for some reason
@@ -81,7 +81,7 @@ async def update():
                 await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
 async def upload():
-    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
+    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
     t = threading.Thread(target=upload_file)
     t.start()
     while t.is_alive():
@@ -90,5 +90,5 @@ async def upload():
 
 def upload_file():
     data = {'files[master/lang/en_US.json]': open('lang/en_US.json', 'r')}
-    project_key = Configuration.getMasterConfigVar("CROWDIN_KEY")
+    project_key = Configuration.get_master_var("CROWDIN_KEY")
     requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?key={project_key}&json", files=data)

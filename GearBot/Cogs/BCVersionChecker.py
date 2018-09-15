@@ -160,7 +160,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                 v = f"{v}\n{line}"
             if len(v) > 0:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.logToBotlog(embed=embed)
+            await GearbotLogging.bot_log(embed=embed)
         for i in range(1,60):
             if checkcog.force or not checkcog.running:
                 break

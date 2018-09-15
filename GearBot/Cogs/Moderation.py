@@ -28,7 +28,7 @@ class Moderation:
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
-        bot.mutes = self.mutes = Utils.fetchFromDisk("mutes")
+        bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
         Pages.register("roles", self.roles_init, self.roles_update), []
@@ -189,7 +189,7 @@ class Moderation:
         """mute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
         else:
@@ -222,7 +222,7 @@ class Moderation:
         """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        roleid = Configuration.getConfigVar(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} The mute feature has been disabled on this server, as such i cannot unmute that person")
@@ -319,7 +319,7 @@ class Moderation:
             return
         if channel is None:
             channel = ctx.message.channel
-        channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
+        channel_id = Configuration.get_var(ctx.guild.id, "MINOR_LOGS")
         if channel_id is not 0:
             permissions = channel.permissions_for(ctx.author)
             if permissions.read_messages and permissions.read_message_history:
@@ -338,7 +338,7 @@ class Moderation:
             return
         user = await Utils.conver_to_id(ctx, user)
         if user is not None:
-            channel_id = Configuration.getConfigVar(ctx.guild.id, "MINOR_LOGS")
+            channel_id = Configuration.get_var(ctx.guild.id, "MINOR_LOGS")
             if channel_id is not 0:
                 messages = LoggedMessage.select().where(
                     (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
@@ -350,7 +350,7 @@ class Moderation:
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
-        roleid = Configuration.getConfigVar(guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(guild.id, "MUTE_ROLE")
         if roleid is not 0:
             role = discord.utils.get(guild.roles, id=roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
@@ -362,7 +362,7 @@ class Moderation:
 
     async def on_member_join(self, member: discord.Member):
         if str(member.guild.id) in self.mutes and member.id in self.mutes[str(member.guild.id)]:
-            roleid = Configuration.getConfigVar(member.guild.id, "MUTE_ROLE")
+            roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
                 role = discord.utils.get(member.guild.roles, id=roleid)
                 if role is not None:
@@ -395,12 +395,12 @@ async def unmuteTask(modcog: Moderation):
             for guildid, list in modcog.mutes.items():
                 guild: discord.Guild = modcog.bot.get_guild(int(guildid))
                 toremove = []
-                if Configuration.getConfigVar(int(guildid), "MUTE_ROLE") is 0:
+                if Configuration.get_var(int(guildid), "MUTE_ROLE") is 0:
                     guildstoremove.append(guildid)
                 for userid, until in list.items():
                     if time.time() > until and userid not in skips:
                         member = guild.get_member(int(userid))
-                        role = discord.utils.get(guild.roles, id=Configuration.getConfigVar(int(guildid), "MUTE_ROLE"))
+                        role = discord.utils.get(guild.roles, id=Configuration.get_var(int(guildid), "MUTE_ROLE"))
                         if guild.me.guild_permissions.manage_roles:
                             await member.remove_roles(role, reason="Mute expired")
                             await GearbotLogging.logToModLog(guild,
@@ -440,6 +440,6 @@ async def unmuteTask(modcog: Moderation):
                 v = f"{v}\n{line}"
             if len(v) > 0:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.logToBotlog(embed=embed)
+            await GearbotLogging.bot_log(embed=embed)
             await asyncio.sleep(10)
     GearbotLogging.info("Unmute background task terminated")

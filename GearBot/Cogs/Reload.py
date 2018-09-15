@@ -25,7 +25,7 @@ class Reload:
             self.bot.unload_extension(f"Cogs.{cog}")
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been reloaded.')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been reloaded by {ctx.author.name}.', log=True)
+            await GearbotLogging.bot_log(f'**{cog}** has been reloaded by {ctx.author.name}.', log=True)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
@@ -34,7 +34,7 @@ class Reload:
         if os.path.isfile(f"Cogs/{cog}.py") or os.path.isfile(f"GearBot/Cogs/{cog}.py"):
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f"**{cog}** has been loaded!")
-            await GearbotLogging.logToBotlog(f"**{cog}** has been loaded by {ctx.author.name}.")
+            await GearbotLogging.bot_log(f"**{cog}** has been loaded by {ctx.author.name}.")
             GearbotLogging.info(f"{cog} has been loaded")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
@@ -44,7 +44,7 @@ class Reload:
         if cog in ctx.bot.cogs:
             self.bot.unload_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been unloaded.')
-            await GearbotLogging.logToBotlog(f'**{cog}** has been unloaded by {ctx.author.name}')
+            await GearbotLogging.bot_log(f'**{cog}** has been unloaded by {ctx.author.name}')
             GearbotLogging.info(f"{cog} has been unloaded")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
@@ -52,7 +52,7 @@ class Reload:
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
         async with ctx.typing():
-            message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
+            message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
             ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
             GearbotLogging.info("Initiating hot reload")
             utils = importlib.reload(Util)

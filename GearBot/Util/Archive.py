@@ -18,7 +18,7 @@ async def archive_purge(bot, guild_id, messages):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(out)
     with open (filename, "rb") as file:
-        await GearbotLogging.log_to_minor_log(bot.get_guild(guild_id), message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(file, "Purged messages archive.txt"))
+        await GearbotLogging.log_to(guild_id, "EDIT_LOGS", message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(file, "Purged messages archive.txt"))
     os.remove(filename)
 
 async def pack_messages(messages):

@@ -31,9 +31,9 @@ class Censor:
         ctx: commands.Context = await self.bot.get_context(message)
         guild = message.guild
         is_mod = Permissioncheckers.get_user_lvl(ctx) >= 2
-        if message.author == guild.me or is_mod or message.author.id in Configuration.getConfigVar(guild.id, "IGNORED_USERS"):
+        if message.author == guild.me or is_mod or message.author.id in Configuration.get_var(guild.id, "IGNORED_USERS"):
             return
-        guilds = Configuration.getConfigVar(message.guild.id, "INVITE_WHITELIST")
+        guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
         if len(guilds) is not 0:
             codes = INVITE_MATCHER.findall(message.content)
             for code in codes:
