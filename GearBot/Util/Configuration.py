@@ -11,40 +11,43 @@ CONFIG_VERSION = 0
 
 def initial_migration(config):
     config["LOG_CHANNELS"] = dict()
+    config["LOG_EVERYTHING"] = False
+
     keys = {
         "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES"],
         "JOIN_LOGS": ["JOIN_LOGS"],
         "MOD_LOGS": ["MOD_ACTIONS"],
     }
-    count = 1
+
     for key, settings in keys.items():
         cid = config[key]
         if cid is not 0:
             found = False
-            for info in config["LOG_CHANNELS"].values():
-                if cid == info["ID"]:
+            for channel, info in config["LOG_CHANNELS"].items():
+                if cid == channel:
                     for setting in settings:
                         info["TYPES"].append(setting)
                     found = True
             if not found:
-                config["LOG_CHANNELS"][f"MIGRATED{count}"] = {
-                    "ID": cid,
+                config["LOG_CHANNELS"][cid] = {
                     "TYPES": settings
                 }
         for setting in settings:
             config[setting] = cid != 0
         del config[key]
+    for channel, info in config["LOG_CHANNELS"].items():
+        log_all = all(all(t in info["TYPES"] for t in types) for types in keys.values())
+        info["EVERYTHING"] = log_all
+        config["LOG_EVERYTHING"] = log_all
+        if log_all:
+            info["TYPES"] = []
+
     return config
 
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
 MIGRATORS = [initial_migration]
-
-
-#     "MINOR_LOGS": 0,
-#     "JOIN_LOGS": 0,
-#     "MOD_LOGS": 0,
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION
@@ -72,7 +75,7 @@ def load_master():
 def load_config(guild):
     global SERVER_CONFIGS
     config = Utils.fetch_from_disk(f'config/{guild}')
-    if "VERSION" not in config and len(config) != 15:
+    if "VERSION" not in config and len(config) < 15:
         GearbotLogging.info(f"The config for {guild} is to old to migrate, falling back to blank config")
         config = dict()
     else:

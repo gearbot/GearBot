@@ -85,9 +85,9 @@ async def bot_log(message = None, embed = None):
 
 async def log_to(guild_id, type, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
-    for info in channels.values():
-        if type in info["TYPES"]:
-            channel = BOT.get_channel(info["ID"])
+    for cid, info in channels.items():
+        if info["EVERYTHING"] or type in info["TYPES"]:
+            channel = BOT.get_channel(cid)
             if channel is not None:
                 await channel.send(message, embed=embed, file=file)
 

@@ -28,6 +28,10 @@ class ModLog:
     def __unload(self):
         self.running = False
 
+    @staticmethod
+    def is_enabled(guild_id, log_type):
+        return Configuration.get_var(guild_id, log_type) or Configuration.get_var(guild_id, "LOG_EVERYTHING")
+
     async def buildCache(self, guild: discord.Guild, limit=500, startup=False):
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
         newCount = 0
@@ -81,7 +85,7 @@ class ModLog:
             f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
         self.to_cache = []
         for guild in self.bot.guilds:
-            if Configuration.get_var(guild.id, "EDIT_LOGS") is not 0:
+            if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
         for i in range(min(3, len(self.bot.guilds))):
             self.bot.loop.create_task(self.startup_cache())
@@ -104,7 +108,7 @@ class ModLog:
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
+        if self.is_enabled(message.guild.id, "EDIT_LOGS"):
             for a in message.attachments:
                 LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
                                      timestamp=message.created_at.timestamp(), channel=message.channel.id,
@@ -114,7 +118,7 @@ class ModLog:
 
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         message = LoggedMessage.get_or_none(messageid=data.message_id)
-        if message is not None and Configuration.get_var(message.guild.id, "EDIT_LOGS"):
+        if message is not None and self.is_enabled(message.guild.id, "EDIT_LOGS"):
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
@@ -139,7 +143,7 @@ class ModLog:
         if event.data["channel_id"] == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
         message = LoggedMessage.get_or_none(messageid=event.message_id)
-        if message is not None and "content" in event.data and Configuration.get_var(message.server, "EDIT_LOGS"):
+        if message is not None and "content" in event.data and self.is_enabled(message.server, "EDIT_LOGS"):
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
                 return
@@ -168,7 +172,7 @@ class ModLog:
             message.save()
 
     async def on_member_join(self, member: discord.Member):
-        if Configuration.get_var(member.guild.id, "JOIN_LOGS"):
+        if self.is_enabled(member.guild.id, "JOIN_LOGS"):
             dif = (datetime.datetime.utcnow() - member.created_at)
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
@@ -186,7 +190,7 @@ class ModLog:
         if member.id in exits:
             exits.remove(member.id)
             return
-        if member.guild.me.guild_permissions.view_audit_log and Configuration.get_var(member.guild.id, "MOD_ACTIONS"):
+        if member.guild.me.guild_permissions.view_audit_log and self.is_enabled(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
                     if member.joined_at > entry.created_at:
@@ -206,13 +210,13 @@ class ModLog:
                 await GearbotLogging.bot_log(
                     f"{Emoji.get_chat_emoji('WARNING')} Tried to fetch audit log for {member.guild.name} ({member.guild.id}) but got denied even though it said i have access, guild permissions: ```{perm_info}```")
 
-        if Configuration.get_var(member.guild.id, "JOIN_LOGS"):
+        if self.is_enabled(member.guild.id, "JOIN_LOGS"):
             await GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                         f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
         if user.id == self.bot.user.id: return
-        if user.id in self.bot.data["forced_exits"] or not Configuration.get_var(guild.id, "MOD_ACTIONS"):
+        if user.id in self.bot.data["forced_exits"] or not self.is_enabled(guild.id, "MOD_ACTIONS"):
             return
         if guild.me.guild_permissions.view_audit_log:
             async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=2):
@@ -231,7 +235,7 @@ class ModLog:
         self.bot.data["forced_exits"].append(user.id)
 
     async def on_member_unban(self, guild, user):
-        if user.id in self.bot.data["unbans"] or not Configuration.get_var(guild.id, "MOD_ACTIONS"):
+        if user.id in self.bot.data["unbans"] or not self.is_enabled(guild.id, "MOD_ACTIONS"):
             return
         else:
             if guild.me.guild_permissions.view_audit_log:
@@ -249,7 +253,7 @@ class ModLog:
         guild = before.guild
         audit_log = guild.me.guild_permissions.view_audit_log
         # nickname changes
-        if Configuration.get_var(guild.id, "NAME_CHANGES"):
+        if self.is_enabled(guild.id, "NAME_CHANGES"):
             if (before.nick != after.nick and
                     after.nick != before.nick):
                 name = Utils.clean_user(after)
@@ -286,7 +290,7 @@ class ModLog:
                 await GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                             f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
         # role changes
-        if Configuration.get_var(guild.id, "ROLE_CHANGES"):
+        if self.is_enabled(guild.id, "ROLE_CHANGES"):
             if len(before.roles) != len(after.roles):
                 log_message = ""
                 removed = []
@@ -323,7 +327,7 @@ class ModLog:
                     await GearbotLogging.log_to(guild.id, "ROLE_CHANGES", log_message)
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
-        if Configuration.get_var(event.guild_id, "EDIT_LOGS"):
+        if self.is_enabled(event.guild_id, "EDIT_LOGS"):
             message_list = dict()
             for mid in event.message_ids:
                 message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
