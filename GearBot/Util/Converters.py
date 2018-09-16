@@ -23,14 +23,13 @@ class UserID(commands.Converter):
         match = ID_MATCHER.match(argument)
         if match is not None:
             argument = match.group(1)
-        else:
+        try:
+            user = await UserConverter().convert(ctx, argument)
+        except commands.BadArgument:
             try:
-                user = await UserConverter().convert(ctx, argument)
-            except commands.BadArgument:
-                try:
-                    user = await Utils.get_user(int(argument, base=10))
-                except ValueError:
-                    pass
+                user = await Utils.get_user(int(argument, base=10))
+            except ValueError:
+                pass
 
         if user is None:
             raise commands.BadArgument(f"Unable to convert '{Utils.clean(argument)}' to a userid")
