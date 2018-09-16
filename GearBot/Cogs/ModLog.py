@@ -109,10 +109,10 @@ class ModLog:
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if self.is_enabled(message.guild.id, "EDIT_LOGS"):
+            LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
+                                 timestamp=message.created_at.timestamp(), channel=message.channel.id,
+                                 server=message.guild.id)
             for a in message.attachments:
-                LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                                     timestamp=message.created_at.timestamp(), channel=message.channel.id,
-                                     server=message.guild.id)
                 LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
                                         messageid=message.id)
 
@@ -151,7 +151,7 @@ class ModLog:
             hasUser = user is not None
             if message.content == event.data["content"]:
                 # prob just pinned
-                return
+                returng
             if message.content is None or message.content == "":
                 message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
             if not (hasUser and user.id in Configuration.get_var(channel.guild.id,

@@ -45,6 +45,7 @@ def init_logger():
 
 async def onReady(bot:commands.Bot, channelID):
     global BOT_LOG_CHANNEL, BOT
+    BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
         LOGGER.error("==========================Logging channel is misconfigured, aborting startup!==========================")
@@ -87,26 +88,9 @@ async def log_to(guild_id, type, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
         if info["EVERYTHING"] or type in info["TYPES"]:
-            channel = BOT.get_channel(cid)
+            channel = BOT.get_channel(int(cid))
             if channel is not None:
                 await channel.send(message, embed=embed, file=file)
-
-
-async def logToModLog(guild, message=None, embed=None):
-    modlog:discord.TextChannel = guild.get_channel(Configuration.get_var(guild.id, "MOD_LOGS"))
-    if modlog is not None:
-        perms = modlog.permissions_for(guild.me)
-        if perms.send_messages:
-            await modlog.send(message, embed=embed)
-        #TODO: notify guild owner?
-
-
-async def log_to_minor_log(guild, message=None, embed=None, file=None):
-    minor_log:discord.TextChannel = guild.get_channel(Configuration.get_var(guild.id, "MINOR_LOGS"))
-    if minor_log is not None:
-        perms = minor_log.permissions_for(guild.me)
-        if perms.send_messages:
-            await minor_log.send(message, embed=embed, file=file)
 
 async def message_owner(bot, message):
     if bot.owner_id is None:

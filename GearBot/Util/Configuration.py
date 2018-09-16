@@ -14,7 +14,7 @@ def initial_migration(config):
     config["LOG_EVERYTHING"] = False
 
     keys = {
-        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES"],
+        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR"],
         "JOIN_LOGS": ["JOIN_LOGS"],
         "MOD_LOGS": ["MOD_ACTIONS"],
     }
@@ -52,6 +52,7 @@ MIGRATORS = [initial_migration]
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION
     CONFIG_VERSION = Utils.fetch_from_disk("config/template")["VERSION"]
+    GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")
     GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
     for guild in bot.guilds:
         GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
@@ -76,7 +77,7 @@ def load_config(guild):
     global SERVER_CONFIGS
     config = Utils.fetch_from_disk(f'config/{guild}')
     if "VERSION" not in config and len(config) < 15:
-        GearbotLogging.info(f"The config for {guild} is to old to migrate, falling back to blank config")
+        GearbotLogging.info(f"The config for {guild} is to old to migrate, resetting")
         config = dict()
     else:
         if "VERSION" not in config:
@@ -88,7 +89,9 @@ def load_config(guild):
         save(guild)
 
 def update_config(config):
+    v = config["VERSION"]
     while config["VERSION"] < CONFIG_VERSION:
+        GearbotLogging.info(f"Upgrading config version from version {v} to {v+1}")
         config = MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
 
