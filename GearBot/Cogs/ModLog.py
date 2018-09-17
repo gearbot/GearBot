@@ -18,12 +18,12 @@ class ModLog:
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
-        self.bot.loop.create_task(self.prep())
-        self.bot.loop.create_task(cache_task(self))
         self.running = True
         self.cache_message = None
         self.to_cache = []
         self.cache_start = 0
+        self.bot.loop.create_task(self.prep())
+        self.bot.loop.create_task(cache_task(self))
 
     def __unload(self):
         self.running = False
@@ -151,7 +151,7 @@ class ModLog:
             hasUser = user is not None
             if message.content == event.data["content"]:
                 # prob just pinned
-                returng
+                return
             if message.content is None or message.content == "":
                 message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
             if not (hasUser and user.id in Configuration.get_var(channel.guild.id,
@@ -336,6 +336,10 @@ class ModLog:
             if len(message_list) > 0:
                 await Archive.archive_purge(self.bot, event.guild_id,
                                             collections.OrderedDict(sorted(message_list.items())))
+
+    @staticmethod
+    async def on_command_completion(ctx):
+        print(f"Command complete: {ctx.message.content}")
 
 
 async def cache_task(modlog: ModLog):

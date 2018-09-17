@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Confirmation
 
 
 class ServerHolder(object):
@@ -51,20 +51,6 @@ async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>"):
     await ctx.send(embed=embed)
 
 
-async def set_log_channel(ctx, channel, log_type, permissions=None):
-    if permissions is None:
-        permissions = ["read_messages", "send_messages"]
-    channel_permissions = channel.permissions_for(ctx.guild.get_member(ctx.bot.user.id))
-    if all(getattr(channel_permissions, perm) for perm in permissions):
-        Configuration.set_var(ctx.guild.id, f"{log_type}_LOGS".upper(), channel.id)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{log_type}_log_channel_set', ctx, channel=channel.mention)}")
-        return True
-    else:
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_perms_in_channel', ctx, perms1=', '.join(permissions[:-1]), perms2=permissions[-1:])}")
-        return False
-
-
 def gen_override_strings(ctx, perm_dict, prefix = ""):
     output = ""
     for command, d in perm_dict["commands"].items():
@@ -84,6 +70,10 @@ class Serveradmin:
         "commands": {
         }
     }
+
+    logging_types = [
+        "EVERYTHING", "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED"
+    ]
 
     def __init__(self, bot):
         bot.to_cache = []
@@ -248,26 +238,6 @@ class Serveradmin:
     @ignored_users.command(name="remove")
     async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
         await remove_item(ctx, user, "ignored", "users")
-
-    @configure.command()
-    async def joinLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for join/leave logs"""
-        await set_log_channel(ctx, channel, "join")
-
-
-    @configure.command()
-    async def modLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for modlogs (mute/kick/ban/...)"""
-        await set_log_channel(ctx, channel, "mod")
-
-    @configure.command()
-    async def minorLogChannel(self, ctx: commands.Context, channel: discord.TextChannel):
-        """Sets the logging channel for minor logs (edit/delete)"""
-        old = Configuration.get_var(ctx.guild.id, "MINOR_LOGS")
-        new = await set_log_channel(ctx, channel, "minor")
-        if old == 0 and new:
-            await ctx.send(Translator.translate('minor_log_caching_start', ctx))
-            self.bot.to_cache.append(ctx)
 
 
     @configure.group()
@@ -481,6 +451,137 @@ class Serveradmin:
             else:
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('NO')} {Translator.translate('did_not_have_lvl4', ctx, member=person, command=command)}")
+
+    @configure.group()
+    @commands.guild_only()
+    async def log_channels(self, ctx):
+        if ctx.invoked_subcommand is self.log_channels:
+            embed = discord.Embed(color=6008770, title=Translator.translate('log_channels', ctx))
+            channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+            if len(channels) > 0:
+                for cid, info in channels.items():
+                    embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, info))
+
+                await ctx.send(embed=embed)
+
+    @staticmethod
+    def get_channel_properties(ctx, cid, info):
+        value = ""
+        channel = ctx.bot.get_channel(int(cid))
+        if channel is None:
+            value += f"{Translator.translate('channel_removed', ctx)}\n"
+        else:
+            value += f"{channel.mention}\n"
+            perms = ["send_messages", "embed_links", "attach_files"]
+            permissions = channel.permissions_for(channel.guild.me)
+            missing = []
+            for p in perms:
+                if not getattr(permissions, p):
+                    missing.append(p)
+            value += f"**{Translator.translate('channel_perms', ctx)}** \n"
+            if len(missing) == 0:
+                value += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('full_channel_perms', ctx)}\n"
+            else:
+                value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n"
+        if info["EVERYTHING"]:
+            tbl = "EVERYTHING"
+        else:
+            tbl = ", ".join(info["TYPES"])
+        value += f"**{Translator.translate('to_be_logged', ctx)}** \n{tbl}"
+        return value
+
+    @log_channels.command(name="add")
+    async def add_log_channel(self, ctx, channel:discord.TextChannel):
+        channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+        cid = str(channel.id)
+        if cid in channels:
+            embed = discord.Embed(color=6008770)
+            embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('already_logging_channel', ctx, channel=channel.mention)}", embed=embed)
+        else:
+            channels[cid] = {
+                "EVERYTHING": False,
+                "TYPES": []
+            }
+            translated = Translator.translate("log_channel_added", ctx, channel=channel.mention)
+            types = "\n".join(f" - `{t}`" for t in self.logging_types)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {translated}\n{types}")
+            Configuration.save(ctx.guild.id)
+
+
+    @log_channels.command(name="add_logging")
+    async def add_logging(self, ctx, channel:discord.TextChannel, *, types):
+        cid = str(channel.id)
+        channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+        if cid not in channels:
+            async def yes():
+                wrench = Emoji.get_chat_emoji('WRENCH')
+                translated = Translator.translate('executing_command', ctx, command=f"configure log_channels add f{cid}")
+                await ctx.send(f"{wrench} {translated}")
+                await ctx.invoke(self.add_log_channel, channel)
+                await ctx.invoke(self.add_logging, channel, types=types)
+
+            async def nope():
+                no = Emoji.get_emoji("NO")
+                translated = Translator.translate("command_canceled", ctx)
+                await ctx.send(f"{no} {translated}")
+
+            translated = Translator.translate("create_log_channel", ctx, channel = channel.mention)
+            await Confirmation.confirm(ctx, translated, on_yes=yes, on_no=nope)
+        else:
+            info = channels[cid]
+            added = []
+            unknown = []
+            ignored = []
+            message = ""
+            types = types.upper()
+            if "EVERYTHING" in types:
+                info["EVERYTHING"] = True
+                info["TYPES"] = []
+                added.append("EVERYTHING")
+            else:
+                for t in [t.strip(",").upper() for t in types.split(" ")]:
+                    if t not in self.logging_types:
+                        unknown.append(t)
+                    elif t in info["TYPES"] or info["EVERYTHING"]:
+                        ignored.append(t)
+                    else:
+                        info["TYPES"].append(t)
+                        added.append(t)
+            if len(added) > 0:
+                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_added', ctx)}{', '.join(added)}"
+
+            if len(ignored) > 0:
+                message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_ignored', ctx)}{', '.join(ignored)}"
+
+            if len(unknown) > 0:
+                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
+
+            embed = discord.Embed(color=6008770)
+            embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            await ctx.send(message, embed=embed)
+            Configuration.save(ctx.guild.id)
+
+
+
+
+    @log_channels.command(name="remove_logging")
+    async def remove_logging(self, ctx, channel: discord.TextChannel, *, types):
+        pass
+
+    @configure.group()
+    @commands.guild_only()
+    async def log_types(self, ctx):
+        pass
+
+    @log_types.command(name="enable")
+    async def enable_log_types(self, ctx, types):
+        pass
+
+    @log_types.command(name="disable")
+    async def disable_log_types(self, ctx, types):
+        pass
+
 
     @commands.group()
     @commands.guild_only()

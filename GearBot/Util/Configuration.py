@@ -12,9 +12,10 @@ CONFIG_VERSION = 0
 def initial_migration(config):
     config["LOG_CHANNELS"] = dict()
     config["LOG_EVERYTHING"] = False
+    config["TIMESTAMPS"] = True
 
     keys = {
-        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR"],
+        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR", "COMMAND_EXECUTED"],
         "JOIN_LOGS": ["JOIN_LOGS"],
         "MOD_LOGS": ["MOD_ACTIONS"],
     }
