@@ -40,7 +40,7 @@ def init_logger():
     LOGGER.addHandler(handler)
 
 
-    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="midnight", backupCount=7)
+    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4, backupCount=30)
     DISCORD_LOGGER.addHandler(handler)
 
 
