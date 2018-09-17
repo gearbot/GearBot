@@ -15,7 +15,7 @@ def initial_migration(config):
     config["TIMESTAMPS"] = True
 
     keys = {
-        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR", "COMMAND_EXECUTED"],
+        "MINOR_LOGS": ["EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR_LOGS", "COMMAND_EXECUTED"],
         "JOIN_LOGS": ["JOIN_LOGS"],
         "MOD_LOGS": ["MOD_ACTIONS"],
     }
