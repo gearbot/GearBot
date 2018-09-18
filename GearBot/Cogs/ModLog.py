@@ -22,7 +22,7 @@ class ModLog:
         self.cache_message = None
         self.to_cache = []
         self.cache_start = 0
-        self.bot.loop.create_task(self.prep())
+        self.bot.loop.create_task(self.prep(bot.hot_reloading))
         self.bot.loop.create_task(cache_task(self))
 
     def __unload(self):
@@ -83,7 +83,7 @@ class ModLog:
         GearbotLogging.info(
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
 
-    async def prep(self):
+    async def prep(self, hot_reloading):
         self.cache_message = await GearbotLogging.bot_log(
             f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
         self.to_cache = []
@@ -91,15 +91,15 @@ class ModLog:
             if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
         for i in range(min(3, len(self.bot.guilds))):
-            self.bot.loop.create_task(self.startup_cache())
+            self.bot.loop.create_task(self.startup_cache(hot_reloading))
         self.cache_start = time.perf_counter()
 
-    async def startup_cache(self):
+    async def startup_cache(self, hot_reloading):
         await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
         while self.to_cache is not None:
             if len(self.to_cache) > 0:
                 guild = self.to_cache.pop()
-                await self.buildCache(guild, startup=True, limit=50 if self.bot.hot_reloading else 500)
+                await self.buildCache(guild, startup=True, limit=50 if hot_reloading else 500)
                 await asyncio.sleep(0)
             else:
                 self.to_cache = None
