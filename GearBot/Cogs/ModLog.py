@@ -118,7 +118,7 @@ class ModLog:
 
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         message = LoggedMessage.get_or_none(messageid=data.message_id)
-        if message is not None and self.is_enabled(message.guild.id, "EDIT_LOGS"):
+        if message is not None and self.is_enabled(message.server, "EDIT_LOGS"):
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
