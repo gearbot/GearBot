@@ -77,8 +77,9 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
-                    if count % 75 is 0:
+                    if count % min(75, int(limit/2)) is 0:
                         await asyncio.sleep(0)
+                await asyncio.sleep(0)
         GearbotLogging.info(
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
 
