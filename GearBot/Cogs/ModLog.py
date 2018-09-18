@@ -340,9 +340,10 @@ class ModLog:
                 await Archive.archive_purge(self.bot, event.guild_id,
                                             collections.OrderedDict(sorted(message_list.items())))
 
-    @staticmethod
-    async def on_command_completion(ctx):
-        print(f"Command complete: {ctx.message.content}")
+    async def on_command_completion(self, ctx):
+        if self.is_enabled(ctx.guild.id, "COMMAND_EXECUTED"):
+            clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
+            await GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
 
 
 async def cache_task(modlog: ModLog):
