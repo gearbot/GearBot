@@ -471,23 +471,23 @@ class Serveradmin:
         if channel is None:
             value += f"{Translator.translate('channel_removed', ctx)}\n"
         else:
-            value += f"{channel.mention}\n"
+            value += f"**{Translator.translate('channel', ctx)}**{channel.mention}\n\n"
             perms = ["send_messages", "embed_links", "attach_files"]
             permissions = channel.permissions_for(channel.guild.me)
-            missing = []
-            for p in perms:
-                if not getattr(permissions, p):
-                    missing.append(p)
+            missing = [p for p in perms if not getattr(permissions, p)]
             value += f"**{Translator.translate('channel_perms', ctx)}** \n"
             if len(missing) == 0:
-                value += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('full_channel_perms', ctx)}\n"
+                value += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('full_channel_perms', ctx)}\n\n"
             else:
-                value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n"
+                value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n\n"
         if info["EVERYTHING"]:
-            tbl = "EVERYTHING"
+            tbl = ["EVERYTHING"]
         else:
-            tbl = ", ".join(info["TYPES"])
-        value += f"**{Translator.translate('to_be_logged', ctx)}** \n{tbl}"
+            tbl = info["TYPES"]
+        value += f"**{Translator.translate('to_be_logged', ctx)}** \n{', '.join(tbl)}\n\n"
+        # disabled = ", ".join([t for t in tbl if not getattr(permissions, p)])
+        # if len(disabled) > 0:
+        #     value+= f"**{Translator.translate('disabled_loggings', ctx)}**\n{disabled}"
         return value
 
     @log_channels.command(name="add")
@@ -594,7 +594,43 @@ class Serveradmin:
 
     @log_channels.command(name="remove_logging")
     async def remove_logging(self, ctx, channel: discord.TextChannel, *, types):
-        pass
+        cid = str(channel.id)
+        channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+        if cid not in channels:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=channel.mention)}")
+        else:
+            info = channels[cid]
+            removed = []
+            unknown = []
+            ignored = []
+            message = ""
+            types = types.upper()
+            if "EVERYTHING" in types:
+                info["EVERYTHING"] = False
+                info["TYPES"] = []
+                removed.append("EVERYTHING")
+            else:
+                for t in self.extract_types(types):
+                    if t not in self.logging_types:
+                        unknown.append(t)
+                    elif t in info["TYPES"] or info["EVERYTHING"]:
+                        removed.append(t)
+                        info["TYPES"].remove(t)
+                    else:
+                        ignored.append(t)
+            if len(removed) > 0:
+                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention)}{', '.join(removed)}"
+
+            if len(ignored) > 0:
+                message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
+
+            if len(unknown) > 0:
+                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
+
+            embed = discord.Embed(color=6008770)
+            embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            await ctx.send(message, embed=embed)
+            Configuration.save(ctx.guild.id)
 
     @configure.group()
     @commands.guild_only()
