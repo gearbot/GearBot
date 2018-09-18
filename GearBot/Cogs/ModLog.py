@@ -32,7 +32,9 @@ class ModLog:
     def is_enabled(guild_id, log_type):
         return Configuration.get_var(guild_id, log_type)
 
-    async def buildCache(self, guild: discord.Guild, limit=500, startup=False):
+    async def buildCache(self, guild: discord.Guild, limit=None, startup=False):
+        if limit is None:
+            limit = 500 if startup else 50
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
         newCount = 0
         editCount = 0
@@ -96,7 +98,7 @@ class ModLog:
         while self.to_cache is not None:
             if len(self.to_cache) > 0:
                 guild = self.to_cache.pop()
-                await self.buildCache(guild, startup=True)
+                await self.buildCache(guild, startup=True, limit=50 if self.bot.hot_reloading else 500)
                 await asyncio.sleep(0)
             else:
                 self.to_cache = None
@@ -351,7 +353,7 @@ async def cache_task(modlog: ModLog):
     while modlog.running:
         if len(modlog.bot.to_cache) > 0:
             ctx = modlog.bot.to_cache.pop(0)
-            await modlog.buildCache(ctx.guild)
+            await modlog.buildCache(ctx.guild, limit=500)
             await ctx.send("Caching complete.")
         await asyncio.sleep(1)
     GearbotLogging.info("modlog background task terminated.")

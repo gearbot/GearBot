@@ -26,8 +26,7 @@ def initial_migration(config):
             found = False
             for channel, info in config["LOG_CHANNELS"].items():
                 if cid == channel:
-                    for setting in settings:
-                        info.append(setting)
+                    info.extend(settings)
                     found = True
             if not found:
                 config["LOG_CHANNELS"][cid] = settings

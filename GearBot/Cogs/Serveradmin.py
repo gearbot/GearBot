@@ -635,6 +635,9 @@ class Serveradmin:
             else:
                 enabled.append(t)
                 Configuration.set_var(ctx.guild.id, var, True)
+                if t == "EDIT_LOGS":
+                    await ctx.send(Translator.translate('minor_log_caching_start', ctx))
+                    self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
             message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_enabled', ctx)}{', '.join(enabled)}"

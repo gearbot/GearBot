@@ -21,6 +21,7 @@ bot.custom_command_count = 0
 bot.errors = 0
 bot.eaten = 0
 bot.database_errors = 0
+bot.hot_reloading = False
 
 @bot.event
 async def on_ready():

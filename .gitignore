@@ -6,7 +6,7 @@ venv/
 site/
 .idea/
 .gradle/
-config/
+
 docs/commands.md
 logs/
 *.json

@@ -51,6 +51,7 @@ class Reload:
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
+        self.bot.hot_reloading = True
         async with ctx.typing():
             message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
             ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
@@ -72,6 +73,7 @@ class Reload:
         await ctx_message.edit(content=m)
         await Translator.upload()
         await DocUtils.update_docs(ctx.bot)
+        self.bot.hot_reloading = False
 
     @commands.command()
     async def pull(self, ctx):
