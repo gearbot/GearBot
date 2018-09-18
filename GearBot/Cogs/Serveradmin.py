@@ -481,9 +481,9 @@ class Serveradmin:
             else:
                 value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n\n"
         value += f"**{Translator.translate('to_be_logged', ctx)}** \n{', '.join(info)}\n\n"
-        # disabled = ", ".join([t for t in tbl if not getattr(permissions, p)])
-        # if len(disabled) > 0:
-        #     value+= f"**{Translator.translate('disabled_loggings', ctx)}**\n{disabled}"
+        disabled = ", ".join([t for t in info if not Configuration.get_var(ctx.guild.id, t)])
+        if len(disabled) > 0:
+            value+= f"**{Translator.translate('disabled_loggings', ctx)}**\n{disabled}"
         return value
 
     @log_channels.command(name="add")

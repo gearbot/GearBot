@@ -280,5 +280,8 @@
   "no_log_channel": "{channel} was not a logging channel.",
   "logs_disabled_channel": "The following logging types where disabled for {channel}: ",
   "logs_already_disabled_channel": "The following logging types where already disabled for {channel}: ",
-  "command_used": "{user} (`{user_id}`) used a command in {channel}: `{command}`"
+  "command_used": "{user} (`{user_id}`) used a command in {channel}: `{command}`",
+  "no_logging_channel": "{channel} wasn't marked as logging channel.",
+  "remove_logging_channel_confirmation": "Are you sure you no longer want to use {channel} for logging?",
+  "logging_channel_removed": "{channel} will no longer be used for any logging."
 }
