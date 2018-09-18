@@ -12,3 +12,4 @@ logs/
 *.json
 
 !lang/*
+!config/template.json
