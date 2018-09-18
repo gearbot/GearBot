@@ -36,7 +36,7 @@ class Infractions:
                 name = Utils.clean_user(member)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
                 aname = Utils.clean_user(ctx.author)
-                await GearbotLogging.log_to(ctx.guild.id, "MOD_ACTION", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                await GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_added', ctx.guild.id, user=ctx.author)}")
 
