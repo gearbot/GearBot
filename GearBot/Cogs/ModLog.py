@@ -30,7 +30,7 @@ class ModLog:
 
     @staticmethod
     def is_enabled(guild_id, log_type):
-        return Configuration.get_var(guild_id, log_type) or Configuration.get_var(guild_id, "LOG_EVERYTHING")
+        return Configuration.get_var(guild_id, log_type)
 
     async def buildCache(self, guild: discord.Guild, limit=500, startup=False):
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
@@ -168,7 +168,7 @@ class ModLog:
                                 value=Utils.trim_message(message.content, 1024), inline=False)
                 embed.add_field(name=Translator.translate('after', channel.guild.id),
                                 value=Utils.trim_message(after, 1024), inline=False)
-                await GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS"
+                await GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS",
                                                               f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
                                             embed=embed)
             message.content = event.data["content"]

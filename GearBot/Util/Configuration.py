@@ -11,7 +11,7 @@ CONFIG_VERSION = 0
 
 def initial_migration(config):
     config["LOG_CHANNELS"] = dict()
-    config["LOG_EVERYTHING"] = False
+    config["FUTURE_LOGS"] = False
     config["TIMESTAMPS"] = True
 
     keys = {
@@ -27,21 +27,19 @@ def initial_migration(config):
             for channel, info in config["LOG_CHANNELS"].items():
                 if cid == channel:
                     for setting in settings:
-                        info["TYPES"].append(setting)
+                        info.append(setting)
                     found = True
             if not found:
-                config["LOG_CHANNELS"][cid] = {
-                    "TYPES": settings
-                }
-        for setting in settings:
-            config[setting] = cid != 0
+                config["LOG_CHANNELS"][cid] = settings
         del config[key]
+        for setting in settings:
+            if setting not in config or not config[setting]:
+                config[setting] = cid != 0
     for channel, info in config["LOG_CHANNELS"].items():
-        log_all = all(all(t in info["TYPES"] for t in types) for types in keys.values())
-        info["EVERYTHING"] = log_all
-        config["LOG_EVERYTHING"] = log_all
+        log_all = all(all(t in info for t in types) for types in keys.values())
         if log_all:
-            info["TYPES"] = []
+            info.append("FUTURE_LOGS")
+        config["FUTURE_LOGS"] = log_all
 
     return config
 

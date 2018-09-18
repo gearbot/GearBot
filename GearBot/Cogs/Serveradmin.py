@@ -71,8 +71,8 @@ class Serveradmin:
         }
     }
 
-    logging_types = [
-        "EVERYTHING", "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR_LOGS", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED"
+    LOGGING_TYPES = [
+        "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSOR_LOGS", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED", "FUTURE_LOGS"
     ]
 
     def __init__(self, bot):
@@ -480,11 +480,7 @@ class Serveradmin:
                 value += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('full_channel_perms', ctx)}\n\n"
             else:
                 value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n\n"
-        if info["EVERYTHING"]:
-            tbl = ["EVERYTHING"]
-        else:
-            tbl = info["TYPES"]
-        value += f"**{Translator.translate('to_be_logged', ctx)}** \n{', '.join(tbl)}\n\n"
+        value += f"**{Translator.translate('to_be_logged', ctx)}** \n{', '.join(info)}\n\n"
         # disabled = ", ".join([t for t in tbl if not getattr(permissions, p)])
         # if len(disabled) > 0:
         #     value+= f"**{Translator.translate('disabled_loggings', ctx)}**\n{disabled}"
@@ -502,17 +498,13 @@ class Serveradmin:
             embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('already_logging_channel', ctx, channel=channel.mention)}", embed=embed)
         else:
-            channels[cid] = {
-                "EVERYTHING": False,
-                "TYPES": []
-            }
+            channels[cid] = []
             translated = Translator.translate('log_channel_added', ctx, channel=channel.mention)
-            types = "\n".join(f" - `{t}`" for t in self.logging_types)
             if log:
+                types = "\n".join(f" - `{t}`" for t in self.LOGGING_TYPES)
                 translated+= f"\n{Translator.translate('log_channel_empty', ctx)}\n{types}"
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {translated}")
             Configuration.save(ctx.guild.id)
-
 
     @log_channels.command(name="add_logging")
     async def add_logging(self, ctx, channel:discord.TextChannel, *, types):
@@ -536,23 +528,15 @@ class Serveradmin:
         else:
             info = channels[cid]
             added = []
-            unknown = []
             ignored = []
             message = ""
-            types = types.upper()
-            if "EVERYTHING" in types:
-                info["EVERYTHING"] = True
-                info["TYPES"] = []
-                added.append("EVERYTHING")
-            else:
-                for t in self.extract_types(types):
-                    if t not in self.logging_types:
-                        unknown.append(t)
-                    elif t in info["TYPES"] or info["EVERYTHING"]:
-                        ignored.append(t)
-                    else:
-                        info["TYPES"].append(t)
-                        added.append(t)
+            known, unknown = self.extract_types(types)
+            for t in known:
+                if t in info:
+                    ignored.append(t)
+                else:
+                    info.append(t)
+                    added.append(t)
             if len(added) > 0:
                 message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_added', ctx)}{', '.join(added)}"
 
@@ -568,10 +552,8 @@ class Serveradmin:
             Configuration.save(ctx.guild.id)
 
             disabled = []
-            everything = Configuration.get_var(ctx.guild.id, "LOG_EVERYTHING")
             for t in (added + ignored):
-                var = "LOG_EVERYTHING" if t == "EVERYTHING" else t
-                if not Configuration.get_var(ctx.guild.id, var) or everything:
+                if not Configuration.get_var(ctx.guild.id, t):
                     disabled.append(t)
             if len(disabled) > 0:
                 missing = f"{Translator.translate('disabled_loggings', ctx)} {', '.join(disabled)}\n{Translator.translate('enable_confirmation', ctx)}"
@@ -601,23 +583,15 @@ class Serveradmin:
         else:
             info = channels[cid]
             removed = []
-            unknown = []
             ignored = []
+            known, unknown = self.extract_types(types)
             message = ""
-            types = types.upper()
-            if "EVERYTHING" in types:
-                info["EVERYTHING"] = False
-                info["TYPES"] = []
-                removed.append("EVERYTHING")
-            else:
-                for t in self.extract_types(types):
-                    if t not in self.logging_types:
-                        unknown.append(t)
-                    elif t in info["TYPES"] or info["EVERYTHING"]:
-                        removed.append(t)
-                        info["TYPES"].remove(t)
-                    else:
-                        ignored.append(t)
+            for t in known:
+                if t in info:
+                    removed.append(t)
+                    info.remove(t)
+                else:
+                    ignored.append(t)
             if len(removed) > 0:
                 message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention)}{', '.join(removed)}"
 
@@ -642,10 +616,8 @@ class Serveradmin:
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('log_types', ctx))
-        everything = Configuration.get_var(ctx.guild.id, "LOG_EVERYTHING")
-        for t in self.logging_types:
-            var = "LOG_EVERYTHING" if t == "EVERYTHING" else t
-            e = Configuration.get_var(ctx.guild.id, var) or everything
+        for t in self.LOGGING_TYPES:
+            e = Configuration.get_var(ctx.guild.id, t)
             embed.add_field(name=t, value=enabled if e else disabled)
         return embed
 
@@ -654,13 +626,11 @@ class Serveradmin:
     async def enable_log_types(self, ctx, types):
         enabled = []
         ignored = []
-        unknown = []
+        known, unknown = self.extract_types(types)
         message = ""
-        for t in self.extract_types(types):
+        for t in known:
             var = "LOG_EVERYTHING" if t == "EVERYTHING" else t
-            if t not in self.logging_types:
-                unknown.append(t)
-            elif Configuration.get_var(ctx.guild.id, var):
+            if Configuration.get_var(ctx.guild.id, var):
                 ignored.append(t)
             else:
                 enabled.append(t)
@@ -682,26 +652,17 @@ class Serveradmin:
     async def disable_log_types(self, ctx, types):
         disabled = []
         ignored = []
-        unknown = []
+        known, unknown = self.extract_types(types)
         message = ""
-        if "EVERYTHING" in types.upper():
-            todo = self.logging_types
-        else:
-            todo = self.extract_types(types)
-        for t in todo:
-            var = "LOG_EVERYTHING" if t == "EVERYTHING" else t
-            if t not in self.logging_types:
-                unknown.append(t)
-            elif not Configuration.get_var(ctx.guild.id, var):
+        for t in known:
+            if not Configuration.get_var(ctx.guild.id, t):
                 ignored.append(t)
             else:
                 disabled.append(t)
-                Configuration.set_var(ctx.guild.id, var, False)
+                Configuration.set_var(ctx.guild.id, t, False)
 
         if len(disabled) > 0:
             message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled', ctx)}{', '.join(disabled)}"
-
-        ignored.remove("EVERYTHING")
 
         if len(ignored) > 0:
             message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled', ctx)}{', '.join(ignored)}"
@@ -711,15 +672,21 @@ class Serveradmin:
 
         await ctx.send(message, embed=self.get_logs_status(ctx))
 
-    @staticmethod
-    def extract_types(types):
-        l = []
-        for t2 in types.split(" "):
+    def extract_types(self, raw_types):
+        raw_types = raw_types.upper()
+        if "EVERYTHING" in raw_types:
+            return self.LOGGING_TYPES, []
+        types = []
+        unknown = []
+        for t2 in raw_types.split(" "):
             for t in t2.split(","):
                 t = t.strip(",",).strip(" ")
                 if t != "":
-                    l.append(t.upper())
-        return l
+                    if t in self.LOGGING_TYPES:
+                        types.append(t)
+                    else:
+                        unknown.append(t)
+        return types, unknown
 
 
     @commands.group()

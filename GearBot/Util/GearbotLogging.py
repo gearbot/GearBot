@@ -88,7 +88,7 @@ async def bot_log(message = None, embed = None):
 async def log_to(guild_id, type, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
-        if info["EVERYTHING"] or type in info["TYPES"]:
+        if type in info:
             channel = BOT.get_channel(int(cid))
             if channel is not None:
                 permissions = channel.permissions_for(BOT.get_guild(guild_id).me)
