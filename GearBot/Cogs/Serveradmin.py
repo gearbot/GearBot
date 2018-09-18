@@ -506,6 +506,27 @@ class Serveradmin:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {translated}")
             Configuration.save(ctx.guild.id)
 
+    @log_channels.command(name="remove")
+    async def remove_log_channel(self, ctx, channel: discord.TextChannel):
+        channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+        cid = str(channel.id)
+        if cid in channels:
+            if len(channels[cid]) is 0:
+                await self._remove_log_channel(ctx, channel)
+            else:
+                async def yes():
+                    await self._remove_log_channel(ctx, channel)
+                await Confirmation.confirm(ctx, Translator.translate('remove_logging_channel_confirmation', ctx, channel=channel.mention), on_yes=yes)
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_logging_channel', ctx, channel=channel.mention)}")
+
+    @staticmethod
+    async def _remove_log_channel(ctx, channel):
+        del Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")[str(channel.id)]
+        Configuration.save(ctx.guild.id)
+        await ctx.send(f"{Translator.translate('logging_channel_removed', ctx, channel=channel.mention)}")
+
+
     @log_channels.command(name="add_logging")
     async def add_logging(self, ctx, channel:discord.TextChannel, *, types):
         cid = str(channel.id)
