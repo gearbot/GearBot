@@ -158,6 +158,9 @@ class ModLog:
                         return
                     if message.content is None or message.content == "":
                         message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
+                    after =  event.data["content"]
+                    if after is None or after == "":
+                        after = f"<{Translator.translate('no_content', channel.guild.id)}>"
                     if not (hasUser and user.id in Configuration.getConfigVar(channel.guild.id,
                                                                               "IGNORED_USERS") or user.id == channel.guild.me.id):
                         embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
@@ -168,7 +171,7 @@ class ModLog:
                         embed.add_field(name=Translator.translate('before', channel.guild.id),
                                         value=Utils.trim_message(message.content, 1024), inline=False)
                         embed.add_field(name=Translator.translate('after', channel.guild.id),
-                                        value=Utils.trim_message(event.data["content"], 1024), inline=False)
+                                        value=Utils.trim_message(after, 1024), inline=False)
                         await logChannel.send(
                             f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
                             embed=embed)
