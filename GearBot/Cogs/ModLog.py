@@ -195,7 +195,7 @@ class ModLog:
         if member.id in exits:
             exits.remove(member.id)
             return
-        if member.guild.me.guild_permissions.view_audit_log and self.is_enabled(member.guild.id, "MOD_ACTIONS"):
+        if member.guild.me.guild_permissions.view_audit_log:
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
                     if member.joined_at > entry.created_at:
@@ -206,7 +206,7 @@ class ModLog:
                         else:
                             reason = entry.reason
                         InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
-                        await GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS"
+                        await GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                                                      f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
             except discord.Forbidden:
@@ -221,7 +221,7 @@ class ModLog:
 
     async def on_member_ban(self, guild, user):
         if user.id == self.bot.user.id: return
-        if user.id in self.bot.data["forced_exits"] or not self.is_enabled(guild.id, "MOD_ACTIONS"):
+        if user.id in self.bot.data["forced_exits"]:
             return
         if guild.me.guild_permissions.view_audit_log:
             async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=2):
@@ -240,7 +240,7 @@ class ModLog:
         self.bot.data["forced_exits"].append(user.id)
 
     async def on_member_unban(self, guild, user):
-        if user.id in self.bot.data["unbans"] or not self.is_enabled(guild.id, "MOD_ACTIONS"):
+        if user.id in self.bot.data["unbans"]:
             return
         else:
             if guild.me.guild_permissions.view_audit_log:
