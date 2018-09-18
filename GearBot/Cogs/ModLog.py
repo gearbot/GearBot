@@ -90,8 +90,7 @@ class ModLog:
         for guild in self.bot.guilds:
             if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
-        for i in range(min(3, len(self.bot.guilds))):
-            self.bot.loop.create_task(self.startup_cache(hot_reloading))
+        self.bot.loop.create_task(self.startup_cache(hot_reloading))
         self.cache_start = time.perf_counter()
 
     async def startup_cache(self, hot_reloading):
@@ -187,7 +186,7 @@ class ModLog:
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
-            await GearbotLogging.log_to(member.guild.id, "JOIN_LOGS"
+            await GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                                          f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
     async def on_member_remove(self, member: discord.Member):
