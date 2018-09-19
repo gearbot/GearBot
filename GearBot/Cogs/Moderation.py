@@ -163,8 +163,13 @@ class Moderation:
             return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_small', ctx.guild.id)}")
         if msgs > 1000:
             return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_big', ctx.guild.id)}")
-        deleted = await ctx.channel.purge(limit=msgs)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}")
+        try:
+            deleted = await ctx.channel.purge(limit=msgs)
+        except discord.NotFound:
+            # sleep for a sec just in case the other bot is still purging so we don't get removed as well
+            await asyncio.sleep(1)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_fail_not_found', ctx.guild.id)}")
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}", delete_after=10)
 
     @commands.command()
     @commands.guild_only()
@@ -239,22 +244,21 @@ class Moderation:
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
-    async def userinfo(self, ctx: commands.Context, *, user: str = None):
+    async def userinfo(self, ctx: commands.Context, *, userID:UserID):
         """Shows information about the chosen user"""
-        if user == None:
+        user = None
+        member = None
+        if userID is None:
             user = ctx.author
-            member = ctx.guild.get_member(user.id)
-        if user != ctx.author:
+            if ctx.guild is not None:
+                member = ctx.guild.get_member(user.id)
+        elif ctx.guild is not None:
             try:
-                user = member = await commands.MemberConverter().convert(ctx, user)
+                user = member = ctx.guild.get_member(userID)
             except BadArgument:
-                duser = await Utils.conver_to_id(ctx, user)
-                if duser is not None:
-                    user = await ctx.bot.get_user_info(duser)
-                    member = None
-                else:
-                    await ctx.send(Translator.translate("unkown_user", ctx))
-                    return
+               pass
+        if user is None:
+            user = await Utils.get_user(userID)
         embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name), icon_url=ctx.author.avatar_url)
@@ -319,8 +323,7 @@ class Moderation:
             return
         if channel is None:
             channel = ctx.message.channel
-        channel_id = Configuration.get_var(ctx.guild.id, "MINOR_LOGS")
-        if channel_id is not 0:
+        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
             permissions = channel.permissions_for(ctx.author)
             if permissions.read_messages and permissions.read_message_history:
                 messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid.desc()).limit(amount)
@@ -332,21 +335,16 @@ class Moderation:
 
 
     @archive.command()
-    async def user(self, ctx, user:str, amount=100):
+    async def user(self, ctx, user:UserID, amount=100):
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
-        user = await Utils.conver_to_id(ctx, user)
-        if user is not None:
-            channel_id = Configuration.get_var(ctx.guild.id, "MINOR_LOGS")
-            if channel_id is not 0:
-                messages = LoggedMessage.select().where(
-                    (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
-                await Archive.ship_messages(ctx, messages)
-            else:
-                await ctx.send("Please enable edit logs so i can archive users")
+        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+            messages = LoggedMessage.select().where(
+                (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
+            await Archive.ship_messages(ctx, messages)
         else:
-            await ctx.send(Translator.translate("unkown_user", ctx))
+            await ctx.send("Please enable edit logs so i can archive users")
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
