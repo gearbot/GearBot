@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive
-from Util.Converters import BannedMember, UserID, Reason
+from Util.Converters import BannedMember, UserID, Reason, DiscordUser
 from database.DatabaseConnector import LoggedMessage
 
 
@@ -75,7 +75,7 @@ class Moderation:
             reason = Translator.translate("no_reason", ctx.guild.id)
         if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].append(user.id)
+                self.bot.data["forced_exits"].add(user.id)
                 await ctx.guild.kick(user,
                                      reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
                 await ctx.send(
@@ -97,7 +97,7 @@ class Moderation:
             reason = Translator.translate("no_reason", ctx.guild.id)
         if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].append(user.id)
+                self.bot.data["forced_exits"].add(user.id)
                 await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                     delete_message_days=0)
                 InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
@@ -119,8 +119,8 @@ class Moderation:
             reason = Translator.translate("no_reason", ctx.guild.id)
         if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
             if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].append(user.id)
-                self.bot.data["unbans"].append(user.id)
+                self.bot.data["forced_exits"].add(user.id)
+                self.bot.data["unbans"].add(user.id)
                 await ctx.guild.ban(user, reason=f"softban - Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
                 await ctx.guild.unban(user)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
@@ -142,7 +142,7 @@ class Moderation:
             member = await commands.MemberConverter().convert(ctx, str(user_id))
         except BadArgument:
             user = await ctx.bot.get_user_info(user_id)
-            self.bot.data["forced_exits"].append(user.id)
+            self.bot.data["forced_exits"].add(user.id)
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                 delete_message_days=0)
             await ctx.send(
@@ -178,7 +178,7 @@ class Moderation:
         """unban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        self.bot.data["unbans"].append(member.user.id)
+        self.bot.data["unbans"].add(member.user.id)
         await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         await ctx.send(
@@ -244,21 +244,12 @@ class Moderation:
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
-    async def userinfo(self, ctx: commands.Context, *, userID:UserID):
+    async def userinfo(self, ctx: commands.Context, *, user:DiscordUser=None):
         """Shows information about the chosen user"""
-        user = None
-        member = None
-        if userID is None:
-            user = ctx.author
-            if ctx.guild is not None:
-                member = ctx.guild.get_member(user.id)
-        elif ctx.guild is not None:
-            try:
-                user = member = ctx.guild.get_member(userID)
-            except BadArgument:
-               pass
         if user is None:
-            user = await Utils.get_user(userID)
+            user = member = ctx.author
+        else:
+            member = None if ctx.guild is None else ctx.guild.get_member(user.id)
         embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name), icon_url=ctx.author.avatar_url)

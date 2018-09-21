@@ -1,4 +1,5 @@
 import json
+import os
 
 from discord.ext import commands
 
@@ -42,10 +43,15 @@ def initial_migration(config):
 
     return config
 
+def v2(config):
+    config["CENSOR_MESSAGES"] = len(config["INVITE_WHITELIST"]) > 0
+    config["WORD_BLACKLIST"] = []
+    config["MAX_MENTIONS"] = 0
+    return config
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration]
+MIGRATORS = [initial_migration, v2]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION
@@ -80,16 +86,20 @@ def load_config(guild):
     else:
         if "VERSION" not in config:
             config["VERSION"] = 0
-        SERVER_CONFIGS[guild] = update_config(config)
+        SERVER_CONFIGS[guild] = update_config(guild, config)
     if len(config) is 0:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
         SERVER_CONFIGS[guild] = Utils.fetch_from_disk("config/template")
         save(guild)
 
-def update_config(config):
+def update_config(guild, config):
     v = config["VERSION"]
     while config["VERSION"] < CONFIG_VERSION:
         GearbotLogging.info(f"Upgrading config version from version {v} to {v+1}")
+        d = f"config/backups/v{v}"
+        if not os.path.isdir(d):
+            os.makedirs(d)
+        Utils.saveToDisk(f"{d}/{guild}", config)
         config = MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
 

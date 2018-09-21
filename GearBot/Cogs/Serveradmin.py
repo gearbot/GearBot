@@ -702,9 +702,9 @@ class Serveradmin:
             return self.LOGGING_TYPES, []
         types = []
         unknown = []
-        for t2 in raw_types.split(" "):
-            for t in t2.split(","):
-                t = t.strip(",",).strip(" ")
+        for t2 in raw_types.split(","):
+            for t in t2.split():
+                t = t.strip(",").strip()
                 if t != "":
                     if t in self.LOGGING_TYPES:
                         types.append(t)

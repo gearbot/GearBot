@@ -36,8 +36,9 @@ async def readyBot(bot):
     Utils.on_ready(bot)
     Translator.on_ready(bot)
     bot.data = {
-        "forced_exits": [],
-        "unbans": []
+        "forced_exits": set(),
+        "unbans": set(),
+        "message_deletes": set()
     }
     await GearbotLogging.onReady(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 

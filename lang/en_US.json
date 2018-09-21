@@ -284,5 +284,9 @@
   "no_logging_channel": "{channel} wasn't marked as logging channel.",
   "remove_logging_channel_confirmation": "Are you sure you no longer want to use {channel} for logging?",
   "logging_channel_removed": "{channel} will no longer be used for any logging.",
-  "purge_fail_not_found": "Whoops, something went wrong there, i tried purging a message but discord said it was already removed, do you have another bot in here who also responded to that purge command?"
+  "purge_fail_not_found": "Whoops, something went wrong there, i tried purging a message but discord said it was already removed, do you have another bot in here who also responded to that purge command?",
+  "autoban_too_many_mentions": "[AUTOBAN] Spam message with {count} mentions",
+  "automod_ban_failed": "[AUTOBAN FAILURE] AUTOBAN was triggered for {user} (`{user_id}`) but i don't have the BAN_MEMBERS permission required to actually ban them! Ban reason: ```{reason}```",
+  "censored_message": "Censored message by {user} (`{user_id}`), blacklisted char sequence `{sequence}` is not allowed.\n```{message}```",
+  "censor_message_failed": "Failed to censor a message by {user} (`{user_id}`), blacklisted char sequence `{sequence}` is not allowed but i was unable to remove it.\n```{message}\n```<{link}>"
 }

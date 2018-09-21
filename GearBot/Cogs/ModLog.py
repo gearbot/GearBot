@@ -42,7 +42,7 @@ class ModLog:
         for channel in guild.text_channels:
             if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
                 logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
-                    LoggedMessage.messageid.desc()).limit(limit * 1.5)
+                    LoggedMessage.messageid.desc()).limit(limit)
                 messages = dict()
                 for message in logged_messages:
                     messages[message.messageid] = message
@@ -70,7 +70,7 @@ class ModLog:
                                 logged.content = message.content
                                 logged.save()
                                 editCount = editCount + 1
-                    else:
+                    elif message.edited_at is not None:
                         logged = messages[message.id]
                         if logged.content != message.content:
                             logged.content = message.content
@@ -119,6 +119,9 @@ class ModLog:
                                         messageid=message.id)
 
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
+        if data.message_id in self.bot.data["message_deletes"]:
+            self.bot.data["message_deletes"].remove(data.message_id)
+            return
         message = LoggedMessage.get_or_none(messageid=data.message_id)
         if message is not None and self.is_enabled(message.server, "EDIT_LOGS"):
             guild = self.bot.get_guild(message.server)
@@ -237,7 +240,7 @@ class ModLog:
                     return
         await GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                     f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
-        self.bot.data["forced_exits"].append(user.id)
+        self.bot.data["forced_exits"].add(user.id)
 
     async def on_member_unban(self, guild, user):
         if user.id in self.bot.data["unbans"]:

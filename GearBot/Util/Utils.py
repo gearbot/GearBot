@@ -6,7 +6,6 @@ from subprocess import Popen
 
 from discord import NotFound
 from discord.ext import commands
-from discord.ext.commands import UserConverter, BadArgument
 
 from Util import GearbotLogging
 
@@ -110,14 +109,3 @@ async def execute(command):
         await asyncio.sleep(1)
     out, error = p.communicate()
     return p.returncode, out, error
-
-async def conver_to_id(ctx, user):
-    duser = None
-    try:
-        duser = (await UserConverter().convert(ctx, user)).id
-    except BadArgument as ex:
-        try:
-            duser = int(user)
-        except ValueError:
-            pass
-    return duser

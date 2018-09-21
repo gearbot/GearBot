@@ -17,7 +17,7 @@ class BannedMember(commands.Converter):
 
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 
-class UserID(commands.Converter):
+class DiscordUser(commands.Converter):
     async def convert(self, ctx, argument):
         user = None
         match = ID_MATCHER.match(argument)
@@ -33,7 +33,11 @@ class UserID(commands.Converter):
 
         if user is None:
             raise commands.BadArgument(f"Unable to convert '{Utils.clean(argument)}' to a userid")
-        return user.id
+        return user
+
+class UserID(commands.Converter):
+    async def convert(self, ctx, argument):
+        return (await DiscordUser().convert(ctx, argument)).id
 
 EMOJI_MATCHER = re.compile('<a*:([^:]+):(?:[0-9]+)>')
 

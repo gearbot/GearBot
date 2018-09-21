@@ -1,5 +1,5 @@
 {
-  "VERSION": 1,
+  "VERSION": 2,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "JOIN_LOGS": false,
@@ -7,7 +7,9 @@
   "NAME_CHANGES": false,
   "ROLE_CHANGES": false,
   "COMMAND_EXECUTED": false,
-  "CENSOR_LOGS": false,
+  "CENSOR_MESSAGES": false,
+  "WORD_BLACKLIST": [],
+  "MAX_MENTIONS": 0,
   "FUTURE_LOGS": false,
   "ADMIN_ROLES": [],
   "DEV_ROLE": 0,
