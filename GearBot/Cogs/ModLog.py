@@ -265,8 +265,8 @@ class ModLog:
             if (before.nick != after.nick and
                     after.nick != before.nick):
                 name = Utils.clean_user(after)
-                before_clean = "" if before.nick is None else Utils.clean(before.nick)
-                after_clean = "" if after.nick is None else Utils.clean(after.nick)
+                before_clean = "" if before.nick is None else Utils.clean_name(before.nick)
+                after_clean = "" if after.nick is None else Utils.clean_name(after.nick)
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):

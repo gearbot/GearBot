@@ -1,23 +1,25 @@
 import asyncio
 import json
 import os
+import re
 import subprocess
 from subprocess import Popen
 
+import discord
 from discord import NotFound
 from discord.ext import commands
 
 from Util import GearbotLogging
 
-bot = None
+BOT = None
 
 def on_ready(actual_bot):
-    global bot
-    bot = actual_bot
-    bot.loop.create_task(cache_nuke())
+    global BOT
+    BOT = actual_bot
+    BOT.loop.create_task(cache_nuke())
 
 async def cache_nuke():
-    while not bot.is_closed():
+    while not BOT.is_closed():
         known_invalid_users.clear()
         user_cache.clear()
         await asyncio.sleep(5*60)
@@ -70,32 +72,64 @@ def trim_message(message, limit):
     return f"{message[:limit-3]}..."
 
 
-def clean(text):
+ID_MATCHER = re.compile("<@!?([0-9]+)>")
+ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
+
+
+async def clean_message(text: str, guild:discord.Guild):
+    # resolve user menitons
+    for uid in ID_MATCHER.findall(text):
+        name = "@" + await username(uid, False)
+        text = text.replace(f"<@{uid}>", name)
+        text = text.replace(f"<@!{uid}>", name)
+
+    # resolve role mentions
+    for uid in ROLE_ID_MATCHER.findall(text):
+        role = discord.utils.get(guild.roles, id=uid)
+        if role is None:
+            name = "@UNKNOWN ROLE"
+        else:
+            name = "@" + role.name
+        text = text.replace(f"<@&{uid}>", name)
+
+    # make sure we don't have funny guys/roles named "everyone" messing it all up
+    text = text.replace("@", "@\u200b")
+
+
+    return text
+
+
+
+def clean_name(text):
     return text.replace("@","@\u200b").replace("`", "")
+
 
 known_invalid_users = []
 user_cache = {}
 
-async def username(id):
-    user = await get_user(id)
+
+async def username(uid, fetch=True):
+    user = await get_user(uid, fetch)
     if user is None:
         return "UNKNOWN USER"
     return clean_user(user)
 
-async def get_user(id):
-    if id in known_invalid_users:
+
+async def get_user(uid, fetch=True):
+    if uid in known_invalid_users:
         return None
-    if id in user_cache:
-        return user_cache[id]
-    user = bot.get_user(id)
-    if user is None:
+    if uid in user_cache:
+        return user_cache[uid]
+    user = BOT.get_user(uid)
+    if user is None and fetch:
         try:
-            user = await bot.get_user_info(id)
-            user_cache[id] = user
+            user = await BOT.get_user_info(uid)
+            user_cache[uid] = user
         except NotFound:
-            known_invalid_users.append(id)
+            known_invalid_users.append(uid)
             return None
     return user
+
 
 def clean_user(user):
     return f"\u200b{user.name}\u200b#{user.discriminator}"

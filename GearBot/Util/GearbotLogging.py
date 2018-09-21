@@ -13,10 +13,11 @@ from Util import Configuration
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
 
-
-BOT_LOG_CHANNEL:discord.TextChannel
+BOT_LOG_CHANNEL: discord.TextChannel
 STARTUP_ERRORS = []
-BOT:commands.AutoShardedBot = None
+BOT: commands.AutoShardedBot = None
+LOG_CACHE = dict()
+SHOULD_TERMINATE = False
 
 
 def init_logger():
@@ -39,17 +40,18 @@ def init_logger():
     DISCORD_LOGGER.addHandler(handler)
     LOGGER.addHandler(handler)
 
-
-    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4, backupCount=30)
+    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4,
+                                       backupCount=30)
     DISCORD_LOGGER.addHandler(handler)
 
 
-async def onReady(bot:commands.Bot, channelID):
+async def onReady(bot: commands.Bot, channelID):
     global BOT_LOG_CHANNEL, BOT
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
-        LOGGER.error("==========================Logging channel is misconfigured, aborting startup!==========================")
+        LOGGER.error(
+            "==========================Logging channel is misconfigured, aborting startup!==========================")
         await bot.logout()
 
     if len(STARTUP_ERRORS) > 0:
@@ -70,6 +72,7 @@ def warn(message):
 def error(message):
     LOGGER.error(message)
 
+
 def exception(message, error):
     LOGGER.error(message)
     trace = ""
@@ -79,29 +82,47 @@ def exception(message, error):
     LOGGER.error(trace)
 
 
-async def bot_log(message = None, embed = None):
+async def bot_log(message=None, embed=None):
     if BOT_LOG_CHANNEL is not None:
         return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
     else:
         STARTUP_ERRORS.append(bot_log(message, embed))
 
+
 async def log_to(guild_id, type, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
         if type in info:
+            if Configuration.get_var(guild_id, "TIMESTAMPS"):
+                message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
+            if cid not in LOG_CACHE:
+                LOG_CACHE[cid] = []
+            LOG_CACHE[cid].append((message, embed, file))
+
+            await channel.send(message, embed=embed, file=file)
+
+
+async def log_pump():
+    while not SHOULD_TERMINATE:
+        for cid, todo in LOG_CACHE.items():
+            to_send = ""
+            while len(todo) > 0:
+                message, embed, file = todo[0]
+                if len(to_send) + len(message)
+                to_send += f"{message}\n"
+
             channel = BOT.get_channel(int(cid))
             if channel is not None:
-                permissions = channel.permissions_for(BOT.get_guild(guild_id).me)
-                if permissions.send_messages and (embed is None or permissions.embed_links) and (file is None or permissions.attach_files):
-                    if Configuration.get_var(guild_id, "TIMESTAMPS"):
-                        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
-                    await channel.send(message, embed=embed, file=file)
+                permissions = channel.permissions_for(channel.guild.me)
+                if permissions.send_messages and (embed is None or permissions.embed_links) and (
+                        file is None or permissions.attach_files):
+
 
 async def message_owner(bot, message):
     if bot.owner_id is None:
         app = await bot.application_info()
         bot.owner_id = app.owner.id
-    owner =  bot.get_user(bot.owner_id)
+    owner = bot.get_user(bot.owner_id)
     dm_channel = owner.dm_channel
     if dm_channel is None:
         await owner.create_dm()

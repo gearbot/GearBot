@@ -7,6 +7,10 @@ from discord.ext.commands import UserConverter
 from Util import Utils
 
 
+def clean(text):
+    return text.replace("@", "@\u200b").replace("`", "")
+
+
 class BannedMember(commands.Converter):
     async def convert(self, ctx, argument):
         try:
@@ -32,7 +36,7 @@ class DiscordUser(commands.Converter):
                 pass
 
         if user is None:
-            raise commands.BadArgument(f"Unable to convert '{Utils.clean(argument)}' to a userid")
+            raise commands.BadArgument(f"Unable to convert '{Utils.clean_name(argument)}' to a userid")
         return user
 
 class UserID(commands.Converter):

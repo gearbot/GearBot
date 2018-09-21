@@ -11,10 +11,10 @@ import requests
 from Util import Configuration, GearbotLogging, Emoji
 
 LANGS = dict()
-bot = None
+BOT = None
 
 def on_ready(bot_in):
-    global bot
+    global BOT
     bot = bot_in
     load_translations()
 
@@ -48,7 +48,7 @@ def translate(key, location, **kwargs):
 async def update():
     message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
     project_key = Configuration.get_master_var("CROWDIN_KEY")
-    session: aiohttp.ClientSession = bot.aiosession
+    session: aiohttp.ClientSession = BOT.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?key={project_key}&json",) as reply:
         if reply.status is not 200:
             await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('WARNING')} Crowdin api error, got response code {reply.status}")
