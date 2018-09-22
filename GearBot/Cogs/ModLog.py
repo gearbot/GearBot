@@ -87,6 +87,8 @@ class ModLog:
         GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
 
     async def prep(self, hot_reloading):
+        if hot_reloading:
+            return
         await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
         self.cache_message = await GearbotLogging.bot_log(
             f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")

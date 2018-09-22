@@ -90,14 +90,14 @@ async def bot_log(message = None, embed = None):
 
 async def log_to(guild_id, type, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+    if Configuration.get_var(guild_id, "TIMESTAMPS"):
+        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
     for cid, info in channels.items():
         if type in info:
             channel = BOT.get_channel(int(cid))
             if channel is not None:
                 permissions = channel.permissions_for(BOT.get_guild(guild_id).me)
                 if permissions.send_messages and (embed is None or permissions.embed_links) and (file is None or permissions.attach_files):
-                    if Configuration.get_var(guild_id, "TIMESTAMPS"):
-                        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
                     await channel.send(message, embed=embed, file=file)
 
 async def message_owner(bot, message):
