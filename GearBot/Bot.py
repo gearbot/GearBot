@@ -7,6 +7,8 @@ from discord.ext import commands
 import Util
 from Util import Configuration, GearbotLogging, GlobalHandlers
 
+from flask import Flask
+api = Flask(__name__)
 
 def prefix_callable(bot, message):
     return GlobalHandlers.prefix_callable(bot, message)
@@ -26,6 +28,10 @@ bot.hot_reloading = False
 @bot.event
 async def on_ready():
     await GlobalHandlers.on_ready(bot)
+    
+@api.route("/")
+def hello():
+    return "Hello World!"
 
 @bot.event
 async def on_message(message:discord.Message):
