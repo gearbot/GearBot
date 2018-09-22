@@ -201,7 +201,7 @@ class ModLog:
         if member.guild.me.guild_permissions.view_audit_log:
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
-                    if member.joined_at > entry.created_at:
+                    if member.joined_at is None or member.joined_at > entry.created_at:
                         break
                     if entry.target == member:
                         if entry.reason is None:
