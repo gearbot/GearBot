@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator
+from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration
 from database.DatabaseConnector import Infraction
 
 
@@ -34,8 +34,14 @@ class Infractions:
                 InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                 name = Utils.clean_user(member)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
-                aname = Utils.clean_user(ctx.author)
+                aname = Utils.clean_user(ctx.author)    
                 await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                if Configuration.getConfigVar(ctx.guild.id, "DM_ON_WARN") == True:
+                    try:
+                        dm_channel = await member.create_dm()
+                        await member.dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', str(ctx.guild))}```{reason}```")
+                    except:
+                        pass
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_added', ctx.guild.id, user=ctx.author)}")
 
