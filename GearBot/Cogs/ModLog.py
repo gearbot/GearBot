@@ -346,7 +346,7 @@ class ModLog:
                                             collections.OrderedDict(sorted(message_list.items())))
 
     async def on_command_completion(self, ctx):
-        if self.is_enabled(ctx.guild.id, "COMMAND_EXECUTED"):
+        if ctx.guild is not None and self.is_enabled(ctx.guild.id, "COMMAND_EXECUTED"):
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
             await GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
 
