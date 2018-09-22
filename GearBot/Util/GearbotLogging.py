@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 from discord.ext import commands
 
-from Util import Configuration
+from Util import Configuration, GlobalHandlers
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
@@ -105,28 +105,42 @@ async def log_to(guild_id, type, message=None, embed=None, file=None):
 
 async def log_pump():
     info("Starting log pump")
+    empty = []
+    senders = []
+    embed = file = cid = todo = to_send = None
     while not SHOULD_TERMINATE:
-        embed = file = None
-        for cid, todo in LOG_CACHE.items():
-            channel = BOT.get_channel(int(cid))
-            if channel is not None:
-                permissions = channel.permissions_for(channel.guild.me)
-                to_send = ""
-                while len(todo) > 0:
-                    message, embed, file = todo[0]
-                    if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
-                            file is not None and not permissions.attach_files):
-                        todo.pop(0)
-                        continue
-                    elif len(to_send) + len(message) < 1999:
-                        to_send += f"{message}\n"
-                        todo.pop(0)
-                    else:
-                        break
-                    if embed is not None or file is not None:
-                        break
-                await channel.send(to_send, embed=embed, file=file)
-        await asyncio.sleep(0.1)
+        try:
+            embed = file = None
+            for cid, todo in LOG_CACHE.items():
+                channel = BOT.get_channel(int(cid))
+                if channel is not None and len(todo) > 0:
+                    permissions = channel.permissions_for(channel.guild.me)
+                    to_send = ""
+                    while len(todo) > 0:
+                        message, embed, file = todo[0]
+                        if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
+                                file is not None and not permissions.attach_files):
+                            todo.pop(0)
+                            continue
+                        elif len(to_send) + len(message) < 1999:
+                            to_send += f"{message}\n"
+                            todo.pop(0)
+                        else:
+                            break
+                        if embed is not None or file is not None:
+                            break
+                    senders.append(channel.send(to_send, embed=embed, file=file))
+                else:
+                    empty.append(cid)
+            for e in empty:
+                del LOG_CACHE[e]
+            empty = []
+            for s in senders:
+                await s
+            senders = []
+            await asyncio.sleep(0.1)
+        except Exception as e:
+            await GlobalHandlers.handle_exception("LOG PUMP", BOT, e, kwargs=dict(cid=cid, todo=todo, to_send=to_send, LOG_CACHE=LOG_CACHE, embed=embed, file=file, empty=empty))
     info("Log pump terminated")
 
 
