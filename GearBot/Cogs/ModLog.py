@@ -100,9 +100,9 @@ class ModLog:
         avg_fetch_time = sum(fetch_times) / len(fetch_times)
         total_processing = sum(processing_times)
         avg_processing = total_processing / len(processing_times)
-        GearbotLogging.debug(f"Average fetch time: {avg_fetch_time} (average message count: {avg_fetch_count})")
-        GearbotLogging.debug(f"Average processing time: {avg_processing} (total of {total_processing})")
-        GearbotLogging.debug(f"Was unable to read messages from {no_access} channels")
+        GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (average message count: {avg_fetch_count})")
+        GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
+        GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
 
     async def prep(self, hot_reloading):
         await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
@@ -112,8 +112,7 @@ class ModLog:
         for guild in self.bot.guilds:
             if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
-        for i in range(min(3, len(self.bot.guilds))):
-            self.bot.loop.create_task(self.startup_cache(hot_reloading))
+        self.bot.loop.create_task(self.startup_cache(hot_reloading))
         self.cache_start = time.perf_counter()
 
     async def startup_cache(self, hot_reloading):
