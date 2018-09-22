@@ -285,5 +285,8 @@
   "remove_logging_channel_confirmation": "Are you sure you no longer want to use {channel} for logging?",
   "logging_channel_removed": "{channel} will no longer be used for any logging.",
   "purge_fail_not_found": "Whoops, something went wrong there, i tried purging a message but discord said it was already removed, do you have another bot in here who also responded to that purge command?",
-  "warning_dm": "You have been warned in `{servername}`!"
+  "warning_dm": "You have been warned in `{servername}`!",
+  "dm_on_warn_msg_enabled": "I will now DM people that you warn",
+  "dm_on_warn_msg_disabled": "I won't DM people that you warn",
+  "dm_on_warn_help": "DMs users when you warn them, providing the reason."
 }
