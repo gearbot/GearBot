@@ -99,23 +99,30 @@ async def log_to(guild_id, type, message=None, embed=None, file=None):
                 LOG_CACHE[cid] = []
             LOG_CACHE[cid].append((message, embed, file))
 
-            await channel.send(message, embed=embed, file=file)
-
-
 async def log_pump():
     while not SHOULD_TERMINATE:
+        embed = file = None
         for cid, todo in LOG_CACHE.items():
-            to_send = ""
-            while len(todo) > 0:
-                message, embed, file = todo[0]
-                if len(to_send) + len(message)
-                to_send += f"{message}\n"
-
             channel = BOT.get_channel(int(cid))
             if channel is not None:
                 permissions = channel.permissions_for(channel.guild.me)
-                if permissions.send_messages and (embed is None or permissions.embed_links) and (
-                        file is None or permissions.attach_files):
+                to_send = ""
+                while len(todo) > 0:
+                    message, embed, file = todo[0]
+                    if not (permissions.send_messages and (embed is None or permissions.embed_links) and (
+                            file is None or permissions.attach_files)):
+                        todo.pop(0)
+                        continue
+                    elif len(to_send) + len(message) < 1999:
+                        to_send += f"{message}\n"
+                        todo.pop(0)
+                    else:
+                        break
+                    if embed is not None or file is not None:
+                        break
+                await channel.send(to_send, embed=embed, file=file)
+
+
 
 
 async def message_owner(bot, message):
