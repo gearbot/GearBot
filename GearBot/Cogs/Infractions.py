@@ -39,7 +39,7 @@ class Infractions:
                 if Configuration.getConfigVar(ctx.guild.id, "DM_ON_WARN") == True:
                     try:
                         dm_channel = await member.create_dm()
-                        await member.dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', str(ctx.guild))}```{reason}```")
+                        await member.dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', servername=str(ctx.guild))}```{reason}```")
                     except:
                         pass
         else:
