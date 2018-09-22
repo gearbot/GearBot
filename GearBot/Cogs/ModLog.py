@@ -140,7 +140,7 @@ class ModLog:
                 embed.add_field(name=Translator.translate('attachment_link', guild),
                                 value="\n".join(attachment.url for attachment in attachments))
             name = Utils.clean_user(user) if hasUser else str(message.author)
-            await GearbotLogging.log_to(guild.id, "EDIT_LOGS",
+            GearbotLogging.log_to(guild.id, "EDIT_LOGS",
                                         f":wastebasket: {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}",
                                         embed=embed)
 
@@ -173,7 +173,7 @@ class ModLog:
                                 value=Utils.trim_message(message.content, 1024), inline=False)
                 embed.add_field(name=Translator.translate('after', channel.guild.id),
                                 value=Utils.trim_message(after, 1024), inline=False)
-                await GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS",
+                GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS",
                                                               f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
                                             embed=embed)
             message.content = event.data["content"]
@@ -189,7 +189,7 @@ class ModLog:
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
-            await GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
+            GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                                          f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
     async def on_member_remove(self, member: discord.Member):
@@ -200,7 +200,7 @@ class ModLog:
             return
         if member.guild.me.guild_permissions.view_audit_log:
             try:
-                async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=2):
+                async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
                     if member.joined_at > entry.created_at:
                         break
                     if entry.target == member:
@@ -209,7 +209,7 @@ class ModLog:
                         else:
                             reason = entry.reason
                         InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
-                        await GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
+                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                                                      f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
             except discord.Forbidden:
@@ -219,7 +219,7 @@ class ModLog:
                     f"{Emoji.get_chat_emoji('WARNING')} Tried to fetch audit log for {member.guild.name} ({member.guild.id}) but got denied even though it said i have access, guild permissions: ```{perm_info}```")
 
         if self.is_enabled(member.guild.id, "JOIN_LOGS"):
-            await GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
+            GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                         f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
@@ -227,7 +227,7 @@ class ModLog:
         if user.id in self.bot.data["forced_exits"]:
             return
         if guild.me.guild_permissions.view_audit_log:
-            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=2):
+            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=25):
                 if entry.target == user:
                     if entry.reason is None:
                         reason = Translator.translate("no_reason", guild.id)
@@ -235,10 +235,10 @@ class ModLog:
                         reason = entry.reason
                     InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
                                                    "No reason given." if entry.reason is None else entry.reason)
-                    await GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                    GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                                 f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                     return
-        await GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                     f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         self.bot.data["forced_exits"].add(user.id)
 
@@ -251,10 +251,10 @@ class ModLog:
                     if entry.target == user:
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
-                        await GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                                     f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
                         return
-            await GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                         f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
 
     async def on_member_update(self, before, after):
@@ -288,19 +288,18 @@ class ModLog:
                     mod_name = Utils.clean_user(entry.user)
                     mod_id = entry.user.id
                     actor = "mod"
-                await GearbotLogging.log_to(guild.id, "NAME_CHANGES",
+                GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                             f"{Emoji.get_chat_emoji('NICKTAG')} {Translator.translate(f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)}")
             # username changes
             elif (before.name != after.name and
                   after.name != before.name):
                 before_clean_name = Utils.clean_user(before)
                 after_clean_name = Utils.clean_user(after)
-                await GearbotLogging.log_to(guild.id, "NAME_CHANGES",
+                GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                             f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
         # role changes
         if self.is_enabled(guild.id, "ROLE_CHANGES"):
             if len(before.roles) != len(after.roles):
-                log_message = ""
                 removed = []
                 added = []
                 for role in before.roles:
@@ -322,17 +321,18 @@ class ModLog:
                     removed = entry.changes.before.roles
                     added = entry.changes.after.roles
                     for role in removed:
-                        log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}\n"
+                        GearbotLogging.log_to(guild.id, "ROLE_CHANGES",
+                                              f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}")
                     for role in added:
-                        log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}\n"
+                        GearbotLogging.log_to(guild.id, "ROLE_CHANGES",
+                                              f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added_by', guild, role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)}")
                 else:
                     for role in removed:
-                        log_message += f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}\n"
+                        GearbotLogging.log_to(guild.id, "ROLE_CHANGES",
+                                              f"{Emoji.get_chat_emoji('ROLE_REMOVE')} {Translator.translate('role_removed', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}")
                     for role in added:
-                        log_message += f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}\n"
-
-                if log_message != "":
-                    await GearbotLogging.log_to(guild.id, "ROLE_CHANGES", log_message)
+                        GearbotLogging.log_to(guild.id, "ROLE_CHANGES",
+                                              f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}")
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if self.is_enabled(event.guild_id, "EDIT_LOGS"):
@@ -348,7 +348,7 @@ class ModLog:
     async def on_command_completion(self, ctx):
         if self.is_enabled(ctx.guild.id, "COMMAND_EXECUTED"):
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
-            await GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
+            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
 
 
 async def cache_task(modlog: ModLog):
