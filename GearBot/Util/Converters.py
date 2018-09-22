@@ -47,3 +47,4 @@ class Duration(commands.Converter):
     async def convert(self, ctx, argument):
         if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "w", "d", "h", "m", "s"]:
             raise commands.BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
+        return argument
