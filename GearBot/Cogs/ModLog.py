@@ -8,7 +8,6 @@ from discord import AuditLogAction
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
-from peewee import IntegrityError
 
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
@@ -41,20 +40,10 @@ class ModLog:
         count = 0
         no_access = 0
         fetch_times = []
-        fetch_counts = []
         processing_times = []
         for channel in guild.text_channels:
             permissions =channel.permissions_for(guild.get_member(self.bot.user.id))
             if permissions.read_messages and permissions.read_message_history:
-                fetch_start = time.perf_counter()
-                logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
-                    LoggedMessage.messageid.desc()).limit(limit * 1.5)
-                messages = dict()
-                for message in logged_messages:
-                    messages[message.messageid] = message
-                fetch_counts.append(len(messages))
-                t = time.perf_counter() - fetch_start
-                fetch_times.append(t)
 
                 async for message in channel.history(limit=limit, reverse=False,
                                                      before=self.cache_message if startup else None):
@@ -62,8 +51,10 @@ class ModLog:
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
-                    if message.id not in messages.keys():
-                        try:
+                    fetch = time.perf_counter()
+                    logged = LoggedMessage.get_or_none(messageid=message.id)
+                    fetch_times.append(time.perf_counter() - fetch)
+                    if logged is None:
                             LoggedMessage.create(messageid=message.id, author=message.author.id,
                                                  content=message.content, timestamp=message.created_at.timestamp(),
                                                  channel=channel.id, server=channel.guild.id)
@@ -72,16 +63,7 @@ class ModLog:
                                                         isImage=(a.width is not None or a.width is 0),
                                                         messageid=message.id)
                             newCount = newCount + 1
-                        except IntegrityError:
-                            # somehow we didn't fetch enough messages, did someone set off a nuke in the channel?
-                            if message.edited_at is not None:
-                                logged = LoggedMessage.get(messageid=message.id)
-                                if logged.content != message.content:
-                                    logged.content = message.content
-                                    logged.save()
-                                    editCount = editCount + 1
                     elif message.edited_at is not None:
-                        logged = messages[message.id]
                         if logged.content != message.content:
                             logged.content = message.content
                             logged.save()
@@ -96,11 +78,11 @@ class ModLog:
                 no_access += 1
         GearbotLogging.info(
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
-        avg_fetch_count = sum(fetch_counts) / len(fetch_counts)
-        avg_fetch_time = sum(fetch_times) / len(fetch_times)
-        total_processing = sum(processing_times)
+        total_fetch_time = sum(fetch_times)
+        avg_fetch_time = (total_fetch_time / len(fetch_times)) * 1000
+        total_processing = (sum(processing_times)) * 1000
         avg_processing = total_processing / len(processing_times)
-        GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (average message count: {avg_fetch_count})")
+        GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (total fetch time: {total_fetch_time})")
         GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
         GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
 
