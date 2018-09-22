@@ -41,8 +41,8 @@ class Infractions:
                     try:
                         dm_channel = await member.create_dm()
                         await member.dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', str(ctx.guild))}```{reason}```")
-                    except:
-                        pass
+                    except discord.Forbidden:
+                        await GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', user=name, id=member.id, reason=reason)}")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_added', ctx.guild.id, user=ctx.author)}")
 
