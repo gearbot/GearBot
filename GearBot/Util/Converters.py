@@ -42,3 +42,8 @@ class Reason(commands.Converter):
         for match in EMOJI_MATCHER.finditer(argument):
             argument = argument.replace(match.group(0), f":{match.group(1)}:")
         return argument
+
+class Duration(commands.Converter):
+    async def convert(self, ctx, argument):
+        if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "w", "d", "h", "m", "s"]:
+            raise commands.BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")

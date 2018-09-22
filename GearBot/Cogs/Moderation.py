@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive
-from Util.Converters import BannedMember, UserID, Reason
+from Util.Converters import BannedMember, UserID, Reason, Duration
 from database.DatabaseConnector import LoggedMessage
 
 
@@ -189,7 +189,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int, durationIdentifier: str, *,
+    async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int, durationIdentifier: Duration, *,
                    reason:Reason=""):
         """mute_help"""
         if reason == "":
