@@ -40,7 +40,8 @@ class ModLog:
         editCount = 0
         count = 0
         for channel in guild.text_channels:
-            if channel.permissions_for(guild.get_member(self.bot.user.id)).read_messages:
+            permissions =channel.permissions_for(guild.get_member(self.bot.user.id))
+            if permissions.read_messages and permissions.read_message_history:
                 logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
                     LoggedMessage.messageid.desc()).limit(limit * 1.5)
                 messages = dict()
@@ -65,12 +66,13 @@ class ModLog:
                             newCount = newCount + 1
                         except IntegrityError:
                             # somehow we didn't fetch enough messages, did someone set off a nuke in the channel?
-                            logged = LoggedMessage.get(messageid=message.id)
-                            if logged.content != message.content:
-                                logged.content = message.content
-                                logged.save()
-                                editCount = editCount + 1
-                    else:
+                            if message.edited_at is not None:
+                                logged = LoggedMessage.get(messageid=message.id)
+                                if logged.content != message.content:
+                                    logged.content = message.content
+                                    logged.save()
+                                    editCount = editCount + 1
+                    elif message.edited_at is not None:
                         logged = messages[message.id]
                         if logged.content != message.content:
                             logged.content = message.content
@@ -90,7 +92,8 @@ class ModLog:
         for guild in self.bot.guilds:
             if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
-        self.bot.loop.create_task(self.startup_cache(hot_reloading))
+        for i in range(min(3, len(self.bot.guilds))):
+            self.bot.loop.create_task(self.startup_cache(hot_reloading))
         self.cache_start = time.perf_counter()
 
     async def startup_cache(self, hot_reloading):
@@ -267,7 +270,7 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and before.nick == e.changes.before.nick and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and after.nick == e.changes.after.nick:
+                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
                             entry = e
                 if before.nick is None:
                     type = "added"
