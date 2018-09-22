@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import sys
@@ -46,7 +47,7 @@ def init_logger():
 
 
 async def onReady(bot: commands.Bot, channelID):
-    global BOT_LOG_CHANNEL, BOT
+    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
@@ -59,6 +60,9 @@ async def onReady(bot: commands.Bot, channelID):
             f":rotating_light: Caught {len(STARTUP_ERRORS)} {'exceptions' if len(STARTUP_ERRORS) > 1 else 'exception'} during startup.")
         for e in STARTUP_ERRORS:
             await e
+        STARTUP_ERRORS = []
+
+    bot.loop.create_task(log_pump())
 
 
 def info(message):
@@ -100,6 +104,7 @@ async def log_to(guild_id, type, message=None, embed=None, file=None):
             LOG_CACHE[cid].append((message, embed, file))
 
 async def log_pump():
+    info("Starting log pump")
     while not SHOULD_TERMINATE:
         embed = file = None
         for cid, todo in LOG_CACHE.items():
@@ -109,8 +114,8 @@ async def log_pump():
                 to_send = ""
                 while len(todo) > 0:
                     message, embed, file = todo[0]
-                    if not (permissions.send_messages and (embed is None or permissions.embed_links) and (
-                            file is None or permissions.attach_files)):
+                    if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
+                            file is not None and not permissions.attach_files):
                         todo.pop(0)
                         continue
                     elif len(to_send) + len(message) < 1999:
@@ -121,6 +126,8 @@ async def log_pump():
                     if embed is not None or file is not None:
                         break
                 await channel.send(to_send, embed=embed, file=file)
+        await asyncio.sleep(0.1)
+    info("Log pump terminated")
 
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import os
 
@@ -52,24 +53,25 @@ class Reload:
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
         self.bot.hot_reloading = True
-        async with ctx.typing():
-            message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
-            ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
-            GearbotLogging.info("Initiating hot reload")
-            utils = importlib.reload(Util)
-            await utils.reload(self.bot)
-            GearbotLogging.info("Reloading all cogs...")
-            temp = []
-            for cog in ctx.bot.cogs:
-                temp.append(cog)
-            for cog in temp:
-                self.bot.unload_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been unloaded.')
-                self.bot.load_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been loaded.')
-            GearbotLogging.info("Hot reload complete.")
-            m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
-            await message.edit(content=m)
+        GearbotLogging.SHOULD_TERMINATE = True
+        message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
+        ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
+        GearbotLogging.info("Initiating hot reload")
+        await asyncio.sleep(2)
+        utils = importlib.reload(Util)
+        await utils.reload(self.bot)
+        GearbotLogging.info("Reloading all cogs...")
+        temp = []
+        for cog in ctx.bot.cogs:
+            temp.append(cog)
+        for cog in temp:
+            self.bot.unload_extension(f"Cogs.{cog}")
+            GearbotLogging.info(f'{cog} has been unloaded.')
+            self.bot.load_extension(f"Cogs.{cog}")
+            GearbotLogging.info(f'{cog} has been loaded.')
+        GearbotLogging.info("Hot reload complete.")
+        m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
+        await message.edit(content=m)
         await ctx_message.edit(content=m)
         await Translator.upload()
         await DocUtils.update_docs(ctx.bot)

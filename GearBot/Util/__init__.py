@@ -1,5 +1,8 @@
+import importlib
+
 from database import DatabaseConnector
-from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, HelpGenerator, Emoji, InfractionUtils, Archive, Translator, DocUtils, GlobalHandlers, JumboGenerator
+from . import Configuration, Converters, GearbotLogging, Pages, Permissioncheckers, Utils, VersionInfo, Confirmation, \
+    HelpGenerator, Emoji, InfractionUtils, Archive, Translator, DocUtils, GlobalHandlers, JumboGenerator
 
 components = [
     Configuration,
@@ -22,11 +25,12 @@ components = [
 ]
 
 async def reload(bot):
-    import importlib
+    log_cache = GearbotLogging.LOG_CACHE
     for c in components:
         importlib.reload(c)
     prepDatabase(bot)
     await readyBot(bot)
+    GearbotLogging.LOG_CACHE = log_cache
 
 async def readyBot(bot):
     await Configuration.on_ready(bot)
