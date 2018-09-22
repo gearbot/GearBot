@@ -39,21 +39,29 @@ class ModLog:
         newCount = 0
         editCount = 0
         count = 0
+        no_access = 0
+        fetch_times = []
+        fetch_counts = []
+        processing_times = []
         for channel in guild.text_channels:
             permissions =channel.permissions_for(guild.get_member(self.bot.user.id))
             if permissions.read_messages and permissions.read_message_history:
+                fetch_start = time.perf_counter()
                 logged_messages = LoggedMessage.select().where(LoggedMessage.channel == channel.id).order_by(
                     LoggedMessage.messageid.desc()).limit(limit * 1.5)
                 messages = dict()
                 for message in logged_messages:
                     messages[message.messageid] = message
+                fetch_counts.append(len(messages))
+                t = time.perf_counter() - fetch_start
+                fetch_times.append(t)
+
                 async for message in channel.history(limit=limit, reverse=False,
                                                      before=self.cache_message if startup else None):
+                    processing = time.perf_counter()
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
-                    if message.author == self.bot.user:
-                        continue
                     if message.id not in messages.keys():
                         try:
                             LoggedMessage.create(messageid=message.id, author=message.author.id,
@@ -79,13 +87,25 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
+                    processing_times.append(time.perf_counter() - processing)
                     if count % min(75, int(limit/2)) is 0:
                         await asyncio.sleep(0)
+
                 await asyncio.sleep(0)
+            else:
+                no_access += 1
         GearbotLogging.info(
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
+        avg_fetch_count = sum(fetch_counts) / len(fetch_counts)
+        avg_fetch_time = sum(fetch_times) / len(fetch_times)
+        total_processing = sum(processing_times)
+        avg_processing = total_processing / len(processing_times)
+        GearbotLogging.debug(f"Average fetch time: {avg_fetch_time} (average message count: {avg_fetch_count})")
+        GearbotLogging.debug(f"Average processing time: {avg_processing} (total of {total_processing})")
+        GearbotLogging.debug(f"Was unable to read messages from {no_access} channels")
 
     async def prep(self, hot_reloading):
+        await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
         self.cache_message = await GearbotLogging.bot_log(
             f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
         self.to_cache = []
@@ -97,7 +117,6 @@ class ModLog:
         self.cache_start = time.perf_counter()
 
     async def startup_cache(self, hot_reloading):
-        await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
         while self.to_cache is not None:
             if len(self.to_cache) > 0:
                 guild = self.to_cache.pop()

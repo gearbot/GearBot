@@ -58,6 +58,8 @@ async def onReady(bot:commands.Bot, channelID):
         for e in STARTUP_ERRORS:
             await e
 
+def debug(message):
+    LOGGER.debug(message)
 
 def info(message):
     LOGGER.info(message)
