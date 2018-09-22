@@ -288,5 +288,6 @@
   "warning_dm": "You have been warned in `{servername}`!",
   "dm_on_warn_msg_enabled": "I will now DM people that you warn",
   "dm_on_warn_msg_disabled": "I won't DM people that you warn",
-  "dm_on_warn_help": "DMs users when you warn them, providing the reason."
+  "dm_on_warn_help": "DMs users when you warn them, providing the reason.",
+  "warning_could_not_dm": "I couldn't DM {user}<{userid}> about warn `{reason}`. He could have DMs disabled or blocked me."
 }
