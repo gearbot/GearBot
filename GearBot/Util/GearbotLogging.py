@@ -96,7 +96,7 @@ async def bot_log(message=None, embed=None):
         STARTUP_ERRORS.append(bot_log(message, embed))
 
 
-def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True):
+def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None):
     if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
         message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
     if message is not None:
@@ -106,12 +106,13 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True):
         if type in info:
             if cid not in LOG_CACHE:
                 LOG_CACHE[cid] = []
-            LOG_CACHE[cid].append((message, embed, file))
+            LOG_CACHE[cid].append((message, embed, file, cleaner))
 
 async def log_pump():
     info("Starting log pump")
     empty = []
     senders = []
+    cleaners = []
     embed = file = cid = todo = to_send = None
     while not SHOULD_TERMINATE:
         try:
@@ -122,10 +123,11 @@ async def log_pump():
                     permissions = channel.permissions_for(channel.guild.me)
                     to_send = ""
                     while len(todo) > 0:
-                        message, embed, file = todo[0]
+                        message, embed, file, cleaner = todo[0]
                         if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
                                 file is not None and not permissions.attach_files):
                             todo.pop(0)
+                            cleaners.append(cleaner)
                             continue
                         elif len(to_send) + len(message) < 1999:
                             to_send += f"{message}\n"
@@ -141,8 +143,17 @@ async def log_pump():
                 del LOG_CACHE[e]
             empty = []
             for s in senders:
-                await s
+                try:
+                    await s
+                except Exception as e:
+                    await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                                                          kwargs=dict(cid=cid, todo=todo, to_send=to_send,
+                                                                      LOG_CACHE=LOG_CACHE, embed=embed, file=file,
+                                                                      empty=empty))
             senders = []
+            for c in cleaners:
+                c()
+            cleaners = []
             await asyncio.sleep(0.1)
         except Exception as e:
             await GlobalHandlers.handle_exception("LOG PUMP", BOT, e, kwargs=dict(cid=cid, todo=todo, to_send=to_send, LOG_CACHE=LOG_CACHE, embed=embed, file=file, empty=empty))
