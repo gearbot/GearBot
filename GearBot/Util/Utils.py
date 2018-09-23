@@ -8,6 +8,7 @@ from subprocess import Popen
 import discord
 from discord import NotFound
 from discord.ext import commands
+from discord.ext.commands import UserConverter, BadArgument
 
 from Util import GearbotLogging
 
@@ -55,7 +56,7 @@ def convertToSeconds(value: int, type: str):
         value = value * 60
         type = 's'
     if type != 's' and type != 'second':
-        raise commands.BadArgument(f"Invalid duration: `{type}`\nValid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
+        return None
     else:
         return value
 

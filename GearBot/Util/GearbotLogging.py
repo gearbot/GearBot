@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import sys
@@ -43,6 +42,7 @@ def init_logger():
 
     handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4,
                                        backupCount=30)
+
     DISCORD_LOGGER.addHandler(handler)
 
 
@@ -64,6 +64,8 @@ async def onReady(bot: commands.Bot, channelID):
 
     bot.loop.create_task(log_pump())
 
+def debug(message):
+    LOGGER.debug(message)
 
 def info(message):
     LOGGER.info(message)
