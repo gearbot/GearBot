@@ -8,6 +8,7 @@
   "ROLE_CHANGES": false,
   "COMMAND_EXECUTED": false,
   "CENSOR_MESSAGES": false,
+  "CENSOR_LOGS": false,
   "WORD_BLACKLIST": [],
   "MAX_MENTIONS": 0,
   "EMBED_EDIT_LOGS": true,
