@@ -76,8 +76,6 @@ ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 
 
 async def clean_message(text: str, guild:discord.Guild):
-    for c in ("\\", "`", "*", "_", "~", "<"):
-        text = text.replace(c, f"\{c}\u200b")
 
     # resolve user menitons
     for uid in ID_MATCHER.findall(text):
@@ -93,6 +91,9 @@ async def clean_message(text: str, guild:discord.Guild):
         else:
             name = "@" + role.name
         text = text.replace(f"<@&{uid}>", name)
+
+    for c in ("\\", "`", "*", "_", "~", "<"):
+        text = text.replace(c, f"\{c}\u200b")
 
     # make sure we don't have funny guys/roles named "everyone" messing it all up
     text = text.replace("@", "@\u200b")
