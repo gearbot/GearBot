@@ -169,7 +169,8 @@ class Moderation:
             # sleep for a sec just in case the other bot is still purging so we don't get removed as well
             await asyncio.sleep(1)
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_fail_not_found', ctx.guild.id)}")
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}", delete_after=10)
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}", delete_after=10)
 
     @commands.command()
     @commands.guild_only()
