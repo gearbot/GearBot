@@ -21,5 +21,6 @@
   "PREFIX": "!",
   "SELF_ROLES": [],
   "TRUSTED_ROLES": [],
-  "TIMESTAMPS": true
+  "TIMESTAMPS": true,
+  "DM_ON_WARN": false
 }

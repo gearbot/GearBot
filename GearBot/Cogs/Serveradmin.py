@@ -157,6 +157,12 @@ class Serveradmin:
     @trusted_roles.command(name="remove")
     async def remove_trusted_role(self, ctx, *, role: discord.Role):
         await remove_item(ctx, role, 'trusted')
+        
+    @configure.command()
+    async def dm_on_warn(self, ctx, value:bool):
+        """dm_on_warn_help"""
+        Configuration.set_var(ctx.guild.id, "DM_ON_WARN", value)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @configure.command(aliases=["muterole"])
     async def mute_role(self, ctx:commands.Context, role:discord.Role):
