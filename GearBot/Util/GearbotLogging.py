@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 from discord.ext import commands
 
-from Util import Configuration, GlobalHandlers
+from Util import Configuration, GlobalHandlers, Utils
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
@@ -93,12 +93,14 @@ async def bot_log(message=None, embed=None):
         STARTUP_ERRORS.append(bot_log(message, embed))
 
 
-def log_to(guild_id, type, message=None, embed=None, file=None):
+def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True):
+    if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
+        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
+    if message is not None:
+        message = Utils.trim_message(f"{message}\u200b", 2000)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
         if type in info:
-            if Configuration.get_var(guild_id, "TIMESTAMPS"):
-                message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
             if cid not in LOG_CACHE:
                 LOG_CACHE[cid] = []
             LOG_CACHE[cid].append((message, embed, file))

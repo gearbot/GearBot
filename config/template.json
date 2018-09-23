@@ -10,6 +10,7 @@
   "CENSOR_MESSAGES": false,
   "WORD_BLACKLIST": [],
   "MAX_MENTIONS": 0,
+  "EMBED_EDIT_LOGS": true,
   "FUTURE_LOGS": false,
   "ADMIN_ROLES": [],
   "DEV_ROLE": 0,

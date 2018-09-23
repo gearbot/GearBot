@@ -77,15 +77,18 @@ ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 
 
 async def clean_message(text: str, guild:discord.Guild):
+    for c in ("\\", "`", "*", "_", "~", "<"):
+        text = text.replace(c, f"\{c}\u200b")
+
     # resolve user menitons
     for uid in ID_MATCHER.findall(text):
-        name = "@" + await username(uid, False)
+        name = "@" + await username(int(uid), False)
         text = text.replace(f"<@{uid}>", name)
         text = text.replace(f"<@!{uid}>", name)
 
     # resolve role mentions
     for uid in ROLE_ID_MATCHER.findall(text):
-        role = discord.utils.get(guild.roles, id=uid)
+        role = discord.utils.get(guild.roles, id=int(uid))
         if role is None:
             name = "@UNKNOWN ROLE"
         else:

@@ -77,7 +77,7 @@ class ModLog:
                             logged.save()
                             editCount = editCount + 1
                     count = count + 1
-                    if count % min(75, int(limit/2)) is 0:
+                    if count % min(75, int(limit / 2)) is 0:
                         await asyncio.sleep(0)
                 await asyncio.sleep(0)
         GearbotLogging.info(
@@ -130,19 +130,29 @@ class ModLog:
             if not hasUser or user.id in Configuration.get_var(guild.id, "IGNORED_USERS") or user.id == guild.me.id:
                 return
             attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == data.message_id)
-            embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
-                                  description=message.content)
-            embed.set_author(name=user.name if hasUser else message.author,
-                             icon_url=user.avatar_url if hasUser else EmptyEmbed)
             channel = self.bot.get_channel(message.channel)
-            embed.set_footer(text=f"Sent in #{channel.name}")
-            if len(attachments) > 0:
-                embed.add_field(name=Translator.translate('attachment_link', guild),
-                                value="\n".join(attachment.url for attachment in attachments))
             name = Utils.clean_user(user) if hasUser else str(message.author)
             GearbotLogging.log_to(guild.id, "EDIT_LOGS",
-                                        f":wastebasket: {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}",
-                                        embed=embed)
+                                  f":wastebasket: {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}")
+            if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
+
+                embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
+                                      description=message.content)
+                embed.set_author(name=user.name if hasUser else message.author,
+                                 icon_url=user.avatar_url if hasUser else EmptyEmbed)
+
+                embed.set_footer(text=f"Sent in #{channel.name}")
+                if len(attachments) > 0:
+                    embed.add_field(name=Translator.translate('attachment_link', guild),
+                                    value="\n".join(attachment.url for attachment in attachments))
+                GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
+            else:
+                cleaned_content = await Utils.clean_message(message.content, channel.guild)
+                GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
+                count = 1
+                for attachment in attachments:
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Attachment{f'{count} ' if len(attachments) > 1 else ''}:** <{attachment.url}>", can_stamp=False)
+                    count +=1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
         if event.data["channel_id"] == Configuration.get_master_var("BOT_LOG_CHANNEL"):
@@ -164,18 +174,24 @@ class ModLog:
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
             if not (hasUser and user.id in Configuration.get_var(channel.guild.id,
                                                                  "IGNORED_USERS") or user.id == channel.guild.me.id):
-                embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-                embed.set_author(name=user.name if hasUser else message.author,
-                                 icon_url=user.avatar_url if hasUser else EmptyEmbed)
-                embed.set_footer(
-                    text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
-                embed.add_field(name=Translator.translate('before', channel.guild.id),
-                                value=Utils.trim_message(message.content, 1024), inline=False)
-                embed.add_field(name=Translator.translate('after', channel.guild.id),
-                                value=Utils.trim_message(after, 1024), inline=False)
                 GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS",
-                                                              f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}",
-                                            embed=embed)
+                                      f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}")
+                if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
+                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+                    embed.set_author(name=user.name if hasUser else message.author,
+                                     icon_url=user.avatar_url if hasUser else EmptyEmbed)
+                    embed.set_footer(
+                        text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
+                    embed.add_field(name=Translator.translate('before', channel.guild.id),
+                                    value=Utils.trim_message(message.content, 1024), inline=False)
+                    embed.add_field(name=Translator.translate('after', channel.guild.id),
+                                    value=Utils.trim_message(after, 1024), inline=False)
+                    GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", embed=embed)
+                else:
+                    clean_old = await Utils.clean_message(message.content, channel.guild)
+                    clean_new = await Utils.clean_message(after, channel.guild)
+                    GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}", can_stamp=False)
+                    GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}", can_stamp=False)
             message.content = event.data["content"]
             message.save()
 
@@ -190,7 +206,7 @@ class ModLog:
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
             GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
-                                                         f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
+                                  f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
     async def on_member_remove(self, member: discord.Member):
         if member.id == self.bot.user.id: return
@@ -210,7 +226,7 @@ class ModLog:
                             reason = entry.reason
                         InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
-                                                                     f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                                              f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
             except discord.Forbidden:
                 permissions = member.guild.me.guild_permissions
@@ -220,7 +236,7 @@ class ModLog:
 
         if self.is_enabled(member.guild.id, "JOIN_LOGS"):
             GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
-                                        f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
+                                  f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
     async def on_member_ban(self, guild, user):
         if user.id == self.bot.user.id: return
@@ -236,10 +252,10 @@ class ModLog:
                     InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
                                                    "No reason given." if entry.reason is None else entry.reason)
                     GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                                          f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                     return
         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                    f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+                              f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         self.bot.data["forced_exits"].add(user.id)
 
     async def on_member_unban(self, guild, user):
@@ -252,10 +268,10 @@ class ModLog:
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                    f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
+                                              f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
                         return
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                        f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+                                  f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
 
     async def on_member_update(self, before, after):
         guild = before.guild
@@ -270,7 +286,9 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and before.nick == e.changes.before.nick and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and after.nick == e.changes.after.nick:
+                        if e.target.id == before.id and before.nick == e.changes.before.nick and hasattr(
+                                e.changes.before, "nick") and hasattr(e.changes.after,
+                                                                      "nick") and after.nick == e.changes.after.nick:
                             entry = e
                 if before.nick is None:
                     type = "added"
@@ -289,14 +307,14 @@ class ModLog:
                     mod_id = entry.user.id
                     actor = "mod"
                 GearbotLogging.log_to(guild.id, "NAME_CHANGES",
-                                            f"{Emoji.get_chat_emoji('NICKTAG')} {Translator.translate(f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)}")
+                                      f"{Emoji.get_chat_emoji('NICKTAG')} {Translator.translate(f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)}")
             # username changes
             elif (before.name != after.name and
                   after.name != before.name):
                 before_clean_name = Utils.clean_user(before)
                 after_clean_name = Utils.clean_user(after)
                 GearbotLogging.log_to(guild.id, "NAME_CHANGES",
-                                            f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
+                                      f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
         # role changes
         if self.is_enabled(guild.id, "ROLE_CHANGES"):
             if len(before.roles) != len(after.roles):
@@ -313,8 +331,9 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after, "roles") and all(
-                                role in e.changes.before.roles for role in removed) and all(
+                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,
+                                                                                                       "roles") and all(
+                            role in e.changes.before.roles for role in removed) and all(
                             role in e.changes.after.roles for role in added):
                             entry = e
                 if entry is not None:
@@ -348,7 +367,8 @@ class ModLog:
     async def on_command_completion(self, ctx):
         if self.is_enabled(ctx.guild.id, "COMMAND_EXECUTED"):
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
-            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
+            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED",
+                                  f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
 
 
 async def cache_task(modlog: ModLog):

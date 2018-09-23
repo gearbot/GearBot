@@ -47,6 +47,7 @@ def v2(config):
     config["CENSOR_MESSAGES"] = len(config["INVITE_WHITELIST"]) > 0
     config["WORD_BLACKLIST"] = []
     config["MAX_MENTIONS"] = 0
+    config["EMBED_EDIT_LOGS"] = True
     return config
 
 
