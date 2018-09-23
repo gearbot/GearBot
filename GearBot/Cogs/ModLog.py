@@ -8,7 +8,6 @@ from discord import AuditLogAction
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
-from peewee import IntegrityError
 
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment

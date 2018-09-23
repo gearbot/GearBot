@@ -7,8 +7,6 @@ from subprocess import Popen
 
 import discord
 from discord import NotFound
-from discord.ext import commands
-from discord.ext.commands import UserConverter, BadArgument
 
 from Util import GearbotLogging
 
