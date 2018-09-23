@@ -389,13 +389,14 @@ async def unmuteTask(modcog: Moderation):
                     if time.time() > until and userid not in skips:
                         member = guild.get_member(int(userid))
                         role = discord.utils.get(guild.roles, id=Configuration.get_var(int(guildid), "MUTE_ROLE"))
-                        if guild.me.guild_permissions.manage_roles:
-                            await member.remove_roles(role, reason="Mute expired")
-                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                        f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
-                        else:
-                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                        f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
+                        if member is not None:
+                            if guild.me.guild_permissions.manage_roles:
+                                await member.remove_roles(role, reason="Mute expired")
+                                GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                                                            f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
+                            else:
+                                GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                                                            f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
                         updated = True
                         toremove.append(userid)
                 for todo in toremove:
