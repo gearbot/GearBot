@@ -1,4 +1,5 @@
 import datetime
+import os
 
 import discord
 
@@ -16,9 +17,13 @@ async def archive_purge(bot, guild_id, messages):
     filename = f"Purged messages archive {archive_counter}.txt"
     with open(filename, "w", encoding="utf-8") as file:
         file.write(out)
-    with open (filename, "rb") as file:
-        GearbotLogging.log_to(guild_id, "EDIT_LOGS", message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(file, "Purged messages archive.txt"))
-    # os.remove(filename)
+    file = open (filename, "rb")
+    GearbotLogging.log_to(guild_id, "EDIT_LOGS", message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(file, "Purged messages archive.txt"), cleaner=lambda: clean(file, filename))
+
+def clean(file, filename):
+    file.close()
+    os.remove(filename)
+
 
 async def pack_messages(messages):
     out = ""
@@ -43,6 +48,6 @@ async def ship_messages(ctx, messages, filename="Message archive"):
             file.write(out)
         with open(real_name, "rb") as file:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(file, f"{filename}.txt"))
-        # os.remove(real_name)
+        os.remove(real_name)
     else:
         await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_empty', ctx)}")
