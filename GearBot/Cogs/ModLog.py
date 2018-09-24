@@ -156,7 +156,7 @@ class ModLog:
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
                 count = 1
                 for attachment in attachments:
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Attachment{f'{count} ' if len(attachments) > 1 else ''}:** <{attachment.url}>", can_stamp=False)
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Attachment{f' {count}' if len(attachments) > 1 else ''}:** <{attachment.url}>", can_stamp=False)
                     count +=1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):

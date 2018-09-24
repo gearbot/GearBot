@@ -75,7 +75,11 @@ def trim_message(message, limit):
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<@#([0-9]+)>")
-URL_MATCHER = re.compile('https?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+URL_MATCHER = re.compile(r'^(?:http)s?://' # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|' # ...or ipv4
+    r'\[?[A-F0-9]*:[A-F0-9:]+\]?)' # ...or ipv6
+    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 async def clean_message(text: str, guild:discord.Guild):
     start = time.perf_counter()
