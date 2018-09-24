@@ -124,6 +124,8 @@ async def log_pump():
                     to_send = ""
                     while len(todo) > 0:
                         message, embed, file, cleaner = todo[0]
+                        if message is None:
+                            message = ""
                         if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
                                 file is not None and not permissions.attach_files):
                             todo.pop(0)
