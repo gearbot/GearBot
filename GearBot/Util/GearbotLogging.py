@@ -209,5 +209,5 @@ async def log_error():
         LOG_PUMP.NUKED = True
         LOG_PUMP = LogPump(BOT)
         BOT.loop.create_task(LOG_PUMP.pump())
-        await bot_log("Log pump got clogged, nuked and restarted")
+        await bot_log("Log pump got clogged, nuked and restarted, moving on")
 
