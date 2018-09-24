@@ -97,9 +97,9 @@ async def bot_log(message=None, embed=None):
 
 
 def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None):
-    if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
-        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
     if message is not None:
+        if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
+            message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
         message = Utils.trim_message(f"{message}\u200b", 2000)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
@@ -136,7 +136,13 @@ async def log_pump():
                             break
                         if embed is not None or file is not None:
                             break
-                    senders.append(channel.send(to_send, embed=embed, file=file))
+                    try:
+                        senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
+                    except Exception as e:
+                        await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                                                              kwargs=dict(cid=cid, todo=todo, to_send=to_send,
+                                                                          LOG_CACHE=LOG_CACHE, embed=embed, file=file,
+                                                                          empty=empty))
                 else:
                     empty.append(cid)
             for e in empty:
