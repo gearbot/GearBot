@@ -15,7 +15,7 @@ BOT = None
 
 def on_ready(bot_in):
     global BOT
-    bot = bot_in
+    BOT = bot_in
     load_translations()
 
 def load_translations():
