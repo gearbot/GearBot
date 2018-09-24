@@ -3,6 +3,7 @@ import json
 import os
 import re
 import subprocess
+import time
 from subprocess import Popen
 
 import discord
@@ -77,7 +78,7 @@ CHANNEL_ID_MATCHER = re.compile("<@#([0-9]+)>")
 URL_MATCHER = re.compile('https?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
 async def clean_message(text: str, guild:discord.Guild):
-
+    start = time.perf_counter()
     # resolve user mentions
     for uid in ID_MATCHER.findall(text):
         name = "@" + await username(int(uid), False)
@@ -113,7 +114,8 @@ async def clean_message(text: str, guild:discord.Guild):
     # make sure we don't have funny guys/roles named "everyone" messing it all up
     text = text.replace("@", "@\u200b")
 
-
+    t = round((time.perf_counter() - start) * 1000, 2)
+    GearbotLogging.info(f"Cleaned a message in {t}ms")
     return text
 
 
