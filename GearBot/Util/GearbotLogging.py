@@ -116,6 +116,9 @@ async def log_pump():
     embed = file = cid = todo = to_send = None
     while not SHOULD_TERMINATE:
         try:
+            cleaners = []
+            empty = []
+            senders = []
             embed = file = None
             for cid, todo in LOG_CACHE.items():
                 channel = BOT.get_channel(int(cid))
@@ -124,7 +127,7 @@ async def log_pump():
                     to_send = ""
                     while len(todo) > 0:
                         message, embed, file, cleaner = todo[0]
-                        if message is None:
+                        if message is None or message.strip() == "":
                             message = ""
                         if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
                                 file is not None and not permissions.attach_files):
@@ -149,7 +152,6 @@ async def log_pump():
                     empty.append(cid)
             for e in empty:
                 del LOG_CACHE[e]
-            empty = []
             for s in senders:
                 try:
                     await s
@@ -158,10 +160,8 @@ async def log_pump():
                                                           kwargs=dict(cid=cid, todo=todo, to_send=to_send,
                                                                       LOG_CACHE=LOG_CACHE, embed=embed, file=file,
                                                                       empty=empty))
-            senders = []
             for c in cleaners:
                 c()
-            cleaners = []
             await asyncio.sleep(0.1)
         except Exception as e:
             await GlobalHandlers.handle_exception("LOG PUMP", BOT, e, kwargs=dict(cid=cid, todo=todo, to_send=to_send, LOG_CACHE=LOG_CACHE, embed=embed, file=file, empty=empty))

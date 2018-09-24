@@ -73,11 +73,12 @@ def trim_message(message, limit):
 
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
-
+CHANNEL_ID_MATCHER = re.compile("<@#([0-9]+)>")
+URL_MATCHER = re.compile('https?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
 async def clean_message(text: str, guild:discord.Guild):
 
-    # resolve user menitons
+    # resolve user mentions
     for uid in ID_MATCHER.findall(text):
         name = "@" + await username(int(uid), False)
         text = text.replace(f"<@{uid}>", name)
@@ -92,8 +93,22 @@ async def clean_message(text: str, guild:discord.Guild):
             name = "@" + role.name
         text = text.replace(f"<@&{uid}>", name)
 
+    # resolve channel names
+    for uid in CHANNEL_ID_MATCHER.findall(text):
+        channel = guild.get_channel(uid)
+        if channel is None:
+            name = "#UNKNOWN CHANNEL"
+        else:
+            name = "#" + channel.name
+        text = text.replace(f"<@#{uid}>", name)
+
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
+
+    #find urls last so the < escaping doesn't break it
+    for url in URL_MATCHER.findall(text):
+        text = text.replace(url, f"<{url}>")
+
 
     # make sure we don't have funny guys/roles named "everyone" messing it all up
     text = text.replace("@", "@\u200b")
