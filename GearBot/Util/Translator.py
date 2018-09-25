@@ -15,7 +15,7 @@ BOT = None
 
 def on_ready(bot_in):
     global BOT
-    bot = bot_in
+    BOT = bot_in
     load_translations()
 
 def load_translations():
@@ -28,15 +28,19 @@ def load_translations():
 
 
 def translate(key, location, **kwargs):
+    lid = None
     if location is not None:
         if hasattr(location, "guild"):
             location = location.guild
         if location is not None and hasattr(location, "id"):
-            lang_key = Configuration.get_var(location.id, "LANG")
+            lid = location.id
         else:
-            lang_key = Configuration.get_var(location, "LANG")
-    else:
+            lid = location
+
+    if lid is None:
         lang_key = "en_US"
+    else:
+        lang_key = Configuration.get_var(lid, "LANG")
     if key in LANGS[lang_key].keys():
         return LANGS[lang_key][key].format(**kwargs)
     else:

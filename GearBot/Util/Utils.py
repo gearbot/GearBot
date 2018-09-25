@@ -3,11 +3,11 @@ import json
 import os
 import re
 import subprocess
+import time
 from subprocess import Popen
 
 import discord
 from discord import NotFound
-from discord.ext import commands
 
 from Util import GearbotLogging
 
@@ -55,7 +55,7 @@ def convertToSeconds(value: int, type: str):
         value = value * 60
         type = 's'
     if type != 's' and type != 'second':
-        raise commands.BadArgument(f"Invalid duration: `{type}`\nValid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
+        return None
     else:
         return value
 
@@ -74,13 +74,12 @@ def trim_message(message, limit):
 
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
-
+CHANNEL_ID_MATCHER = re.compile("<@#([0-9]+)>")
+URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ ]*)?)', re.IGNORECASE)
 
 async def clean_message(text: str, guild:discord.Guild):
-    for c in ("\\", "`", "*", "_", "~", "<"):
-        text = text.replace(c, f"\{c}\u200b")
-
-    # resolve user menitons
+    start = time.perf_counter()
+    # resolve user mentions
     for uid in ID_MATCHER.findall(text):
         name = "@" + await username(int(uid), False)
         text = text.replace(f"<@{uid}>", name)
@@ -95,10 +94,29 @@ async def clean_message(text: str, guild:discord.Guild):
             name = "@" + role.name
         text = text.replace(f"<@&{uid}>", name)
 
+
+    for c in ("\\", "`", "*", "_", "~", "<"):
+        text = text.replace(c, f"\{c}\u200b")
+
+    #find urls last so the < escaping doesn't break it
+    for url in URL_MATCHER.findall(text):
+        text = text.replace(url, f"<{url}>")
+
+        # resolve channel names
+        for uid in CHANNEL_ID_MATCHER.findall(text):
+            channel = guild.get_channel(uid)
+            if channel is None:
+                name = "#UNKNOWN CHANNEL"
+            else:
+                name = "#" + channel.name
+            text = text.replace(f"\\<@#{uid}>", name)
+
+
     # make sure we don't have funny guys/roles named "everyone" messing it all up
     text = text.replace("@", "@\u200b")
 
-
+    t = round((time.perf_counter() - start) * 1000, 2)
+    GearbotLogging.info(f"Cleaned a message in {t}ms")
     return text
 
 

@@ -17,8 +17,8 @@ DISCORD_LOGGER = logging.getLogger('discord')
 BOT_LOG_CHANNEL: discord.TextChannel
 STARTUP_ERRORS = []
 BOT: commands.AutoShardedBot = None
-LOG_CACHE = dict()
-SHOULD_TERMINATE = False
+LOG_PUMP = None
+LOG_ERRORS = 0
 
 
 def init_logger():
@@ -43,11 +43,12 @@ def init_logger():
 
     handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4,
                                        backupCount=30)
+
     DISCORD_LOGGER.addHandler(handler)
 
 
 async def onReady(bot: commands.Bot, channelID):
-    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS
+    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS, LOG_PUMP
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
@@ -62,7 +63,14 @@ async def onReady(bot: commands.Bot, channelID):
             await e
         STARTUP_ERRORS = []
 
-    bot.loop.create_task(log_pump())
+def initialize_pump(bot):
+    global LOG_PUMP
+    LOG_PUMP = LogPump(bot)
+    bot.loop.create_task(LOG_PUMP.pump())
+
+
+def debug(message):
+    LOGGER.debug(message)
 
 
 def info(message):
@@ -93,59 +101,15 @@ async def bot_log(message=None, embed=None):
         STARTUP_ERRORS.append(bot_log(message, embed))
 
 
-def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True):
-    if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
-        message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
+def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None):
     if message is not None:
+        if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
+            message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
         message = Utils.trim_message(f"{message}\u200b", 2000)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
         if type in info:
-            if cid not in LOG_CACHE:
-                LOG_CACHE[cid] = []
-            LOG_CACHE[cid].append((message, embed, file))
-
-async def log_pump():
-    info("Starting log pump")
-    empty = []
-    senders = []
-    embed = file = cid = todo = to_send = None
-    while not SHOULD_TERMINATE:
-        try:
-            embed = file = None
-            for cid, todo in LOG_CACHE.items():
-                channel = BOT.get_channel(int(cid))
-                if channel is not None and len(todo) > 0:
-                    permissions = channel.permissions_for(channel.guild.me)
-                    to_send = ""
-                    while len(todo) > 0:
-                        message, embed, file = todo[0]
-                        if (not permissions.send_messages) or (embed is not None and not permissions.embed_links) or (
-                                file is not None and not permissions.attach_files):
-                            todo.pop(0)
-                            continue
-                        elif len(to_send) + len(message) < 1999:
-                            to_send += f"{message}\n"
-                            todo.pop(0)
-                        else:
-                            break
-                        if embed is not None or file is not None:
-                            break
-                    senders.append(channel.send(to_send, embed=embed, file=file))
-                else:
-                    empty.append(cid)
-            for e in empty:
-                del LOG_CACHE[e]
-            empty = []
-            for s in senders:
-                await s
-            senders = []
-            await asyncio.sleep(0.1)
-        except Exception as e:
-            await GlobalHandlers.handle_exception("LOG PUMP", BOT, e, kwargs=dict(cid=cid, todo=todo, to_send=to_send, LOG_CACHE=LOG_CACHE, embed=embed, file=file, empty=empty))
-    info("Log pump terminated")
-
-
+            LOG_PUMP.receive(cid, (message, embed, file, cleaner))
 
 
 async def message_owner(bot, message):
@@ -157,3 +121,94 @@ async def message_owner(bot, message):
     if dm_channel is None:
         await owner.create_dm()
     await owner.dm_channel.send(message)
+
+
+class LogPump:
+
+    def __init__(self, bot):
+        self.todo = dict()
+        self.running = True
+        self.bot = bot
+        self.NUKED = False
+        info("Starting log pump")
+
+    async def pump(self):
+        info("Log pump engaged")
+        empty = []
+        embed = file = cid = todo = to_send = None
+        while (self.running or len(self.todo) > 0) and not self.NUKED:
+            try:
+                cleaners = []
+                empty = []
+                senders = []
+                embed = file = None
+                for cid, todo in self.todo.items():
+                    channel = BOT.get_channel(int(cid))
+                    if channel is not None and len(todo) > 0:
+                        permissions = channel.permissions_for(channel.guild.me)
+                        to_send = ""
+                        while len(todo) > 0:
+                            message, embed, file, cleaner = todo[0]
+                            if message is None or message.strip() == "":
+                                message = ""
+                            if (not permissions.send_messages) or (
+                                    embed is not None and not permissions.embed_links) or (
+                                    file is not None and not permissions.attach_files):
+                                todo.pop(0)
+                                cleaners.append(cleaner)
+                                continue
+                            elif len(to_send) + len(message) < 1999:
+                                to_send += f"{message}\n"
+                                todo.pop(0)
+                            else:
+                                break
+                            if embed is not None or file is not None:
+                                break
+                        try:
+                            senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
+                        except Exception as e:
+                            await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                                                                  kwargs=dict(cid=cid, todo=todo, to_send=to_send,
+                                                                              LOG_CACHE=LOG_CACHE, embed=embed,
+                                                                              file=file,
+                                                                              empty=empty))
+                    else:
+                        empty.append(cid)
+                for e in empty:
+                    del self.todo[e]
+                for s in senders:
+                    try:
+                        await s
+                    except Exception as e:
+                        await log_error()
+                        await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                                                              kwargs=dict(cid=cid, todo=todo, to_send=to_send,
+                                                                          LOG_CACHE=self.todo, embed=embed, file=file,
+                                                                          empty=empty))
+                for c in cleaners:
+                    c()
+                await asyncio.sleep(0.1)
+            except Exception as e:
+                await log_error()
+                await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                                                      kwargs=dict(cid=cid, todo=todo, to_send=to_send,
+                                                                  LOG_CACHE=self.todo, embed=embed, file=file,
+                                                                  empty=empty))
+        info("Log pump terminated")
+
+    def receive(self, cid, data):
+        if cid not in self.todo:
+            self.todo[cid] = []
+        self.todo[cid].append(data)
+
+
+async def log_error():
+    global LOG_ERRORS, LOG_PUMP
+    LOG_ERRORS += 1
+    if LOG_ERRORS >= 10:
+        LOG_ERRORS = 0
+        error("=========Log pump error limit reached, deploying nuke to unclog the system=========")
+        LOG_PUMP.NUKED = True
+        initialize_pump(BOT)
+        await bot_log("Log pump got clogged, nuked and restarted, moving on")
+

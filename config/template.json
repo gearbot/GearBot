@@ -3,6 +3,7 @@
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
+  "CENSOR_LOGS": false,
   "WORD_BLACKLIST": [],
   "MAX_MENTIONS": 0,
   "EMBED_EDIT_LOGS": true,

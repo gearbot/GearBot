@@ -25,14 +25,14 @@ components = [
 ]
 
 async def reload(bot):
-    log_cache = GearbotLogging.LOG_CACHE
+    GearbotLogging.LOG_PUMP.running = False
     for c in components:
         importlib.reload(c)
     prepDatabase(bot)
     await readyBot(bot)
-    GearbotLogging.LOG_CACHE = log_cache
 
 async def readyBot(bot):
+    GearbotLogging.initialize_pump(bot)
     await Configuration.on_ready(bot)
     Emoji.on_ready(bot)
     Confirmation.on_ready(bot)
