@@ -216,7 +216,7 @@ class ModLog:
         if member.id in exits:
             exits.remove(member.id)
             return
-        if member.guild.me.guild_permissions.view_audit_log:
+        if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
                     if member.joined_at is None or member.joined_at > entry.created_at:
