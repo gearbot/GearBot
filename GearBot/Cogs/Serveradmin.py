@@ -600,7 +600,7 @@ class Serveradmin:
         await ctx.send(message, embed=self.get_logs_status(ctx))
 
 
-    @log_types.command(name="disable")
+    @features.command(name="disable")
     async def disable_log_types(self, ctx, types):
         disabled = []
         ignored = []
@@ -656,6 +656,13 @@ class Serveradmin:
                 await member.remove_roles(role, reason=f"Mute feature has been disabled")
         Configuration.set_var(ctx.guild.id, "MUTE_ROLE", 0)
         await ctx.send("Mute feature has been disabled, all people muted have been unmuted and the role can now be removed.")
+
+    @configure.command()
+    async def dm_on_warn(self, ctx, value: bool):
+        """dm_on_warn_help"""
+        Configuration.set_var(ctx.guild.id, "DM_ON_WARN", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
 
 def setup(bot):

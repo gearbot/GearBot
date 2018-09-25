@@ -48,15 +48,17 @@ def v2(config):
     config["WORD_BLACKLIST"] = []
     config["MAX_MENTIONS"] = 0
     config["EMBED_EDIT_LOGS"] = True
+    return config
 
+def v3(config):
     for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
         del config[v]
-
+    config["DM_ON_WARN"] = False
     return config
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2]
+MIGRATORS = [initial_migration, v2, v3]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION

@@ -91,7 +91,7 @@ class ModLog:
             f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
         self.to_cache = []
         for guild in self.bot.guilds:
-            if self.is_enabled(guild.id, "EDIT_LOGS") is not 0:
+            if Configuration.get_var(guild.id, "EDIT_LOGS") is not 0:
                 self.to_cache.append(guild)
         self.bot.loop.create_task(self.startup_cache(hot_reloading))
         self.cache_start = time.perf_counter()
@@ -112,7 +112,7 @@ class ModLog:
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        if self.is_enabled(message.guild.id, "EDIT_LOGS"):
+        if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
             LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
                                  timestamp=message.created_at.timestamp(), channel=message.channel.id,
                                  server=message.guild.id)

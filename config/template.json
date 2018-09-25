@@ -1,5 +1,5 @@
 {
-  "VERSION": 2,
+  "VERSION": 3,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -20,5 +20,6 @@
   "PREFIX": "!",
   "SELF_ROLES": [],
   "TRUSTED_ROLES": [],
-  "TIMESTAMPS": true
+  "TIMESTAMPS": true,
+  "DM_ON_WARN": false
 }
