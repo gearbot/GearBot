@@ -64,6 +64,7 @@ async def onReady(bot: commands.Bot, channelID):
         STARTUP_ERRORS = []
 
 def initialize_pump(bot):
+    global LOG_PUMP
     LOG_PUMP = LogPump(bot)
     bot.loop.create_task(LOG_PUMP.pump())
 
