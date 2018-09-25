@@ -75,11 +75,7 @@ def trim_message(message, limit):
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<@#([0-9]+)>")
-URL_MATCHER = re.compile(r'^(?:http)s?://' # http:// or https://
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|' # ...or ipv4
-    r'\[?[A-F0-9]*:[A-F0-9:]+\]?)' # ...or ipv6
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ ]*)?)', re.IGNORECASE)
 
 async def clean_message(text: str, guild:discord.Guild):
     start = time.perf_counter()
@@ -98,14 +94,6 @@ async def clean_message(text: str, guild:discord.Guild):
             name = "@" + role.name
         text = text.replace(f"<@&{uid}>", name)
 
-    # resolve channel names
-    for uid in CHANNEL_ID_MATCHER.findall(text):
-        channel = guild.get_channel(uid)
-        if channel is None:
-            name = "#UNKNOWN CHANNEL"
-        else:
-            name = "#" + channel.name
-        text = text.replace(f"<@#{uid}>", name)
 
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
@@ -113,6 +101,15 @@ async def clean_message(text: str, guild:discord.Guild):
     #find urls last so the < escaping doesn't break it
     for url in URL_MATCHER.findall(text):
         text = text.replace(url, f"<{url}>")
+
+        # resolve channel names
+        for uid in CHANNEL_ID_MATCHER.findall(text):
+            channel = guild.get_channel(uid)
+            if channel is None:
+                name = "#UNKNOWN CHANNEL"
+            else:
+                name = "#" + channel.name
+            text = text.replace(f"\\<@#{uid}>", name)
 
 
     # make sure we don't have funny guys/roles named "everyone" messing it all up
