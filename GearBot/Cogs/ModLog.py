@@ -291,8 +291,7 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after,
-                                                                      "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
+                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
                             entry = e
                 if before.nick is None:
                     type = "added"
@@ -335,10 +334,9 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,
-                                                                                                       "roles") and all(
-                            role in e.changes.before.roles for role in removed) and all(
-                            role in e.changes.after.roles for role in added):
+                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,"roles")\
+                        and all(role in e.changes.before.roles for role in removed)\
+                        and all(role in e.changes.after.roles for role in added):
                             entry = e
                 if entry is not None:
                     removed = entry.changes.before.roles

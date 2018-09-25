@@ -63,6 +63,7 @@ async def onReady(bot: commands.Bot, channelID):
             await e
         STARTUP_ERRORS = []
 
+def initialize_pump(bot):
     LOG_PUMP = LogPump(bot)
     bot.loop.create_task(LOG_PUMP.pump())
 
@@ -207,7 +208,6 @@ async def log_error():
         LOG_ERRORS = 0
         error("=========Log pump error limit reached, deploying nuke to unclog the system=========")
         LOG_PUMP.NUKED = True
-        LOG_PUMP = LogPump(BOT)
-        BOT.loop.create_task(LOG_PUMP.pump())
+        initialize_pump(BOT)
         await bot_log("Log pump got clogged, nuked and restarted, moving on")
 
