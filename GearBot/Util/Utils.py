@@ -12,17 +12,26 @@ from discord import NotFound
 from Util import GearbotLogging
 
 BOT = None
+cache_task = None
+
+class CacheCleaner:
+
+    def __init__(self) :
+        self.running = True
+
+    async def run(self):
+        while not BOT.is_closed() and self.running:
+            known_invalid_users.clear()
+            user_cache.clear()
+            await asyncio.sleep(5 * 60)
+
 
 def on_ready(actual_bot):
-    global BOT
+    global BOT, cache_task
     BOT = actual_bot
-    BOT.loop.create_task(cache_nuke())
+    cache_task = CacheCleaner()
+    BOT.loop.create_task(cache_task.run())
 
-async def cache_nuke():
-    while not BOT.is_closed():
-        known_invalid_users.clear()
-        user_cache.clear()
-        await asyncio.sleep(5*60)
 
 
 def fetch_from_disk(filename, alternative=None):
