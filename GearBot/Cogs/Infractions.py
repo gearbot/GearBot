@@ -107,7 +107,7 @@ class Infractions:
                     del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_delete_deleted', ctx.guild.id, id=inf_id)}")
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                    Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), targetid=target.id, mod=str(mod), modid=mod.id, reason=reason, user=str(ctx.author), userid=ctx.author.id))
+                    f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), targetid=target.id, mod=str(mod), modid=mod.id, reason=reason, user=str(ctx.author), userid=ctx.author.id)}")
             async def no():
                 await ctx.send(Translator.translate("inf_delete_cancelled", ctx.guild.id, id=inf_id))
             await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=inf_id)}", on_yes=yes, on_no=no)
