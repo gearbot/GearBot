@@ -285,5 +285,9 @@
   "feature_already_enabled": "This feature was already enabled.",
   "feature_already_disabled": "This feature was already disabled.",
   "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging.",
-  "inf_delete_help" : "Deletes an infraction. This can not be undone!"
+  "inf_delete_help" : "Deletes an infraction. This can not be undone!",
+  "inf_delete_confirmation" : "Are you sure you would like to delete infraction #{id}?\n\n*This can not be undone.*",
+  "inf_delete_deleted" : "Infraction #{id} has been deleted.",
+  "inf_delete_cancelled" : "Infraction #{id} remains as it is.",
+  "inf_delete_log" : "Infraction #{id} to {target}(``{targetid}``) given by {mod}(``{modid}``) with reason```{reason}``` has been deleted by {user}(``{userid}``)"
 }
