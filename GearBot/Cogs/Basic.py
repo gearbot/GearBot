@@ -203,7 +203,7 @@ class Basic:
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(
                     text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name,
-                                              user=Utils.clean(ctx.author.display_name), message_id=message_id))
+                                              user=Utils.clean_user(ctx.author.display_name), message_id=message_id))
                 await ctx.send(embed=embed)
                 if ctx.channel.permissions_for(ctx.me).manage_messages:
                     await ctx.message.delete()
