@@ -284,5 +284,6 @@
   "features": "Features",
   "feature_already_enabled": "This feature was already enabled.",
   "feature_already_disabled": "This feature was already disabled.",
-  "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging."
+  "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging.",
+  "inf_delete_help" : "Deletes an infraction. This can not be undone!"
 }

@@ -84,6 +84,17 @@ class Infractions:
                 del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
 
+    @inf.command()
+    async def delete(self, ctx:commands.Context, inf_id:int):
+        """inf_delete_help"""
+        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
+        if infraction is None:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('inf_not_found', ctx.guild.id, id=inf_id)}")
+        else:
+            infraction.delete_instance()
+            if f"{ctx.guild.id}_{infraction.user_id}" in InfractionUtils.cache.keys():
+                del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
 
 def setup(bot):
     bot.add_cog(Infractions(bot))
