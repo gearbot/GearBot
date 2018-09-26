@@ -26,6 +26,7 @@ components = [
 
 async def reload(bot):
     GearbotLogging.LOG_PUMP.running = False
+    Utils.cache_task.running = False
     for c in components:
         importlib.reload(c)
     prepDatabase(bot)
