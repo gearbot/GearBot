@@ -3,7 +3,7 @@ import os
 
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils
+from Util import GearbotLogging, Utils, Features
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
@@ -50,9 +50,19 @@ def v2(config):
     config["EMBED_EDIT_LOGS"] = True
     return config
 
+def v3(config):
+    for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
+        del config[v]
+    config["DM_ON_WARN"] = False
+    for cid, info in config["LOG_CHANNELS"]:
+        if "CENSOR_LOGS" in info:
+            info.remove("CENSOR_LOGS")
+            info.append("CENSORED_MESSAGES")
+    return config
+
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2]
+MIGRATORS = [initial_migration, v2, v3]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION
@@ -92,6 +102,7 @@ def load_config(guild):
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
         SERVER_CONFIGS[guild] = Utils.fetch_from_disk("config/template")
         save(guild)
+    Features.check_server(guild)
 
 def update_config(guild, config):
     v = config["VERSION"]
@@ -119,6 +130,7 @@ def get_var(id, key):
 def set_var(id, key, value):
     SERVER_CONFIGS[id][key] = value
     save(id)
+    Features.check_server(id)
 
 
 def save(id):

@@ -1,12 +1,7 @@
 {
-  "VERSION": 2,
+  "VERSION": 3,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
-  "JOIN_LOGS": false,
-  "MOD_ACTIONS": false,
-  "NAME_CHANGES": false,
-  "ROLE_CHANGES": false,
-  "COMMAND_EXECUTED": false,
   "CENSOR_MESSAGES": false,
   "CENSOR_LOGS": false,
   "WORD_BLACKLIST": [],
@@ -25,5 +20,6 @@
   "PREFIX": "!",
   "SELF_ROLES": [],
   "TRUSTED_ROLES": [],
-  "TIMESTAMPS": true
+  "TIMESTAMPS": true,
+  "DM_ON_WARN": false
 }
