@@ -327,6 +327,7 @@ class Basic:
         return None
 
     @commands.command()
+    @commands.bot_has_permissions(attach_files=True)
     async def jumbo(self, ctx, *, emojis: str):
         """Jumbo emoji"""
         await JumboGenerator(ctx, emojis).generate()
