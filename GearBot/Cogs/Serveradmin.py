@@ -624,7 +624,7 @@ class Serveradmin:
 
 
     @features.command(name="disable")
-    async def disable(self, ctx, feature:str, state:bool):
+    async def feature_disable(self, ctx, feature:str, state:bool):
         feature = feature.upper()
         message = None
         if state:
