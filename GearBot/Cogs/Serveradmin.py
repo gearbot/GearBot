@@ -527,12 +527,16 @@ class Serveradmin:
             info = channels[cid]
             removed = []
             ignored = []
+            unable = []
             known, unknown = self.extract_types(types)
             message = ""
             for t in known:
                 if t in info:
-                    removed.append(t)
-                    info.remove(t)
+                    if self.can_remove(ctx.guild.id, t):
+                        removed.append(t)
+                        info.remove(t)
+                    else:
+                        unable.append(t)
                 else:
                     ignored.append(t)
             if len(removed) > 0:
@@ -540,6 +544,9 @@ class Serveradmin:
 
             if len(ignored) > 0:
                 message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
+
+            if len(unknown) > 0:
+                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unable', ctx)}{', '.join(unknown)}"
 
             if len(unknown) > 0:
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
@@ -605,7 +612,7 @@ class Serveradmin:
             embed.add_field(name=t, value=enabled if e else disabled)
         return embed
 
-    def can_remove(self, guild, feature):
+    def can_remove(self, guild, logging):
         counts = dict()
         for cid, info in Configuration.get_var(guild, "LOG_CHANNELS").items():
             for i in info:
@@ -613,7 +620,7 @@ class Serveradmin:
                     counts[i] = 1
                 else:
                     counts[i] +=1
-        return feature in counts and counts[feature] > 1
+        return logging not in Features.requires_logging.items() or (logging in counts and counts[logging] > 1)
 
 
     @features.command(name="disable")
