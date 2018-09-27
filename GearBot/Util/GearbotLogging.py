@@ -8,7 +8,7 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 from discord.ext import commands
 
-from Util import Configuration
+from Util import Configuration, Emoji, Translator
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
@@ -99,6 +99,10 @@ async def log_to(guild_id, type, message=None, embed=None, file=None):
                 permissions = channel.permissions_for(BOT.get_guild(guild_id).me)
                 if permissions.send_messages and (embed is None or permissions.embed_links) and (file is None or permissions.attach_files):
                     await channel.send(message, embed=embed, file=file)
+
+
+async def send_to(destination, emoji, lang_key, delete_after=None, **kwargs):
+    await destination.send(f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(lang_key, destination.guild, **kwargs)}", delete_after=delete_after)
 
 async def message_owner(bot, message):
     if bot.owner_id is None:

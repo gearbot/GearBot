@@ -6,7 +6,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import clean_content
+from discord.ext.commands import clean_content, BadArgument
 
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from Util.JumboGenerator import JumboGenerator
@@ -261,7 +261,7 @@ class Basic:
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
-            except Exception as ex:
+            except BadArgument as ex:
                 await ctx.send(Translator.translate("role_not_found", ctx))
             else:
                 roles = Configuration.get_var(ctx.guild.id, "SELF_ROLES")
@@ -363,9 +363,12 @@ class Basic:
                         e = Emoji.get_emoji(str(i + 1))
                         if payload.emoji.name == e:
                             roles = Configuration.get_var(guild.id, "SELF_ROLES")
-                            role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
-                            member = guild.get_member(payload.user_id)
                             channel = self.bot.get_channel(payload.channel_id)
+                            number = info['page'] * 10 + i
+                            if number > len(roles):
+                                await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                            role = discord.utils.get(guild.roles, id=roles[number])
+                            member = guild.get_member(payload.user_id)
                             try:
                                 if role in member.roles:
                                     await member.remove_roles(role)
