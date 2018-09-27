@@ -233,9 +233,9 @@
   "missing_arg": "You are missing a required command argument: `{arg}`",
   "command_usage": "Command usage: `{usage}`",
   "role_removed": "The ``{role}`` role was removed from **{user}** (``{user_id}``)",
-  "role_removed_by": "The ``{role}`` role was removed from {user} (``{user_id}``) by {moderator} (``{moderator_id}``)",
+  "role_removed_by": "The ``{role}`` role was removed from **{user}** (``{user_id}``) by {moderator} (``{moderator_id}``)",
   "role_added": "The ``{role}`` role was added to {user} (``{user_id}``)",
-  "role_added_by": "The ``{role}`` role was added to {user} (``{user_id}``) by {moderator} (``{moderator_id}``)",
+  "role_added_by": "The ``{role}`` role was added to **{user}** (``{user_id}``) by {moderator} (``{moderator_id}``)",
   "nickname_changed": "{user} (``{user_id}``) has changed nickname from **``\u200b{before}\u200b``** to **``\u200b{after}\u200b``**",
   "own_nickname_changed": "{user} (``{user_id}``) has changed their own nickname from **``\u200b{before}\u200b``** to **``\u200b{after}\u200b``**",
   "unknown_nickname_changed": "{user} (``{user_id}``) has changed nicknames from **``\u200b{before}\u200b``** to **``\u200b{after}\u200b``**",
@@ -284,5 +284,6 @@
   "features": "Features",
   "feature_already_enabled": "This feature was already enabled.",
   "feature_already_disabled": "This feature was already disabled.",
-  "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging."
+  "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging.",
+  "role_not_on_page": "You requested role number {requested} but this page only has {max} roles!"
 }

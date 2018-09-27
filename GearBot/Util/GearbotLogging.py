@@ -112,6 +112,10 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
             LOG_PUMP.receive(cid, (message, embed, file, cleaner))
 
 
+
+async def send_to(destination, emoji, lang_key, delete_after=None, **kwargs):
+    await destination.send(f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(lang_key, destination.guild, **kwargs)}", delete_after=delete_after)
+
 async def message_owner(bot, message):
     if bot.owner_id is None:
         app = await bot.application_info()
