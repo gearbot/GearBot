@@ -60,9 +60,12 @@ def v3(config):
             info.append("CENSORED_MESSAGES")
     return config
 
+def v4(config):
+    del config["CENSOR_LOGS"]
+
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3]
+MIGRATORS = [initial_migration, v2, v3, v4]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION

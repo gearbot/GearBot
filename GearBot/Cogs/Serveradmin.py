@@ -716,6 +716,12 @@ class Serveradmin:
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
+    @configure.command()
+    async def log_embeds(self, ctx, value: bool):
+        Configuration.set_var(ctx.guild.id, "EMBED_EDIT_LOGS", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
 
 def setup(bot):
     bot.add_cog(Serveradmin(bot))
