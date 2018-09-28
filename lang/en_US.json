@@ -290,5 +290,5 @@
   "features_disabled": "The following features where successfully disabled: ",
   "features_unknown": "The following are no valid feature names and thus ignored: ",
   "embed_log_enabled": "I will now use embeds for edit and delete logs.",
-  "embed_log_disable": "I will no longer use embeds for edit and delete logs."
+  "embed_log_disabled": "I will no longer use embeds for edit and delete logs."
 }
