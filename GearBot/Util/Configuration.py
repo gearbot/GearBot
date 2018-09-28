@@ -54,7 +54,7 @@ def v3(config):
     for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
         del config[v]
     config["DM_ON_WARN"] = False
-    for cid, info in config["LOG_CHANNELS"]:
+    for cid, info in config["LOG_CHANNELS"].items():
         if "CENSOR_LOGS" in info:
             info.remove("CENSOR_LOGS")
             info.append("CENSORED_MESSAGES")
