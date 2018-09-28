@@ -16,7 +16,7 @@ async def censor_invite(ctx, code, server_name):
         await ctx.message.delete()
         clean_message = await clean_content().convert(ctx, ctx.message.content)
         clean_name = Utils.clean_user(ctx.message.author)
-        GearbotLogging.log_to(ctx.guild.id, "CENSOR",
+        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                                     f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name)}")
     except discord.NotFound:
         pass  # we failed? guess we lost the race
@@ -80,11 +80,11 @@ class Censor:
                             pass  # lost the race with another bot?
                         else:
                             clean_message = await clean_content().convert(ctx, message.content)
-                            GearbotLogging.log_to(ctx.guild.id, "CENSOR_LOGS",
+                            GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                                                         f":no_entry_sign: {Translator.translate('censored_message', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad)}")
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
-                        GearbotLogging.log_to(ctx.guild.id, "CENSOR_LOGS",
+                        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                                                     f":no_entry_sign: {Translator.translate('censor_message_failed', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)}")
 
         mentions = len(message.mentions) + len(message.role_mentions)
