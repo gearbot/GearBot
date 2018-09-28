@@ -173,3 +173,8 @@ async def execute(command):
         await asyncio.sleep(1)
     out, error = p.communicate()
     return p.returncode, out, error
+
+def find_key(data, wanted):
+    for k, v in data.items():
+        if v == wanted:
+            return k

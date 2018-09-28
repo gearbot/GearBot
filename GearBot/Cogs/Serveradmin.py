@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation
 
 
 class ServerHolder(object):
@@ -516,6 +516,17 @@ class Serveradmin:
         await ctx.send(message, embed=embed)
         Configuration.save(ctx.guild.id)
 
+        features = []
+        for a in added:
+            feature = Utils.find_key(Features.requires_logging, a)
+            if feature is not None and not Configuration.get_var(ctx.guild.id, feature):
+                features.append(feature)
+
+        if len(features) > 0:
+            async def yes():
+                await ctx.invoke(self.enable_feature, ", ".join(features))
+            translated = Translator.translate('confirmation_enable_features', ctx)
+            await Confirmation.confirm(ctx, f"{Emoji.get_chat_emoji('WHAT')} {translated}\n{', '.join(features)}", on_yes=yes)
 
     @logging.command(name="remove")
     async def remove_logging(self, ctx, channel: discord.TextChannel, *, types):
@@ -545,8 +556,8 @@ class Serveradmin:
             if len(ignored) > 0:
                 message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
 
-            if len(unknown) > 0:
-                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unable', ctx)}{', '.join(unknown)}"
+            if len(unable) > 0:
+                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unable', ctx)} {', '.join(unable)}"
 
             if len(unknown) > 0:
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
@@ -569,12 +580,26 @@ class Serveradmin:
             embed.add_field(name=t, value=enabled if e else disabled)
         return embed
 
+    @configure.group()
+    @commands.guild_only()
+    async def features(self, ctx):
+        if ctx.invoked_subcommand == self.features:
+            await ctx.send(embed=self.get_features_status(ctx))
 
-    @logging.command(name="enable")
+    @features.command(name="enable")
     async def enable_feature(self, ctx, types):
         enabled = []
         ignored = []
-        known, unknown = self.extract_types(types)
+        known = []
+        unknown = []
+        for t2 in types.split(","):
+            for t in t2.split():
+                t = t.strip(",").strip()
+                if t != "":
+                    if t in Features.requires_logging:
+                        known.append(t)
+                    else:
+                        unknown.append(t)
         message = ""
         for t in known:
             if Configuration.get_var(ctx.guild.id, t):
@@ -587,29 +612,24 @@ class Serveradmin:
                     self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
-            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_enabled', ctx)}{', '.join(enabled)}"
+            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_enabled', ctx)}{', '.join(enabled)}"
 
         if len(ignored) > 0:
-            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_enabled', ctx)}{', '.join(ignored)}"
+            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_enabled', ctx)}{', '.join(ignored)}"
 
         if len(unknown) > 0:
             message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
-        await ctx.send(message, embed=self.get_logging_status(ctx))
-
-    @configure.group()
-    @commands.guild_only()
-    async def features(self, ctx):
-        await ctx.send(embed=self.get_features_status(ctx))
+        await ctx.send(message, embed=self.get_features_status(ctx))
 
     @staticmethod
     def get_features_status(ctx):
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
-        for t in Features.requires_logging.values():
+        for f, t in Features.requires_logging.items():
             e = Features.is_logged(ctx.guild.id, t)
-            embed.add_field(name=t, value=enabled if e else disabled)
+            embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
     def can_remove(self, guild, logging):
@@ -620,22 +640,39 @@ class Serveradmin:
                     counts[i] = 1
                 else:
                     counts[i] +=1
-        return logging not in Features.requires_logging.items() or (logging in counts and counts[logging] > 1)
+        return logging not in Features.requires_logging.values() or (logging in counts and counts[logging] > 1)
 
 
     @features.command(name="disable")
-    async def feature_disable(self, ctx, feature:str, state:bool):
-        feature = feature.upper()
-        message = None
-        if state:
-            if not Features.can_enable(ctx.guild.id, feature):
-                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('feature_missing_logging', ctx, type=Features.requires_logging[feature])}"
-            elif Configuration.get_var(ctx.guild.id, feature):
-                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('feature_already_enabled', ctx)}"
+    async def feature_disable(self, ctx, types:str):
+        disabled= []
+        ignored = []
+        known = []
+        unknown = []
+        for t2 in types.split(","):
+            for t in t2.split():
+                t = t.strip(",").strip()
+                if t != "":
+                    if t in Features.requires_logging:
+                        known.append(t)
+                    else:
+                        unknown.append(t)
+        message = ""
+        for t in known:
+            if not Configuration.get_var(ctx.guild.id, t):
+                ignored.append(t)
             else:
-                Configuration.set_var(ctx.guild.id, feature, state)
-        else:
-            pass
+                disabled.append(t)
+                Configuration.set_var(ctx.guild.id, t, False)
+
+        if len(disabled) > 0:
+            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_disabled', ctx)}{', '.join(disabled)}"
+
+        if len(ignored) > 0:
+            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_disabled', ctx)}{', '.join(ignored)}"
+
+        if len(unknown) > 0:
+            message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('features_unknown', ctx)}{', '.join(unknown)}"
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 

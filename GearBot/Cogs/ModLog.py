@@ -365,9 +365,9 @@ class ModLog:
 
     async def on_command_completion(self, ctx):
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "COMMAND_EXECUTED"):
+            logging = f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention)} "
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
-            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED",
-                                  f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
+            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging, tag_on=f"``{clean_content}``")
 
 
 async def cache_task(modlog: ModLog):

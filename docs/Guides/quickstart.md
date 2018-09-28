@@ -53,7 +53,6 @@ Setting it up is also really easy if you just want a single channel where everyt
 
 The command to kick it all off:
 ```
-!configure log_channels add_logging <channel> everything
+!configure logging add #test-logging everything
 ```
-GearBot will inform you that this channel is not marked as one he can use for logging yet, just use confirm you want to use that channel with the yes emoji.
-Next step normally is enabling the logging for the server (you can configure where to log things and if it's logged at all separately, this allows configuring GearBot as backup bot without him actually spamming the modlog channel). To enable the logging, just react with the yes emoji.
+This will log everything to the channel and ask you to enable the edit and censor features, if you want to use these, just react with the yes emoji. Censoring won't actually do anything until you configure blacklisted words or add servers to the invite whitelist.

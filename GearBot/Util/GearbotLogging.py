@@ -101,15 +101,33 @@ async def bot_log(message=None, embed=None):
         STARTUP_ERRORS.append(bot_log(message, embed))
 
 
-def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None):
-    if message is not None:
-        if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
-            message = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`] {message}"
-        message = Utils.trim_message(f"{message}\u200b", 2000)
+def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None, tag_on=None):
+    remaining = None
+    if message is None and embed is None and file is None:
+        raise ValueError("What the heck is trying to log nothing?")
+    if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
+        stamp = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`]"
+        if message is None:
+            message = stamp
+        else:
+            message = f"{stamp}{message}"
+    if tag_on is not None:
+        if message is None:
+            message = tag_on
+        else:
+            if len(message) + len(tag_on) < 1999:
+                message = f"{message} {tag_on}"
+            else:
+                remaining = tag_on
+    message = Utils.trim_message(f"{message}\u200b", 1999)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     for cid, info in channels.items():
         if type in info:
-            LOG_PUMP.receive(cid, (message, embed, file, cleaner))
+            if remaining is None:
+                LOG_PUMP.receive(cid, (message, embed, file, cleaner))
+            else:
+                LOG_PUMP.receive(cid, (message, None, None, None))
+                LOG_PUMP.receive(cid, (tag_on, embed, file, cleaner))
 
 
 
@@ -173,7 +191,7 @@ class LogPump:
                         except Exception as e:
                             await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
                                                                   kwargs=dict(cid=cid, todo=todo, to_send=to_send,
-                                                                              LOG_CACHE=LOG_CACHE, embed=embed,
+                                                                              LOG_CACHE=self.todo, embed=embed,
                                                                               file=file,
                                                                               empty=empty))
                     else:
