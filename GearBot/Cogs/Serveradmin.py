@@ -93,7 +93,7 @@ class Serveradmin:
                 to_remove = []
                 roles = Configuration.get_var(guild.id, type + "_ROLES")
                 for role in roles:
-                    if discord.utils.get(guild.roles, id=role) is None:
+                    if guild.get_role(role) is None:
                         to_remove.append(role)
                 for role in to_remove:
                     roles.remove(role)
@@ -702,7 +702,7 @@ class Serveradmin:
     @disable.command()
     async def mute(self, ctx:commands.Context):
         """Disable the mute feature"""
-        role = discord.utils.get(ctx.guild.roles, id=Configuration.get_var(ctx.guild.id, "MUTE_ROLE"))
+        role = ctx.guild.get_role(Configuration.get_var(ctx.guild.id, "MUTE_ROLE"))
         if role is not None:
             for member in role.members:
                 await member.remove_roles(role, reason=f"Mute feature has been disabled")

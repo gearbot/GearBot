@@ -85,7 +85,7 @@ class BCVersionChecker:
     @Permissioncheckers.devOnly()
     async def request_testing(self, ctx:commands.Context, roleName):
         """Make a role pingable for announcements"""
-        role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
+        role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles.values())
         if role is None:
             await ctx.send("Unable to find that role")
         else:

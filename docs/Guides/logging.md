@@ -5,7 +5,7 @@ GearBot can log the following things (these are also the keys you use in the con
  - EDIT_LOGS
  - NAME_CHANGES
  - ROLE_CHANGES
- - CENSOR_LOGS
+ - CENSORED_MESSAGES
  - JOIN_LOGS
  - MOD_ACTIONS
  - COMMAND_EXECUTED

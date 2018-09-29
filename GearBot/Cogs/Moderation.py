@@ -199,7 +199,7 @@ class Moderation:
         if roleid is 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
         else:
-            role = discord.utils.get(ctx.guild.roles, id=roleid)
+            role = ctx.guild.get_role(roleid)
             if role is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_missing', ctx.guild.id, user=target.mention)}")
             else:
@@ -233,7 +233,7 @@ class Moderation:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} The mute feature has been disabled on this server, as such i cannot unmute that person")
         else:
-            role = discord.utils.get(ctx.guild.roles, id=roleid)
+            role = ctx.guild.get_role(roleid)
             if role is None:
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('NO')} Unable to comply, the role i've been told to use for muting no longer exists")
@@ -342,7 +342,7 @@ class Moderation:
         guild: discord.Guild = channel.guild
         roleid = Configuration.get_var(guild.id, "MUTE_ROLE")
         if roleid is not 0:
-            role = discord.utils.get(guild.roles, id=roleid)
+            role = guild.get_role(roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
                 if isinstance(channel, discord.TextChannel):
                     await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id), send_messages=False,
@@ -354,7 +354,7 @@ class Moderation:
         if str(member.guild.id) in self.mutes and member.id in self.mutes[str(member.guild.id)]:
             roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
-                role = discord.utils.get(member.guild.roles, id=roleid)
+                role = member.guild.get_role(roleid)
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
                         await member.add_roles(role, reason=Translator.translate('mute_reapply_reason', member.guild.id))
@@ -389,7 +389,7 @@ async def unmuteTask(modcog: Moderation):
                 for userid, until in list.items():
                     if time.time() > until and userid not in skips:
                         member = guild.get_member(int(userid))
-                        role = discord.utils.get(guild.roles, id=Configuration.get_var(int(guildid), "MUTE_ROLE"))
+                        role = guild.get_role(Configuration.get_var(int(guildid), "MUTE_ROLE"))
                         if member is not None:
                             if guild.me.guild_permissions.manage_roles:
                                 await member.remove_roles(role, reason="Mute expired")
