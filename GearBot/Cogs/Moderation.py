@@ -66,6 +66,17 @@ class Moderation:
         """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
         await Pages.create_new("roles", ctx)
 
+    @staticmethod
+    def _can_act(action, ctx, user: discord.Member):
+        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or \
+                (ctx.guild.owner == ctx.author and ctx.author != user):
+            if ctx.me.top_role > user.top_role:
+                return True, None
+            else:
+                return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
+        else:
+            return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
+
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
@@ -73,20 +84,20 @@ class Moderation:
         """kick_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
-            if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].add(user.id)
-                await ctx.guild.kick(user,
-                                     reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
-                await ctx.send(
-                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('kick_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                            f":boot: {Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id), reason)
-            else:
-                await ctx.send(Translator.translate('kick_unable',ctx.guild.id, user=Utils.clean_user(user)))
+
+        allowed, message = self._can_act("kick", ctx, user)
+
+        if allowed:
+            self.bot.data["forced_exits"].add(user.id)
+            await ctx.guild.kick(user, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
+            translated = Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)
+            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":boot: {translated}")
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id), reason)
+            await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('kick_not_allowed', ctx.guild.id, user=user)}")
+            await GearbotLogging.send_to(ctx, "NO", message, translate=False)
+
+
 
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
@@ -95,20 +106,17 @@ class Moderation:
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
-            if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].add(user.id)
-                await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
-                                    delete_message_days=0)
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
-                await ctx.send(
-                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('ban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+
+        allowed, message = self._can_act("ban", ctx, user)
+        if allowed:
+            self.bot.data["forced_exits"].add(user.id)
+            await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
+            await GearbotLogging.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
+            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                             f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
-            else:
-                await ctx.send(Translator.translate('ban_unable', ctx.guild.id, user=Utils.clean_user(user)))
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('ban_not_allowed', ctx.guild.id, user=user)}")
+            await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     @commands.command()
     @commands.guild_only()
@@ -117,19 +125,19 @@ class Moderation:
         """softban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (ctx.guild.owner == ctx.author and ctx.author != user):
-            if ctx.me.top_role > user.top_role:
-                self.bot.data["forced_exits"].add(user.id)
-                self.bot.data["unbans"].add(user.id)
-                await ctx.guild.ban(user, reason=f"softban - Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
-                await ctx.guild.unban(user)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason)
-            else:
-                await ctx.send(Translator.translate('softban_unable', ctx.guild.id, user=Utils.clean_user(user)))
+
+        allowed, message = self._can_act("softban", ctx, user)
+        if allowed:
+            self.bot.data["forced_exits"].add(user.id)
+            self.bot.data["unbans"].add(user.id)
+            await ctx.guild.ban(user, reason=f"softban - Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
+            await ctx.guild.unban(user)
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
+            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason)
+
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('softban_not_allowed', ctx.guild.id, user=user)}")
+            await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     @commands.command()
     @commands.guild_only()

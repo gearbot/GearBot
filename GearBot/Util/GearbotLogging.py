@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 from discord.ext import commands
 
-from Util import Configuration, GlobalHandlers, Utils
+from Util import Configuration, GlobalHandlers, Utils, Translator, Emoji
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
@@ -131,8 +131,9 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
 
 
 
-async def send_to(destination, emoji, lang_key, delete_after=None, **kwargs):
-    await destination.send(f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(lang_key, destination.guild, **kwargs)}", delete_after=delete_after)
+async def send_to(destination, emoji, message, delete_after=None, translate=True, **kwargs):
+    translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
+    await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after)
 
 async def message_owner(bot, message):
     if bot.owner_id is None:
