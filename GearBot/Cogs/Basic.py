@@ -368,7 +368,7 @@ class Basic:
                             number = info['page'] * 10 + i
                             if number > len(roles):
                                 await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
-                            role = guild.get_role(id=roles[number])
+                            role = guild.get_role(roles[number])
                             member = guild.get_member(payload.user_id)
                             try:
                                 if role in member.roles:

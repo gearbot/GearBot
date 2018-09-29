@@ -21,7 +21,6 @@ class ModLog:
         self.cache_message = None
         self.to_cache = []
         self.cache_start = 0
-        self.bot.loop.create_task(self.prep(bot.hot_reloading))
         self.bot.loop.create_task(cache_task(self))
 
     def __unload(self):
@@ -82,32 +81,6 @@ class ModLog:
         GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (total fetch time: {total_fetch_time})")
         GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
         GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
-
-    async def prep(self, hot_reloading):
-        if hot_reloading:
-            return
-        await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
-        self.cache_message = await GearbotLogging.bot_log(
-            f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
-        self.to_cache = []
-        for guild in self.bot.guilds:
-            if Configuration.get_var(guild.id, "EDIT_LOGS") is not 0:
-                self.to_cache.append(guild)
-        self.bot.loop.create_task(self.startup_cache(hot_reloading))
-        self.cache_start = time.perf_counter()
-
-    async def startup_cache(self, hot_reloading):
-        while self.to_cache is not None:
-            if len(self.to_cache) > 0:
-                guild = self.to_cache.pop()
-                await self.buildCache(guild, startup=True, limit=50 if hot_reloading else 500)
-                await asyncio.sleep(0)
-            else:
-                self.to_cache = None
-                minutes, seconds = divmod(round(time.perf_counter() - self.cache_start), 60)
-                await self.cache_message.edit(
-                    content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
-                await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
