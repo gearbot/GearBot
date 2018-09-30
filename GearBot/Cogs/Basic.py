@@ -366,7 +366,7 @@ class Basic:
                             roles = Configuration.get_var(guild.id, "SELF_ROLES")
                             channel = self.bot.get_channel(payload.channel_id)
                             number = info['page'] * 10 + i
-                            if number > len(roles):
+                            if number >= len(roles):
                                 await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
                             role = guild.get_role(roles[number])
                             member = guild.get_member(payload.user_id)
