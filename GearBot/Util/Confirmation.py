@@ -4,6 +4,8 @@ import discord
 from discord import utils
 from discord.ext import commands
 
+from Util import GearbotLogging
+
 yesID = 465582004260569088
 noID = 465582003874693130
 yes = None
@@ -30,5 +32,8 @@ async def confirm(ctx:commands.Context, text, timeout=30, on_yes = None, on_no =
     else:
         if reaction.emoji is yes and on_yes is not None:
             await on_yes()
-        elif reaction.emoji is no and on_no is not None:
-            await on_no()
+        elif reaction.emoji is no:
+            if on_no is not None:
+                await on_no()
+            else:
+                await GearbotLogging.send_to(ctx, "NO", "command_canceled")

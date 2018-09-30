@@ -110,7 +110,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
         if message is None:
             message = stamp
         else:
-            message = f"{stamp}{message}"
+            message = f"{stamp} {Utils.trim_message(message, 1985)}"
     if tag_on is not None:
         if message is None:
             message = tag_on

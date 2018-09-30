@@ -6,10 +6,10 @@ from concurrent.futures import CancelledError
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive
+    Archive, Confirmation
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser
 from database.DatabaseConnector import LoggedMessage
 
@@ -31,7 +31,8 @@ class Moderation:
         bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
-        Pages.register("roles", self.roles_init, self.roles_update), []
+        Pages.register("roles", self.roles_init, self.roles_update)
+        Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
 
     def __unload(self):
         Utils.saveToDisk("mutes", self.mutes)
@@ -88,16 +89,62 @@ class Moderation:
         allowed, message = self._can_act("kick", ctx, user)
 
         if allowed:
-            self.bot.data["forced_exits"].add(user.id)
-            await ctx.guild.kick(user, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
-            translated = Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)
-            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":boot: {translated}")
-            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id), reason)
-            await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)
+           await self.kick(ctx, user, reason, True)
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
+    async def _kick(self, ctx, user, reason, confirm):
+        self.bot.data["forced_exits"].add(user.id)
+        await ctx.guild.kick(user,
+                             reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
+        translated = Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id,
+                                          moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
+                                          reason=reason)
+        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":boot: {translated}")
+        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id),
+                                       reason)
+        if confirm:
+            await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
+                                        user_id=user.id, reason=reason)
 
+    @commands.guild_only()
+    @commands.command("mkick")
+    @commands.bot_has_permissions(kick_members=True)
+    async def mkick(self, ctx, targets: Greedy[int], *, reason:Reason=""):
+        """mkick help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            valid = 0
+            failures = []
+            for t in targets:
+                try:
+                    member = await MemberConverter().convert(ctx, str(t))
+                except BadArgument as bad:
+                    failures.append(f"{t}: {bad}")
+                else:
+                    allowed, message = self._can_act("kick", ctx, member)
+                    if allowed:
+                        await self._kick(ctx, member, reason, False)
+                        valid+=1
+                    else:
+                        failures.append(f"{t}: {message}")
+            await GearbotLogging.send_to(ctx, "YES", "mkick_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new("mass_failures", ctx, action="kick", failures=Pages.paginate("\n".join(failures)))
+
+        await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
+
+    @staticmethod
+    async def _mass_failures_init(ctx, action, failures):
+        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(failures) > 1, []
+
+    @staticmethod
+    async def _mass_failures_update(ctx, message, page_num, action, data):
+        page, page_num = Pages.basic_pages(data["failures"], page_num, action)
+        action_type = data["action"]
+        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, page_num
 
     @commands.command(aliases=["🚪"])
     @commands.guild_only()

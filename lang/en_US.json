@@ -257,7 +257,7 @@
   "logging_settings": "{channel} logging settings:",
   "executing_command": "Executing `{command}` for you",
   "command_canceled": "Command execution canceled",
-  "logs_added": "The following logging types where added to the channel: ",
+  "logs_added": "The following logging types were added to the channel: ",
   "none": "None",
   "logs_ignored": "The following logging types where already on the list: ",
   "logs_unknown": "The following logging types are invalid and thus could not be processed: ",
@@ -290,5 +290,8 @@
   "features_disabled": "The following features where successfully disabled: ",
   "features_unknown": "The following are no valid feature names and thus ignored: ",
   "embed_log_enabled": "I will now use embeds for edit and delete logs.",
-  "embed_log_disabled": "I will no longer use embeds for edit and delete logs."
+  "embed_log_disabled": "I will no longer use embeds for edit and delete logs.",
+  "mkick_confirm": "Are you sure you want to kick those people?",
+  "mkick_confirmation": "Successfully kicked {count} people out.",
+  "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):"
 }
