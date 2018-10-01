@@ -59,7 +59,10 @@ async def update(bot, message, action, user):
             data = known_messages[message_id]
             if data["sender"] == user or page_handlers[type]["sender_only"] is False:
                 page_num = data["page"]
-                trigger_message = await message.channel.get_message(data["trigger"])
+                try:
+                    trigger_message = await message.channel.get_message(data["trigger"])
+                except discord.NotFound:
+                    trigger_message = None
                 ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
                 text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
                 await message.edit(content=text, embed=embed)
