@@ -56,3 +56,15 @@ class Duration(commands.Converter):
         if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "w", "d", "h", "m", "s"]:
             raise commands.BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
         return argument
+
+class PotentialID(commands.Converter):
+    async def convert(self, ctx, argument):
+        match = ID_MATCHER.match(argument)
+        if match is not None:
+            argument = match.group(1)
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise commands.BadArgument("Not a potential userid")
+        else:
+            return argument

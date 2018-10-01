@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation
-from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser
+from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID
 from database.DatabaseConnector import LoggedMessage
 
 
@@ -110,12 +110,13 @@ class Moderation:
     @commands.guild_only()
     @commands.command("mkick")
     @commands.bot_has_permissions(kick_members=True)
-    async def mkick(self, ctx, targets: Greedy[int], *, reason:Reason=""):
+    async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason:Reason=""):
         """mkick help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
         async def yes():
+            pmessage = await GearbotLogging.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
             for t in targets:
@@ -130,6 +131,7 @@ class Moderation:
                         valid+=1
                     else:
                         failures.append(f"{t}: {message}")
+            await pmessage.delete()
             await GearbotLogging.send_to(ctx, "YES", "mkick_confirmation", count=valid)
             if len(failures) > 0:
                 await Pages.create_new("mass_failures", ctx, action="kick", failures=Pages.paginate("\n".join(failures)))
@@ -156,14 +158,58 @@ class Moderation:
 
         allowed, message = self._can_act("ban", ctx, user)
         if allowed:
-            self.bot.data["forced_exits"].add(user.id)
-            await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=0)
-            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
-            await GearbotLogging.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
-            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                            f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+            await self._ban(ctx, user, reason, True)
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
+
+    async def _ban(self, ctx, user, reason, confirm):
+        self.bot.data["forced_exits"].add(user.id)
+        await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
+                            delete_message_days=0)
+        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
+        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                              f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+        if confirm:
+            await GearbotLogging.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
+                                        reason=reason)
+
+    @commands.guild_only()
+    @commands.command()
+    @commands.bot_has_permissions(ban_members=True)
+    async def mban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+        """mban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            pmessage = await GearbotLogging.send_to(ctx, "REFRESH", "processing")
+            valid = 0
+            failures = []
+            for t in targets:
+                try:
+                    member = await MemberConverter().convert(ctx, str(t))
+                except BadArgument:
+                    try:
+                        user = await DiscordUser().convert(ctx, str(t))
+                    except BadArgument as bad:
+                        failures.append(f"{t}: {bad}")
+                    else:
+                        await self._ban(ctx, user, reason, False)
+                        valid += 1
+                else:
+                    allowed, message = self._can_act("ban", ctx, member)
+                    if allowed:
+                        await self._ban(ctx, member, reason, False)
+                        valid += 1
+                    else:
+                        failures.append(f"{t}: {message}")
+            await pmessage.delete()
+            await GearbotLogging.send_to(ctx, "YES", "mban_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new("mass_failures", ctx, action="ban",
+                                       failures=Pages.paginate("\n".join(failures)))
+
+        await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
 
     @commands.command()
     @commands.guild_only()

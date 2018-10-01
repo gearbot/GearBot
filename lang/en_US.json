@@ -293,5 +293,9 @@
   "embed_log_disabled": "I will no longer use embeds for edit and delete logs.",
   "mkick_confirm": "Are you sure you want to kick those people?",
   "mkick_confirmation": "Successfully kicked {count} people out.",
-  "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):"
+  "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):",
+  "mban_confirm": "Are you sure you want to ban those people?",
+  "mban_confirmation": "Successfully banned {count} people.",
+  "mass_failures_ban": "I was unable to ban the following users ({page_num}/{pages}):",
+  "processing": "Processing..."
 }
