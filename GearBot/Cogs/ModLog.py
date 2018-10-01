@@ -192,7 +192,7 @@ class ModLog:
         if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
-                    if member.joined_at is None or member.joined_at > entry.created_at:
+                    if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(time.time() - 30):
                         break
                     if entry.target == member:
                         if entry.reason is None:
@@ -219,7 +219,7 @@ class ModLog:
             return
         if guild.me.guild_permissions.view_audit_log:
             async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=25):
-                if entry.target == user:
+                if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
                     if entry.reason is None:
                         reason = Translator.translate("no_reason", guild.id)
                     else:
@@ -239,7 +239,7 @@ class ModLog:
         else:
             if guild.me.guild_permissions.view_audit_log:
                 async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
-                    if entry.target == user:
+                    if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -261,7 +261,7 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
+                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
                             entry = e
                 if before.nick is None:
                     type = "added"
@@ -306,7 +306,8 @@ class ModLog:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
                         if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,"roles")\
                         and all(role in e.changes.before.roles for role in removed)\
-                        and all(role in e.changes.after.roles for role in added):
+                        and all(role in e.changes.after.roles for role in added) \
+                        and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
                             entry = e
                 if entry is not None:
                     removed = entry.changes.before.roles

@@ -140,6 +140,7 @@ def save(id):
     global SERVER_CONFIGS
     with open(f'config/{id}.json', 'w') as jsonfile:
         jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
+    Features.check_server(id)
 
 
 def get_master_var(key, default=None):
