@@ -236,7 +236,7 @@ class Basic:
         pages = self.gen_role_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
         embed = discord.Embed(
-            title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=page_num + 1,
+            title=Translator.translate("assignable_roles", ctx, server_name=message.channel.guild.name, page_num=page_num + 1,
                                        page_count=len(pages)), color=0x54d5ff, description=page)
         return None, embed, page_num
 
