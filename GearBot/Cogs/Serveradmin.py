@@ -600,6 +600,7 @@ class Serveradmin:
 
     @features.command(name="enable")
     async def enable_feature(self, ctx, types):
+        types = types.upper()
         enabled = []
         ignored = []
         known = []
@@ -640,7 +641,7 @@ class Serveradmin:
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
-            e = Features.is_logged(ctx.guild.id, t)
+            e = Configuration.get_var(ctx.guild.id, f)
             embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
@@ -657,6 +658,7 @@ class Serveradmin:
 
     @features.command(name="disable")
     async def feature_disable(self, ctx, types:str):
+        types = types.upper()
         disabled= []
         ignored = []
         known = []
