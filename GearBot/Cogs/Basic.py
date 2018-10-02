@@ -116,6 +116,7 @@ class Basic:
                     pass
         error = None
         dmessage = None
+        message = None
         if message_id is None:
             error = Translator.translate('quote_invalid_format', ctx)
         async with ctx.typing():

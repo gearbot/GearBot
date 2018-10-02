@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation
+from Util.Converters import LoggingChannel
 
 
 class ServerHolder(object):
@@ -529,8 +530,8 @@ class Serveradmin:
             await Confirmation.confirm(ctx, f"{Emoji.get_chat_emoji('WHAT')} {translated}\n{', '.join(features)}", on_yes=yes)
 
     @logging.command(name="remove")
-    async def remove_logging(self, ctx, channel: discord.TextChannel, *, types):
-        cid = str(channel.id)
+    async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
+        channel = self.bot.get_channel(int(cid))
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=channel.mention)}")
@@ -551,7 +552,7 @@ class Serveradmin:
                 else:
                     ignored.append(t)
             if len(removed) > 0:
-                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention)}{', '.join(removed)}"
+                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention if channel is not None else cid)}{', '.join(removed)}"
 
             if len(ignored) > 0:
                 message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
@@ -562,9 +563,18 @@ class Serveradmin:
             if len(unknown) > 0:
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
-            embed = discord.Embed(color=6008770)
-            embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            if len(info) > 0:
+                embed = discord.Embed(color=6008770)
+                embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            else:
+                embed=None
             await ctx.send(message, embed=embed)
+            empty = []
+            for cid, info in channels.items():
+                if len(info) is 0:
+                    empty.append(cid)
+            for e in empty:
+                del channels[e]
             Configuration.save(ctx.guild.id)
 
     @logging.command()
@@ -721,6 +731,8 @@ class Serveradmin:
         Configuration.set_var(ctx.guild.id, "EMBED_EDIT_LOGS", value)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+
 
 
 def setup(bot):
