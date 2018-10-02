@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
+    Pages
+from Util.Converters import LoggingChannel
 
 
 class ServerHolder(object):
@@ -80,6 +82,7 @@ class Serveradmin:
         bot.to_cache = []
         self.bot:commands.AutoShardedBot = bot
         self.validate_configs()
+        Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
         pass
@@ -93,7 +96,7 @@ class Serveradmin:
                 to_remove = []
                 roles = Configuration.get_var(guild.id, type + "_ROLES")
                 for role in roles:
-                    if discord.utils.get(guild.roles, id=role) is None:
+                    if guild.get_role(role) is None:
                         to_remove.append(role)
                 for role in to_remove:
                     roles.remove(role)
@@ -516,10 +519,21 @@ class Serveradmin:
         await ctx.send(message, embed=embed)
         Configuration.save(ctx.guild.id)
 
+        features = []
+        for a in added:
+            feature = Utils.find_key(Features.requires_logging, a)
+            if feature is not None and not Configuration.get_var(ctx.guild.id, feature):
+                features.append(feature)
+
+        if len(features) > 0:
+            async def yes():
+                await ctx.invoke(self.enable_feature, ", ".join(features))
+            translated = Translator.translate('confirmation_enable_features', ctx)
+            await Confirmation.confirm(ctx, f"{Emoji.get_chat_emoji('WHAT')} {translated}\n{', '.join(features)}", on_yes=yes)
 
     @logging.command(name="remove")
-    async def remove_logging(self, ctx, channel: discord.TextChannel, *, types):
-        cid = str(channel.id)
+    async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
+        channel = self.bot.get_channel(int(cid))
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=channel.mention)}")
@@ -527,26 +541,42 @@ class Serveradmin:
             info = channels[cid]
             removed = []
             ignored = []
+            unable = []
             known, unknown = self.extract_types(types)
             message = ""
             for t in known:
                 if t in info:
-                    removed.append(t)
-                    info.remove(t)
+                    if self.can_remove(ctx.guild.id, t):
+                        removed.append(t)
+                        info.remove(t)
+                    else:
+                        unable.append(t)
                 else:
                     ignored.append(t)
             if len(removed) > 0:
-                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention)}{', '.join(removed)}"
+                message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention if channel is not None else cid)}{', '.join(removed)}"
 
             if len(ignored) > 0:
                 message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
 
+            if len(unable) > 0:
+                message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unable', ctx)} {', '.join(unable)}"
+
             if len(unknown) > 0:
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
-            embed = discord.Embed(color=6008770)
-            embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            if len(info) > 0:
+                embed = discord.Embed(color=6008770)
+                embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+            else:
+                embed=None
             await ctx.send(message, embed=embed)
+            empty = []
+            for cid, info in channels.items():
+                if len(info) is 0:
+                    empty.append(cid)
+            for e in empty:
+                del channels[e]
             Configuration.save(ctx.guild.id)
 
     @logging.command()
@@ -562,12 +592,26 @@ class Serveradmin:
             embed.add_field(name=t, value=enabled if e else disabled)
         return embed
 
+    @configure.group()
+    @commands.guild_only()
+    async def features(self, ctx):
+        if ctx.invoked_subcommand == self.features:
+            await ctx.send(embed=self.get_features_status(ctx))
 
-    @logging.command(name="enable")
+    @features.command(name="enable")
     async def enable_feature(self, ctx, types):
         enabled = []
         ignored = []
-        known, unknown = self.extract_types(types)
+        known = []
+        unknown = []
+        for t2 in types.split(","):
+            for t in t2.split():
+                t = t.strip(",").strip()
+                if t != "":
+                    if t in Features.requires_logging:
+                        known.append(t)
+                    else:
+                        unknown.append(t)
         message = ""
         for t in known:
             if Configuration.get_var(ctx.guild.id, t):
@@ -580,32 +624,27 @@ class Serveradmin:
                     self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
-            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_enabled', ctx)}{', '.join(enabled)}"
+            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_enabled', ctx)}{', '.join(enabled)}"
 
         if len(ignored) > 0:
-            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_enabled', ctx)}{', '.join(ignored)}"
+            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_enabled', ctx)}{', '.join(ignored)}"
 
         if len(unknown) > 0:
             message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
-        await ctx.send(message, embed=self.get_logging_status(ctx))
-
-    @configure.group()
-    @commands.guild_only()
-    async def features(self, ctx):
-        await ctx.send(embed=self.get_features_status(ctx))
+        await ctx.send(message, embed=self.get_features_status(ctx))
 
     @staticmethod
     def get_features_status(ctx):
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
-        for t in Features.requires_logging.values():
+        for f, t in Features.requires_logging.items():
             e = Features.is_logged(ctx.guild.id, t)
-            embed.add_field(name=t, value=enabled if e else disabled)
+            embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
-    def can_remove(self, guild, feature):
+    def can_remove(self, guild, logging):
         counts = dict()
         for cid, info in Configuration.get_var(guild, "LOG_CHANNELS").items():
             for i in info:
@@ -613,22 +652,39 @@ class Serveradmin:
                     counts[i] = 1
                 else:
                     counts[i] +=1
-        return feature in counts and counts[feature] > 1
+        return logging not in Features.requires_logging.values() or (logging in counts and counts[logging] > 1)
 
 
     @features.command(name="disable")
-    async def disable(self, ctx, feature:str, state:bool):
-        feature = feature.upper()
-        message = None
-        if state:
-            if not Features.can_enable(ctx.guild.id, feature):
-                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('feature_missing_logging', ctx, type=Features.requires_logging[feature])}"
-            elif Configuration.get_var(ctx.guild.id, feature):
-                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('feature_already_enabled', ctx)}"
+    async def feature_disable(self, ctx, types:str):
+        disabled= []
+        ignored = []
+        known = []
+        unknown = []
+        for t2 in types.split(","):
+            for t in t2.split():
+                t = t.strip(",").strip()
+                if t != "":
+                    if t in Features.requires_logging:
+                        known.append(t)
+                    else:
+                        unknown.append(t)
+        message = ""
+        for t in known:
+            if not Configuration.get_var(ctx.guild.id, t):
+                ignored.append(t)
             else:
-                Configuration.set_var(ctx.guild.id, feature, state)
-        else:
-            pass
+                disabled.append(t)
+                Configuration.set_var(ctx.guild.id, t, False)
+
+        if len(disabled) > 0:
+            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_disabled', ctx)}{', '.join(disabled)}"
+
+        if len(ignored) > 0:
+            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_disabled', ctx)}{', '.join(ignored)}"
+
+        if len(unknown) > 0:
+            message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('features_unknown', ctx)}{', '.join(unknown)}"
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 
@@ -658,7 +714,7 @@ class Serveradmin:
     @disable.command()
     async def mute(self, ctx:commands.Context):
         """Disable the mute feature"""
-        role = discord.utils.get(ctx.guild.roles, id=Configuration.get_var(ctx.guild.id, "MUTE_ROLE"))
+        role = ctx.guild.get_role(Configuration.get_var(ctx.guild.id, "MUTE_ROLE"))
         if role is not None:
             for member in role.members:
                 await member.remove_roles(role, reason=f"Mute feature has been disabled")
@@ -671,6 +727,50 @@ class Serveradmin:
         Configuration.set_var(ctx.guild.id, "DM_ON_WARN", value)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
+    async def log_embeds(self, ctx, value: bool):
+        Configuration.set_var(ctx.guild.id, "EMBED_EDIT_LOGS", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.group()
+    async def blacklist(self, ctx):
+        await Pages.create_new("blacklist", ctx)
+
+    @staticmethod
+    async def _blacklist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1, []
+
+    @staticmethod
+    async def _blacklist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
+
+    @blacklist.command("add")
+    async def blacklist_add(self, ctx, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
+        if word in blacklist:
+            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", entry=word)
+        elif len(word) < 3:
+            await GearbotLogging.send_to(ctx, "NO", "entry_too_short")
+        else:
+            blacklist.append(word)
+            await GearbotLogging.send_to(ctx, "YES", "entry_added", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @blacklist.command("remove")
+    async def blacklist_remove(self, ctx, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
+        if word not in blacklist:
+            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", entry=word)
+        else:
+            blacklist.remove(word)
+            await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
+            Configuration.save(ctx.guild.id)
+
 
 
 def setup(bot):

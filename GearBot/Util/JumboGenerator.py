@@ -7,7 +7,7 @@ import aiohttp
 import discord
 from PIL import Image
 
-from Util import Translator, Emoji
+from Util import GearbotLogging
 
 EMOJI_LOCKS = []
 JUMBO_NUM = 0
@@ -40,8 +40,8 @@ class EmojiHandler:
 
     def get_image(self, eid, frame=None):
         image = Image.open(f"emoji/{eid}.{self.extension}")
-        return image.resize((round(image.size[0] * (JUMBO_TARGET_SIZE / image.size[1])),
-                      round(image.size[1] * (JUMBO_TARGET_SIZE / image.size[1]))))
+        scale = JUMBO_TARGET_SIZE / max(image.size[0], image.size[1])
+        return image.resize((round(image.size[0] * scale), round(image.size[1] * scale)))
 
     @staticmethod
     def get_frame_count(eid):
@@ -62,17 +62,21 @@ class TwermojiHandler(EmojiHandler):
 
     def match(self, text):
         char = text[:self.count]
-        return text[self.count:], '-'.join(char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
+        return text[self.count:], '-'.join(
+            char.encode("unicode_escape").decode("utf-8")[2:].lstrip("0") for char in char)
 
 
 HANDLERS = [
-    EmojiHandler("png", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<:(?:[^:]+):([0-9]+)>')),
-    EmojiHandler("gif", "https://cdn.discordapp.com/emojis/{eid}.{extension}", re.compile('([^<]*)<a:(?:[^:]+):([0-9]+)>')),
+    EmojiHandler("png", "https://cdn.discordapp.com/emojis/{eid}.{extension}",
+                 re.compile('([^<]*)<:(?:[^:]+):([0-9]+)>')),
+    EmojiHandler("gif", "https://cdn.discordapp.com/emojis/{eid}.{extension}",
+                 re.compile('([^<]*)<a:(?:[^:]+):([0-9]+)>')),
     TwermojiHandler(4),
     TwermojiHandler(3),
     TwermojiHandler(2),
     TwermojiHandler(1),
 ]
+
 
 class EmojiIterator:
     def __init__(self, emoji):
@@ -87,20 +91,15 @@ class EmojiIterator:
         self.height = 1
 
         if emoji_count >= 3:
-            if emoji_count % 2 == 0:
-                side = round(math.sqrt(emoji_count))
-                if side * side == emoji_count:
-                    self.mode = "RECTANGLE"
-                    self.width = self.height = side
-            elif emoji_count >= 8:
+            if emoji_count >= 8:
                 left = emoji_count
                 count = 0
-                sum = 0
+                total = 0
                 while left > 0:
                     count += 1
                     left -= count
-                    sum += count
-                    if (sum - count) == left:
+                    total += count
+                    if (total - count) == left:
                         self.mode = "DIAMOND"
                         self.width = count
                         self.height = (count * 2) - 1
@@ -110,6 +109,12 @@ class EmojiIterator:
                     self.mode = "TRIANGLE"
                     self.width = self.height = count
                     self.row_size = 1
+
+            if self.mode == "line" and emoji_count % 2 == 0:
+                side = round(math.sqrt(emoji_count))
+                if side * side == emoji_count:
+                    self.mode = "RECTANGLE"
+                    self.width = self.height = side
 
             if self.mode == "LINE" and emoji_count > 8:
                 self.mode = "RECTANGLE"
@@ -123,8 +128,6 @@ class EmojiIterator:
             if emoji_count > 8 and self.height is 1:
                 self.mode = "CROSS"
                 self.height = self.width = math.ceil(emoji_count / 2)
-
-
 
     @property
     def size(self):
@@ -152,16 +155,16 @@ class EmojiIterator:
             return image, (self.x * size + image_offset, self.y * size)
         elif self.mode == "TRIANGLE" or self.mode == "DIAMOND":
             if self.x >= self.row_size:
-                self.row_size += (1 if self.count < len(self.emoji)/2 or self.mode == "TRIANGLE" else -1)
+                self.row_size += (1 if self.count < len(self.emoji) / 2 or self.mode == "TRIANGLE" else -1)
                 self.next_line()
             row_offset = (self.width - self.row_size) * size / 2
             x_offset = math.floor(row_offset + (self.x * size))
             y_offset = self.y * size
             return image, (x_offset + image_offset, y_offset)
         elif self.mode == "CROSS":
-            line_limit = self.width if (math.floor(self.height/2)-1 == self.y) else 1
+            line_limit = self.width if (math.floor(self.height / 2) - 1 == self.y) else 1
             self.limit_line(line_limit)
-            modifier = 0 if math.floor(self.height/2)-1 == self.y else self.width / 2
+            modifier = 0 if math.floor(self.height / 2) - 1 == self.y else self.width / 2
             x_offset = math.floor((self.x + modifier - 1) * size)
             y_offset = math.floor(self.y * size)
             return image, (x_offset + image_offset, y_offset)
@@ -173,7 +176,6 @@ class EmojiIterator:
     def next_line(self):
         self.x = 0
         self.y += 1
-
 
 
 class JumboGenerator:
@@ -194,44 +196,38 @@ class JumboGenerator:
             await asyncio.wait_for(self.prep(), timeout=20)
             await asyncio.wait_for(self.build(), timeout=60)
         except asyncio.TimeoutError:
-            await self.ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('jumbo_timeout', self.ctx)}")
+            GearbotLogging.send_to(self.ctx, "WHAT", 'jumbo_timeout')
         else:
             if len(self.e_list) > 0:
                 await self.send()
                 self.cleanup()
             else:
-                await self.ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('jumbo_no_emoji', self.ctx)}")
+                GearbotLogging.send_to(self.ctx, "WRENCH", "jumbo_no_emoji")
 
     async def prep(self):
-        prev = 0
         for part in self.text.split(" "):
-            while 0 < len(part) != prev:
-                prev = len(part)
+            while len(part) > 0:
                 for handler in HANDLERS:
                     new_part, eid = handler.match(part)
                     if eid is not None and eid != "" and await handler.fetch(eid, self.ctx.bot.aiosession):
                         self.e_list.append((eid, handler))
                         part = new_part
-                        prev = 0
                         break
-
-
+                else:
+                    part = part[1:]
 
     async def build(self):
-        #todo: animated handling
+        # todo: animated handling
         if len(self.e_list) > 0:
             iterator = EmojiIterator(self.e_list)
             size = JUMBO_TARGET_SIZE + JUMBO_PADDING * 2
             result = Image.new('RGBA', (size * iterator.width, size * iterator.height))
-            print(iterator.mode)
             for info in iterator:
                 result.paste(*info)
             result.save(f"emoji/jumbo{self.number}.png")
 
-
     async def send(self):
         await self.ctx.send(file=discord.File(open(f"emoji/jumbo{self.number}.png", "rb"), filename="emoji.png"))
-
 
     def cleanup(self):
         for eid, handler in self.e_list:

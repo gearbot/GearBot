@@ -54,15 +54,18 @@ def v3(config):
     for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
         del config[v]
     config["DM_ON_WARN"] = False
-    for cid, info in config["LOG_CHANNELS"]:
+    for cid, info in config["LOG_CHANNELS"].items():
         if "CENSOR_LOGS" in info:
             info.remove("CENSOR_LOGS")
             info.append("CENSORED_MESSAGES")
     return config
 
+def v4(config):
+    del config["CENSOR_LOGS"]
+
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3]
+MIGRATORS = [initial_migration, v2, v3, v4]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION
@@ -114,6 +117,7 @@ def update_config(guild, config):
         Utils.saveToDisk(f"{d}/{guild}", config)
         config = MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
+        Utils.saveToDisk(guild, config)
 
     return config
 
@@ -137,6 +141,7 @@ def save(id):
     global SERVER_CONFIGS
     with open(f'config/{id}.json', 'w') as jsonfile:
         jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
+    Features.check_server(id)
 
 
 def get_master_var(key, default=None):

@@ -21,7 +21,6 @@ class ModLog:
         self.cache_message = None
         self.to_cache = []
         self.cache_start = 0
-        self.bot.loop.create_task(self.prep(bot.hot_reloading))
         self.bot.loop.create_task(cache_task(self))
 
     def __unload(self):
@@ -82,32 +81,6 @@ class ModLog:
         GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (total fetch time: {total_fetch_time})")
         GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
         GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
-
-    async def prep(self, hot_reloading):
-        if hot_reloading:
-            return
-        await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
-        self.cache_message = await GearbotLogging.bot_log(
-            f"{Emoji.get_chat_emoji('REFRESH')} Validating modlog cache")
-        self.to_cache = []
-        for guild in self.bot.guilds:
-            if Configuration.get_var(guild.id, "EDIT_LOGS") is not 0:
-                self.to_cache.append(guild)
-        self.bot.loop.create_task(self.startup_cache(hot_reloading))
-        self.cache_start = time.perf_counter()
-
-    async def startup_cache(self, hot_reloading):
-        while self.to_cache is not None:
-            if len(self.to_cache) > 0:
-                guild = self.to_cache.pop()
-                await self.buildCache(guild, startup=True, limit=50 if hot_reloading else 500)
-                await asyncio.sleep(0)
-            else:
-                self.to_cache = None
-                minutes, seconds = divmod(round(time.perf_counter() - self.cache_start), 60)
-                await self.cache_message.edit(
-                    content=f"{Emoji.get_chat_emoji('YES')} Modlog cache validation completed in {minutes} minutes, {seconds} seconds")
-                await self.bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
@@ -219,7 +192,7 @@ class ModLog:
         if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
-                    if member.joined_at is None or member.joined_at > entry.created_at:
+                    if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(time.time() - 30):
                         break
                     if entry.target == member:
                         if entry.reason is None:
@@ -246,7 +219,7 @@ class ModLog:
             return
         if guild.me.guild_permissions.view_audit_log:
             async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=25):
-                if entry.target == user:
+                if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
                     if entry.reason is None:
                         reason = Translator.translate("no_reason", guild.id)
                     else:
@@ -266,7 +239,7 @@ class ModLog:
         else:
             if guild.me.guild_permissions.view_audit_log:
                 async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
-                    if entry.target == user:
+                    if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -288,7 +261,7 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick:
+                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
                             entry = e
                 if before.nick is None:
                     type = "added"
@@ -333,7 +306,8 @@ class ModLog:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
                         if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,"roles")\
                         and all(role in e.changes.before.roles for role in removed)\
-                        and all(role in e.changes.after.roles for role in added):
+                        and all(role in e.changes.after.roles for role in added) \
+                        and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
                             entry = e
                 if entry is not None:
                     removed = entry.changes.before.roles
@@ -365,9 +339,9 @@ class ModLog:
 
     async def on_command_completion(self, ctx):
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "COMMAND_EXECUTED"):
+            logging = f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention)} "
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
-            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED",
-                                  f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention, command=clean_content)}")
+            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging, tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
 
 
 async def cache_task(modlog: ModLog):

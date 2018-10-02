@@ -6,7 +6,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import clean_content
+from discord.ext.commands import clean_content, BadArgument
 
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from Util.JumboGenerator import JumboGenerator
@@ -96,6 +96,14 @@ class Basic:
                     message_id = int(parts[1].strip(" "))
                 except ValueError:
                     pass
+            else:
+                parts = message_info.split(" ")
+                if len(parts) is 2:
+                    try:
+                        channel_id = int(parts[0].strip(" "))
+                        message_id = int(parts[1].strip(" "))
+                    except ValueError:
+                        pass
         else:
             result = JUMP_LINK_MATCHER.match(message_info)
             if result is not None:
@@ -108,9 +116,13 @@ class Basic:
                     pass
         error = None
         dmessage = None
+        message = None
+        if message_id is None:
+            error = Translator.translate('quote_invalid_format', ctx)
         async with ctx.typing():
-            message = LoggedMessage.get_or_none(messageid=message_id)
-            if message is None:
+            if message_id is not None:
+                message = LoggedMessage.get_or_none(messageid=message_id)
+            if message is None and message_id is not None:
                 if channel_id is None:
                     for channel in ctx.guild.text_channels:
                         try:
@@ -203,7 +215,7 @@ class Basic:
                 embed.set_author(name=user.name, icon_url=user.avatar_url)
                 embed.set_footer(
                     text=Translator.translate("quote_footer", ctx, channel=self.bot.get_channel(message.channel).name,
-                                              user=Utils.clean(ctx.author.display_name), message_id=message_id))
+                                              user=Utils.clean_user(ctx.author), message_id=message_id))
                 await ctx.send(embed=embed)
                 if ctx.channel.permissions_for(ctx.me).manage_messages:
                     await ctx.message.delete()
@@ -236,7 +248,7 @@ class Basic:
         pages = self.gen_role_pages(message.guild)
         page, page_num = Pages.basic_pages(pages, page_num, action)
         embed = discord.Embed(
-            title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=page_num + 1,
+            title=Translator.translate("assignable_roles", ctx, server_name=message.channel.guild.name, page_num=page_num + 1,
                                        page_count=len(pages)), color=0x54d5ff, description=page)
         return None, embed, page_num
 
@@ -261,7 +273,7 @@ class Basic:
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
-            except Exception as ex:
+            except BadArgument as ex:
                 await ctx.send(Translator.translate("role_not_found", ctx))
             else:
                 roles = Configuration.get_var(ctx.guild.id, "SELF_ROLES")
@@ -327,6 +339,7 @@ class Basic:
         return None
 
     @commands.command()
+    @commands.bot_has_permissions(attach_files=True)
     async def jumbo(self, ctx, *, emojis: str):
         """Jumbo emoji"""
         await JumboGenerator(ctx, emojis).generate()
@@ -363,9 +376,14 @@ class Basic:
                         e = Emoji.get_emoji(str(i + 1))
                         if payload.emoji.name == e:
                             roles = Configuration.get_var(guild.id, "SELF_ROLES")
-                            role = discord.utils.get(guild.roles, id=roles[info['page'] * 10 + i])
-                            member = guild.get_member(payload.user_id)
                             channel = self.bot.get_channel(payload.channel_id)
+                            number = info['page'] * 10 + i
+                            if number >= len(roles):
+                                await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                            role = guild.get_role(roles[number])
+                            if role is None:
+                                return
+                            member = guild.get_member(payload.user_id)
                             try:
                                 if role in member.roles:
                                     await member.remove_roles(role)
