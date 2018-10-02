@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging
 from Util.Converters import LoggingChannel
 
 
@@ -732,6 +732,31 @@ class Serveradmin:
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
+    @configure.group()
+    async def blacklist(self, ctx):
+        pass
+
+    @blacklist.command("add")
+    async def blacklist_add(self, ctx, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
+        if word in blacklist:
+            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", entry=word)
+        elif len(word) < 3:
+            await GearbotLogging.send_to(ctx, "NO", "entry_too_short")
+        else:
+            blacklist.append(word)
+            await GearbotLogging.send_to(ctx, "YES", "entry_added", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @blacklist.command("remove")
+    async def blacklist_remove(self, ctx, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
+        if word not in blacklist:
+            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", entry=word)
+        else:
+            blacklist.remove(word)
+            await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
+            Configuration.save(ctx.guild.id)
 
 
 

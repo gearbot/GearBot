@@ -298,5 +298,9 @@
   "mban_confirmation": "Successfully banned {count} people.",
   "mass_failures_ban": "I was unable to ban the following users ({page_num}/{pages}):",
   "processing": "Processing...",
-  "already_blacklisted": "``{word}`` was already on the blacklist."
+  "already_blacklisted": "``{word}`` was already on the blacklist.",
+  "entry_too_short": "Blacklist entries must be atleast 3 chars.",
+  "entry_added": "Successfully added ``{entry}`` to the blacklist.",
+  "not_blacklisted": "``{word}`` was not blacklisted.",
+  "entry_removed": "Successfully removed ``{entry}`` from the blacklist."
 }
