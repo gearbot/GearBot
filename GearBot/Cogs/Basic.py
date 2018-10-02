@@ -96,6 +96,14 @@ class Basic:
                     message_id = int(parts[1].strip(" "))
                 except ValueError:
                     pass
+            else:
+                parts = message_info.split(" ")
+                if len(parts) is 2:
+                    try:
+                        channel_id = int(parts[0].strip(" "))
+                        message_id = int(parts[1].strip(" "))
+                    except ValueError:
+                        pass
         else:
             result = JUMP_LINK_MATCHER.match(message_info)
             if result is not None:
@@ -108,9 +116,12 @@ class Basic:
                     pass
         error = None
         dmessage = None
+        if message_id is None:
+            error = Translator.translate('quote_invalid_format', ctx)
         async with ctx.typing():
-            message = LoggedMessage.get_or_none(messageid=message_id)
-            if message is None:
+            if message_id is not None:
+                message = LoggedMessage.get_or_none(messageid=message_id)
+            if message is None and message_id is not None:
                 if channel_id is None:
                     for channel in ctx.guild.text_channels:
                         try:
