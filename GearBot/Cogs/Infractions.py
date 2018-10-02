@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration
+from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, Confirmation
 from Util.Converters import UserID, Reason
 from database.DatabaseConnector import Infraction
 
@@ -11,7 +11,14 @@ class Infractions:
         "min": 2,
         "max": 6,
         "required": 2,
-        "commands": {}
+        "commands": {
+            "inf" : {
+                "required" : 2,
+                "commands" : {
+                    "delete": {"required": 5, "min": 2, "max": 6}
+                }
+            }
+        }
     }
 
     def __init__(self, bot):
@@ -84,6 +91,26 @@ class Infractions:
                 del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
 
+    @inf.command()
+    async def delete(self, ctx:commands.Context, inf_id:int):
+        """inf_delete_help"""
+        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
+        if infraction is None:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('inf_not_found', ctx.guild.id, id=inf_id)}")
+        else:
+            reason = infraction.reason
+            target = self.bot.get_user(infraction.user_id)
+            mod = self.bot.get_user(infraction.mod_id)
+            async def yes():
+                infraction.delete_instance()
+                if f"{ctx.guild.id}_{infraction.user_id}" in InfractionUtils.cache.keys():
+                    del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_delete_deleted', ctx.guild.id, id=inf_id)}")
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                    f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), targetid=target.id, mod=str(mod), modid=mod.id, reason=reason, user=str(ctx.author), userid=ctx.author.id)}")
+            async def no():
+                await ctx.send(Translator.translate("inf_delete_cancelled", ctx.guild.id, id=inf_id))
+            await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=inf_id)}", on_yes=yes, on_no=no)
 
 def setup(bot):
     bot.add_cog(Infractions(bot))

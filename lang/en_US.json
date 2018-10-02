@@ -303,5 +303,10 @@
   "entry_added": "Successfully added ``{entry}`` to the blacklist.",
   "not_blacklisted": "``{word}`` was not blacklisted.",
   "entry_removed": "Successfully removed ``{entry}`` from the blacklist.",
-  "blacklist_list": "Blacklist for {server} ({page_num}/{pages})"
+  "blacklist_list": "Blacklist for {server} ({page_num}/{pages})",
+  "inf_delete_help" : "Deletes an infraction. This can not be undone!",
+  "inf_delete_confirmation" : "Are you sure you would like to delete infraction #{id}?\n\n*This can not be undone.*",
+  "inf_delete_deleted" : "Infraction #{id} has been deleted.",
+  "inf_delete_cancelled" : "Infraction #{id} remains as it is.",
+  "inf_delete_log" : "Infraction #{id} to {target}(``{targetid}``) given by {mod}(``{modid}``) with reason```{reason}``` has been deleted by {user}(``{userid}``)"
 }
