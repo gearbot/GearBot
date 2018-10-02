@@ -302,5 +302,6 @@
   "entry_too_short": "Blacklist entries must be atleast 3 chars.",
   "entry_added": "Successfully added ``{entry}`` to the blacklist.",
   "not_blacklisted": "``{word}`` was not blacklisted.",
-  "entry_removed": "Successfully removed ``{entry}`` from the blacklist."
+  "entry_removed": "Successfully removed ``{entry}`` from the blacklist.",
+  "blacklist_list": "Blacklist for {server} ({page_num}/{pages})"
 }

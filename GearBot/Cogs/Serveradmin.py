@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
+    Pages
 from Util.Converters import LoggingChannel
 
 
@@ -81,6 +82,7 @@ class Serveradmin:
         bot.to_cache = []
         self.bot:commands.AutoShardedBot = bot
         self.validate_configs()
+        Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
         pass
@@ -734,7 +736,18 @@ class Serveradmin:
 
     @configure.group()
     async def blacklist(self, ctx):
-        pass
+        await Pages.create_new("blacklist", ctx)
+
+    @staticmethod
+    async def _blacklist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1, []
+
+    @staticmethod
+    async def _blacklist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
     @blacklist.command("add")
     async def blacklist_add(self, ctx, word: str):
