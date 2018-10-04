@@ -407,7 +407,10 @@ class Moderation:
     @commands.group()
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
-        await ctx.trigger_typing()
+        if ctx.subcommand_passed is None:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx)}")
+        else:
+            await ctx.trigger_typing()
 
     @archive.command()
     async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
@@ -424,7 +427,7 @@ class Moderation:
             else:
                 ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms')}")
         else:
-            await ctx.send("Not implemented, please enable edit logs to be able to use archiving")
+            await ctx.send(f"{{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs')}"
 
 
     @archive.command()
@@ -437,7 +440,7 @@ class Moderation:
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
             await Archive.ship_messages(ctx, messages)
         else:
-            await ctx.send("Please enable edit logs so i can archive users")
+            await ctx.send(f"{{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs')}"
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
