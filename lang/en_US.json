@@ -221,6 +221,8 @@
   "archived_count": "Archived {count} messages.",
   "archive_empty": "I tried to make you an archive but couldn't find any messages, either there are none, send too long before edit logs on this server where enabled, or there just are are no messages for me to archive",
   "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied.",
+  "archive_no_subcommand": "See the subcommands `{ctx.prefix}help archive` for archival types and help.",
+  "archive_no_edit_logs": "Not implemented, please enable edit logs to be able to use archiving",
   "archive_too_much": "I get it, you like reading old conversations, good for you. But do you really need more than 5000 messages? You might want to try a good book instead.",
   "quote_invalid_format": "I'm sorry but I have no clue where you want me to go look for a message with that info. Please try again providing me the info in one of the following formats: \n - `<jumplink>` (can be acquired by clicking 'copy link' in the 3 dotted menu on a message), \n - `<messageid>` (only works if that server has edit logs enabled) or \n - `<messageid>-<channelid>` (can be acquired by holding shift when clicking 'copy id' on the message menu)",
   "quote_missing_channel": "It seems you only gave me a message-id, but I can't find that message, could you please provide a channel-id as well by holding shift when copying the id or providing a jumplink?",
