@@ -38,16 +38,16 @@ def prefix_callable(bot, message):
     if message.guild is None or not bot.STARTUP_COMPLETE:
         prefixes.append('!') #use default ! prefix in DMs
     else:
-        prefixes.append(Configuration.getConfigVar(message.guild.id, "PREFIX"))
+        prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
 
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
-        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="dnd")
-        await GearbotLogging.onReady(bot, Configuration.getMasterConfigVar("BOT_LOG_CHANNEL"))
+        GearbotLogging.initialize_pump(bot)
+        await GearbotLogging.onReady(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
         info = await bot.application_info()
-        await GearbotLogging.logToBotlog(message="Spinning up the gears!")
+        await GearbotLogging.bot_log(message="Spinning up the gears!")
         await Util.readyBot(bot)
         Emoji.on_ready(bot)
         Utils.on_ready(bot)
@@ -72,14 +72,14 @@ async def on_ready(bot):
                 GearbotLogging.exception(f"Failed to load extention {extension}", e)
         GearbotLogging.info("Cogs loaded")
 
-        if Configuration.getMasterConfigVar("CROWDIN_KEY") is not None:
+        if Configuration.get_master_var("CROWDIN_KEY") is not None:
             bot.loop.create_task(translation_task(bot))
 
         await DocUtils.update_docs(bot)
 
         bot.STARTUP_COMPLETE = True
-        await GearbotLogging.logToBotlog(message=f"All gears turning at full speed, {info.name} ready to go!")
-        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'), status="idle")
+        await GearbotLogging.bot_log(message=f"All gears turning at full speed, {info.name} ready to go!")
+        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
     else:
         await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
 
@@ -109,7 +109,7 @@ async def translation_task(bot):
                 v = f"{v}\n{line}"
             if len(v) > 0:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.logToBotlog(embed=embed)
+            await GearbotLogging.bot_log(embed=embed)
 
         try:
             await asyncio.sleep(6*60*60)
@@ -138,7 +138,7 @@ async def on_message(bot, message:discord.Message):
 
 async def on_guild_join(guild: discord.Guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.loadConfig(guild.id)
+    Configuration.load_config(guild.id)
 
 async def on_guild_remove(guild: discord.Guild):
     GearbotLogging.info(f"i was removed from a guild: {guild.name} ({guild.id}).")
@@ -152,7 +152,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
     elif isinstance(error, commands.DisabledCommand):
         await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.getConfigVar(ctx.guild.id, "PERM_DENIED_MESSAGE"):
+        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "PERM_DENIED_MESSAGE"):
             await ctx.send(":lock: You do not have the required permissions to run this command")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
@@ -200,7 +200,7 @@ async def handle_database_error(bot):
     # database trouble, notify bot owner
     message = f"{Emoji.get_chat_emoji('WARNING')} Peewee exception caught! attempting to reconnect to the database!"
     await GearbotLogging.message_owner(bot, message)
-    await GearbotLogging.logToBotlog(message)
+    await GearbotLogging.bot_log(message)
 
     try:
         DatabaseConnector.init()
@@ -215,7 +215,7 @@ async def handle_database_error(bot):
             if os.path.isfile('stage_2.txt'):
                 message = f"{Emoji.get_chat_emoji('NO')} VM reboot did not fix the problem, shutting down completely for fixes"
                 await bot.get_user(bot.owner_id).dm_channel.send(message)
-                await GearbotLogging.logToBotlog(message)
+                await GearbotLogging.bot_log(message)
                 with open("stage_3.txt", "w") as file:
                     file.write("stage_3")
                 os.kill(os.getpid(), 9)
@@ -224,29 +224,29 @@ async def handle_database_error(bot):
                     file.write("stage_2")
                 message = f"{Emoji.get_chat_emoji('NO')} Reconnecting and bot rebooting failed, escalating to VM reboot"
                 await GearbotLogging.message_owner(bot, message)
-                await GearbotLogging.logToBotlog(message)
+                await GearbotLogging.bot_log(message)
                 data = {'type': 'reboot'}
                 async with aiohttp.ClientSession(headers={'Content-Type': 'application/json',
-                                                          'Authorization': f'Bearer {Configuration.getMasterConfigVar("DO_TOKEN")}'}) as session:
-                    await session.post(f'https://api.digitalocean.com/v2/droplets/{Configuration.getMasterConfigVar("DO_ID")}/actions',
+                                                          'Authorization': f'Bearer {Configuration.get_master_var("DO_TOKEN")}'}) as session:
+                    await session.post(f'https://api.digitalocean.com/v2/droplets/{Configuration.get_master_var("DO_ID")}/actions',
                                             data=json.dumps(data), timeout=30)
                 time.sleep(60)
 
             else:
                 message = f"{Emoji.get_chat_emoji('NO')} Reconnecting failed, escalating to reboot"
                 await GearbotLogging.message_owner(bot, message)
-                await GearbotLogging.logToBotlog(message)
+                await GearbotLogging.bot_log(message)
                 with open("stage_1.txt", "w") as file:
                     file.write("stage_1")
                 os.kill(os.getpid(), 9)
         else:
             message = f"{Emoji.get_chat_emoji('YES')} 2nd reconnection attempt successfully connected!"
             await GearbotLogging.message_owner(bot, message)
-            await GearbotLogging.logToBotlog(message)
+            await GearbotLogging.bot_log(message)
     else:
         message = f"{Emoji.get_chat_emoji('YES')} 1st reconnection attempt successfully connected!"
         await GearbotLogging.message_owner(bot, message)
-        await GearbotLogging.logToBotlog(message)
+        await GearbotLogging.bot_log(message)
 
 
 
@@ -345,7 +345,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
 
     # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking down the bot (and if we ended here it might have even been due to trying to log to botlog
     try:
-        await GearbotLogging.logToBotlog(embed=embed)
+        await GearbotLogging.bot_log(embed=embed)
     except Exception as ex:
         GearbotLogging.error(
             f"Failed to log to botlog, either Discord broke or something is seriously wrong!\n{ex}")

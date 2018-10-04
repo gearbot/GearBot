@@ -48,36 +48,11 @@ and
 
 #**Logging**
 
-GearBot has 3 types of logging and they can all be pointed to the same channel or different ones, that's up to you.
-In all these commands please replace ``<channel>`` with the actual channel, either a #mention or ID works for him.
+GearBot has different types of modlogs, with more being planned.
+Setting it up is also really easy if you just want a single channel where everything is logged in, for more complex setups see [Advanced Logging](logging.md)
 
-##__*Join logs*__
-It's always good to know who comes and goes, for this GearBot can log whenever people join or leave the server:
+The command to kick it all off:
 ```
-!configure joinLogChannel <channel>
+!configure logging add #test-logging everything
 ```
-Don't want him to log it anymore for some reason? No worries, you can tell him to stop at any time:
-```
-!disable joinLogChannel
-```
-
-##__*Minor logs*__
-People are sneaky, they can say bad things and then cover it up with edits or deleting before a moderator shows up. But GearBot sees everything and can log those edits and deleted messages for you.
-```
-!configure minorLogChannel <channel>
-```
-You can of course disable this again later as well:
-```
-!disable minorLogChannel
-```
-
-
-##__*Mod logs*__
-And last but definitely not least: the all important mod logs, this is where he logs the really imporant stuff (kicks/bans/warnings/...)
-```
-!configure modLogChannel <channel>
-```
-And disabling is equally easy (but not recommended at all):
-```
-!disable modLogChannel
-```
+This will log everything to the channel and ask you to enable the edit and censor features, if you want to use these, just react with the yes emoji. Censoring won't actually do anything until you configure blacklisted words or add servers to the invite whitelist.

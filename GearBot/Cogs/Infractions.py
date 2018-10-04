@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator
+from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
+    Confirmation
 from Util.Converters import UserID, Reason
 from database.DatabaseConnector import Infraction
 
@@ -11,7 +12,14 @@ class Infractions:
         "min": 2,
         "max": 6,
         "required": 2,
-        "commands": {}
+        "commands": {
+            "inf" : {
+                "required" : 2,
+                "commands" : {
+                    "delete": {"required": 5, "min": 4, "max": 6}
+                }
+            }
+        }
     }
 
     def __init__(self, bot):
@@ -36,12 +44,19 @@ class Infractions:
                 name = Utils.clean_user(member)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
                 aname = Utils.clean_user(ctx.author)
-                await GearbotLogging.logToModLog(ctx.guild, f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
+                    try:
+                        dm_channel = await member.create_dm()
+                        await dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+                    except discord.Forbidden:
+                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                                                    f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_added', ctx.guild.id, user=ctx.author)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=ctx.author)}")
 
     @commands.guild_only()
-    @commands.group()
+    @commands.group(aliases=["infraction", "infractions"])
     async def inf(self, ctx:commands.Context):
         """inf_help"""
         pass
@@ -77,6 +92,25 @@ class Infractions:
                 del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
 
+    @inf.command(aliases=["del", "remove"])
+    async def delete(self, ctx:commands.Context, inf_id:int):
+        """inf_delete_help"""
+        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
+        if infraction is None:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('inf_not_found', ctx.guild.id, id=inf_id)}")
+        else:
+            reason = infraction.reason
+            target = await Utils.get_user(infraction.user_id)
+            mod = await Utils.get_user(infraction.mod_id)
+            async def yes():
+                infraction.delete_instance()
+                key = f"{ctx.guild.id}_{infraction.user_id}"
+                if key in InfractionUtils.cache.keys():
+                    del InfractionUtils.cache[key]
+                await GearbotLogging.send_to(ctx, "YES", "inf_delete_deleted", id=inf_id)
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                    f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), target_id=target.id, mod=str(mod), mod_id=mod.id, reason=reason, user=str(ctx.author), user_id=ctx.author.id)}")
+            await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=inf_id, user=str(target), user_id=target.id, reason=reason)}", on_yes=yes)
 
 def setup(bot):
     bot.add_cog(Infractions(bot))

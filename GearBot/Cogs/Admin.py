@@ -32,7 +32,7 @@ class Admin:
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
         await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
-        await GearbotLogging.logToBotlog(f"Upgrade initiated by {ctx.author.name}")
+        await GearbotLogging.bot_log(f"Upgrade initiated by {ctx.author.name}")
         GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
         file = open("upgradeRequest", "w")
         file.write("upgrade requested")
@@ -79,8 +79,8 @@ class Admin:
     async def reloadconfigs(self, ctx:commands.Context):
         """Reloads all server configs from disk"""
         async with ctx.typing():
-            Configuration.loadGlobalConfig()
-            await Configuration.onReady(self.bot)
+            Configuration.load_master()
+            await Configuration.on_ready(self.bot)
             await ctx.send("Configs reloaded")
 
     @commands.command(hidden=True)
@@ -147,10 +147,6 @@ class Admin:
             await ctx.send(file=discord.File(f"{name}.png"))
             for page in pages:
                 await ctx.send(page)
-
-    @commands.command()
-    async def migrate_configs(self, ctx):
-        Configuration.migrate_configs(self.bot)
 
     @commands.command()
     async def set_presence(self, ctx, name):

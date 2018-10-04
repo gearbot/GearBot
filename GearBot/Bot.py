@@ -21,6 +21,7 @@ bot.custom_command_count = 0
 bot.errors = 0
 bot.eaten = 0
 bot.database_errors = 0
+bot.hot_reloading = False
 
 @bot.event
 async def on_ready():
@@ -50,8 +51,6 @@ async def on_error(event, *args, **kwargs):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("--debug", help="Runs the bot in debug mode", dest='debug', action='store_true')
-    parser.add_argument("--debugLogging", help="Set debug logging level", action='store_true')
     parser.add_argument("--token", help="Specify your Discord token")
 
     GearbotLogging.init_logger()
@@ -61,8 +60,8 @@ if __name__ == '__main__':
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
-    elif not Configuration.getMasterConfigVar("LOGIN_TOKEN", "0") is "0":
-        token = Configuration.getMasterConfigVar("LOGIN_TOKEN")
+    elif not Configuration.get_master_var("LOGIN_TOKEN", "0") is "0":
+        token = Configuration.get_master_var("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
     bot.remove_command("help")

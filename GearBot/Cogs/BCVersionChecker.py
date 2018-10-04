@@ -85,7 +85,7 @@ class BCVersionChecker:
     @Permissioncheckers.devOnly()
     async def request_testing(self, ctx:commands.Context, roleName):
         """Make a role pingable for announcements"""
-        role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
+        role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles.values())
         if role is None:
             await ctx.send("Unable to find that role")
         else:
@@ -160,7 +160,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                 v = f"{v}\n{line}"
             if len(v) > 0:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.logToBotlog(embed=embed)
+            await GearbotLogging.bot_log(embed=embed)
         for i in range(1,60):
             if checkcog.force or not checkcog.running:
                 break

@@ -11,16 +11,16 @@ from Util import Configuration, Utils, Pages, GearbotLogging, Emoji, Permissionc
 image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
 
 async def update_docs(bot):
-    message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
+    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating documentation")
     await sync_guides(bot)
     generate_command_list(bot)
     await update_site(bot)
     await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Documentation updated")
 
 async def sync_guides(bot):
-    category = bot.get_channel(Configuration.getMasterConfigVar("GUIDES"))
+    category = bot.get_channel(Configuration.get_master_var("GUIDES"))
     if category is not None:
-        guide_hashes = Utils.fetchFromDisk("guide_hashes")
+        guide_hashes = Utils.fetch_from_disk("guide_hashes")
         for channel in category.channels:
             if isinstance(channel, discord.TextChannel):
                 name = channel.name
@@ -57,7 +57,7 @@ async def send_buffer(channel, buffer):
 
 async def update_site(bot):
     if os.path.isfile(f"./site-updater.sh") and platform.system().lower() != "windows":
-        log_message = await GearbotLogging.logToBotlog(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
+        log_message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
         code, output, error = await Utils.execute(["chmod +x site-updater.sh && ./site-updater.sh"])
         GearbotLogging.info("Site update output")
         if code is 0:

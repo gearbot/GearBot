@@ -6,7 +6,7 @@ certifi==2018.8.24
 cffi==1.11.5
 chardet==3.0.4
 cryptography==2.3.1
-discord.py==1.0.0a1551+g00a659c
+discord.py==1.0.0a1580+g836ae73
 idna==2.7
 idna-ssl==1.1.0
 multidict==4.3.1

@@ -27,7 +27,7 @@ def is_user(perm_type, ctx):
         return False
     if not hasattr(ctx.author, "roles"):
         return False
-    roles = Configuration.getConfigVar(ctx.guild.id, f"{perm_type}_ROLES")
+    roles = Configuration.get_var(ctx.guild.id, f"{perm_type}_ROLES")
     for role in ctx.author.roles:
         if role.id in roles:
             return True
@@ -41,7 +41,7 @@ def mod_only():
 def is_dev(ctx:commands.Context):
     if ctx.guild is None:
         return False
-    devrole = Configuration.getConfigVar(ctx.guild.id, "DEV_ROLE")
+    devrole = Configuration.get_var(ctx.guild.id, "DEV_ROLE")
     if devrole != 0:
         for role in ctx.author.roles:
             if role.id == devrole:
@@ -70,7 +70,7 @@ def check_permission(ctx:commands.Context):
     if ctx.guild is None:
         return 0 >= get_required(ctx, ctx.cog.permissions)
     else:
-        overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+        overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
         cog_name = type(ctx.cog).__name__
         required = -1
         if cog_name in overrides:
@@ -102,7 +102,7 @@ def get_user_lvl(ctx:commands.Context):
     if is_server_owner(ctx):
         return 5
     cog_name = type(ctx.cog).__name__
-    overrides = Configuration.getConfigVar(ctx.guild.id, "PERM_OVERRIDES")
+    overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
     if cog_name in overrides:
         target = overrides[cog_name]
         pieces = ctx.message.content[len(ctx.prefix):].split(" ")
