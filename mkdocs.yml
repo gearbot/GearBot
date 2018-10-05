@@ -11,3 +11,4 @@ nav:
       - Advanced Logging: 'Guides/logging.md'
       - Advanced permissions: 'Guides/permissions.md'
       - Archiving: 'Guides/archiving.md'
+  - Supporting: 'supporting.md'
