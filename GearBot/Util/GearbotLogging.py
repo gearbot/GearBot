@@ -120,13 +120,16 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
                 remaining = tag_on
     message = Utils.trim_message(f"{message}\u200b", 1999)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+
+    pushed_cleaner = False
     for cid, info in channels.items():
         if type in info:
             if remaining is None:
-                LOG_PUMP.receive(cid, (message, embed, file, cleaner))
+                LOG_PUMP.receive(cid, (message, embed, file, cleaner if not pushed_cleaner else None))
             else:
                 LOG_PUMP.receive(cid, (message, None, None, None))
-                LOG_PUMP.receive(cid, (tag_on, embed, file, cleaner))
+                LOG_PUMP.receive(cid, (tag_on, embed, file, cleaner if not pushed_cleaner else None))
+            pushed_cleaner = True
 
 
 
