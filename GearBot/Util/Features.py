@@ -11,7 +11,7 @@ def check_server(guild_id):
 
 
 def is_logged(guild, feature):
-    return feature in LOG_MAP[guild]
+    return guild in LOG_MAP and feature in LOG_MAP[guild]
 
 
 requires_logging = {

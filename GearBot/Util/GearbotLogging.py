@@ -41,10 +41,9 @@ def init_logger():
     DISCORD_LOGGER.addHandler(handler)
     LOGGER.addHandler(handler)
 
-    handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=4,
-                                       backupCount=30)
+    # handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=1, backupCount=24)
 
-    DISCORD_LOGGER.addHandler(handler)
+    # DISCORD_LOGGER.addHandler(handler)
 
 
 async def onReady(bot: commands.Bot, channelID):
@@ -202,6 +201,8 @@ class LogPump:
                 for s in senders:
                     try:
                         await s
+                    except discord.Forbidden:
+                        pass
                     except Exception as e:
                         await log_error()
                         await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,

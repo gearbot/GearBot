@@ -261,6 +261,7 @@ class Serveradmin:
 
     @cog_overrides.command(name="add")
     async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
+        cog = cog.lower()
         if cog in ctx.bot.cogs:
             cogo = ctx.bot.cogs[cog]
             if not hasattr(cogo, "permissions"):
@@ -292,6 +293,7 @@ class Serveradmin:
 
     @cog_overrides.command(name="remove")
     async def remove_cog_override(self, ctx, cog: str):
+        cog = cog.lower()
         overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
         if cog in overrides:
             overrides[cog]["required"] = -1
@@ -319,6 +321,7 @@ class Serveradmin:
 
     @command_overrides.command(name="set", aliases=["add"])
     async def add_command_override(self, ctx, command:str, perm_lvl:int):
+        command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.instance
@@ -363,6 +366,7 @@ class Serveradmin:
 
     @command_overrides.command(name="remove")
     async def remove_command_override(self, ctx, command:str):
+        command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.instance
@@ -600,6 +604,7 @@ class Serveradmin:
 
     @features.command(name="enable")
     async def enable_feature(self, ctx, types):
+        types = types.upper()
         enabled = []
         ignored = []
         known = []
@@ -640,7 +645,7 @@ class Serveradmin:
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
-            e = Features.is_logged(ctx.guild.id, t)
+            e = Configuration.get_var(ctx.guild.id, f)
             embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
@@ -657,6 +662,7 @@ class Serveradmin:
 
     @features.command(name="disable")
     async def feature_disable(self, ctx, types:str):
+        types = types.upper()
         disabled= []
         ignored = []
         known = []

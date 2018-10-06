@@ -89,7 +89,7 @@ class Moderation:
         allowed, message = self._can_act("kick", ctx, user)
 
         if allowed:
-           await self.kick(ctx, user, reason, True)
+           await self._kick(ctx, user, reason, True)
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 

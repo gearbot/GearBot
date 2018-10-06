@@ -105,7 +105,7 @@ def get_user_lvl(ctx:commands.Context):
     overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
     if cog_name in overrides:
         target = overrides[cog_name]
-        pieces = ctx.message.content[len(ctx.prefix):].split(" ")
+        pieces = ctx.message.content.lower()[len(ctx.prefix):].split(" ")
         while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
             target = target["commands"][pieces.pop(0)]
         if ctx.author.id in target["people"]:
