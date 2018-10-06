@@ -118,7 +118,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
                 message = f"{message} {tag_on}"
             else:
                 remaining = tag_on
-    message = Utils.trim_message(f"{message}\u200b", 1999)
+    message = Utils.trim_message(f"{message}\u200b", 1998)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
 
     pushed_cleaner = False
@@ -182,7 +182,7 @@ class LogPump:
                                 todo.pop(0)
                                 cleaners.append(cleaner)
                                 continue
-                            elif len(to_send) + len(message) < 1999:
+                            elif len(to_send) + len(message) <= 1999:
                                 to_send += f"{message}\n"
                                 todo.pop(0)
                             else:
