@@ -189,7 +189,7 @@ class Basic:
                 if len(attachments) == 1:
                     attachment = attachments[0]
                 embed = discord.Embed(colour=discord.Color(0xd5fff),
-                                      timestamp=datetime.utcfromtimestamp(message.timestamp))
+                                      timestamp=discord.Object(message.messageid).created_at)
                 if message.content is None or message.content == "":
                     if attachment is not None:
                         if attachment.isImage:
