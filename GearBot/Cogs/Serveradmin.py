@@ -261,6 +261,7 @@ class Serveradmin:
 
     @cog_overrides.command(name="add")
     async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
+        cog = cog.lower()
         if cog in ctx.bot.cogs:
             cogo = ctx.bot.cogs[cog]
             if not hasattr(cogo, "permissions"):
@@ -292,6 +293,7 @@ class Serveradmin:
 
     @cog_overrides.command(name="remove")
     async def remove_cog_override(self, ctx, cog: str):
+        cog = cog.lower()
         overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
         if cog in overrides:
             overrides[cog]["required"] = -1
@@ -319,6 +321,7 @@ class Serveradmin:
 
     @command_overrides.command(name="set", aliases=["add"])
     async def add_command_override(self, ctx, command:str, perm_lvl:int):
+        command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.instance
@@ -363,6 +366,7 @@ class Serveradmin:
 
     @command_overrides.command(name="remove")
     async def remove_command_override(self, ctx, command:str):
+        command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.instance
