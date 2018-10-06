@@ -131,7 +131,6 @@ class Basic:
                                 dmessage = await channel.get_message(message_id)
                                 message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
                                                                author=dmessage.author.id,
-                                                               timestamp=dmessage.created_at.timestamp(),
                                                                channel=channel.id, server=dmessage.guild.id)
                                 for a in dmessage.attachments:
                                     LoggedAttachment.get_or_create(id=a.id, url=a.url,
@@ -155,7 +154,6 @@ class Basic:
                         else:
                             message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
                                                            author=dmessage.author.id,
-                                                           timestamp=dmessage.created_at.timestamp(),
                                                            channel=channel.id, server=dmessage.guild.id)
                             for a in dmessage.attachments:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,

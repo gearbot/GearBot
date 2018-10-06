@@ -52,7 +52,7 @@ class ModLog:
                     fetch_times.append(time.perf_counter() - fetch)
                     if logged is None:
                             LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                 content=message.content, timestamp=message.created_at.timestamp(),
+                                                 content=message.content,
                                                  channel=channel.id, server=channel.guild.id)
                             for a in message.attachments:
                                 LoggedAttachment.create(id=a.id, url=a.url,
@@ -87,8 +87,7 @@ class ModLog:
             return
         if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
             LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                                 timestamp=message.created_at.timestamp(), channel=message.channel.id,
-                                 server=message.guild.id)
+                                 channel=message.channel.id, server=message.guild.id)
             for a in message.attachments:
                 LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
                                         messageid=message.id)
