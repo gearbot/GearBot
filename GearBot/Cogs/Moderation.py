@@ -94,7 +94,7 @@ class Moderation:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     async def _kick(self, ctx, user, reason, confirm):
-        self.bot.data["forced_exits"].add(user.id)
+        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.kick(user,
                              reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
         translated = Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id,
@@ -163,7 +163,7 @@ class Moderation:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     async def _ban(self, ctx, user, reason, confirm):
-        self.bot.data["forced_exits"].add(user.id)
+        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                             delete_message_days=0)
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
@@ -221,7 +221,7 @@ class Moderation:
 
         allowed, message = self._can_act("softban", ctx, user)
         if allowed:
-            self.bot.data["forced_exits"].add(user.id)
+            self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             self.bot.data["unbans"].add(user.id)
             await ctx.guild.ban(user, reason=f"softban - Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}", delete_message_days=1)
             await ctx.guild.unban(user)
@@ -243,7 +243,7 @@ class Moderation:
             member = await commands.MemberConverter().convert(ctx, str(user_id))
         except BadArgument:
             user = await ctx.bot.get_user_info(user_id)
-            self.bot.data["forced_exits"].add(user.id)
+            self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                                 delete_message_days=0)
             await ctx.send(

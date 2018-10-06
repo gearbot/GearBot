@@ -186,8 +186,9 @@ class ModLog:
     async def on_member_remove(self, member: discord.Member):
         if member.id == self.bot.user.id: return
         exits = self.bot.data["forced_exits"]
-        if member.id in exits:
-            exits.remove(member.id)
+        fid = f"{member.guild.id}-{member.id}"
+        if fid in exits:
+            exits.remove(fid)
             return
         if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
@@ -215,7 +216,8 @@ class ModLog:
 
     async def on_member_ban(self, guild, user):
         if user.id == self.bot.user.id or not Features.is_logged(guild.id, "MOD_ACTIONS"): return
-        if user.id in self.bot.data["forced_exits"]:
+        fid = f"{guild.id}-{user.id}"
+        if fid in self.bot.data["forced_exits"]:
             return
         if guild.me.guild_permissions.view_audit_log:
             async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=25):
@@ -231,7 +233,7 @@ class ModLog:
                     return
         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                               f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
-        self.bot.data["forced_exits"].add(user.id)
+        self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
         if user.id in self.bot.data["unbans"] or not Features.is_logged(guild.id, "MOD_ACTIONS"):
