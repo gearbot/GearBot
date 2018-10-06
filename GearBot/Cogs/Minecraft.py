@@ -26,6 +26,9 @@ class Minecraft:
         self.bot.loop.create_task(expire_cache(self))
         Pages.register("cf", self.init_cf, self.update_cf)
 
+    def __unload(self):
+        self.running = False
+
     async def __local_check(self, ctx):
         return Permissioncheckers.check_permission(ctx)
 
@@ -169,7 +172,7 @@ def setup(bot):
 
 async def expire_cache(self):
     GearbotLogging.info("Started CurseForge cache cleaning task")
-    while self.running == True:
+    while self.running:
         if self.cf_cache != {}:
             for cachedproject, projectinfo in self.cf_cache.items():
                 cachedtime = projectinfo["time"].minute
@@ -183,3 +186,4 @@ async def expire_cache(self):
             pass  # We have nothing to purge
 
         await asyncio.sleep(5)
+    GearbotLogging.info("CurseForge cache cleaning task terminated")

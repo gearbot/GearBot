@@ -131,7 +131,6 @@ class Basic:
                                 dmessage = await channel.get_message(message_id)
                                 message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
                                                                author=dmessage.author.id,
-                                                               timestamp=dmessage.created_at.timestamp(),
                                                                channel=channel.id, server=dmessage.guild.id)
                                 for a in dmessage.attachments:
                                     LoggedAttachment.get_or_create(id=a.id, url=a.url,
@@ -155,7 +154,6 @@ class Basic:
                         else:
                             message = LoggedMessage.create(messageid=message_id, content=dmessage.content,
                                                            author=dmessage.author.id,
-                                                           timestamp=dmessage.created_at.timestamp(),
                                                            channel=channel.id, server=dmessage.guild.id)
                             for a in dmessage.attachments:
                                 LoggedAttachment.get_or_create(id=a.id, url=a.url,
@@ -191,7 +189,7 @@ class Basic:
                 if len(attachments) == 1:
                     attachment = attachments[0]
                 embed = discord.Embed(colour=discord.Color(0xd5fff),
-                                      timestamp=datetime.utcfromtimestamp(message.timestamp))
+                                      timestamp=discord.Object(message.messageid).created_at)
                 if message.content is None or message.content == "":
                     if attachment is not None:
                         if attachment.isImage:
@@ -201,7 +199,7 @@ class Basic:
                 else:
                     description = message.content
                     embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
-                                          timestamp=datetime.utcfromtimestamp(message.timestamp))
+                                          timestamp=datetime.utcfromtimestamp(discord.Object(message_id).created_at))
                     embed.add_field(name="​",
                                     value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
                     if attachment is not None:
