@@ -201,6 +201,8 @@ class LogPump:
                 for s in senders:
                     try:
                         await s
+                    except discord.Forbidden:
+                        pass
                     except Exception as e:
                         await log_error()
                         await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
