@@ -199,7 +199,7 @@ class Basic:
                 else:
                     description = message.content
                     embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
-                                          timestamp=datetime.utcfromtimestamp(message.timestamp))
+                                          timestamp=datetime.utcfromtimestamp(discord.Object(message_id).created_at))
                     embed.add_field(name="​",
                                     value=f"https://discordapp.com/channels/{channel.guild.id}/{channel.id}/{message_id}")
                     if attachment is not None:

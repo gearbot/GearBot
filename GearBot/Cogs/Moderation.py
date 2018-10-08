@@ -31,41 +31,59 @@ class Moderation:
         bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
         self.bot.loop.create_task(unmuteTask(self))
-        Pages.register("roles", self.roles_init, self.roles_update)
+        Pages.register("roles_sorted", self.roles_init_sorted, self.roles_update_sorted)
+        Pages.register("roles_unsorted", self.roles_init_unsorted, self.roles_update_unsorted)
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
 
     def __unload(self):
         Utils.saveToDisk("mutes", self.mutes)
         self.running = False
-        Pages.unregister("roles")
+        Pages.unregister("roles_sorted")
+        Pages.unregister("roles_unsorted")
 
     async def __local_check(self, ctx):
         return Permissioncheckers.check_permission(ctx)
 
-    async def roles_init(self, ctx):
-        pages = self.gen_roles_pages(ctx.guild)
+    async def roles_init_sorted(self, ctx):
+        pages = self.gen_roles_pages(ctx.guild, sort=True)
         page = pages[0]
         return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1, []
 
-    async def roles_update(self, ctx, message, page_num, action, data):
-        pages = self.gen_roles_pages(message.guild)
+    async def roles_update_sorted(self, ctx, message, page_num, action, data):
+        pages = self.gen_roles_pages(message.guild, sort=True)
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        return f"**{Translator.translate('roles', message.guild.id, server_name=ctx.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
+
+    async def roles_init_unsorted(self, ctx):
+        pages = self.gen_roles_pages(ctx.guild, sort=False)
+        page = pages[0]
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1, []
+
+    async def roles_update_unsorted(self, ctx, message, page_num, action, data):
+        pages = self.gen_roles_pages(message.guild, sort=False)
         page, page_num = Pages.basic_pages(pages, page_num, action)
         return f"**{Translator.translate('roles', message.guild.id, server_name=ctx.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
     @staticmethod
-    def gen_roles_pages(guild: discord.Guild):
+    def gen_roles_pages(guild: discord.Guild, sort):
         role_list = dict()
         longest_name = 1
         for role in guild.roles:
             role_list[f"{role.name} - {role.id}"] = role
             longest_name = max(longest_name, len(role.name))
-        return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in sorted(role_list.keys())))
+        if sort:
+            return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in sorted(role_list.keys())))
+        else:
+            return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in reversed(list(role_list.keys()))))
 
     @commands.command()
     @commands.guild_only()
-    async def roles(self, ctx: commands.Context):
-        """Lists all roles on the server and their IDs, useful for configuring without having to ping that role"""
-        await Pages.create_new("roles", ctx)
+    async def roles(self, ctx: commands.Context, alphabetical=False):
+        """Lists all roles on the server and their IDs, useful for configuring without having to ping that role. The alphabetical argument will set whether the list is sorted by hierachy or alphabetically"""
+        if alphabetical:
+            await Pages.create_new("roles_sorted", ctx)
+        else:
+            await Pages.create_new("roles_unsorted", ctx)
 
     @staticmethod
     def _can_act(action, ctx, user: discord.Member):
