@@ -81,3 +81,15 @@ class LoggingChannel(commands.Converter):
         if argument not in channels:
             raise commands.BadArgument("Not an configured logging channel")
         return argument
+
+
+class RoleMode(commands.Converter):
+    async def convert(self, ctx, argument):
+        argument = argument.lower()
+        options = [
+            "alphabetic",
+            "hierarchy",
+        ]
+        if argument in options:
+            return argument
+        raise commands.BadArgument(f"Unknown mode, valid modes: {', '.join(options)}")

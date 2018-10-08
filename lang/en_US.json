@@ -307,5 +307,6 @@
   "inf_delete_help" : "Deletes an infraction. This can not be undone!",
   "inf_delete_confirmation" : "Are you sure you would like to delete infraction #{id}?\n\nUser: {user} (``{user_id}``)\nReason: {reason}\n\n*This can not be undone.*",
   "inf_delete_deleted" : "Infraction #{id} has been deleted.",
-  "inf_delete_log" : "{user} (``{user_id}``) deleted infraction #{id} to {target} (``{target_id}``) given by {mod} (``{mod_id}``) with reason:```{reason}```"
+  "inf_delete_log" : "{user} (``{user_id}``) deleted infraction #{id} to {target} (``{target_id}``) given by {mod} (``{mod_id}``) with reason:```{reason}```",
+  "roles_help": "Prints a list of all roles in the server, possible modes are alphabetic or hierarchy (default)"
 }
