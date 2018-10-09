@@ -225,9 +225,9 @@ class ModLog:
                         reason = Translator.translate("no_reason", guild.id)
                     else:
                         reason = entry.reason
-                    Infraction.update(active=False).where(Infraction.user_id == user.id,
-                                                          Infraction.type == "Unban",
-                                                          Infraction.guild_id == guild.id)
+                    Infraction.update(active=False).where((Infraction.user_id == user.id) &
+                                                          (Infraction.type == "Unban") &
+                                                          (Infraction.guild_id == guild.id))
                     InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
                                                    "No reason given." if entry.reason is None else entry.reason)
                     GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -235,6 +235,9 @@ class ModLog:
                     return
         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                               f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+        Infraction.update(active=False).where((Infraction.user_id == user.id) &
+                                              (Infraction.type == "Unban") &
+                                              (Infraction.guild_id == guild.id))
         self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
@@ -244,16 +247,19 @@ class ModLog:
             if guild.me.guild_permissions.view_audit_log:
                 async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
                     if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
-                        Infraction.update(active=False).where(Infraction.user_id == user.id,
-                                                              Infraction.type == "Ban",
-                                                              Infraction.guild_id == guild.id)
+                        Infraction.update(active=False).where((Infraction.user_id == user.id) &
+                                                              (Infraction.type == "Ban") &
+                                                              (Infraction.guild_id == guild.id))
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                               f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
                         return
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                  f":door: {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+                                  f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
+            Infraction.update(active=False).where((Infraction.user_id == user.id) &
+                                                  (Infraction.type == "Ban") &
+                                                  (Infraction.guild_id == guild.id))
 
     async def on_member_update(self, before, after):
         guild = before.guild

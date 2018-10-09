@@ -30,7 +30,7 @@ class Moderation:
         self.bot: commands.Bot = bot
         bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
-        self.bot.loop.create_task(unmuteTask(self))
+        self.bot.loop.create_task(self.timed_actions())
         Pages.register("roles", self.roles_init, self.roles_update)
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
 
@@ -169,7 +169,7 @@ class Moderation:
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                             delete_message_days=0)
-        Infraction.update(active=False).where(Infraction.user_id == user.id, Infraction.type == "Unban", Infraction.guild_id == ctx.guild.id)
+        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (Infraction.guild_id == ctx.guild.id))
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                               f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
@@ -255,9 +255,9 @@ class Moderation:
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                         f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
-            Infraction.update(active=False).where(Infraction.user_id == user.id, Infraction.type == "Unban",
-                                                  Infraction.guild_id == ctx.guild.id)
-            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('forced_ban', ctx.guild.id), reason)
+            Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") &
+                                                  (Infraction.guild_id == ctx.guild.id))
+            InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id, user=Utils.clean_user(member))}")
             await ctx.invoke(self.ban, member, reason=reason)
@@ -289,8 +289,8 @@ class Moderation:
             reason = Translator.translate("no_reason", ctx.guild.id)
         self.bot.data["unbans"].add(member.user.id)
         await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
-        Infraction.update(active=False).where(Infraction.user_id == member.user.id, Infraction.type == "Ban",
-                                              Infraction.guild_id == ctx.guild.id)
+        Infraction.update(active=False).where((Infraction.user_id == member.user.id) & (Infraction.type == "Ban") &
+                                              (Infraction.guild_id == ctx.guild.id))
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('unban_confirmation', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, reason=reason)}")
@@ -473,69 +473,118 @@ class Moderation:
             del self.mutes[guild.id]
             Utils.saveToDisk("mutes", self.mutes)
 
+    async def timed_actions(self):
+        GearbotLogging.info("Started timed moderation action background task")
+        while self.running:
+            # actions to handle and the function handling it
+            types = {
+                "Mute": self._unmute
+            }
+            now = time.time()
+            limit = time.time() + 30
+            for name, action in types:
+                for infraction in Infraction.select().where(Infraction.type == name, Infraction.active == True,
+                                                            Infraction.end >= limit):
+                    self.bot.loop.create_task(self.run_after(infraction.end - now, action(infraction)))
+
+    async def run_after(self, delay, action):
+        if delay > 0:
+            await asyncio.sleep(delay)
+        await action
+
+    async def _unmute(self, infraction: Infraction):
+        # check if we're even still in the guild
+        guild = self.bot.get_guild(infraction.guild_id)
+        if guild is None:
+            GearbotLogging.info(f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
+            return self.end_infraction(infraction)
+
+        role = Configuration.get_var(guild.id, "MUTE_ROLE")
+        member = guild.get_member(infraction.user_id)
+        if role is None or member is None:
+            return self.end_infraction(infraction) #role got removed or member left
+
+        if role not in member.roles:
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_already_removed', guild.id, user=Utils.username(infraction.user_id), user_id=infraction.user_id)}")
+            return self.end_infraction(infraction)
+
+        if not guild.me.guild_permissions.manage_roles:
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                                  f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('unmute_missing_perms', guild.id, user=Utils.username(infraction.user_id), user_id=infraction.user_id)}")
+            return self.end_infraction(infraction)
+
+        await member.remove_roles(role, reason="Mute expired")
+        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                              f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('')}")
+
+
+    @staticmethod
+    def end_infraction(infraction):
+        infraction.active = False
+        infraction.save()
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
 
 
-async def unmuteTask(modcog: Moderation):
-    GearbotLogging.info("Started unmute background task")
-    skips = []
-    updated = False
-    while modcog.running:
-        userid = 0
-        guildid = 0
-        try:
-            guildstoremove = []
-            for guildid, list in modcog.mutes.items():
-                guild: discord.Guild = modcog.bot.get_guild(int(guildid))
-                toremove = []
-                if Configuration.get_var(int(guildid), "MUTE_ROLE") is 0:
-                    guildstoremove.append(guildid)
-                for userid, until in list.items():
-                    if time.time() > until and userid not in skips:
-                        member = guild.get_member(int(userid))
-                        role = guild.get_role(Configuration.get_var(int(guildid), "MUTE_ROLE"))
-                        if member is not None:
-                            if guild.me.guild_permissions.manage_roles:
-                                await member.remove_roles(role, reason="Mute expired")
-                                GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                            f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
-                            else:
-                                GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                            f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
-                        updated = True
-                        toremove.append(userid)
-                for todo in toremove:
-                    del list[todo]
-                await asyncio.sleep(0)
-            if updated:
-                Utils.saveToDisk("mutes", modcog.mutes)
-                updated = False
-            for id in guildstoremove:
-                del modcog.mutes[id]
-            await asyncio.sleep(10)
-        except CancelledError:
-            pass  # bot shutdown
-        except Exception as ex:
-            GearbotLogging.error("Something went wrong in the unmute task")
-            GearbotLogging.error(traceback.format_exc())
-            skips.append(userid)
-            embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
 
-            embed.set_author(name="Something went wrong in the unmute task:")
-            embed.add_field(name="Current guildid", value=guildid)
-            embed.add_field(name="Current userid", value=userid)
-            embed.add_field(name="Exception", value=ex)
-            v = ""
-            for line in traceback.format_exc().splitlines():
-                if len(v) + len(line) > 1024:
-                    embed.add_field(name="Stacktrace", value=v)
-                    v = ""
-                v = f"{v}\n{line}"
-            if len(v) > 0:
+async def old():
+    userid = 0
+    guildid = 0
+    try:
+        guildstoremove = []
+        for guildid, list in modcog.mutes.items():
+            guild: discord.Guild = modcog.bot.get_guild(int(guildid))
+            toremove = []
+            if Configuration.get_var(int(guildid), "MUTE_ROLE") is 0:
+                guildstoremove.append(guildid)
+            for userid, until in list.items():
+                if time.time() > until and userid not in skips:
+                    member = guild.get_member(int(userid))
+                    role = guild.get_role(Configuration.get_var(int(guildid), "MUTE_ROLE"))
+                    if member is not None:
+                        if guild.me.guild_permissions.manage_roles:
+                            await member.remove_roles(role, reason="Mute expired")
+                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                                                  f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
+                        else:
+                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
+                                                  f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
+                    updated = True
+                    toremove.append(userid)
+            for todo in toremove:
+                del list[todo]
+            await asyncio.sleep(0)
+        if updated:
+            Utils.saveToDisk("mutes", modcog.mutes)
+            updated = False
+        for id in guildstoremove:
+            del modcog.mutes[id]
+        await asyncio.sleep(10)
+    except CancelledError:
+        pass  # bot shutdown
+    except Exception as ex:
+        GearbotLogging.error("Something went wrong in the unmute task")
+        GearbotLogging.error(traceback.format_exc())
+        skips.append(userid)
+        embed = discord.Embed(colour=discord.Colour(0xff0000),
+                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+
+        embed.set_author(name="Something went wrong in the unmute task:")
+        embed.add_field(name="Current guildid", value=guildid)
+        embed.add_field(name="Current userid", value=userid)
+        embed.add_field(name="Exception", value=ex)
+        v = ""
+        for line in traceback.format_exc().splitlines():
+            if len(v) + len(line) > 1024:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.bot_log(embed=embed)
-            await asyncio.sleep(10)
-    GearbotLogging.info("Unmute background task terminated")
+                v = ""
+            v = f"{v}\n{line}"
+        if len(v) > 0:
+            embed.add_field(name="Stacktrace", value=v)
+        await GearbotLogging.bot_log(embed=embed)
+        await asyncio.sleep(10)
+
+
+GearbotLogging.info("Unmute background task terminated")

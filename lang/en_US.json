@@ -308,5 +308,8 @@
   "inf_delete_confirmation" : "Are you sure you would like to delete infraction #{id}?\n\nUser: {user} (``{user_id}``)\nReason: {reason}\n\n*This can not be undone.*",
   "inf_delete_deleted" : "Infraction #{id} has been deleted.",
   "inf_delete_log" : "{user} (``{user_id}``) deleted infraction #{id} to {target} (``{target_id}``) given by {mod} (``{mod_id}``) with reason:```{reason}```",
-  "roles_help": "Prints a list of all roles in the server, possible modes are alphabetic or hierarchy (default)"
+  "roles_help": "Prints a list of all roles in the server, possible modes are alphabetic or hierarchy (default)",
+  "mute_role_already_removed": "The mute for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but someone else already removed the mute role in advance!",
+  "unmute_missing_perms": "The mute for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but i no longer have the ``MANAGE_ROLES`` permission and was unable to remove the mute role.",
+  "unmuted": "{user} (``{user_id}``) was automatically unmuted as their tempmute expired (infraction ``{inf_id}``)."
 }
