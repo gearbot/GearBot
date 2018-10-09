@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation
+    Archive, Confirmation, GlobalHandlers
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode
 from database.DatabaseConnector import LoggedMessage, Infraction
 
@@ -287,8 +287,13 @@ class Moderation:
         """unban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        self.bot.data["unbans"].add(member.user.id)
-        await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
+        fid = f"{ctx.guild.id}-{member.user.id}"
+        self.bot.data["unbans"].add(fid)
+        try:
+            await ctx.guild.unban(member.user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}")
+        except Exception as e:
+            self.bot.data["unbans"].remove(fid)
+            raise e
         Infraction.update(active=False).where((Infraction.user_id == member.user.id) & (Infraction.type == "Ban") &
                                               (Infraction.guild_id == ctx.guild.id))
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
@@ -478,7 +483,8 @@ class Moderation:
         while self.running:
             # actions to handle and the function handling it
             types = {
-                "Mute": self._unmute
+                "Mute": self._lift_mute,
+                "Tempban": self._lift_tempban
             }
             now = time.time()
             limit = time.time() + 30
@@ -486,13 +492,16 @@ class Moderation:
                 for infraction in Infraction.select().where(Infraction.type == name, Infraction.active == True,
                                                             Infraction.end >= limit):
                     self.bot.loop.create_task(self.run_after(infraction.end - now, action(infraction)))
+            await asyncio.sleep(10)
+        GearbotLogging.info("Timed moderation actions background task terminated")
 
     async def run_after(self, delay, action):
         if delay > 0:
             await asyncio.sleep(delay)
-        await action
+        if self.running: # cog got terminated, new cog is now in charge of making sure this gets handled
+            await action
 
-    async def _unmute(self, infraction: Infraction):
+    async def _lift_mute(self, infraction: Infraction):
         # check if we're even still in the guild
         guild = self.bot.get_guild(infraction.guild_id)
         if guild is None:
@@ -502,20 +511,79 @@ class Moderation:
         role = Configuration.get_var(guild.id, "MUTE_ROLE")
         member = guild.get_member(infraction.user_id)
         if role is None or member is None:
-            return self.end_infraction(infraction) #role got removed or member left
+            return self.end_infraction(infraction) # role got removed or member left
+
+        info = {
+            "user": Utils.clean_user(member),
+            "user_id": infraction.user_id,
+            "inf_id": infraction.id
+        }
 
         if role not in member.roles:
-            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_already_removed', guild.id, user=Utils.username(infraction.user_id), user_id=infraction.user_id)}")
+            translated = Translator.translate('mute_role_already_removed', guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
             return self.end_infraction(infraction)
 
         if not guild.me.guild_permissions.manage_roles:
-            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                  f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('unmute_missing_perms', guild.id, user=Utils.username(infraction.user_id), user_id=infraction.user_id)}")
+            translated = Translator.translate('unmute_missing_perms', guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
             return self.end_infraction(infraction)
 
-        await member.remove_roles(role, reason="Mute expired")
-        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                              f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('')}")
+        try:
+            await member.remove_roles(role, reason="Mute expired")
+        except discord.Forbidden:
+            translated = Translator.translate('unmute_missing_perms', guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+        except Exception as ex:
+            translated = Translator.translate("unmute_unknown_error", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+            GlobalHandlers.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
+        else:
+            translated = Translator.translate('unmuted', guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('INNOCENT')} {translated}")
+        finally:
+            self.end_infraction(infraction)
+
+    async def _lift_tempban(self, infraction):
+        guild = self.bot.get_guild(infraction.guild_id)
+        if guild is None:
+            GearbotLogging.info(f"Got an expired tempban for server {infraction.guild_id} but am no longer on that server")
+            return self.end_infraction(infraction)
+
+        user = await Utils.get_user(infraction.user_id)
+        info = {
+            "user": Utils.clean_user(user),
+            "user_id": infraction.user_id,
+            "inf_id": infraction.id
+        }
+
+        if not guild.me.guild_permissions.ban_members:
+            translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+            return self.end_infraction(infraction)
+
+        try:
+            await guild.get_ban(user)
+        except discord.NotFound:
+            translated = Translator.translate("tempban_already_lifted", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+            return self.end_infraction(infraction)
+
+        fid=f"{guild.id}-{infraction.user_id}"
+        self.bot.data["unbans"].add(fid)
+        try:
+            await guild.unban(user)
+        except discord.Forbidden:
+            self.bot.data["unbans"].remove(fid)
+            translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+        except Exception as ex:
+            self.bot.data["unbans"].remove(fid)
+            translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+            GlobalHandlers.handle_exception("Lift tempban", self.bot, ex, **info)
+        else:
+
 
 
     @staticmethod
@@ -526,65 +594,3 @@ class Moderation:
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
-
-
-
-async def old():
-    userid = 0
-    guildid = 0
-    try:
-        guildstoremove = []
-        for guildid, list in modcog.mutes.items():
-            guild: discord.Guild = modcog.bot.get_guild(int(guildid))
-            toremove = []
-            if Configuration.get_var(int(guildid), "MUTE_ROLE") is 0:
-                guildstoremove.append(guildid)
-            for userid, until in list.items():
-                if time.time() > until and userid not in skips:
-                    member = guild.get_member(int(userid))
-                    role = guild.get_role(Configuration.get_var(int(guildid), "MUTE_ROLE"))
-                    if member is not None:
-                        if guild.me.guild_permissions.manage_roles:
-                            await member.remove_roles(role, reason="Mute expired")
-                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                  f"<:gearInnocent:465177981287923712> {member.name}#{member.discriminator} (`{member.id}`) has automaticaly been unmuted")
-                        else:
-                            GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                                  f":no_entry: ERROR: {member.name}#{member.discriminator} (`{member.id}`) was muted earlier but I no longer have the permissions needed to unmute this person, please remove the role manually!")
-                    updated = True
-                    toremove.append(userid)
-            for todo in toremove:
-                del list[todo]
-            await asyncio.sleep(0)
-        if updated:
-            Utils.saveToDisk("mutes", modcog.mutes)
-            updated = False
-        for id in guildstoremove:
-            del modcog.mutes[id]
-        await asyncio.sleep(10)
-    except CancelledError:
-        pass  # bot shutdown
-    except Exception as ex:
-        GearbotLogging.error("Something went wrong in the unmute task")
-        GearbotLogging.error(traceback.format_exc())
-        skips.append(userid)
-        embed = discord.Embed(colour=discord.Colour(0xff0000),
-                              timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-
-        embed.set_author(name="Something went wrong in the unmute task:")
-        embed.add_field(name="Current guildid", value=guildid)
-        embed.add_field(name="Current userid", value=userid)
-        embed.add_field(name="Exception", value=ex)
-        v = ""
-        for line in traceback.format_exc().splitlines():
-            if len(v) + len(line) > 1024:
-                embed.add_field(name="Stacktrace", value=v)
-                v = ""
-            v = f"{v}\n{line}"
-        if len(v) > 0:
-            embed.add_field(name="Stacktrace", value=v)
-        await GearbotLogging.bot_log(embed=embed)
-        await asyncio.sleep(10)
-
-
-GearbotLogging.info("Unmute background task terminated")

@@ -193,7 +193,7 @@ def extract_info(o):
 
 async def on_error(bot, event, *args, **kwargs):
     t, exception, info = sys.exc_info()
-    await handle_exception("Event handler failure", bot, exception, event, args=args, kwargs=kwargs)
+    await handle_exception("Event handler failure", bot, exception, event, *args, **kwargs)
 
 async def handle_database_error(bot):
     GearbotLogging.error(traceback.format_exc())
@@ -250,7 +250,7 @@ async def handle_database_error(bot):
 
 
 
-async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, args = (), kwargs = dict()):
+async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
 
     embed = discord.Embed(colour=discord.Colour(0xff0000),
@@ -269,7 +269,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         arg_info = "No arguments"
 
     kwarg_info = ""
-    for name, arg in dict(**kwargs).items():
+    for name, arg in kwargs.items():
         kwarg_info += "{}: {}\n".format(name, extract_info(arg))
     if kwarg_info == "":
         kwarg_info = "No keyword arguments"

@@ -193,10 +193,9 @@ class LogPump:
                             senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
                         except Exception as e:
                             await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
-                                                                  kwargs=dict(cid=cid, todo=todo, to_send=to_send,
-                                                                              LOG_CACHE=self.todo, embed=embed,
-                                                                              file=file,
-                                                                              empty=empty))
+                                                                  cid=cid, todo=todo, to_send=to_send,
+                                                                  LOG_CACHE=self.todo, embed=embed,
+                                                                  file=file, empty=empty)
                     else:
                         empty.append(cid)
                 for e in empty:
@@ -209,18 +208,18 @@ class LogPump:
                     except Exception as e:
                         await log_error()
                         await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
-                                                              kwargs=dict(cid=cid, todo=todo, to_send=to_send,
-                                                                          LOG_CACHE=self.todo, embed=embed, file=file,
-                                                                          empty=empty))
+                                                              cid=cid, todo=todo, to_send=to_send,
+                                                              LOG_CACHE=self.todo, embed=embed, file=file,
+                                                              empty=empty)
                 for c in cleaners:
                     c()
                 await asyncio.sleep(0.1)
             except Exception as e:
                 await log_error()
                 await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
-                                                      kwargs=dict(cid=cid, todo=todo, to_send=to_send,
-                                                                  LOG_CACHE=self.todo, embed=embed, file=file,
-                                                                  empty=empty))
+                                                      cid=cid, todo=todo, to_send=to_send,
+                                                      LOG_CACHE=self.todo, embed=embed, file=file,
+                                                      empty=empty)
         info("Log pump terminated")
 
     def receive(self, cid, data):

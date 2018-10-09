@@ -311,5 +311,9 @@
   "roles_help": "Prints a list of all roles in the server, possible modes are alphabetic or hierarchy (default)",
   "mute_role_already_removed": "The mute for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but someone else already removed the mute role in advance!",
   "unmute_missing_perms": "The mute for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but i no longer have the ``MANAGE_ROLES`` permission and was unable to remove the mute role.",
-  "unmuted": "{user} (``{user_id}``) was automatically unmuted as their tempmute expired (infraction ``{inf_id}``)."
+  "unmuted": "{user} (``{user_id}``) was automatically unmuted as their tempmute expired (infraction ``{inf_id}``).",
+  "unmute_unknown_error": "The mute for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but something went wrong when trying to unmute. Manual unmuting is probably.",
+  "tempban_already_lifted": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but someone already lifted the ban earlier!",
+  "tempban_expired_missing_perms": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but i no longer have the ``ban_members`` permission required to lift the ban.",
+  "tempban_unknown_error": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but something went wrong when trying to unban. Manual lifting of the ban is probably required.",
 }

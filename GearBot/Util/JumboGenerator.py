@@ -14,7 +14,6 @@ JUMBO_NUM = 0
 JUMBO_TARGET_SIZE = 128
 JUMBO_PADDING = 4
 
-
 class EmojiHandler:
     def __init__(self, extension, link, matcher=None, has_frames=False):
         self.extension = extension

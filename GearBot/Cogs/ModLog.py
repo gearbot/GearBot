@@ -241,7 +241,11 @@ class ModLog:
         self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
-        if user.id in self.bot.data["unbans"] or not Features.is_logged(guild.id, "MOD_ACTIONS"):
+        fid = f"{guild.id}-{user.id}"
+        if fid in self.bot.data["unbans"]:
+            self.bot.data["unbans"].remove(fid)
+            return
+        elif not Features.is_logged(guild.id, "MOD_ACTIONS"):
             return
         else:
             if guild.me.guild_permissions.view_audit_log:
