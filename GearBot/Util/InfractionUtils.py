@@ -6,9 +6,9 @@ from database.DatabaseConnector import Infraction
 cache = dict()
 
 
-def add_infraction(guild_id, user_id, mod_id, type, reason):
+def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
     Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
-                      timestamp=datetime.now())
+                      start=datetime.now(), end=end, active=active)
     if f"{guild_id}_{user_id}" in cache.keys():
         del cache[f"{guild_id}_{user_id}"]
     if f"{guild_id}_{None}" in cache.keys():
@@ -37,8 +37,8 @@ async def get_infraction_pages(guild_id, query):
         for inf in infs:
             user = await Utils.username(inf.user_id)
             mod = await Utils.username(inf.mod_id)
-            out += f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod, longest_mod)} | {inf.timestamp} | {Utils.pad(inf.type, longest_type)} | {inf.reason}\n"
-        prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user)} | {Utils.pad('moderator', longest_mod)} | timestamp           | {Utils.pad('type', longest_type)} | reason"
+            out += f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod, longest_mod)} | {inf.start} | {Utils.pad(inf.type, longest_type)} | {inf.reason}\n"
+        prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user)}| {Utils.pad('moderator', longest_mod)} | timestamp           | {Utils.pad('type', longest_type)} | reason"
         prefix = f"```\n{prefix}\n{'-' * len(prefix)}\n"
         pages = Pages.paginate(out, prefix=prefix, suffix="```")
         cache[f"{guild_id}_{query}"] = pages

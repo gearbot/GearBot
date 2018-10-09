@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features
-from database.DatabaseConnector import LoggedMessage, LoggedAttachment
+from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
 
 class ModLog:
@@ -199,7 +199,7 @@ class ModLog:
                             reason = Translator.translate("no_reason", member.guild.id)
                         else:
                             reason = entry.reason
-                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason)
+                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason, active=False)
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                               f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
@@ -225,6 +225,9 @@ class ModLog:
                         reason = Translator.translate("no_reason", guild.id)
                     else:
                         reason = entry.reason
+                    Infraction.update(active=False).where(Infraction.user_id == user.id,
+                                                          Infraction.type == "Unban",
+                                                          Infraction.guild_id == guild.id)
                     InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
                                                    "No reason given." if entry.reason is None else entry.reason)
                     GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -241,6 +244,9 @@ class ModLog:
             if guild.me.guild_permissions.view_audit_log:
                 async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
                     if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
+                        Infraction.update(active=False).where(Infraction.user_id == user.id,
+                                                              Infraction.type == "Ban",
+                                                              Infraction.guild_id == guild.id)
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",

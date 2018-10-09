@@ -46,7 +46,9 @@ class Infraction(Model):
     mod_id = BigIntegerField()
     type = CharField(max_length=10, collation="utf8mb4_general_ci")
     reason = CharField(max_length=2000, collation="utf8mb4_general_ci")
-    timestamp = TimestampField()
+    start = TimestampField()
+    end = TimestampField(null=True)
+    active = BooleanField(default=True)
 
     class Meta:
         database = connection

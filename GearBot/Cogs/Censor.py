@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, InfractionUtils, Emoji
+from database.DatabaseConnector import Infraction
 
 INVITE_MATCHER = re.compile(
     r"(?:https?:\/\/)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|discordapp\.com\/invite)\/([\w|\d|-]+)",
@@ -94,6 +95,8 @@ class Censor:
 
             if message.guild.me.guild_permissions.ban_members:
                 await message.guild.ban(message.author, reason=reason)
+                Infraction.update(active=False).where(Infraction.user_id == message.author.id, Infraction.type == "Unban",
+                                                      Infraction.guild_id == ctx.guild.id)
                 InfractionUtils.add_infraction(message.guild.id, message.author.id, self.bot.user.id, "AUTOBAN", reason)
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                             f":door: {Translator.translate('ban_log', ctx.guild.id, user=message.author, user_id=message.author.id, moderator=self.bot.user, moderator_id=self.bot.user.id, reason=reason)}")
