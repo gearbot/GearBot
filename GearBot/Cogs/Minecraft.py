@@ -140,9 +140,9 @@ class Minecraft:
     async def info(self, ctx, project_name: str):
         await Pages.create_new("cf", ctx, project_name=project_name)
 
-    @cf.command()
-    async def latest(self, ctx, project_name: str, version: str):
-        await Pages.create_new("cf", ctx, project_name=project_name, version=version)
+    # @cf.command()
+    # async def latest(self, ctx, project_name: str, version: str):
+    #     await Pages.create_new("cf", ctx, project_name=project_name, version=version)
 
     async def init_cf(self, ctx, project_name):
         info = await self.get_info(ctx, project_name, True)
