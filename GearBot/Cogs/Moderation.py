@@ -1,8 +1,6 @@
 import asyncio
 import datetime
 import time
-import traceback
-from concurrent.futures import CancelledError
 
 import discord
 from discord.ext import commands
@@ -30,6 +28,7 @@ class Moderation:
         self.bot: commands.Bot = bot
         bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
+        self.handling = set()
         self.bot.loop.create_task(self.timed_actions())
         Pages.register("roles", self.roles_init, self.roles_update)
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
@@ -486,12 +485,15 @@ class Moderation:
                 "Mute": self._lift_mute,
                 "Tempban": self._lift_tempban
             }
-            now = time.time()
-            limit = time.time() + 30
-            for name, action in types:
+            now = datetime.datetime.fromtimestamp(time.time())
+            limit = datetime.datetime.fromtimestamp(time.time() + 30)
+            for name, action in types.items():
+
                 for infraction in Infraction.select().where(Infraction.type == name, Infraction.active == True,
-                                                            Infraction.end >= limit):
-                    self.bot.loop.create_task(self.run_after(infraction.end - now, action(infraction)))
+                                                            Infraction.end <= limit):
+                    if infraction.id not in self.handling:
+                        self.handling.add(infraction.id)
+                        self.bot.loop.create_task(self.run_after((infraction.end - now).total_seconds(), action(infraction)))
             await asyncio.sleep(10)
         GearbotLogging.info("Timed moderation actions background task terminated")
 
@@ -510,6 +512,7 @@ class Moderation:
 
         role = Configuration.get_var(guild.id, "MUTE_ROLE")
         member = guild.get_member(infraction.user_id)
+        role = guild.get_role(role)
         if role is None or member is None:
             return self.end_infraction(infraction) # role got removed or member left
 
@@ -537,7 +540,7 @@ class Moderation:
         except Exception as ex:
             translated = Translator.translate("unmute_unknown_error", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            GlobalHandlers.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
+            await GlobalHandlers.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
         else:
             translated = Translator.translate('unmuted', guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('INNOCENT')} {translated}")
@@ -581,15 +584,18 @@ class Moderation:
             self.bot.data["unbans"].remove(fid)
             translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            GlobalHandlers.handle_exception("Lift tempban", self.bot, ex, **info)
+            await GlobalHandlers.handle_exception("Lift tempban", self.bot, ex, **info)
         else:
+            translated = Translator.translate("tempban_lifted", guild.id, **info)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
+        finally:
+            self.end_infraction(infraction)
 
 
-
-    @staticmethod
-    def end_infraction(infraction):
+    def end_infraction(self, infraction):
         infraction.active = False
         infraction.save()
+        self.handling.remove(infraction.id)
 
 
 def setup(bot):

@@ -316,4 +316,5 @@
   "tempban_already_lifted": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but someone already lifted the ban earlier!",
   "tempban_expired_missing_perms": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but i no longer have the ``ban_members`` permission required to lift the ban.",
   "tempban_unknown_error": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but something went wrong when trying to unban. Manual lifting of the ban is probably required.",
+  "tempban_lifted": "{user} (``{user_id}``) was automatically unbanned as their tempban (infraction ``{inf_id}``) expired."
 }
