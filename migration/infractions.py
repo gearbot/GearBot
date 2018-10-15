@@ -1,4 +1,4 @@
-from playhouse.migrate import *
+from playhouse.migrate import MySQLMigrator, MySQLDatabase, TimestampField, BooleanField, migrate
 
 from Util import Configuration
 from database.DatabaseConnector import Infraction

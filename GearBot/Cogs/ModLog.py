@@ -227,7 +227,7 @@ class ModLog:
                         reason = entry.reason
                     Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                                           (Infraction.type == "Unban") &
-                                                          (Infraction.guild_id == guild.id))
+                                                          (Infraction.guild_id == guild.id)).execute()
                     InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
                                                    "No reason given." if entry.reason is None else entry.reason)
                     GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -237,7 +237,7 @@ class ModLog:
                               f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                               (Infraction.type == "Unban") &
-                                              (Infraction.guild_id == guild.id))
+                                              (Infraction.guild_id == guild.id)).execute()
         self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
@@ -253,7 +253,7 @@ class ModLog:
                     if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
                         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                                               (Infraction.type == "Ban") &
-                                                              (Infraction.guild_id == guild.id))
+                                                              (Infraction.guild_id == guild.id)).execute()
                         InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
                                                        "Manual unban")
                         GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
@@ -263,7 +263,7 @@ class ModLog:
                                   f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
             Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                                   (Infraction.type == "Ban") &
-                                                  (Infraction.guild_id == guild.id))
+                                                  (Infraction.guild_id == guild.id)).execute()
 
     async def on_member_update(self, before, after):
         guild = before.guild

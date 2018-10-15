@@ -194,7 +194,7 @@ class Moderation:
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
                             delete_message_days=0)
-        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (Infraction.guild_id == ctx.guild.id))
+        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                               f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
@@ -281,7 +281,7 @@ class Moderation:
                                         f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
             Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") &
-                                                  (Infraction.guild_id == ctx.guild.id))
+                                                  (Infraction.guild_id == ctx.guild.id)).execute()
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id, user=Utils.clean_user(member))}")
@@ -320,7 +320,7 @@ class Moderation:
             self.bot.data["unbans"].remove(fid)
             raise e
         Infraction.update(active=False).where((Infraction.user_id == member.user.id) & (Infraction.type == "Ban") &
-                                              (Infraction.guild_id == ctx.guild.id))
+                                              (Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('unban_confirmation', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, reason=reason)}")
