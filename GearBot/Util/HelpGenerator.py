@@ -23,7 +23,8 @@ async def command_list(bot, ctx:Context):
         for command_name, info in commands.items():
             output += "  " + command_name + (" " * (longest - len(command_name) + 2)) + info + "\n"
         output_tree[cog] = output
-    return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{ctx.prefix}help <command>'\nCommands followed by ↪  have subcommands".replace(ctx.me.mention, f"@{ctx.me.name}"))
+    prefix = (ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") if ctx is not None else "@GearBot")
+    return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{prefix}help <command>'\nCommands followed by ↪  have subcommands")
 
 
 async def cog_commands(bot, ctx, cog):
