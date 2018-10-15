@@ -164,6 +164,32 @@ class Moderation:
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members=True)
+    async def tempban(self, ctx: commands.Context, user: discord.Member, durationNumber: int, durationIdentifier: Duration, *, reason: Reason = ""):
+        """ban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        allowed, message = self._can_act("ban", ctx, user)
+        if allowed:
+            duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
+            if duration > 0:
+                until = time.time() + duration
+                self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+                await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
+                                    delete_message_days=0)
+                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
+                translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id,
+                                                  moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason,
+                                                  until=datetime.datetime.utcfromtimestamp(until))
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {translated}")
+                await GearbotLogging.send_to(ctx, "YES", "tempban_confirmation", user=Utils.clean_user(user),
+                                             user_id=user.id, reason=reason, until=datetime.datetime.utcfromtimestamp(until))
+        else:
+            await GearbotLogging.send_to(ctx, "NO", message, translate=False)
+
     async def _ban(self, ctx, user, reason, confirm):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=f"Moderator: {ctx.author.name} ({ctx.author.id}) Reason: {reason}",
