@@ -107,8 +107,8 @@ class Basic:
         else:
             result = JUMP_LINK_MATCHER.match(message_info)
             if result is not None:
-                channel_id = result.group(1)
-                message_id = result.group(2)
+                channel_id = int(result.group(1))
+                message_id = int(result.group(2))
             else:
                 try:
                     message_id = int(message_info)
