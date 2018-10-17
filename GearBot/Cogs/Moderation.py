@@ -443,7 +443,7 @@ class Moderation:
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
         if ctx.subcommand_passed is None:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
         else:
             await ctx.trigger_typing()
 
