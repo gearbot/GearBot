@@ -462,7 +462,7 @@ class Moderation:
             else:
                 ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms', ctx, prefix=ctx.prefix)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}"
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
 
     @archive.command()
@@ -475,7 +475,7 @@ class Moderation:
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
             await Archive.ship_messages(ctx, messages)
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}"
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
