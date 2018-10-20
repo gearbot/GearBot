@@ -14,7 +14,7 @@ def clean(text):
 class BannedMember(commands.Converter):
     async def convert(self, ctx, argument):
         try:
-            entity = await ctx.guild.get_ban(await DiscordUser.convert(ctx, argument))
+            entity = await ctx.guild.get_ban(await DiscordUser().convert(ctx, argument))
         except discord.NotFound:
             raise commands.BadArgument("Not a valid previously-banned member.")
         return entity
