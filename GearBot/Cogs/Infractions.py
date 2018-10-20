@@ -53,7 +53,7 @@ class Infractions:
                         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                                     f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=ctx.author)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
 
     @commands.guild_only()
     @commands.group(aliases=["infraction", "infractions"])
