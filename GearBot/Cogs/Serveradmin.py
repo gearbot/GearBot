@@ -540,7 +540,7 @@ class Serveradmin:
         channel = self.bot.get_channel(int(cid))
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=channel.mention)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=f'<{cid}>')}")
         else:
             info = channels[cid]
             removed = []
@@ -561,7 +561,7 @@ class Serveradmin:
                 message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('logs_disabled_channel', ctx, channel=channel.mention if channel is not None else cid)}{', '.join(removed)}"
 
             if len(ignored) > 0:
-                message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention)}{', '.join(ignored)}"
+                message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('logs_already_disabled_channel', ctx, channel=channel.mention if channel is not None else cid)}{', '.join(ignored)}"
 
             if len(unable) > 0:
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unable', ctx)} {', '.join(unable)}"
@@ -571,7 +571,7 @@ class Serveradmin:
 
             if len(info) > 0:
                 embed = discord.Embed(color=6008770)
-                embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+                embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, cid, channels[cid]))
             else:
                 embed=None
             await ctx.send(message, embed=embed)
