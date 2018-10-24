@@ -390,12 +390,21 @@ class Basic:
                                         delete_after=10)
                                 else:
                                     await member.add_roles(role)
-                                    await channel.send(
-                                        f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}",
-                                        delete_after=10)
                             except discord.Forbidden:
-                                await channel.send(
-                                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}")
+                                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
+                                try:
+                                    await channel.send(message)
+                                except discord.Forbidden:
+                                    try:
+                                        member.send(message)
+                                    except discord.Forbidden:
+                                        pass
+                            else:
+                                try:
+                                    await channel.send(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}",delete_after=10)
+                                except discord.Forbidden:
+                                    pass
+
                             if channel.permissions_for(guild.me).manage_messages:
                                 await message.remove_reaction(e, member)
                             break
