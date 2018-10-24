@@ -391,12 +391,12 @@ class Basic:
                                 else:
                                     await member.add_roles(role)
                             except discord.Forbidden:
-                                message = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
+                                emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
                                 try:
-                                    await channel.send(message)
+                                    await channel.send(emessage)
                                 except discord.Forbidden:
                                     try:
-                                        member.send(message)
+                                        member.send(emessage)
                                     except discord.Forbidden:
                                         pass
                             else:
