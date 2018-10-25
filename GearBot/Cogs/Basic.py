@@ -386,8 +386,10 @@ class Basic:
                             try:
                                 if role in member.roles:
                                     await member.remove_roles(role)
+                                    added = False
                                 else:
                                     await member.add_roles(role)
+                                    added = True
                             except discord.Forbidden:
                                 emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
                                 try:
@@ -399,7 +401,7 @@ class Basic:
                                         pass
                             else:
                                 try:
-                                    action_type = 'role_joined' if role in member.roles else 'role_left'
+                                    action_type = 'role_joined' if added else 'role_left'
                                     await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
                                 except discord.Forbidden:
                                     pass
