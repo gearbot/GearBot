@@ -378,6 +378,7 @@ class Basic:
                             number = info['page'] * 10 + i
                             if number >= len(roles):
                                 await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                                return
                             role = guild.get_role(roles[number])
                             if role is None:
                                 return
@@ -385,9 +386,6 @@ class Basic:
                             try:
                                 if role in member.roles:
                                     await member.remove_roles(role)
-                                    await channel.send(
-                                        f"{member.mention} {Translator.translate('role_left', payload.guild_id, role_name=role.name)}",
-                                        delete_after=10)
                                 else:
                                     await member.add_roles(role)
                             except discord.Forbidden:
@@ -401,7 +399,8 @@ class Basic:
                                         pass
                             else:
                                 try:
-                                    await channel.send(f"{member.mention} {Translator.translate('role_joined', payload.guild_id, role_name=role.name)}",delete_after=10)
+                                    action_type = 'role_joined' if role in member.roles else 'role_left'
+                                    await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
                                 except discord.Forbidden:
                                     pass
 

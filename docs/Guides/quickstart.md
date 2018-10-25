@@ -1,6 +1,6 @@
 ![Quickstart header](../img/quickstart.png)
 #**Inviting**
-First you want to do is add GearBot to your server. Unlike regular users a normal invite link can't be used by bots but you can add GearBot  to your server by following this link: <https://discordapp.com/oauth2/authorize?client_id=349977940198555660&scope=bot&permissions=268788822>.
+First you want to do is add GearBot to your server. Unlike regular users a normal invite link can't be used by bots but you can add GearBot  to your server by following this link: <https://discordapp.com/oauth2/authorize?client_id=349977940198555660&scope=bot&permissions=268823766>.
 There you will be able to pick what server you want to add GearBot to as well it will list the permission GearBot will be granted (as he'll need those for different things to work).
 
 
