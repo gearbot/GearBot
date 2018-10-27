@@ -15,7 +15,7 @@ FUTURE_LOGS is a special one, this one doesnt log anything, it is merely a place
 Another special case is "EVERYONE", this isn't a key on it's own, but when running a command this will get replaced by the full list of available keys. So if you want all of them you do not have to type them one by one (also means that if you want all but one type, you can add everything, and then just remove the on you don't want).
 All keys are case insensitive so you can type them in upper or lower case when using in the commands.
 
-These commands are also made to be user friendly and help you in figuring out why things do not work. As such things can be a bit verbose and when you try to enable/disable things that are already enabled/disabled it will inform you. It will also let you know if you specified any invalid logging keys (but still process the valid ones.)
+These commands are also made to be user friendly and help you in figuring out why things do not work. As such things can be a bit verbose and when you try to enable/disable things that are already enabled/disabled it will inform you. It will also let you know if you specified any invalid logging keys (but still process the valid ones)
 
 ##**Adding logging to channels**
 To add logging to a channel you can simply use the following command
