@@ -180,11 +180,14 @@ class LogPump:
                                     embed is not None and not permissions.embed_links) or (
                                     file is not None and not permissions.attach_files):
                                 todo.pop(0)
-                                cleaners.append(cleaner)
+                                if cleaner is not None:
+                                    cleaners.append(cleaner)
                                 continue
                             elif len(to_send) + len(message) <= 1999:
                                 to_send += f"{message}\n"
                                 todo.pop(0)
+                                if cleaner is not None:
+                                    cleaners.append(cleaner)
                             else:
                                 break
                             if embed is not None or file is not None:
