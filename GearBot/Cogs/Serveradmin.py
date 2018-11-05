@@ -759,7 +759,7 @@ class Serveradmin:
     async def blacklist_add(self, ctx, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", entry=word)
+            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
             await GearbotLogging.send_to(ctx, "NO", "entry_too_short")
         else:
@@ -771,7 +771,7 @@ class Serveradmin:
     async def blacklist_remove(self, ctx, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word not in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", entry=word)
+            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", word=word)
         else:
             blacklist.remove(word)
             await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
