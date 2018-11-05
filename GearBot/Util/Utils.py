@@ -123,8 +123,6 @@ async def clean_message(text: str, guild:discord.Guild):
 
     # make sure we don't have funny guys/roles named "everyone" messing it all up
     text = text.replace("@", "@\u200b")
-
-    GearbotLogging.info(f"Cleaned a message in {t}ms")
     return text
 
 
