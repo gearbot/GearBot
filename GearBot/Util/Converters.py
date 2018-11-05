@@ -93,3 +93,17 @@ class RoleMode(commands.Converter):
         if argument in options:
             return argument
         raise commands.BadArgument(f"Unknown mode, valid modes: {', '.join(options)}")
+
+
+class Guild(commands.Converter):
+    async def convert(self, ctx, argument):
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise commands.BadArgument(f"Not a server ID")
+        else:
+            guild = ctx.bot.get_guild(argument)
+            if guild is None:
+                raise commands.BadArgument(f"Either not a valid server ID or the ID is from a server i'm not a part of")
+            else:
+                return guild

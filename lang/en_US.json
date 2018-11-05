@@ -320,5 +320,6 @@
   "tempban_unknown_error": "The tempban for {user} (``{user_id}``) expired (infraction ``{inf_id}``) but something went wrong when trying to unban. Manual lifting of the ban is probably required.",
   "tempban_lifted": "{user} (``{user_id}``) was automatically unbanned as their tempban (infraction ``{inf_id}``) expired.",
   "tempban_log": "{user} (``{user_id}``) has been temp-banned until {until} by {moderator} (``{moderator_id}``). Reason: ``{reason}``",
-  "tempban_confirmation": "{user} (``{user_id}``) has been temp-banned until {until}. Reason: `{reason}`"
+  "tempban_confirmation": "{user} (``{user_id}``) has been temp-banned until {until}. Reason: `{reason}`",
+  "emoji": "Server emoji"
 }

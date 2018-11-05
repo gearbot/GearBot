@@ -8,7 +8,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
-from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode
+from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -413,34 +413,13 @@ class Moderation:
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def serverinfo(self, ctx):
+    async def serverinfo(self, ctx, guild:Guild=None):
         """Shows information about the current server."""
-        guild_features = ", ".join(ctx.guild.features)
-        print(guild_features)
-        if guild_features == "":
-            guild_features = None
-        role_list = []
-        for i in range(len(ctx.guild.roles)):
-            role_list.append(ctx.guild.roles[i].name)
-        guild_made = ctx.guild.created_at.strftime("%d-%m-%Y")
-        embed = discord.Embed(color=0x7289DA, timestamp= datetime.datetime.fromtimestamp(time.time()))
-        embed.set_thumbnail(url=ctx.guild.icon_url)
-        embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author), icon_url=ctx.author.avatar_url)
-        embed.add_field(name=Translator.translate('name', ctx), value=ctx.guild.name, inline=True)
-        embed.add_field(name=Translator.translate('id', ctx), value=ctx.guild.id, inline=True)
-        embed.add_field(name=Translator.translate('owner', ctx), value=ctx.guild.owner, inline=True)
-        embed.add_field(name=Translator.translate('members', ctx), value=ctx.guild.member_count, inline=True)
-        embed.add_field(name=Translator.translate('text_channels', ctx), value=str(len(ctx.guild.text_channels)), inline=True)
-        embed.add_field(name=Translator.translate('voice_channels', ctx), value=str(len(ctx.guild.voice_channels)), inline=True)
-        embed.add_field(name=Translator.translate('total_channel', ctx), value=str(len(ctx.guild.text_channels) + len(ctx.guild.voice_channels)),
-                        inline=True)
-        embed.add_field(name=Translator.translate('created_at', ctx),
-                        value=f"{guild_made} ({(ctx.message.created_at - ctx.guild.created_at).days} days ago)",
-                        inline=True)
-        embed.add_field(name=Translator.translate('vip_features', ctx), value=guild_features, inline=True)
-        if ctx.guild.icon_url != "":
-            embed.add_field(name=Translator.translate('server_icon', ctx), value=f"[{Translator.translate('server_icon', ctx)}]({ctx.guild.icon_url})", inline=True)
-        embed.add_field(name=Translator.translate('all_roles', ctx), value=", ".join(role_list), inline=True) #todo paginate
+        if guild is None:
+            guild = ctx.guild
+        embed = Utils.server_info(guild)
+        embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
+                         icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.group()

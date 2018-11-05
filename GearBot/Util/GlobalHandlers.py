@@ -139,9 +139,11 @@ async def on_message(bot, message:discord.Message):
 async def on_guild_join(guild: discord.Guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.load_config(guild.id)
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
 
 async def on_guild_remove(guild: discord.Guild):
-    GearbotLogging.info(f"i was removed from a guild: {guild.name} ({guild.id}).")
+    GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
 
 async def on_command_error(bot, ctx: commands.Context, error):
     if isinstance(error, commands.NoPrivateMessage):
