@@ -1,8 +1,8 @@
 #**What is archiving?**
-Archiving gives you the ability to collect messages by a specific user or in a channel and keep them in a text file format. By default this is available to moderators and above (permissions lvl 2 and higher). 
+Archiving gives you the ability to collect messages by a specific user or in a channel and keep them in a text file format. By default this is available to moderators and above (permissions lvl 2 and higher).
 #**How can I archive?**
 First of all with archiving there are two options, you can either archive messages sent by a user or messages sent in a channel.
-When you run the command, the bot sends a text file with all the messages that you specified to archive. The file includes all information such as timestamps, ids, usernames, content of the messages. This also means the bot needs file upload perms in the channel you use it in (and if you don't want the result archive to be public, don't use it in a public channel) 
+When you run the command, the bot sends a text file with all the messages that you specified to archive. The file includes all information such as timestamps, ids, usernames, content of the messages. This also means the bot needs file upload perms in the channel you use it in (and if you don't want the result archive to be public, don't use it in a public channel).
 
 #**Arguments that can be passed in:**
 <user> - A user's messages to archive (can be a mention or an id)
