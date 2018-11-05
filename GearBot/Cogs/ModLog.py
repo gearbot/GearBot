@@ -298,13 +298,7 @@ class ModLog:
                     actor = "mod"
                 GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                       f"{Emoji.get_chat_emoji('NICKTAG')} {Translator.translate(f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)}")
-            # username changes
-            elif (before.name != after.name and
-                  after.name != before.name):
-                before_clean_name = Utils.clean_user(before)
-                after_clean_name = Utils.clean_user(after)
-                GearbotLogging.log_to(guild.id, "NAME_CHANGES",
-                                      f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
+
         # role changes
         if Features.is_logged(guild.id, "ROLE_CHANGES"):
             if len(before.roles) != len(after.roles):
@@ -342,6 +336,15 @@ class ModLog:
                     for role in added:
                         GearbotLogging.log_to(guild.id, "ROLE_CHANGES",
                                               f"{Emoji.get_chat_emoji('ROLE_ADD')} {Translator.translate('role_added', guild, role=role.name, user=Utils.clean_user(before), user_id=before.id)}")
+
+        # username changes
+        if before.name != after.name or before.discriminator != after.discriminator:
+            for guild in self.bot.guilds:
+                if guild.get_member(before.id) is not None:
+                    before_clean_name = Utils.clean_user(before)
+                    after_clean_name = Utils.clean_user(after)
+                    GearbotLogging.log_to(guild.id, "NAME_CHANGES",
+                                          f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
