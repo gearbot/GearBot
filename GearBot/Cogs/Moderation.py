@@ -71,8 +71,8 @@ class Moderation:
 
     @staticmethod
     def _can_act(action, ctx, user: discord.Member):
-        if (ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or \
-                (ctx.guild.owner == ctx.author and ctx.author != user):
+        if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
+                ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
             if ctx.me.top_role > user.top_role:
                 return True, None
             else:
