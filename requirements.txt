@@ -13,7 +13,7 @@ peewee==3.6.4
 Pillow==5.2.0
 pycparser==2.18
 PyMySQL==0.9.2
-requests==2.19.1
+requests==2.20.0
 six==1.11.0
 urllib3==1.23
 websockets==6.0
