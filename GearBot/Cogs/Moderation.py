@@ -384,6 +384,7 @@ class Moderation:
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def userinfo(self, ctx: commands.Context, *, user:DiscordUser=None):
         """Shows information about the chosen user"""
         if user is None:
