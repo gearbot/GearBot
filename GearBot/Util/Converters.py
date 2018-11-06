@@ -179,6 +179,7 @@ class Message(Converter):
 
     @staticmethod
     async def get_messages(ctx, message_id, channel_id):
+        message = None
         logged_message = LoggedMessage.get_or_none(messageid=message_id)
         async with ctx.typing():
             if logged_message is None:
