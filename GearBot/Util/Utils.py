@@ -130,6 +130,8 @@ async def clean_message(text: str, guild:discord.Guild):
 
 
 def clean_name(text):
+    if text is None:
+        return None
     return text.replace("@","@\u200b").replace("`", "")
 
 
