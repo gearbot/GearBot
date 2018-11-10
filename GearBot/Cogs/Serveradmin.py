@@ -571,7 +571,7 @@ class Serveradmin:
 
             if len(info) > 0:
                 embed = discord.Embed(color=6008770)
-                embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, cid, channels[cid]))
+                embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, channels[cid]))
             else:
                 embed=None
             await ctx.send(message, embed=embed)

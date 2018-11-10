@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator
+from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, GearbotLogging
 from database.DatabaseConnector import CustomCommand
 
 
@@ -67,15 +67,17 @@ class CustCommands:
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
-    async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
+    async def create(self, ctx: commands.Context, trigger: str, *, reply: str = None):
         """Create a new command"""
         if len(trigger) == 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply', ctx.guild.id)}")
+        elif len(trigger) > 20:
+            await GearbotLogging.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         else:
             trigger = trigger.lower()
-            command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
+            command = CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
                 self.commands[ctx.guild.id][trigger] = reply
@@ -93,7 +95,9 @@ class CustCommands:
     async def remove(self, ctx:commands.Context, trigger:str):
         """Removes a custom command"""
         trigger = trigger.lower()
-        if trigger in self.commands[ctx.guild.id]:
+        if len(trigger) > 20:
+            await GearbotLogging.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
+        elif trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")

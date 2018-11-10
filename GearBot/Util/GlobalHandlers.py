@@ -302,7 +302,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
             content = "<no content>"
         else:
             content = message.content
-        embed.add_field(name="Original message", value=content, inline=False)
+        embed.add_field(name="Original message", value=Utils.trim_message(content, 1000), inline=False)
 
         lines.append("======================ORIGINAL MESSAGE (DETAILED)======================")
         lines.append(extract_info(message))
