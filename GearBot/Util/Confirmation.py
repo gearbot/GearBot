@@ -28,28 +28,20 @@ async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=No
         return user == ctx.message.author and reaction.emoji in (yes, no) and reaction.message.id == message.id
 
     try:
-        task = ctx.bot.loop.create_task(ctx.bot.wait_for('reaction_add', timeout=timeout, check=check))
-        if not hasattr(bot, 'wait_for_debug_tasks'):
-            bot.wait_for_debug_tasks = dict()
-        bot.wait_for_debug_tasks[message.id] = {
-            "task": task,
-            "message": message,
-            "ctx": ctx
-        }
-        reaction, user = await task
+        reaction, user = await ctx.bot.wait_for('reaction_add', timeout=timeout, check=check)
     except asyncio.TimeoutError:
         await message.delete()
         await ctx.send(f"I got no answer within {timeout} seconds.. Aborting.")
         return
     GearbotLogging.info(f"CONFIRMATOR RESPONCE RECEIVED:\nreaction: {reaction}\nemoji: {reaction.emoji}\non_yes: {on_yes}\non_no: {on_no}")
-    if reaction.emoji is yes and on_yes is not None:
+    if reaction.emoji == yes and on_yes is not None:
         if delete:
             try:
                 await message.delete()
             except discord.Forbidden:
                 pass
         await on_yes()
-    elif reaction.emoji is no:
+    elif reaction.emoji == no:
         if delete:
             try:
                 await message.delete()
@@ -59,4 +51,3 @@ async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=No
             await on_no()
         else:
             await GearbotLogging.send_to(ctx, "NO", "command_canceled")
-    del bot.wait_for_debug_tasks[message.id]
