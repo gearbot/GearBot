@@ -19,7 +19,6 @@ def on_ready(bot):
 
 
 async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=None, delete=True):
-    bot = ctx.bot
     message: discord.Message = await ctx.send(text)
     await message.add_reaction(yes)
     await message.add_reaction(no)
