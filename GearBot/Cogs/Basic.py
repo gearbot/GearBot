@@ -141,7 +141,7 @@ class Basic:
         if thing == "":
             thing = Translator.translate("coinflip_default", ctx)
         else:
-            thing = Utils.clean_message(thing, ctx.guild)
+            thing = await Utils.clean_message(thing, ctx.guild)
         outcome = random.randint(1, 2)
         if outcome == 1 or ("mute" in thing and "vos" in thing):
             await ctx.send(Translator.translate("coinflip_yes", ctx, thing=thing))
