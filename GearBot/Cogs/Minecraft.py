@@ -134,6 +134,7 @@ class Minecraft:
 
     @commands.group()
     async def cf(self, ctx):
+        """cf_help"""
         pass
 
     @cf.command()

@@ -425,6 +425,7 @@ class Moderation:
     @commands.group()
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
+        """"archive_help"""
         if ctx.subcommand_passed is None:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
         else:
@@ -432,6 +433,7 @@ class Moderation:
 
     @archive.command()
     async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
+        """archive_channel_help"""
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
@@ -450,6 +452,7 @@ class Moderation:
 
     @archive.command()
     async def user(self, ctx, user:UserID, amount=100):
+        """archive_user_help"""
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
