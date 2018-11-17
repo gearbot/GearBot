@@ -492,7 +492,7 @@ class Moderation:
     async def clean(self, ctx):
         """clean_help"""
         if ctx.invoked_subcommand == self.clean:
-            await ctx.invoke(self.bot.get_command("help"), "clean")
+            await ctx.invoke(self.bot.get_command("help"), query="clean")
 
     @clean.command("user")
     async def clean_user(self, ctx, user: DiscordUser, amount: RangedInt(1) = 50):
