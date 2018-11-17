@@ -72,8 +72,6 @@
   "forced_ban": "Forced ban",
   "forceban_to_ban": "{user} is on this server, executing regular ban command instead.",
   "purge_help": "Purges up to 1000 messages in this channel.",
-  "purge_too_small": "You must purge at least 1 message.",
-  "purge_too_big": "You can only purge 1000 messages at a time.",
   "purge_confirmation": "Deleted {count} message(s)!",
   "unban_help": "Unbans a user from the server.",
   "unban_confirmation": "{user} (``{user_id}``) has been unbanned. Reason: ``{reason}``",
@@ -335,5 +333,8 @@
   "archive_channel_help": "Archive messages from a channel",
   "archive_user_help": "Archive messages from a user",
   "mban_help": "Bans multiple users with the same reason",
-  "mkick_help": "Kicks multiple users with the same reason"
+  "mkick_help": "Kicks multiple users with the same reason",
+  "NaN": "Not an number",
+  "number_too_small": "Number too small, must be at least {min}",
+  "number_too_big": "Number too big, must be at most {max}"
 }
