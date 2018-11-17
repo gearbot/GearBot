@@ -336,5 +336,9 @@
   "mkick_help": "Kicks multiple users with the same reason",
   "NaN": "Not an number",
   "number_too_small": "Number too small, must be at least {min}",
-  "number_too_big": "Number too big, must be at most {max}"
+  "number_too_big": "Number too big, must be at most {max}",
+  "clean_help": "Gets out the broom to clean whatever mess needs cleaning",
+  "clean_user_help": "Removes messages by a specific user",
+  "clean_bots_help": "Removes messages send by any bot",
+  "clean_all_help": "Just clean everything"
 }

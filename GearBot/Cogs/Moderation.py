@@ -506,6 +506,7 @@ class Moderation:
 
     @clean.command("all")
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
+        """clean_all_help"""
         await self._clean(ctx, amount, lambda m: True)
 
     @staticmethod
