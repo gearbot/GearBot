@@ -489,15 +489,16 @@ class Moderation:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
     @commands.group()
+    @commands.guild_only()
     async def clean(self, ctx):
         """clean_help"""
         if ctx.invoked_subcommand == self.clean:
             await ctx.invoke(self.bot.get_command("help"), query="clean")
 
     @clean.command("user")
-    async def clean_user(self, ctx, user: DiscordUser, amount: RangedInt(1) = 50):
+    async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_user_help"""
-        await self._clean(ctx, amount, lambda m: m.author.id == user.id)
+        await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
 
     @clean.command("bots")
     async def clean_bots(self, ctx, amount: RangedInt(1) = 50):
