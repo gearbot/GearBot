@@ -35,7 +35,7 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(RangedInt(max=9223372036854775807).convert(ctx, argument))
+                user = await Utils.get_user(await RangedInt(max=9223372036854775807).convert(ctx, argument))
             except ValueError:
                 pass
 
