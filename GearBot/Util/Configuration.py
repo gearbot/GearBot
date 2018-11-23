@@ -117,7 +117,7 @@ def update_config(guild, config):
         Utils.saveToDisk(f"{d}/{guild}", config)
         config = MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
-        Utils.saveToDisk(guild, config)
+        Utils.saveToDisk(f"config/{guild}", config)
 
     return config
 

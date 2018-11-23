@@ -328,5 +328,11 @@
   "no_log_channel": "'{arg} is not configured as a logging channel",
   "unknown_server": "Can't find a server with '{arg}' as ID, if you are sure this server exists then i'm not a part of it",
   "unknown_message": "Found the channel, but not the message, did it get removed or is it in a channel i can't read messages from?",
-  "custom_command_trigger_too_long": "Custom command triggers can only be up to 20 chars long"
+  "custom_command_trigger_too_long": "Custom command triggers can only be up to 20 chars long",
+  "channel_created": "A new channel was created: {channel} (``{channel.id}``)",
+  "channel_created_by": "A new channel was created: {channel} (``{channel.id}``) by {person} (``{person.id}``)",
+  "channel_deleted": "A channel was removed: {channel} (``{channel.id}``)",
+  "channel_deleted_by": "A channel was removed: {channel}  (``{channel.id}``) by {person} (``{person.id}``)",
+  "channel_update_simple": "{channel} (``{channel.id}``) was updated: ``{attr}`` changed from ``{before}`` to ``{after}``",
+  "channel_update_simple_by": "{channel} (``{channel.id}``) was updated by {person} (``{person.id}``): ``{attr}`` changed from ``{before}`` to ``{after}``"
 }

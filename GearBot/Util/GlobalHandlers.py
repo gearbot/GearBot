@@ -195,7 +195,7 @@ def extract_info(o):
 
 async def on_error(bot, event, *args, **kwargs):
     t, exception, info = sys.exc_info()
-    await handle_exception("Event handler failure", bot, exception, event, *args, **kwargs)
+    await handle_exception("Event handler failure", bot, exception, event, None, None, *args, **kwargs)
 
 async def handle_database_error(bot):
     GearbotLogging.error(traceback.format_exc())
