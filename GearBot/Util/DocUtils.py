@@ -82,8 +82,13 @@ def generate_command_list(bot):
         file.write(page)
 
 def gen_command_listing(command):
-    listing = f"|{command.qualified_name}|{Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']}|{Translator.translate(command.short_doc, None)}|\n"
-    if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
-        for c in command.all_commands.values():
-            listing += gen_command_listing(c)
-    return listing
+    try:
+        listing = f"|{command.qualified_name}|{Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']}|{Translator.translate(command.short_doc, None)}|\n"
+    except Exception as ex:
+        GearbotLogging.error(command.qualified_name)
+        raise ex
+    else:
+        if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
+            for c in command.all_commands.values():
+                listing += gen_command_listing(c)
+        return listing

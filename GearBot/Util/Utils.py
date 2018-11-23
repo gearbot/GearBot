@@ -145,18 +145,21 @@ async def username(uid, fetch=True):
 
 
 async def get_user(uid, fetch=True):
-    if uid in known_invalid_users:
-        return None
-    if uid in user_cache:
-        return user_cache[uid]
     user = BOT.get_user(uid)
-    if user is None and fetch:
-        try:
-            user = await BOT.get_user_info(uid)
-            user_cache[uid] = user
-        except NotFound:
-            known_invalid_users.append(uid)
+    if user is None:
+        if uid in known_invalid_users:
             return None
+
+        if uid in user_cache:
+            return user_cache[uid]
+
+        if fetch:
+            try:
+                user = await BOT.get_user_info(uid)
+                user_cache[uid] = user
+            except NotFound:
+                known_invalid_users.append(uid)
+                return None
     return user
 
 

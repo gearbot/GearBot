@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
+from Util.Converters import UserID
 
 
 class Admin:
@@ -151,6 +152,15 @@ class Admin:
     @commands.command()
     async def set_presence(self, ctx, name):
         await self.bot.change_presence(status=name, activity=ctx.me.activity)
+
+    @commands.command()
+    async def mutuals(self, ctx, user:UserID):
+        mutuals = []
+        for guild in self.bot.guilds:
+            if guild.get_member(user) is not None:
+                mutuals.append(guild)
+        for page in Pages.paginate("\n".join(f"{guild.id} - {guild.name}" for guild in mutuals), prefix="```py\n", suffix="```"):
+            await ctx.send(page)
 
 
 

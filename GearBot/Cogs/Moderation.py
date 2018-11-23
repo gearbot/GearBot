@@ -8,7 +8,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
-from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild
+from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, RangedInt
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -44,7 +44,8 @@ class Moderation:
     async def roles_init(self, ctx, mode):
         pages = self.gen_roles_pages(ctx.guild, mode=mode)
         page = pages[0]
-        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1, []
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(
+            pages) > 1, []
 
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild, mode=data["mode"])
@@ -59,13 +60,17 @@ class Moderation:
             role_list[f"{role.name} - {role.id}"] = role
             longest_name = max(longest_name, len(role.name))
         if mode == "alphabetic":
-            return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in sorted(role_list.keys())))
+            return Pages.paginate("\n".join(
+                f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in
+                sorted(role_list.keys())))
         else:
-            return Pages.paginate("\n".join(f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in reversed(list(role_list.keys()))))
+            return Pages.paginate("\n".join(
+                f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in
+                reversed(list(role_list.keys()))))
 
     @commands.command()
     @commands.guild_only()
-    async def roles(self, ctx: commands.Context, mode:RoleMode="hierarchy"):
+    async def roles(self, ctx: commands.Context, mode: RoleMode = "hierarchy"):
         """roles_help"""
         await Pages.create_new("roles", ctx, mode=mode)
 
@@ -83,7 +88,7 @@ class Moderation:
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.Member, *, reason:Reason=""):
+    async def kick(self, ctx, user: discord.Member, *, reason: Reason = ""):
         """kick_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -91,14 +96,16 @@ class Moderation:
         allowed, message = self._can_act("kick", ctx, user)
 
         if allowed:
-           await self._kick(ctx, user, reason, True)
+            await self._kick(ctx, user, reason, True)
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     async def _kick(self, ctx, user, reason, confirm):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.kick(user,
-                             reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
+                             reason=Utils.trim_message(
+                                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
+                                 500))
         translated = Translator.translate('kick_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id,
                                           moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                           reason=reason)
@@ -107,12 +114,12 @@ class Moderation:
                                        reason, active=False)
         if confirm:
             await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
-                                        user_id=user.id, reason=reason)
+                                         user_id=user.id, reason=reason)
 
     @commands.guild_only()
     @commands.command("mkick")
     @commands.bot_has_permissions(kick_members=True)
-    async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason:Reason=""):
+    async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mkick help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -130,19 +137,21 @@ class Moderation:
                     allowed, message = self._can_act("kick", ctx, member)
                     if allowed:
                         await self._kick(ctx, member, reason, False)
-                        valid+=1
+                        valid += 1
                     else:
                         failures.append(f"{t}: {message}")
             await pmessage.delete()
             await GearbotLogging.send_to(ctx, "YES", "mkick_confirmation", count=valid)
             if len(failures) > 0:
-                await Pages.create_new("mass_failures", ctx, action="kick", failures=Pages.paginate("\n".join(failures)))
+                await Pages.create_new("mass_failures", ctx, action="kick",
+                                       failures=Pages.paginate("\n".join(failures)))
 
         await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
 
     @staticmethod
     async def _mass_failures_init(ctx, action, failures):
-        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(failures) > 1, []
+        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(
+            failures) > 1, []
 
     @staticmethod
     async def _mass_failures_update(ctx, message, page_num, action, data):
@@ -153,7 +162,7 @@ class Moderation:
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: commands.Context, user: discord.Member, *, reason:Reason=""):
+    async def ban(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -167,7 +176,8 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def tempban(self, ctx: commands.Context, user: discord.Member, durationNumber: int, durationIdentifier: Duration, *, reason: Reason = ""):
+    async def tempban(self, ctx: commands.Context, user: discord.Member, durationNumber: int,
+                      durationIdentifier: Duration, *, reason: Reason = ""):
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -178,29 +188,35 @@ class Moderation:
             if duration > 0:
                 until = time.time() + duration
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-                await ctx.guild.ban(user, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+                await ctx.guild.ban(user, reason=Utils.trim_message(
+                    f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
                 InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
-                translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id,
-                                                  moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason,
+                translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user),
+                                                  user_id=user.id,
+                                                  moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
+                                                  reason=reason,
                                                   until=datetime.datetime.utcfromtimestamp(until))
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {translated}")
                 await GearbotLogging.send_to(ctx, "YES", "tempban_confirmation", user=Utils.clean_user(user),
-                                             user_id=user.id, reason=reason, until=datetime.datetime.utcfromtimestamp(until))
+                                             user_id=user.id, reason=reason,
+                                             until=datetime.datetime.utcfromtimestamp(until))
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     async def _ban(self, ctx, user, reason, confirm):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-        await ctx.guild.ban(user, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+        await ctx.guild.ban(user, reason=Utils.trim_message(
+            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                             delete_message_days=0)
-        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (Infraction.guild_id == ctx.guild.id)).execute()
+        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (
+                    Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                               f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
         if confirm:
             await GearbotLogging.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
-                                        reason=reason)
+                                         reason=reason)
 
     @commands.guild_only()
     @commands.command()
@@ -243,7 +259,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def softban(self, ctx:commands.Context, user: discord.Member, *, reason:Reason=""):
+    async def softban(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
         """softban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -252,10 +268,14 @@ class Moderation:
         if allowed:
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             self.bot.data["unbans"].add(user.id)
-            await ctx.guild.ban(user, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500), delete_message_days=1)
+            await ctx.guild.ban(user, reason=Utils.trim_message(
+                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+                                delete_message_days=1)
             await ctx.guild.unban(user)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
-            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
+            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                                  f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason, active=False)
 
         else:
@@ -264,7 +284,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason:Reason=""):
+    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason: Reason = ""):
         """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -273,52 +293,41 @@ class Moderation:
         except BadArgument:
             user = await ctx.bot.get_user_info(user_id)
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-            await ctx.guild.ban(user, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+            await ctx.guild.ban(user, reason=Utils.trim_message(
+                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                 delete_message_days=0)
             await ctx.send(
                 f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, reason=reason)}")
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                        f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                  f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
             Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") &
                                                   (Infraction.guild_id == ctx.guild.id)).execute()
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id, user=Utils.clean_user(member))}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id, user=Utils.clean_user(member))}")
             await ctx.invoke(self.ban, member, reason=reason)
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
-    async def purge(self, ctx, msgs: int):
+    async def purge(self, ctx, count:RangedInt(1, 5000)):
         """purge_help"""
-        if msgs < 1:
-            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_small', ctx.guild.id)}")
-        if msgs > 1000:
-            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('purge_too_big', ctx.guild.id)}")
-        try:
-            deleted = await ctx.channel.purge(limit=msgs)
-        except discord.NotFound:
-            # sleep for a sec just in case the other bot is still purging so we don't get removed as well
-            await asyncio.sleep(1)
-            try:
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_fail_not_found', ctx.guild.id)}")
-            except discord.NotFound:
-                pass # sometimes people remove channels mid purge
-        else:
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('purge_confirmation', ctx.guild.id, count=len(deleted))}", delete_after=10)
+        await ctx.invoke(self.clean_all, count)
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def unban(self, ctx, member: BannedMember, *, reason:Reason=""):
+    async def unban(self, ctx, member: BannedMember, *, reason: Reason = ""):
         """unban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         fid = f"{ctx.guild.id}-{member.user.id}"
         self.bot.data["unbans"].add(fid)
         try:
-            await ctx.guild.unban(member.user, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
+            await ctx.guild.unban(member.user, reason=Utils.trim_message(
+                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
         except Exception as e:
             self.bot.data["unbans"].remove(fid)
             raise e
@@ -328,34 +337,44 @@ class Moderation:
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('unban_confirmation', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, reason=reason)}")
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                    f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unban_log', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                              f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unban_log', ctx.guild.id, user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int, durationIdentifier: Duration, *,
-                   reason:Reason=""):
+    async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int,
+                   durationIdentifier: Duration, *,
+                   reason: Reason = ""):
         """mute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
-            await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
         else:
             role = ctx.guild.get_role(roleid)
             if role is None:
-                await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_missing', ctx.guild.id, user=target.mention)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_missing', ctx.guild.id, user=target.mention)}")
             else:
-                if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
+                if (
+                        ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
                     duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
                     if duration > 0:
                         until = time.time() + duration
-                        await target.add_roles(role, reason=Utils.trim_message(f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
-                        InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason, end=until)
-                        await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{durationNumber} {durationIdentifier}')}")
-                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{durationNumber} {durationIdentifier}', reason=reason)}")
+                        await target.add_roles(role, reason=Utils.trim_message(
+                            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
+                            500))
+                        InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
+                                                       end=until)
+                        await ctx.send(
+                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{durationNumber} {durationIdentifier}')}")
+                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{durationNumber} {durationIdentifier}', reason=reason)}")
                     else:
-                        await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{durationNumber} {durationIdentifier}')} {Emoji.get_chat_emoji('WHAT')}")
+                        await ctx.send(
+                            f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{durationNumber} {durationIdentifier}')} {Emoji.get_chat_emoji('WHAT')}")
                 else:
                     await ctx.send(
                         f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_not_allowed', ctx.guild.id, user=target)}")
@@ -363,7 +382,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason:Reason=""):
+    async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason: Reason = ""):
         """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -380,12 +399,12 @@ class Moderation:
                 await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                 await ctx.send(f"{Emoji.get_chat_emoji('INNOCENT')} {target.display_name} has been unmuted")
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                            f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
+                                      f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    async def userinfo(self, ctx: commands.Context, *, user:DiscordUser=None):
+    async def userinfo(self, ctx: commands.Context, *, user: DiscordUser = None):
         """Shows information about the chosen user"""
         if user is None:
             user = member = ctx.author
@@ -393,7 +412,8 @@ class Moderation:
             member = None if ctx.guild is None else ctx.guild.get_member(user.id)
         embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
-        embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name), icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
+                         icon_url=ctx.author.avatar_url)
         embed.add_field(name=Translator.translate('name', ctx), value=f"{user.name}#{user.discriminator}", inline=True)
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
@@ -409,11 +429,12 @@ class Moderation:
         embed.add_field(name=Translator.translate('account_created_at', ctx),
                         value=f"{account_made} ({(ctx.message.created_at - user.created_at).days} days ago)",
                         inline=True)
-        embed.add_field(name=Translator.translate('avatar_url', ctx), value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
+        embed.add_field(name=Translator.translate('avatar_url', ctx),
+                        value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def serverinfo(self, ctx, guild:Guild=None):
+    async def serverinfo(self, ctx, guild: Guild = None):
         """Shows information about the current server."""
         if guild is None:
             guild = ctx.guild
@@ -425,13 +446,16 @@ class Moderation:
     @commands.group()
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
+        """"archive_help"""
         if ctx.subcommand_passed is None:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
         else:
             await ctx.trigger_typing()
 
     @archive.command()
-    async def channel(self, ctx, channel:discord.TextChannel=None, amount=100):
+    async def channel(self, ctx, channel: discord.TextChannel = None, amount=100):
+        """archive_channel_help"""
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
@@ -440,25 +464,74 @@ class Moderation:
         if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
             permissions = channel.permissions_for(ctx.author)
             if permissions.read_messages and permissions.read_message_history:
-                messages = LoggedMessage.select().where((LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(LoggedMessage.messageid.desc()).limit(amount)
+                messages = LoggedMessage.select().where(
+                    (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(
+                    LoggedMessage.messageid.desc()).limit(amount)
                 await Archive.ship_messages(ctx, messages)
             else:
-                ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms', ctx, prefix=ctx.prefix)}")
+                ctx.send(
+                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms', ctx, prefix=ctx.prefix)}")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
-
     @archive.command()
-    async def user(self, ctx, user:UserID, amount=100):
+    async def user(self, ctx, user: UserID, amount=100):
+        """archive_user_help"""
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
         if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
             messages = LoggedMessage.select().where(
-                (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(LoggedMessage.messageid.desc()).limit(amount)
+                (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(
+                LoggedMessage.messageid.desc()).limit(amount)
             await Archive.ship_messages(ctx, messages)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
+
+    @commands.group()
+    @commands.guild_only()
+    async def clean(self, ctx):
+        """clean_help"""
+        if ctx.invoked_subcommand == self.clean:
+            await ctx.invoke(self.bot.get_command("help"), query="clean")
+
+    @clean.command("user")
+    async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
+        """clean_user_help"""
+        await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
+
+    @clean.command("bots")
+    async def clean_bots(self, ctx, amount: RangedInt(1) = 50):
+        """clean_bots_help"""
+        await self._clean(ctx, amount, lambda m: m.author.bot)
+
+    @clean.command("all")
+    async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
+        """clean_all_help"""
+        await self._clean(ctx, amount, lambda m: True)
+
+    @staticmethod
+    async def _clean(ctx, amount, checker):
+        counter = 0
+
+        def check(message):
+            nonlocal counter
+            match = checker(message) and counter < amount
+            if match:
+                counter += 1
+            return match
+
+        try:
+            deleted = await ctx.channel.purge(limit=min(amount * 5, 5000), check=check, before=ctx.message)
+        except discord.NotFound:
+            # sleep for a sec just in case the other bot is still purging so we don't get removed as well
+            await asyncio.sleep(1)
+            try:
+                await GearbotLogging.send_to(ctx, 'YES', 'purge_fail_not_found')
+            except discord.NotFound:
+                pass  # sometimes people remove channels mid purge
+        else:
+            await GearbotLogging.send_to(ctx, "YES", "purge_confirmation", count=len(deleted))
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
@@ -468,13 +541,15 @@ class Moderation:
             if role is not None and channel.permissions_for(guild.me).manage_channels:
                 if isinstance(channel, discord.TextChannel):
                     try:
-                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id), send_messages=False,
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
+                                                      send_messages=False,
                                                       add_reactions=False)
                     except discord.Forbidden:
                         pass
                 else:
                     try:
-                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id), speak=False, connect=False)
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
+                                                      speak=False, connect=False)
                     except discord.Forbidden:
                         pass
 
@@ -485,10 +560,13 @@ class Moderation:
                 role = member.guild.get_role(roleid)
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
-                        await member.add_roles(role, reason=Translator.translate('mute_reapply_reason', member.guild.id))
-                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_reapply_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
+                        await member.add_roles(role,
+                                               reason=Translator.translate('mute_reapply_reason', member.guild.id))
+                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
+                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_reapply_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
                     else:
-                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS", Translator.translate('mute_reapply_failed_log', member.build.id))
+                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
+                                              Translator.translate('mute_reapply_failed_log', member.build.id))
 
     async def on_guild_remove(self, guild: discord.Guild):
         if guild.id in self.mutes.keys():
@@ -511,28 +589,30 @@ class Moderation:
                                                             Infraction.end <= limit):
                     if infraction.id not in self.handling:
                         self.handling.add(infraction.id)
-                        self.bot.loop.create_task(self.run_after((infraction.end - now).total_seconds(), action(infraction)))
+                        self.bot.loop.create_task(
+                            self.run_after((infraction.end - now).total_seconds(), action(infraction)))
             await asyncio.sleep(10)
         GearbotLogging.info("Timed moderation actions background task terminated")
 
     async def run_after(self, delay, action):
         if delay > 0:
             await asyncio.sleep(delay)
-        if self.running: # cog got terminated, new cog is now in charge of making sure this gets handled
+        if self.running:  # cog got terminated, new cog is now in charge of making sure this gets handled
             await action
 
     async def _lift_mute(self, infraction: Infraction):
         # check if we're even still in the guild
         guild = self.bot.get_guild(infraction.guild_id)
         if guild is None:
-            GearbotLogging.info(f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
+            GearbotLogging.info(
+                f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
             return self.end_infraction(infraction)
 
         role = Configuration.get_var(guild.id, "MUTE_ROLE")
         member = guild.get_member(infraction.user_id)
         role = guild.get_role(role)
         if role is None or member is None:
-            return self.end_infraction(infraction) # role got removed or member left
+            return self.end_infraction(infraction)  # role got removed or member left
 
         info = {
             "user": Utils.clean_user(member),
@@ -568,7 +648,8 @@ class Moderation:
     async def _lift_tempban(self, infraction):
         guild = self.bot.get_guild(infraction.guild_id)
         if guild is None:
-            GearbotLogging.info(f"Got an expired tempban for server {infraction.guild_id} but am no longer on that server")
+            GearbotLogging.info(
+                f"Got an expired tempban for server {infraction.guild_id} but am no longer on that server")
             return self.end_infraction(infraction)
 
         user = await Utils.get_user(infraction.user_id)
@@ -590,7 +671,7 @@ class Moderation:
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
             return self.end_infraction(infraction)
 
-        fid=f"{guild.id}-{infraction.user_id}"
+        fid = f"{guild.id}-{infraction.user_id}"
         self.bot.data["unbans"].add(fid)
         try:
             await guild.unban(user)
@@ -608,7 +689,6 @@ class Moderation:
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
         finally:
             self.end_infraction(infraction)
-
 
     def end_infraction(self, infraction):
         infraction.active = False

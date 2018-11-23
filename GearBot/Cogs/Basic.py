@@ -40,6 +40,7 @@ class Basic:
 
     @commands.command()
     async def about(self, ctx):
+        """about_help"""
         uptime = datetime.utcnow() - self.bot.start_time
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)

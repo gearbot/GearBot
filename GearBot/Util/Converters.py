@@ -9,8 +9,8 @@ from database.DatabaseConnector import LoggedMessage
 
 
 class TranslatedBadArgument(BadArgument):
-    def __init__(self, key, ctx, *args, arg=None):
-        super().__init__(Translator.translate(key, ctx, arg=Utils.clean_name(arg)), *args)
+    def __init__(self, key, ctx, arg=None, **kwargs):
+        super().__init__(Translator.translate(key, ctx, arg=Utils.clean_name(arg), **kwargs))
 
 
 class BannedMember(Converter):
@@ -35,7 +35,7 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(int(argument, base=10))
+                user = await Utils.get_user(RangedInt(max=9223372036854775807).convert(ctx, argument))
             except ValueError:
                 pass
 
@@ -207,3 +207,23 @@ class Message(Converter):
             else:
                 raise TranslatedBadArgument('unknown_channel', ctx)
         return logged_message, message
+
+
+class RangedInt(Converter):
+
+    def __init__(self, min=None, max=None) -> None:
+        self.min = min
+        self.max = max
+
+    async def convert(self, ctx, argument) -> int:
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise TranslatedBadArgument('NaN', ctx)
+        else:
+            if self.min is not None and argument < self.min:
+                raise TranslatedBadArgument('number_too_small', ctx, min=self.min)
+            elif self.max is not None and argument > self.max:
+                raise TranslatedBadArgument('number_too_big', ctx, max=self.max)
+            else:
+                return argument
