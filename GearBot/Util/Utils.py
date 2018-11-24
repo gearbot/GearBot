@@ -87,30 +87,32 @@ ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
 URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n]*)?)', re.IGNORECASE)
 
-async def clean_message(text: str, guild:discord.Guild):
-    # resolve user mentions
-    for uid in set(ID_MATCHER.findall(text)):
-        name = "@" + await username(int(uid), False)
-        text = text.replace(f"<@{uid}>", name)
-        text = text.replace(f"<@!{uid}>", name)
+async def clean(text, guild:discord.Guild=None):
+    text = str(text)
+    if guild is not None:
+        # resolve user mentions
+        for uid in set(ID_MATCHER.findall(text)):
+            name = "@" + await username(int(uid), False)
+            text = text.replace(f"<@{uid}>", name)
+            text = text.replace(f"<@!{uid}>", name)
 
-    # resolve role mentions
-    for uid in set(ROLE_ID_MATCHER.findall(text)):
-        role = discord.utils.get(guild.roles, id=int(uid))
-        if role is None:
-            name = "@UNKNOWN ROLE"
-        else:
-            name = "@" + role.name
-        text = text.replace(f"<@&{uid}>", name)
-
-        # resolve channel names
-        for uid in set(CHANNEL_ID_MATCHER.findall(text)):
-            channel = guild.get_channel(uid)
-            if channel is None:
-                name = "#UNKNOWN CHANNEL"
+        # resolve role mentions
+        for uid in set(ROLE_ID_MATCHER.findall(text)):
+            role = discord.utils.get(guild.roles, id=int(uid))
+            if role is None:
+                name = "@UNKNOWN ROLE"
             else:
-                name = "#" + channel.name
-            text = text.replace(f"<@#{uid}>", name)
+                name = "@" + role.name
+            text = text.replace(f"<@&{uid}>", name)
+
+            # resolve channel names
+            for uid in set(CHANNEL_ID_MATCHER.findall(text)):
+                channel = guild.get_channel(uid)
+                if channel is None:
+                    name = "#UNKNOWN CHANNEL"
+                else:
+                    name = "#" + channel.name
+                text = text.replace(f"<@#{uid}>", name)
 
 
     for c in ("\\", "`", "*", "_", "~", "<"):
