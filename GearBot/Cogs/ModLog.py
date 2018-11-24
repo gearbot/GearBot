@@ -386,7 +386,7 @@ class ModLog:
             logging = Translator.assemble("DELETE", "channel_delete", channel.guild, channel=channel)
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
-    async def on_guild_channel_update(self, before: discord.TextChannel, after: discord.TextChannel):
+    async def on_guild_channel_update(self, before, after):
         simple = ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate", "user_limit"]
         for attr in simple:
             if hasattr(before, attr):
@@ -421,11 +421,13 @@ class ModLog:
                     for perm, value in override:
                         new_value = getattr(a_override, perm)
                         if value != new_value:
-                            parts = dict(before=self.prep_override(value), after=self.prep_override(new_value), permission=perm, channel=after, target_name=await Utils.clean(target), target_id=target.id)
+                            parts = dict(before=self.prep_override(value), after=self.prep_override(new_value),
+                                         permission=perm, channel=after, target_name=await Utils.clean(target),
+                                         target_id=target.id)
                             key = "permission_override_update"
 
                             def finder(e):
-                                if e.target.id == before.id and e.target.id == after.id and e.extra.id == target.id:
+                                if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id:
                                     before_allowed, before_denied = override.pair()
                                     after_allowed, after_denied = new_overrides[target].pair()
                                     has_allow = hasattr(e.before, "allow")
