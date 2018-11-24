@@ -41,7 +41,8 @@ BACKUPS = {
     "ROLE_REMOVE": "🛬",
     "CREATE": "🔨",
     "ALTER": "🛠",
-    "DELETE": "⛏"
+    "DELETE": "⛏",
+    "VOICE": "🔊"
 }
 
 

@@ -268,7 +268,7 @@ class ModLog:
                                                   (Infraction.type == "Ban") &
                                                   (Infraction.guild_id == guild.id)).execute()
 
-    async def on_member_update(self, before, after):
+    async def on_member_update(self, before:discord.Member, after):
         guild = before.guild
         audit_log = guild.me.guild_permissions.view_audit_log
         # nickname changes
@@ -352,6 +352,33 @@ class ModLog:
                     GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                           f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
 
+
+    async def on_voice_state_update(self, member, before, after):
+        if Features.is_logged(member.guild.id, "VOICE_CHANGES_DETAILED"):
+            simple = ["deaf", "mute", "self_mute", "self_deaf", "afk"]
+            for s in simple:
+                old = getattr(before, s)
+                new = getattr(after, s)
+                if old != new:
+                    key = f"voice_change_{s}_{str(new).lower()}"
+                    logging = Translator.assemble("VOICE", key, member.guild.id, user=await Utils.clean(member), user_id=member.id)
+                    GearbotLogging.log_to(member.guild.id, "VOICE_CHANGES_DETAILED", logging)
+        if Features.is_logged(member.guild.id, "VOICE_CHANGES"):
+            if before.channel != after.channel:
+                parts = dict(user=await Utils.clean(member), user_id=member.id)
+                if before.channel is None:
+                    key = "connected_to_voice"
+                    parts.update(channel_name=after.channel, channel_id=after.channel.id)
+                elif after.channel is None:
+                    key = "disconnected_voice"
+                    parts.update(channel_name=before.channel, channel_id=before.channel.id)
+                else:
+                    key = "moved_voice"
+                    parts.update(old_channel_name=before.channel, old_channel_id=before.channel.id,
+                                 new_channel_name=after.channel, new_channel_id=after.channel.id)
+                logging = Translator.assemble("VOICE", key, member.guild.id, **parts)
+                GearbotLogging.log_to(member.guild.id, "VOICE_CHANGES", logging)
+
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
             message_list = dict()
@@ -371,6 +398,7 @@ class ModLog:
                                   tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
 
     async def on_guild_channel_create(self, channel):
+        if not Features.is_logged(channel.guild.id, "CHANNEL_CHANGES"): return
         e = await self.find_log(channel.guild, AuditLogAction.channel_create, lambda e: e.target.id == channel.id)
         if e is not None:
             logging = Translator.assemble("CREATE", "channel_created_by", channel.guild, channel=channel, person=e.user)
@@ -379,6 +407,7 @@ class ModLog:
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
     async def on_guild_channel_delete(self, channel):
+        if not Features.is_logged(channel.guild.id, "CHANNEL_CHANGES"): return
         e = await self.find_log(channel.guild, AuditLogAction.channel_delete, lambda e: e.target.id == channel.id)
         if e is not None:
             logging = Translator.assemble("DELETE", "channel_deleted_by", channel.guild, channel=channel, person=e.user)
@@ -387,21 +416,11 @@ class ModLog:
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
     async def on_guild_channel_update(self, before, after):
-        simple = ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate", "user_limit"]
-        for attr in simple:
-            if hasattr(before, attr):
-                ba = getattr(before, attr)
-                aa = getattr(after, attr)
-                if ba != aa:
-                    entry = await self.find_log(before.guild, AuditLogAction.channel_update,
-                                            lambda e: e.target.id == before.id and hasattr(e.changes.before, attr) and getattr(e.changes.before, attr) == ba and getattr(e.changes.after, attr) == aa)
-                    parts = dict(before=self.prep_attr(ba), after=self.prep_attr(aa), channel=after, attr=attr)
-                    key = f"channel_update_simple"
-                    if entry is not None:
-                        parts.update(person=entry.user)
-                        key += "_by"
-                    logging = Translator.assemble("ALTER", key, before.guild, **parts)
-                    GearbotLogging.log_to(before.guild.id, "CHANNEL_CHANGES", logging)
+        if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES"): return
+        await self.handle_simple_changes(before, after, "role_update_simple", "CHANNEL_CHANGES",
+                                         AuditLogAction.channel_update,
+                                         ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate",
+                                          "user_limit"])
 
         # checking overrides
         old_overrides = dict()
@@ -495,6 +514,64 @@ class ModLog:
             logging = Translator.assemble("ALTER", key, after.guild.id, **parts)
             GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
 
+    async def on_guild_role_create(self, role):
+        if not Features.is_logged(role.guild.id, "ROLE_CHANGES"): return
+        entry = await self.find_log(role.guild, AuditLogAction.role_create, lambda e: e.target.id == role.id)
+        if entry is None:
+            logging = Translator.assemble("CREATE", "role_created", role.guild.id, role=role.name)
+        else:
+            logging = Translator.assemble("CREATE", "role_created_by", role.guild.id, role=role.name, person=await Utils.clean(entry.user), person_id=entry.user.id)
+        GearbotLogging.log_to(role.guild.id, "ROLE_CHANGES", logging)
+
+    async def on_guild_role_delete(self, role:discord.Role):
+        if not Features.is_logged(role.guild.id, "ROLE_CHANGES"): return
+        entry = await self.find_log(role.guild, AuditLogAction.role_delete, lambda e: e.target.id == role.id)
+        if entry is None:
+            logging = Translator.assemble("DELETE", "role_deleted", role.guild.id, role=role.name)
+        else:
+            logging = Translator.assemble("DELETE", "role_deleted_by", role.guild.id, role=role.name,
+                                          person=await Utils.clean(entry.user), person_id=entry.user.id)
+        GearbotLogging.log_to(role.guild.id, "ROLE_CHANGES", logging)
+
+
+    async def on_guild_role_update(self, before:discord.Role, after):
+        if not Features.is_logged(before.guild.id, "ROLE_CHANGES"): return
+        await self.handle_simple_changes(before, after, "role_update_simple", "ROLE_CHANGES", AuditLogAction.role_update,  ["name", "color", "hoist", "mentionable"])
+        if before.permissions != after.permissions:
+            for perm, value in before.permissions:
+                av = getattr(after.permissions, perm)
+                if av != value:
+                    entry = await self.find_log(before.guild, AuditLogAction.role_update,
+                                                lambda e: e.target.id == after.id and hasattr(e.before, "permissions") and e.before.permissions == before.permissions and e.after.permissions == after.permissions)
+                    key = f"role_update_perm_{'added' if av else 'revoked'}"
+                    parts = dict(role=after.name, role_id=after.id, perm=perm)
+                    if entry is not None:
+                        key += "_by"
+                        parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
+                    logging = Translator.assemble("ALTER", key, before.guild.id, **parts)
+                    GearbotLogging.log_to(after.guild.id, "ROLE_CHANGES", logging)
+
+
+
+
+    async def handle_simple_changes(self, before, after, base_key, log_key, action, attributes):
+        for attr in attributes:
+            if hasattr(before, attr):
+                ba = getattr(before, attr)
+                aa = getattr(after, attr)
+                key = base_key
+                if ba != aa:
+                    entry = await self.find_log(before.guild, action,
+                                                lambda e: e.target.id == before.id and hasattr(e.changes.before, attr) and getattr(e.changes.before, attr) == ba and getattr(e.changes.after, attr) == aa)
+                    parts = dict(before=self.prep_attr(ba), after=self.prep_attr(aa), thing=after, thing_id=after.id, attr=attr)
+                    if entry is not None:
+                        parts.update(person=entry.user, person_id=entry.user.id)
+                        key += "_by"
+                    logging = Translator.assemble("ALTER", key, before.guild, **parts)
+                    GearbotLogging.log_to(before.guild.id, log_key, logging)
+
+
+
     @staticmethod
     def prep_attr(attr):
         attr = Utils.trim_message(str(attr), 900)
@@ -523,6 +600,8 @@ class ModLog:
             except discord.Forbidden:
                 pass
         return entry
+
+
 
 
 async def cache_task(modlog: ModLog):
