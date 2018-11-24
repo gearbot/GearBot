@@ -61,7 +61,8 @@ def v3(config):
     return config
 
 def v4(config):
-    del config["CENSOR_LOGS"]
+    if "CENSOR_LOGS" in config.keys():
+        del config["CENSOR_LOGS"]
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
             info.append("ROLE_CHANGES")
