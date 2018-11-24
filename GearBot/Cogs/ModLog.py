@@ -574,7 +574,7 @@ class ModLog:
 
     @staticmethod
     def prep_attr(attr):
-        attr = Utils.trim_message(str(attr), 900)
+        attr = f"\u200b{Utils.trim_message(str(attr), 900)}\u200b"
         if "\n" in attr:
             return f"`{attr}`"
         return attr
