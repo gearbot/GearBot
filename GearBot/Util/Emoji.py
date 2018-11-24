@@ -38,7 +38,10 @@ BACKUPS = {
     "9": "9⃣",
     "10": "🔟",
     "ROLE_ADD": "🛫",
-    "ROLE_REMOVE": "🛬"
+    "ROLE_REMOVE": "🛬",
+    "CREATE": "🔨",
+    "ALTER": "🛠",
+    "DELETE": "⛏"
 }
 
 

@@ -27,6 +27,9 @@ def load_translations():
                 LANGS[filename[:-5]] = json.load(lang)
 
 
+def assemble(emoji, key, location, **kwargs):
+    return f"{Emoji.get_chat_emoji(emoji)} {translate(key, location, **kwargs)}"
+
 def translate(key, location, **kwargs):
     lid = None
     if location is not None:

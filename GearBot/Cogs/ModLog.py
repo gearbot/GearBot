@@ -5,6 +5,7 @@ import time
 
 import discord
 from discord import AuditLogAction
+from discord.abc import GuildChannel
 from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
@@ -26,7 +27,6 @@ class ModLog:
     def __unload(self):
         self.running = False
 
-
     async def buildCache(self, guild: discord.Guild, limit=None, startup=False):
         if limit is None:
             limit = 500 if startup else 50
@@ -38,7 +38,7 @@ class ModLog:
         fetch_times = []
         processing_times = []
         for channel in guild.text_channels:
-            permissions =channel.permissions_for(guild.get_member(self.bot.user.id))
+            permissions = channel.permissions_for(guild.get_member(self.bot.user.id))
             if permissions.read_messages and permissions.read_message_history:
 
                 async for message in channel.history(limit=limit, reverse=False,
@@ -51,14 +51,14 @@ class ModLog:
                     logged = LoggedMessage.get_or_none(messageid=message.id)
                     fetch_times.append(time.perf_counter() - fetch)
                     if logged is None:
-                            LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                                 content=message.content,
-                                                 channel=channel.id, server=channel.guild.id)
-                            for a in message.attachments:
-                                LoggedAttachment.create(id=a.id, url=a.url,
-                                                        isImage=(a.width is not None or a.width is 0),
-                                                        messageid=message.id)
-                            newCount = newCount + 1
+                        LoggedMessage.create(messageid=message.id, author=message.author.id,
+                                             content=message.content,
+                                             channel=channel.id, server=channel.guild.id)
+                        for a in message.attachments:
+                            LoggedAttachment.create(id=a.id, url=a.url,
+                                                    isImage=(a.width is not None or a.width is 0),
+                                                    messageid=message.id)
+                        newCount = newCount + 1
                     elif message.edited_at is not None:
                         if logged.content != message.content:
                             logged.content = message.content
@@ -66,7 +66,7 @@ class ModLog:
                             editCount = editCount + 1
                     count = count + 1
                     processing_times.append(time.perf_counter() - processing)
-                    if count % min(75, int(limit/2)) is 0:
+                    if count % min(75, int(limit / 2)) is 0:
                         await asyncio.sleep(0)
 
                 await asyncio.sleep(0)
@@ -125,8 +125,10 @@ class ModLog:
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
                 count = 1
                 for attachment in attachments:
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Attachment{f' {count}' if len(attachments) > 1 else ''}:** <{attachment.url}>", can_stamp=False)
-                    count +=1
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS",
+                                          f"**Attachment{f' {count}' if len(attachments) > 1 else ''}:** <{attachment.url}>",
+                                          can_stamp=False)
+                    count += 1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
         if event.data["channel_id"] == Configuration.get_master_var("BOT_LOG_CHANNEL"):
@@ -192,14 +194,16 @@ class ModLog:
         if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
-                    if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(time.time() - 30):
+                    if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(
+                            time.time() - 30):
                         break
                     if entry.target == member:
                         if entry.reason is None:
                             reason = Translator.translate("no_reason", member.guild.id)
                         else:
                             reason = entry.reason
-                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason, active=False)
+                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
+                                                       active=False)
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                               f":boot: {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
                         return
@@ -278,7 +282,9 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
+                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after,
+                                                                                                      "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(
+                                time.time() - 1):
                             entry = e
                 if before.nick is None:
                     type = "added"
@@ -315,10 +321,11 @@ class ModLog:
                 entry = None
                 if audit_log:
                     async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,"roles")\
-                        and all(role in e.changes.before.roles for role in removed)\
-                        and all(role in e.changes.after.roles for role in added) \
-                        and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
+                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,
+                                                                                                       "roles") \
+                                and all(role in e.changes.before.roles for role in removed) \
+                                and all(role in e.changes.after.roles for role in added) \
+                                and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
                             entry = e
                 if entry is not None:
                     removed = entry.changes.before.roles
@@ -361,7 +368,61 @@ class ModLog:
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "COMMAND_EXECUTED"):
             logging = f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention)} "
             clean_content = await commands.clean_content(fix_channel_mentions=True).convert(ctx, ctx.message.content)
-            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging, tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
+            GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging,
+                                  tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
+
+    async def on_guild_channel_create(self, channel):
+        e = await self.find_log(channel.guild, AuditLogAction.channel_create, lambda e: e.target.id == channel.id)
+        if e is not None:
+            logging = Translator.assemble("CREATE", "channel_created_by", channel.guild, channel=channel, person=e.user)
+        else:
+            logging = Translator.assemble("CREATE", "channel_created", channel.guild, channel=channel)
+        GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
+
+    async def on_guild_channel_delete(self, channel):
+        e = await self.find_log(channel.guild, AuditLogAction.channel_delete, lambda e: e.target.id == channel.id)
+        if e is not None:
+            logging = Translator.assemble("DELETE", "channel_deleted_by", channel.guild, channel=channel, person=e.user)
+        else:
+            logging = Translator.assemble("DELETE", "channel_delete", channel.guild, channel=channel)
+        GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
+
+    async def on_guild_channel_update(self, before, after):
+        simple = ["name", "category", "position", "nsfw", "slowmode_delay", "topic", "bitrate", "user_limit"]
+        for attr in simple:
+            if hasattr(before, attr):
+                ba = getattr(before, attr)
+                aa = getattr(after, attr)
+                if ba != aa:
+                    e = await self.find_log(before.guild, AuditLogAction.channel_update,
+                                            lambda e: e.target.id == before.id and hasattr(e.changes.before, attr) and getattr(e.changes.before, attr) == ba and getattr(e.changes.after, attr) == aa)
+                    parts = dict(before=self.prep_attr(ba), after=self.prep_attr(aa), channel=after, attr=attr)
+                    key = f"channel_update_simple"
+                    if e is not None:
+                        parts.update(person=e.user)
+                        key += "_by"
+                    logging = Translator.assemble("ALTER", key, before.guild, **parts)
+                    GearbotLogging.log_to(before.guild.id, "CHANNEL_CHANGES", logging)
+
+    @staticmethod
+    def prep_attr(attr):
+        attr = Utils.trim_message(str(attr), 900)
+        if "\n" in attr:
+            return f"`{attr}`"
+        return attr
+
+    @staticmethod
+    async def find_log(guild, action, matcher, check_limit=10):
+        entry = None
+        if guild.me.guild_permissions.view_audit_log:
+            try:
+                async for e in guild.audit_logs(action=action, limit=check_limit):
+                    if matcher(e):
+                        if entry is None or e.id > entry.id:
+                            entry = e
+            except discord.Forbidden:
+                pass
+        return entry
 
 
 async def cache_task(modlog: ModLog):
