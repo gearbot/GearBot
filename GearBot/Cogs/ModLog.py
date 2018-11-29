@@ -417,7 +417,7 @@ class ModLog:
 
     async def on_guild_channel_update(self, before, after):
         if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES"): return
-        await self.handle_simple_changes(before, after, "role_update_simple", "CHANNEL_CHANGES",
+        await self.handle_simple_changes(before, after, "channel_update_simple", "CHANNEL_CHANGES",
                                          AuditLogAction.channel_update,
                                          ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate",
                                           "user_limit"])
@@ -574,7 +574,7 @@ class ModLog:
 
     @staticmethod
     def prep_attr(attr):
-        attr = Utils.trim_message(str(attr), 900)
+        attr = f"\u200b{Utils.trim_message(str(attr), 900)}\u200b"
         if "\n" in attr:
             return f"`{attr}`"
         return attr
