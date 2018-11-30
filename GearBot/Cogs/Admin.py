@@ -82,7 +82,7 @@ class Admin:
         async with ctx.typing():
             Configuration.load_master()
             await Configuration.on_ready(self.bot)
-            await ctx.send("Configs reloaded")
+        await ctx.send("Configs reloaded")
 
     @commands.command(hidden=True)
     async def eval(self, ctx:commands.Context, *, code: str):
@@ -143,7 +143,7 @@ class Admin:
     @commands.command(hidden=True)
     async def post_info(self, ctx, name):
         with open(f"{name}.txt", "r") as file:
-            pages =  Pages.paginate("".join(file.readlines()), 500, 2000)
+            pages = Pages.paginate("".join(file.readlines()), 500, 2000)
             await ctx.channel.purge(limit=len(pages) + 2)
             await ctx.send(file=discord.File(f"{name}.png"))
             for page in pages:
