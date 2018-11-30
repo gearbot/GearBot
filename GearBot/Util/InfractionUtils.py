@@ -39,7 +39,7 @@ async def get_infraction_pages(guild_id, query):
             mod = await Utils.username(inf.mod_id)
             out += f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod, longest_mod)} | {inf.start} | {Utils.pad(inf.type, longest_type)} | {inf.reason}\n"
         prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user-1)}| {Utils.pad('moderator', longest_mod-1)}| timestamp           | {Utils.pad('type', longest_type)} | reason"
-        prefix = f"```\n{prefix}\n{'-' * len(prefix)}\n"
+        prefix = f"```md\n{prefix}\n{'-' * len(prefix)}\n"
         pages = Pages.paginate(out, prefix=prefix, suffix="```")
         cache[f"{guild_id}_{query}"] = pages
     if len(cache.keys()) > 20:

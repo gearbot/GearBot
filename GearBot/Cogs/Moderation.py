@@ -26,7 +26,6 @@ class Moderation:
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
-        bot.mutes = self.mutes = Utils.fetch_from_disk("mutes")
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.timed_actions())
@@ -34,7 +33,6 @@ class Moderation:
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
 
     def __unload(self):
-        Utils.saveToDisk("mutes", self.mutes)
         self.running = False
         Pages.unregister("roles")
 
@@ -554,7 +552,9 @@ class Moderation:
                         pass
 
     async def on_member_join(self, member: discord.Member):
-        if str(member.guild.id) in self.mutes and member.id in self.mutes[str(member.guild.id)]:
+        now = datetime.datetime.fromtimestamp(time.time())
+        if Infraction.get_or_none(Infraction.type == "Mute", Infraction.active == True,
+                                                            Infraction.end <= now):
             roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
                 role = member.guild.get_role(roleid)
@@ -567,11 +567,6 @@ class Moderation:
                     else:
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                               Translator.translate('mute_reapply_failed_log', member.build.id))
-
-    async def on_guild_remove(self, guild: discord.Guild):
-        if guild.id in self.mutes.keys():
-            del self.mutes[guild.id]
-            Utils.saveToDisk("mutes", self.mutes)
 
     async def timed_actions(self):
         GearbotLogging.info("Started timed moderation action background task")
