@@ -10,7 +10,7 @@ from database.DatabaseConnector import LoggedMessage
 
 class TranslatedBadArgument(BadArgument):
     def __init__(self, key, ctx, arg=None, **kwargs):
-        super().__init__(Translator.translate(key, ctx, arg=Utils.clean_name(arg), **kwargs))
+        super().__init__(Translator.translate(key, ctx, arg=Utils.clean_name(str(arg)), **kwargs))
 
 
 class BannedMember(Converter):
