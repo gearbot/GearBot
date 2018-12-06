@@ -8,7 +8,8 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
-from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, RangedInt
+from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
+    RangedInt, Message
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -507,6 +508,26 @@ class Moderation:
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
         await self._clean(ctx, amount, lambda m: True)
+
+    @clean.command("last")
+    async def clean_last(self, ctx, durationNumber: int, durationIdentifier: Duration):
+        """clean_last_help"""
+        duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
+        until = datetime.datetime.utcfromtimestamp(time.time() - duration)
+        await self._clean(ctx, 2000, lambda m: m.created_at > until)
+
+    @clean.command("until")
+    async def clean_until(self, ctx, message:Message(local_only=True)):
+        """clean_until_help"""
+        await self._clean(ctx, 2000, lambda m: m.id > message.id)
+
+    @clean.command("between")
+    async def clean_between(self, ctx, start: Message(local_only=True), end: Message(local_only=True)):
+        """clean_between_help"""
+        a = min(start.id, end.id)
+        b = max(start.id, end.id)
+        await self._clean(ctx, 2000, lambda m: a <= m.id <= b)
+
 
     @staticmethod
     async def _clean(ctx, amount, checker):

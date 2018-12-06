@@ -381,5 +381,9 @@
   "voice_change_afk_false": "{user} (``{user_id}``) is no longer AFK in voice",
   "connected_to_voice": "{user} (``{user_id}``) has connected to **{channel_name}** (``{channel_id}``)",
   "moved_voice": "{user} (``{user_id}``) has moved from **{old_channel_name}** (``{old_channel_id}``) to **{new_channel_name}** (``{new_channel_id}``)",
-  "disconnected_voice": "{user} (``{user_id}``) has disconnected from **{channel_name}** (``{channel_id}``)"
+  "disconnected_voice": "{user} (``{user_id}``) has disconnected from **{channel_name}** (``{channel_id}``)",
+  "message_wrong_guild": "The requested message was from another guild instead of this one",
+  "clean_until_help": "Cleans until the given message (message is also removed)",
+  "clean_last_help": "Cleans all messages send in the last x time (5 m for example)",
+  "clean_between_help": "Cleans both messages given and everything in between"
 }

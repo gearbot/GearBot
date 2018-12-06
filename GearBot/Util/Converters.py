@@ -126,8 +126,9 @@ JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channe
 
 class Message(Converter):
 
-    def __init__(self, insert=False) -> None:
+    def __init__(self, insert=False, local_only=False) -> None:
         self.insert = insert
+        self.local_only = local_only
 
     async def convert(self, ctx, argument):
         async with ctx.typing():
@@ -140,7 +141,8 @@ class Message(Converter):
             if logged.content != message.content:
                 logged.content = message.content
                 logged.save()
-
+        if message.guild != ctx.guild and self.local_only:
+            raise TranslatedBadArgument('message_wrong_guild', ctx)
         return message
 
     @staticmethod
