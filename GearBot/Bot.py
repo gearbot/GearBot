@@ -31,7 +31,6 @@ async def on_ready():
 async def on_message(message:discord.Message):
     await GlobalHandlers.on_message(bot, message)
 
-
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     await GlobalHandlers.on_guild_join(guild)

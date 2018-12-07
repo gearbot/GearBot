@@ -29,7 +29,8 @@ extensions = [
     "Censor",
     "Infractions",
     "Minecraft",
-    "DMMessages"
+    "DMMessages",
+    "AntiRaid"
 ]
 
 def prefix_callable(bot, message):
