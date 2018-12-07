@@ -138,7 +138,7 @@ class Message(Converter):
                 raise TranslatedBadArgument('unknown_message', ctx)
             if logged is None and message is not None and self.insert:
                 logged = DBUtils.insert_message(message)
-            if logged.content != message.content:
+            if logged is not None and logged.content != message.content:
                 logged.content = message.content
                 logged.save()
         if message.guild != ctx.guild and self.local_only:
