@@ -191,6 +191,7 @@ class Message(Converter):
                             permissions = channel.permissions_for(channel.guild.me)
                             if permissions.read_messages and permissions.read_message_history:
                                 message = await channel.get_message(message_id)
+                                channel_id = channel.id
                                 break
                         except (NotFound, Forbidden):
                             pass
@@ -199,15 +200,16 @@ class Message(Converter):
             elif channel_id is None:
                 channel_id = logged_message.channel
             channel = ctx.bot.get_channel(channel_id)
-            if channel is not None:
+            if channel is None:
+                raise TranslatedBadArgument('unknown_channel', ctx)
+            elif message is None:
                 try:
                     permissions = channel.permissions_for(channel.guild.me)
                     if permissions.read_messages and permissions.read_message_history:
                         message = await channel.get_message(message_id)
                 except (NotFound, Forbidden):
                     raise TranslatedBadArgument('unknown_message', ctx)
-            else:
-                raise TranslatedBadArgument('unknown_channel', ctx)
+
         return logged_message, message
 
 
