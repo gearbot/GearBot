@@ -36,7 +36,6 @@ async def readyBot(bot):
     GearbotLogging.initialize_pump(bot)
     await Configuration.on_ready(bot)
     Emoji.on_ready(bot)
-    Confirmation.on_ready(bot)
     Pages.on_ready(bot)
     Utils.on_ready(bot)
     Translator.on_ready(bot)
