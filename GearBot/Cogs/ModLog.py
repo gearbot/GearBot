@@ -544,7 +544,7 @@ class ModLog:
                     entry = await self.find_log(before.guild, AuditLogAction.role_update,
                                                 lambda e: e.target.id == after.id and hasattr(e.before, "permissions") and e.before.permissions == before.permissions and e.after.permissions == after.permissions)
                     key = f"role_update_perm_{'added' if av else 'revoked'}"
-                    parts = dict(role=Utils.clean(after.name), role_id=after.id, perm=perm)
+                    parts = dict(role=await Utils.clean(after.name), role_id=after.id, perm=perm)
                     if entry is not None:
                         key += "_by"
                         parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
