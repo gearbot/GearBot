@@ -15,13 +15,13 @@ def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=Tru
         del cache[f"{guild_id}_{None}"]
 
 
-async def get_infraction_pages(guild_id, query):
+async def get_infraction_pages(guild_id, query, amount):
     if f"{guild_id}_{query}" not in cache.keys():
         if query is None:
-            infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
+            infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(amount)
         else:
             infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
-                    (Infraction.user_id == query) | (Infraction.mod_id == query))).order_by(Infraction.id.desc())
+                    (Infraction.user_id == query) | (Infraction.mod_id == query))).order_by(Infraction.id.desc()).limit(amount)
 
         out = ""
         longest_user = 0
