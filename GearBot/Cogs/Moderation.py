@@ -575,7 +575,7 @@ class Moderation:
     async def on_member_join(self, member: discord.Member):
         now = datetime.datetime.fromtimestamp(time.time())
         if Infraction.get_or_none(Infraction.type == "Mute", Infraction.active == True,
-                                                            Infraction.end <= now):
+                                                            Infraction.end >= now):
             roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
                 role = member.guild.get_role(roleid)
