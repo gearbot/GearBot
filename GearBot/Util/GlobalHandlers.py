@@ -16,21 +16,6 @@ import Util
 from Util import Configuration, Emoji, Utils, Translator, GearbotLogging, DocUtils, Pages
 from database import DatabaseConnector
 
-extensions = [
-    "Basic",
-    "Admin",
-    "Moderation",
-    "Serveradmin",
-    "ModLog",
-    "CustCommands",
-    "BCVersionChecker",
-    "Reload",
-    "PageHandler",
-    "Censor",
-    "Infractions",
-    "Minecraft",
-    "DMMessages"
-]
 
 def prefix_callable(bot, message):
     user_id = bot.user.id
@@ -65,7 +50,7 @@ async def on_ready(bot):
         bot.aiosession = aiohttp.ClientSession()
         bot.start_time = datetime.datetime.utcnow()
         GearbotLogging.info("Loading cogs...")
-        for extension in extensions:
+        for extension in Configuration.get_master_var("COGS"):
             try:
                 bot.load_extension("Cogs." + extension)
             except Exception as e:
