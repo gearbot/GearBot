@@ -83,6 +83,45 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
+        
+    @commands.group()
+    @commands.guild_only()
+    async def mrole(self, ctx: commands.Context):
+        """Allows variety of roles to be pinged."""
+        if ctx.subcommand_passed is None:
+            await ctx.send(f"Use `{ctx.prefix}help role Command` for info on how to use this command.")
+
+    @mrole.command()
+    async def add(self, ctx, user: discord.Member, *, rolename:str):
+        """Adds an role to someone."""
+        role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+        if not role:
+            return await ctx.send("That role doesn't exist!")
+        elif role > ctx.guild.me.top_role:
+            return await ctx.send(f':no_entry_sign: {role.name} ({role.id}) is higher than my highest role.')
+        elif user.top_role > ctx.guild.me.top_role:
+            return await ctx.send(f':no_entry_sign: {user.name}#{user.discriminator} (``{user.id}``) has a higher role than me, I can\'t add the role to them.')
+        try:
+            await user.add_roles(role)
+            await ctx.send(f":ok_hand: I added the {role.name} role to {user}(``{user.id}!``)")
+        except discord.Forbidden:
+            await ctx.send("I need **Manage Roles** for this!")
+
+    @mrole.command()
+    async def remove(self, ctx, user: discord.Member, *, rolename:str):
+        """Removes an role to someone."""
+        role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+        if not role:
+            return await ctx.send("That role doesn't exist!")
+        elif role > ctx.guild.me.top_role:
+            return await ctx.send(f':no_entry_sign: {role.name} ({role.id}) is higher than my highest role.')
+        elif user.top_role > ctx.guild.me.top_role:
+            return await ctx.send(f':no_entry_sign: {user.name}#{user.discriminator} (``{user.id}``) has a higher role than me, I can\'t remove the role from them.')
+        try:
+            await user.remove_roles(role)
+            await ctx.send(f":ok_hand: I removed the {role.name} role to {user}(``{user.id}!``)")
+        except discord.Forbidden:
+            await ctx.send("I need **Manage Roles** for this!")
 
     @commands.command(aliases=["👢"])
     @commands.guild_only()
