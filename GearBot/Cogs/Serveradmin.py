@@ -261,8 +261,8 @@ class Serveradmin:
 
     @cog_overrides.command(name="add")
     async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
-        cog = cog.lower()
-        if cog in ctx.bot.cogs:
+        cog = cog
+        if cog in ctx.bot.cogs.keys():
             cogo = ctx.bot.cogs[cog]
             if not hasattr(cogo, "permissions"):
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
@@ -293,7 +293,6 @@ class Serveradmin:
 
     @cog_overrides.command(name="remove")
     async def remove_cog_override(self, ctx, cog: str):
-        cog = cog.lower()
         overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
         if cog in overrides:
             overrides[cog]["required"] = -1
