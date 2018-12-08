@@ -741,7 +741,8 @@ class Serveradmin:
 
     @configure.group()
     async def blacklist(self, ctx):
-        await Pages.create_new("blacklist", ctx)
+        if ctx.command == self.blacklist and ctx.invoked_subcommand is None:
+            await Pages.create_new("blacklist", ctx)
 
     @staticmethod
     async def _blacklist_init(ctx):
