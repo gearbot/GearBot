@@ -385,5 +385,17 @@
   "message_wrong_guild": "The requested message was from another guild instead of this one",
   "clean_until_help": "Cleans until the given message (message is also removed)",
   "clean_last_help": "Cleans all messages send in the last x time (5 m for example)",
-  "clean_between_help": "Cleans both messages given and everything in between"
+  "clean_between_help": "Cleans both messages given and everything in between",
+  "mrole_add_too_high": "My role needs to be higher than the {role} before I can add it to people.",
+  "mrole_no_subcommand": "See the subcommands {prefix}help mrole for help on how to use this command.",
+  "user_mrole_add_too_high": "{user} (``{user_id}``) has a higher role than you do, I can't add the role to them.",
+  "mrole_help": "Currently lists the list from this group.", 
+  "mrole_add_help": "Adds an role to an user.",
+  "mrole_remove_help": "Removes an role from the user.",
+  "mrole_added": "I added the {role} role to {user} (``{user_id}``)",
+  "mrole_remove_too_high": "My role needs to be higher than the {role} before I can remove it from people.",
+  "user_mrole_remove_too_high": "{user} (``{user_id}``) has a higher role than you do, I cannot remove the role from them.",
+  "mrole_removed": "I removed the {role} role from {user} (``{user_id}``).",
+  "author_mrole_add_same": "I cannot add the {role} to {user} (``{user_id}``) because you can only add roles lower than you.",
+  "author_mrole_remove_same": "I cannot remove the {role} from {user} (``{user_id}``) because you can only remove roles lower than you."
 }
