@@ -491,7 +491,7 @@ class ModLog:
 
         for target in set(new_overrides.keys()).difference(old_overrides.keys()):
             key = "permission_override_added"
-            parts = dict(channel=after, target_name=Utils.clean_user(target), target_id=target.id)
+            parts = dict(channel=after, target_name=await Utils.clean(target), target_id=target.id)
 
             def finder(e):
                 if e.target.id == after.id and e.extra.id == target.id:
