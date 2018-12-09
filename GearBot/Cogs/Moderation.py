@@ -6,6 +6,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
+from discord import Object
+
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
@@ -83,9 +85,17 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-        
 
-            
+
+    @commands.command()
+    @commands.guild_only()
+    async def seen(self, ctx, user: discord.Member):
+        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
+        if(len(messages)==0):
+            await GearbotLogging.send_to(ctx, "NO", f"I've never seen {Utils.clean_user(user)} ({user.id}) before.", Translate=False)
+            return;
+        await GearbotLogging.send_to(ctx, "YES", f"I've last seen {Utils.clean_user(user)} ({user.id}) at {Object(messages[0].messageid).created_at}", Translate=False)
+
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
