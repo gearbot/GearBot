@@ -21,13 +21,13 @@ class PageHandler:
         except discord.NotFound:
             pass
         else:
-            if payload.emoji.id == Emoji.get_emoji('LEFT').id:
+            if str(payload.emoji) == str(Emoji.get_emoji('LEFT')):
                 if await Pages.update(self.bot, message , "PREV", payload.user_id):
                     try:
                         await message.remove_reaction(Emoji.get_emoji('LEFT'), user)
                     except discord.Forbidden:
                         pass
-            elif payload.emoji.id == Emoji.get_emoji('RIGHT').id:
+            elif str(payload.emoji) == str(Emoji.get_emoji('RIGHT')):
                 if await Pages.update(self.bot, message, "NEXT", payload.user_id):
                     try:
                         await message.remove_reaction(Emoji.get_emoji('RIGHT'), user)
