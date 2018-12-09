@@ -89,21 +89,23 @@ class Moderation:
     async def mrole(self, ctx: commands.Context):
         """Allows variety of roles to be pinged."""
         if ctx.subcommand_passed is None:
-            await ctx.send(f"Use `{ctx.prefix}help role Command` for info on how to use this command.")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_no_subcommand', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
 
     @mrole.command()
     async def add(self, ctx, user: discord.Member, *, rolename:str):
         """Adds an role to someone."""
         role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
         if not role:
-            return await ctx.send("That role doesn't exist!")
+            return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
         elif role > ctx.guild.me.top_role:
-            return await ctx.send(f':no_entry_sign: {role.name} ({role.id}) is higher than my highest role.')
-        elif user.top_role > ctx.guild.me.top_role:
-            return await ctx.send(f':no_entry_sign: {user.name}#{user.discriminator} (``{user.id}``) has a higher role than me, I can\'t add the role to them.')
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_add_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+        elif user.top_role > ctx.author.top_role:
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_add_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+        elif role == ctx.author.top_role:
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_add_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
         try:
             await user.add_roles(role)
-            await ctx.send(f":ok_hand: I added the {role.name} role to {user}(``{user.id}!``)")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
         except discord.Forbidden:
             await ctx.send("I need **Manage Roles** for this!")
 
@@ -112,17 +114,19 @@ class Moderation:
         """Removes an role to someone."""
         role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
         if not role:
-            return await ctx.send("That role doesn't exist!")
+            return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
         elif role > ctx.guild.me.top_role:
-            return await ctx.send(f':no_entry_sign: {role.name} ({role.id}) is higher than my highest role.')
-        elif user.top_role > ctx.guild.me.top_role:
-            return await ctx.send(f':no_entry_sign: {user.name}#{user.discriminator} (``{user.id}``) has a higher role than me, I can\'t remove the role from them.')
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_remove_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+        elif user.top_role > ctx.author.top_role:
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_remove_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+        elif role == ctx.author.top_role:
+            return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_remove_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
         try:
             await user.remove_roles(role)
-            await ctx.send(f":ok_hand: I removed the {role.name} role to {user}(``{user.id}!``)")
+            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
         except discord.Forbidden:
             await ctx.send("I need **Manage Roles** for this!")
-
+            
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
