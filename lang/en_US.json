@@ -397,5 +397,6 @@
   "user_mrole_remove_too_high": "{user} (``{user_id}``) has a higher role than you do, I cannot remove the role from them.",
   "mrole_removed": "I removed the {role} role from {user} (``{user_id}``).",
   "author_mrole_add_same": "I cannot add the {role} to {user} (``{user_id}``) because you can only add roles lower than you.",
-  "author_mrole_remove_same": "I cannot remove the {role} from {user} (``{user_id}``) because you can only remove roles lower than you."
+  "author_mrole_remove_same": "I cannot remove the {role} from {user} (``{user_id}``) because you can only remove roles lower than you.",
+  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned"
 }

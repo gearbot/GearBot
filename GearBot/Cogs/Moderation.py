@@ -343,7 +343,18 @@ class Moderation:
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                   f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
-            Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") &
+
+            tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
+                                          (Infraction.guild_id == ctx.guild.id)))
+            if len(tempbans) > 0:
+                inf = tempbans[0]
+                timeframe = datetime.datetime.utcfromtimestamp(inf.end.timestamp()) - datetime.datetime.utcfromtimestamp(time.time())
+                hours, remainder = divmod(int(timeframe.total_seconds()), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                tt = Translator.translate("hours", ctx, hours=hours, minutes=minutes)
+                await GearbotLogging.send_to(ctx, "WARNING", "forceban_override_tempban", user=Utils.clean_user(user), timeframe=tt, inf_id=inf.id)
+
+            Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Unban") | (Infraction.type == "Tempban")) &
                                                   (Infraction.guild_id == ctx.guild.id)).execute()
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
@@ -488,7 +499,7 @@ class Moderation:
     @commands.group()
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
-        """"archive_help"""
+        """archive_help"""
         if ctx.subcommand_passed is None:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
