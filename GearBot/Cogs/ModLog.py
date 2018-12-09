@@ -441,7 +441,7 @@ class ModLog:
                         new_value = getattr(a_override, perm)
                         if value != new_value:
                             parts = dict(before=self.prep_override(value), after=self.prep_override(new_value),
-                                         permission=perm, channel=after, target_name=Utils.clean(target),
+                                         permission=perm, channel=after, target_name=await Utils.clean(target),
                                          target_id=target.id)
                             key = "permission_override_update"
 
