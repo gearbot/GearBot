@@ -502,6 +502,7 @@ class Moderation:
 
     @commands.group()
     @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean(self, ctx):
         """clean_help"""
         if ctx.invoked_subcommand == self.clean:
