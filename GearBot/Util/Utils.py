@@ -115,8 +115,7 @@ async def clean(text, guild:discord.Guild=None):
                 text = text.replace(f"<@#{uid}>", name)
 
 
-    for c in ("\\", "`", "*", "_", "~", "<"):
-        text = text.replace(c, f"\{c}\u200b")
+    text = escape_markdown(text)
 
     #find urls last so the < escaping doesn't break it
     for url in URL_MATCHER.findall(text):
@@ -127,12 +126,15 @@ async def clean(text, guild:discord.Guild=None):
     text = text.replace("@", "@\u200b")
     return text
 
-
+def escape_markdown(text):
+    for c in ("\\", "`", "*", "_", "~", "<"):
+        text = text.replace(c, f"\{c}\u200b")
+    return text
 
 def clean_name(text):
     if text is None:
         return None
-    return text.replace("@","@\u200b").replace("`", "")
+    return text.replace("@","@\u200b")
 
 
 known_invalid_users = []
@@ -166,7 +168,7 @@ async def get_user(uid, fetch=True):
 
 
 def clean_user(user):
-    return f"\u200b{user.name}\u200b#{user.discriminator}"
+    return f"\u200b{escape_markdown(user.name)}\u200b#{user.discriminator}"
 
 def pad(text, length, char=' '):
     return f"{text}{char * (length-len(text))}"
