@@ -87,7 +87,7 @@ ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
 URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n]*)?)', re.IGNORECASE)
 
-async def clean(text, guild:discord.Guild=None):
+async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     text = str(text)
     if guild is not None:
         # resolve user mentions
@@ -114,12 +114,13 @@ async def clean(text, guild:discord.Guild=None):
                     name = "#" + channel.name
                 text = text.replace(f"<@#{uid}>", name)
 
+    if markdown:
+        text = escape_markdown(text)
 
-    text = escape_markdown(text)
-
-    #find urls last so the < escaping doesn't break it
-    for url in URL_MATCHER.findall(text):
-        text = text.replace(url, f"<{url}>")
+    if links:
+        #find urls last so the < escaping doesn't break it
+        for url in URL_MATCHER.findall(text):
+            text = text.replace(url, f"<{url}>")
 
 
     # make sure we don't have funny guys/roles named "everyone" messing it all up
