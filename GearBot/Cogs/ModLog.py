@@ -441,7 +441,7 @@ class ModLog:
                         new_value = getattr(a_override, perm)
                         if value != new_value:
                             parts = dict(before=self.prep_override(value), after=self.prep_override(new_value),
-                                         permission=perm, channel=after, target_name=Utils.clean_user(target),
+                                         permission=perm, channel=after, target_name=await Utils.clean(target),
                                          target_id=target.id)
                             key = "permission_override_update"
 
@@ -491,7 +491,7 @@ class ModLog:
 
         for target in set(new_overrides.keys()).difference(old_overrides.keys()):
             key = "permission_override_added"
-            parts = dict(channel=after, target_name=Utils.clean_user(target), target_id=target.id)
+            parts = dict(channel=after, target_name=await Utils.clean(target), target_id=target.id)
 
             def finder(e):
                 if e.target.id == after.id and e.extra.id == target.id:
