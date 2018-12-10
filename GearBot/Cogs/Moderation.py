@@ -384,7 +384,7 @@ class Moderation:
         except Exception as e:
             self.bot.data["unbans"].remove(fid)
             raise e
-        Infraction.update(active=False).where((Infraction.user_id == member.user.id) & (Infraction.type == "Ban") &
+        Infraction.update(active=False).where((Infraction.user_id == member.user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
                                               (Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         await ctx.send(
