@@ -6,6 +6,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
+from discord import Object
+
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
@@ -83,7 +85,16 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-        
+
+    @commands.command()
+    @commands.guild_only()
+    async def seen(self, ctx, user: discord.Member):
+        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
+        if(len(messages)==0):
+            return await ctx.send(f"{Translator.translate('seen_fail', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user))}")
+        return await ctx.send(f"{Translator.translate('seen_success', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)}");
+
+
     # @commands.group()
     # @commands.guild_only()
     # async def mrole(self, ctx: commands.Context):
@@ -126,7 +137,7 @@ class Moderation:
     #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
     #     except discord.Forbidden:
     #         await ctx.send("I need **Manage Roles** for this!")
-            
+
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)

@@ -1,4 +1,6 @@
 {
+  "seen_fail": "🕵 I've never seen {cleaneduser} ({user_id}) before.",
+  "seen_success": "👀 I've last seen {cleaneduser} ({user_id}) at {date}.",
   "ping_help": "See if the bot is still online.",
   "quote_help": "Quotes the requested message.",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
