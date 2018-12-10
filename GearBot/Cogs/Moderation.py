@@ -86,15 +86,58 @@ class Moderation:
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
 
+@commands.command()
+@commands.guild_only()
+async def seen(self, ctx, user: discord.Member):
+    messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
+    if(len(messages)==0):
+        await GearbotLogging.send_to(ctx, "NO", f"I've never seen {Utils.clean_user(user)} ({user.id}) before.", Translate=False)
+        return;
+    await GearbotLogging.send_to(ctx, "YES", f"I've last seen {Utils.clean_user(user)} ({user.id}) at {Object(messages[0].messageid).created_at}", Translate=False)
 
-    @commands.command()
-    @commands.guild_only()
-    async def seen(self, ctx, user: discord.Member):
-        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
-        if(len(messages)==0):
-            await GearbotLogging.send_to(ctx, "NO", f"I've never seen {Utils.clean_user(user)} ({user.id}) before.", Translate=False)
-            return;
-        await GearbotLogging.send_to(ctx, "YES", f"I've last seen {Utils.clean_user(user)} ({user.id}) at {Object(messages[0].messageid).created_at}", Translate=False)
+
+    # @commands.group()
+    # @commands.guild_only()
+    # async def mrole(self, ctx: commands.Context):
+    #     """Allows variety of roles to be pinged."""
+    #     if ctx.subcommand_passed is None:
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_no_subcommand', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
+    #
+    # @mrole.command()
+    # async def add(self, ctx, user: discord.Member, *, rolename:str):
+    #     """Adds an role to someone."""
+    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+    #     if not role:
+    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
+    #     elif role > ctx.guild.me.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_add_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+    #     elif user.top_role > ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_add_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     elif role == ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_add_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     try:
+    #         await user.add_roles(role)
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     except discord.Forbidden:
+    #         await ctx.send("I need **Manage Roles** for this!")
+    #
+    # @mrole.command()
+    # async def remove(self, ctx, user: discord.Member, *, rolename:str):
+    #     """Removes an role to someone."""
+    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+    #     if not role:
+    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
+    #     elif role > ctx.guild.me.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_remove_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+    #     elif user.top_role > ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_remove_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     elif role == ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_remove_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     try:
+    #         await user.remove_roles(role)
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     except discord.Forbidden:
+    #         await ctx.send("I need **Manage Roles** for this!")
 
     @commands.command(aliases=["👢"])
     @commands.guild_only()
@@ -353,7 +396,7 @@ class Moderation:
         except Exception as e:
             self.bot.data["unbans"].remove(fid)
             raise e
-        Infraction.update(active=False).where((Infraction.user_id == member.user.id) & (Infraction.type == "Ban") &
+        Infraction.update(active=False).where((Infraction.user_id == member.user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
                                               (Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
         await ctx.send(

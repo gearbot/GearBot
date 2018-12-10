@@ -71,9 +71,14 @@ def v4(config):
             info.append("VOICE_CHANGES_DETAILED")
     return config
 
+def v5(config):
+    config["ROLE_WHITELIST"] = True
+    config["ROLE_LIST"] = []
+    return config
+
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4]
+MIGRATORS = [initial_migration, v2, v3, v4, v5]
 
 async def on_ready(bot: commands.Bot):
     global CONFIG_VERSION

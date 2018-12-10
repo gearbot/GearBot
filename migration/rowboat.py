@@ -1,11 +1,45 @@
+import json
 import math
 import time
 from datetime import datetime
 
-from Util import Utils
-from database.DatabaseConnector import Infraction
+from peewee import PrimaryKeyField, Model, BigIntegerField, CharField, TimestampField, BooleanField, MySQLDatabase
 
-infractions = Utils.fetch_from_disk("infractions")["infractions"]
+
+def fetch_from_disk(filename, alternative=None):
+    try:
+        with open(f"{filename}.json") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        if alternative is not None:
+            fetch_from_disk(alternative)
+        return dict()
+
+c = fetch_from_disk("../config/master")
+
+connection = MySQLDatabase(c["DATABASE_NAME"],
+                           user=c["DATABASE_USER"],
+                           password=c["DATABASE_PASS"],
+                           host=c["DATABASE_HOST"],
+                           port=c["DATABASE_PORT"], use_unicode=True, charset="utf8mb4")
+
+class Infraction(Model):
+    id = PrimaryKeyField()
+    guild_id = BigIntegerField()
+    user_id = BigIntegerField()
+    mod_id = BigIntegerField()
+    type = CharField(max_length=10, collation="utf8mb4_general_ci")
+    reason = CharField(max_length=2000, collation="utf8mb4_general_ci")
+    start = TimestampField()
+    end = TimestampField(null=True)
+    active = BooleanField(default=True)
+
+    class Meta:
+        database = connection
+
+
+
+infractions = fetch_from_disk("infractions")["infractions"]
 print(f"Importing {len(infractions)}, this can take a while...")
 done = 0
 last_reported = -1

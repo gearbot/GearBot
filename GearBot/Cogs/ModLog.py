@@ -350,7 +350,7 @@ class ModLog:
                     before_clean_name = Utils.clean_user(before)
                     after_clean_name = Utils.clean_user(after)
                     GearbotLogging.log_to(guild.id, "NAME_CHANGES",
-                                          f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after=after_clean_name, before=before_clean_name, user_id=after.id)}")
+                                          f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after_clean=after_clean_name, before=before_clean_name, user_id=after.id, after=after)}")
 
 
     async def on_voice_state_update(self, member, before, after):
@@ -361,11 +361,11 @@ class ModLog:
                 new = getattr(after, s)
                 if old != new:
                     key = f"voice_change_{s}_{str(new).lower()}"
-                    logging = Translator.assemble("VOICE", key, member.guild.id, user=await Utils.clean(member), user_id=member.id)
+                    logging = Translator.assemble("VOICE", key, member.guild.id, user=Utils.clean_user(member), user_id=member.id)
                     GearbotLogging.log_to(member.guild.id, "VOICE_CHANGES_DETAILED", logging)
         if Features.is_logged(member.guild.id, "VOICE_CHANGES"):
             if before.channel != after.channel:
-                parts = dict(user=await Utils.clean(member), user_id=member.id)
+                parts = dict(user=Utils.clean_user(member), user_id=member.id)
                 if before.channel is None:
                     key = "connected_to_voice"
                     parts.update(channel_name=after.channel, channel_id=after.channel.id)
@@ -393,7 +393,7 @@ class ModLog:
     async def on_command_completion(self, ctx):
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "COMMAND_EXECUTED"):
             logging = f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention)} "
-            clean_content = await Utils.clean(ctx.message.content, ctx.guild)
+            clean_content = await Utils.clean(ctx.message.content, ctx.guild, markdown=False, links=False)
             GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging,
                                   tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
 
@@ -441,7 +441,7 @@ class ModLog:
                         new_value = getattr(a_override, perm)
                         if value != new_value:
                             parts = dict(before=self.prep_override(value), after=self.prep_override(new_value),
-                                         permission=perm, channel=after, target_name=await Utils.clean(target),
+                                         permission=perm, channel=after, target_name=Utils.escape_markdown(str(target)),
                                          target_id=target.id)
                             key = "permission_override_update"
 
@@ -462,13 +462,13 @@ class ModLog:
                                 key += "_role"
                             if entry is not None:
                                 key += "_by"
-                                parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
+                                parts.update(person=Utils.clean_user(entry.user), person_id=entry.user.id)
                             logging = Translator.assemble("ALTER", key, after.guild.id, **parts)
                             GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
             else:
                 # permission override removed
                 key = "permission_override_removed"
-                parts = dict(channel=after, target_name=await Utils.clean(target), target_id=target.id)
+                parts = dict(channel=after, target_name=Utils.clean_user(target), target_id=target.id)
 
                 def finder(e):
                     if e.target.id == after.id and e.extra.id == target.id:
@@ -485,13 +485,13 @@ class ModLog:
                     key += "_role"
                 if entry is not None:
                     key += "_by"
-                    parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
+                    parts.update(person=Utils.clean_user(entry.user), person_id=entry.user.id)
                 logging = Translator.assemble("ALTER", key, after.guild.id, **parts)
                 GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
 
         for target in set(new_overrides.keys()).difference(old_overrides.keys()):
             key = "permission_override_added"
-            parts = dict(channel=after, target_name=await Utils.clean(target), target_id=target.id)
+            parts = dict(channel=after, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
             def finder(e):
                 if e.target.id == after.id and e.extra.id == target.id:
@@ -510,7 +510,7 @@ class ModLog:
                 key += "_role"
             if entry is not None:
                 key += "_by"
-                parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
+                parts.update(person=Utils.clean_user(entry.user), person_id=entry.user.id)
             logging = Translator.assemble("ALTER", key, after.guild.id, **parts)
             GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
 
@@ -520,7 +520,7 @@ class ModLog:
         if entry is None:
             logging = Translator.assemble("CREATE", "role_created", role.guild.id, role=role.name)
         else:
-            logging = Translator.assemble("CREATE", "role_created_by", role.guild.id, role=role.name, person=await Utils.clean(entry.user), person_id=entry.user.id)
+            logging = Translator.assemble("CREATE", "role_created_by", role.guild.id, role=role.name, person=Utils.clean_user(entry.user), person_id=entry.user.id)
         GearbotLogging.log_to(role.guild.id, "ROLE_CHANGES", logging)
 
     async def on_guild_role_delete(self, role:discord.Role):
@@ -530,7 +530,7 @@ class ModLog:
             logging = Translator.assemble("DELETE", "role_deleted", role.guild.id, role=role.name)
         else:
             logging = Translator.assemble("DELETE", "role_deleted_by", role.guild.id, role=role.name,
-                                          person=await Utils.clean(entry.user), person_id=entry.user.id)
+                                          person=Utils.clean_user(entry.user), person_id=entry.user.id)
         GearbotLogging.log_to(role.guild.id, "ROLE_CHANGES", logging)
 
 
@@ -547,7 +547,7 @@ class ModLog:
                     parts = dict(role=await Utils.clean(after.name), role_id=after.id, perm=perm)
                     if entry is not None:
                         key += "_by"
-                        parts.update(person=await Utils.clean(entry.user), person_id=entry.user.id)
+                        parts.update(person=Utils.clean_user(entry.user), person_id=entry.user.id)
                     logging = Translator.assemble("ALTER", key, before.guild.id, **parts)
                     GearbotLogging.log_to(after.guild.id, "ROLE_CHANGES", logging)
 

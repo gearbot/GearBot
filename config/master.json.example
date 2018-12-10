@@ -1,0 +1,31 @@
+{
+  "LOGIN_TOKEN": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "BOT_LOG_CHANNEL": 365908831328403456,
+  "CROWDIN_KEY": null,
+  "DATABASE_HOST": "localhost",
+  "DATABASE_NAME": "gearbot",
+  "DATABASE_PASS": "database password",
+  "DATABASE_PORT": 3306,
+  "DATABASE_USER": "gearbot",
+  "EMOJI": {
+
+  },
+  "GUIDES": 0,
+  "inbox": 0,
+  "COGS": [
+    "Basic",
+    "Admin",
+    "Moderation",
+    "Serveradmin",
+    "ModLog",
+    "CustCommands",
+    "BCVersionChecker",
+    "Reload",
+    "PageHandler",
+    "Censor",
+    "Infractions",
+    "Minecraft",
+    "DMMessages"
+  ],
+  "DOCS": true
+}
