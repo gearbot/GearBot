@@ -106,7 +106,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
     if message is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
     if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
-        stamp = f"[`{datetime.strftime(datetime.now(), '%H:%M:%S')}`]"
+        stamp = f"[``{datetime.strftime(datetime.now(), '%H:%M:%S')}``]"
         if message is None:
             message = stamp
         else:
@@ -115,7 +115,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
         if message is None:
             message = tag_on
         else:
-            if len(message) + len(tag_on) < 1999:
+            if len(message) + len(tag_on) <= 2000:
                 message = f"{message} {tag_on}"
             else:
                 remaining = tag_on
