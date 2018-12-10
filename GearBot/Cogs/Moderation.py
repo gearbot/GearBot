@@ -3,6 +3,7 @@ import datetime
 import time
 
 import discord
+from discord import Object
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -83,6 +84,15 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
+@commands.command()
+    @commands.guild_only()
+    async def seen(self, ctx, user: discord.Member):
+        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
+        if len(messages) is 0:
+            await GearbotLogging.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await GearbotLogging.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
+
 
     @commands.group()
     @commands.guild_only()
@@ -110,7 +120,6 @@ class Moderation:
     async def add(self, ctx, user: discord.Member, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
-
 
     # @mrole.command()
     # async def remove(self, ctx, user: discord.Member, *, rolename:str):
