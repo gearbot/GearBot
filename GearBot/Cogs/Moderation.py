@@ -4,7 +4,7 @@ import time
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter
+from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
@@ -83,32 +83,35 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-        
-    # @commands.group()
-    # @commands.guild_only()
-    # async def mrole(self, ctx: commands.Context):
-    #     """Allows variety of roles to be pinged."""
-    #     if ctx.subcommand_passed is None:
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_no_subcommand', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
-    #
-    # @mrole.command()
-    # async def add(self, ctx, user: discord.Member, *, rolename:str):
-    #     """Adds an role to someone."""
-    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
-    #     if not role:
-    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
-    #     elif role > ctx.guild.me.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_add_too_high', ctx, user=Utils.clean(user), role=role.name)}")
-    #     elif user.top_role > ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_add_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     elif role == ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_add_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     try:
-    #         await user.add_roles(role)
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     except discord.Forbidden:
-    #         await ctx.send("I need **Manage Roles** for this!")
-    #
+
+    @commands.group()
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_roles=True)
+    async def role(self, ctx: commands.Context):
+        """mod_role_help"""
+        if ctx.subcommand_passed is None:
+            await ctx.invoke(self.bot.get_command("help"), "role")
+
+    async def role_handler(self, ctx, user, role, action):
+        try:
+            drole = RoleConverter().convert(ctx, role)
+        except BadArgument:
+            # todo: try finding partial matches
+            drole = None
+
+        if role is None:
+            await GearbotLogging.send_to(ctx, 'NO', 'role_not_found', role=role)
+        elif self._can_act("role_add", ctx, user, ):
+            await getattr(user, f"{action}_roles")(drole)
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+
+    @role.command()
+    async def add(self, ctx, user: discord.Member, *, role: str):
+        """role_add_help"""
+        await self.role_handler(ctx, user, role, "add")
+
+
     # @mrole.command()
     # async def remove(self, ctx, user: discord.Member, *, rolename:str):
     #     """Removes an role to someone."""
@@ -126,7 +129,7 @@ class Moderation:
     #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
     #     except discord.Forbidden:
     #         await ctx.send("I need **Manage Roles** for this!")
-            
+
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)

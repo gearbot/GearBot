@@ -1,7 +1,7 @@
 import re
 
-from discord import NotFound, Forbidden
-from discord.ext.commands import UserConverter, BadArgument, Converter
+from discord import NotFound, Forbidden, Member
+from discord.ext.commands import UserConverter, BadArgument, Converter, MemberConverter, Context
 
 from Util import Utils, Configuration, Translator
 from database import DBUtils

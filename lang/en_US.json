@@ -203,10 +203,8 @@
   "command_override_removed": "Command override for `{command}` has been removed.",
   "command_override_not_found": "I don't have a command override for `{command}` to remove.",
   "softban_help": "Soft bans a user from the server (ban, removes last day of messages and unbans).",
-  "softban_unable": "Unable to softban {user} as I do not have a higher role than them.",
   "softban_confirmation": "{user} (``{user_id}``) was softbanned. Reason: ``{reason}``",
   "softban_log": "{user} (``{user_id}``) was softbanned by {moderator} (``{moderator_id}``). Reason: ``{reason}``",
-  "softban_not_allowed": "You are not allowed to softban {user}.",
   "configure_mute_help": "Sets what role to use for muting people.",
   "help_footer": "You can get more info about a command (params and subcommands) by using '{prefix}help {signature} <subcommand>'\nCommands followed by ↪  have subcommands.",
   "lvl4_added": "{member} now has permission lvl 4 for the `{command}` command.",
@@ -387,5 +385,7 @@
   "clean_last_help": "Cleans all messages send in the last x time (5 m for example)",
   "clean_between_help": "Cleans both messages given and everything in between",
 
-  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned"
+  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned",
+  "action_bot_role_too_low": "I'm not allowed to take action against {member} as i don't have a higher role then them",
+  "action_user_role_too_low": "You are not allowed to take action aginst {member} as you don't have a higher role then them"
 }
