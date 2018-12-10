@@ -42,7 +42,9 @@ BACKUPS = {
     "CREATE": "🔨",
     "ALTER": "🛠",
     "DELETE": "⛏",
-    "VOICE": "🔊"
+    "VOICE": "🔊",
+    "EYES": "👀",
+    "SPY": "🕵"
 }
 
 

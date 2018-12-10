@@ -3,10 +3,9 @@ import datetime
 import time
 
 import discord
+from discord import Object
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
-
-from discord import Object
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
@@ -90,9 +89,10 @@ class Moderation:
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
         messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
-        if(len(messages)==0):
-            return await ctx.send(f"{Translator.translate('seen_fail', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user))}")
-        return await ctx.send(f"{Translator.translate('seen_success', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)}");
+        if len(messages) is 0:
+            await GearbotLogging.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await GearbotLogging.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
 
 
     # @commands.group()
