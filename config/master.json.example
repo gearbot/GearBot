@@ -27,5 +27,7 @@
     "Minecraft",
     "DMMessages"
   ],
-  "DOCS": true
+  "DOCS": true,
+  "DOG_KEY": "",
+  "CAT_KEY": ""
 }
