@@ -88,7 +88,7 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
-        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
+        messages = LoggedMessage.select().where(LoggedMessage.author == user.id).order_by(LoggedMessage.messageid.desc()).limit(1)
         if len(messages) is 0:
             await GearbotLogging.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
         else:
