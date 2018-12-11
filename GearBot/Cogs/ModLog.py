@@ -468,7 +468,7 @@ class ModLog:
             else:
                 # permission override removed
                 key = "permission_override_removed"
-                parts = dict(channel=after, target_name=Utils.clean_user(target), target_id=target.id)
+                parts = dict(channel=after, target_name=Utils.escape_markdown(target), target_id=target.id)
 
                 def finder(e):
                     if e.target.id == after.id and e.extra.id == target.id:
