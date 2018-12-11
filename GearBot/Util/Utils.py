@@ -116,6 +116,8 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
     if markdown:
         text = escape_markdown(text)
+    else:
+        text = text.replace("@", "@\u200b")
 
     if links:
         #find urls last so the < escaping doesn't break it
@@ -123,14 +125,12 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
             text = text.replace(url, f"<{url}>")
 
 
-    # make sure we don't have funny guys/roles named "everyone" messing it all up
-    text = text.replace("@", "@\u200b")
     return text
 
 def escape_markdown(text):
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
-    return text
+    return text.replace("@", "@\u200b")
 
 def clean_name(text):
     if text is None:
