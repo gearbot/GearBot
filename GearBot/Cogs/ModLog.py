@@ -347,10 +347,9 @@ class ModLog:
         if before.name != after.name or before.discriminator != after.discriminator:
             for guild in self.bot.guilds:
                 if guild.get_member(before.id) is not None:
-                    before_clean_name = Utils.clean_user(before)
                     after_clean_name = Utils.clean_user(after)
                     GearbotLogging.log_to(guild.id, "NAME_CHANGES",
-                                          f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after_clean=after_clean_name, before=before_clean_name, user_id=after.id, after=after)}")
+                                          f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after_clean=after_clean_name, before=before, user_id=after.id, after=after)}")
 
 
     async def on_voice_state_update(self, member, before, after):
