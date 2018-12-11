@@ -75,16 +75,17 @@ class Moderation:
         await Pages.create_new("roles", ctx, mode=mode)
 
     @staticmethod
-    def _can_act(action, ctx, user: discord.Member):
+    def _can_act(action, ctx, user: discord.Member, check_bot=True):
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
-            if ctx.me.top_role > user.top_role:
+            if ctx.me.top_role > user.top_role or not check_bot:
                 return True, None
             else:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-@commands.command()
+
+    @commands.command()
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
         messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
@@ -106,38 +107,36 @@ class Moderation:
         try:
             drole = RoleConverter().convert(ctx, role)
         except BadArgument:
-            # todo: try finding partial matches
-            drole = None
+            role_search = role.lower().replace(" ", "")
+            roles = [r for r in ctx.roles if role_search in r.name.lower().replace(" ", "")]
+            if len(roles) is 1:
+                drole = roles[0]
+            elif len(roles) > 1:
+                await GearbotLogging.send_to(ctx, "NO", "role_too_many_matches", name=role)
+                return
+            else:
+                await GearbotLogging.send_to(ctx, "NO", "role_no_matches", name=role)
+                return
 
-        if role is None:
-            await GearbotLogging.send_to(ctx, 'NO', 'role_not_found', role=role)
-        elif self._can_act("role_add", ctx, user, ):
-            await getattr(user, f"{action}_roles")(drole)
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+        if self._can_act(f"role_{action}", ctx, user, check_bot=False):
+            role_list = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
+            mode = Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST")
+            mode_name = "whitelist" if mode else "blacklist"
+            if (role.id in role_list) is mode:
+                await getattr(user, f"{action}_roles")(drole)
+                await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=role.name)
+            else:
+                await GearbotLogging.send_to(ctx, "NO", f"role_denied_{mode_name}", role=role.name)
 
     @role.command()
     async def add(self, ctx, user: discord.Member, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
 
-    # @mrole.command()
-    # async def remove(self, ctx, user: discord.Member, *, rolename:str):
-    #     """Removes an role to someone."""
-    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
-    #     if not role:
-    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
-    #     elif role > ctx.guild.me.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_remove_too_high', ctx, user=Utils.clean(user), role=role.name)}")
-    #     elif user.top_role > ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_remove_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     elif role == ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_remove_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     try:
-    #         await user.remove_roles(role)
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     except discord.Forbidden:
-    #         await ctx.send("I need **Manage Roles** for this!")
+    @role.command()
+    async def remove(self, ctx, user: discord.Member, *, role: str):
+        """role_remove_help"""
+        await self.role_handler(ctx, user, role, "remove")
 
     @commands.command(aliases=["👢"])
     @commands.guild_only()

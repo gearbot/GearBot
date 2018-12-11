@@ -386,8 +386,13 @@
   "clean_until_help": "Cleans until the given message (message is also removed)",
   "clean_last_help": "Cleans all messages send in the last x time (5 m for example)",
   "clean_between_help": "Cleans both messages given and everything in between",
-
-  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned",
-  "action_bot_role_too_low": "I'm not allowed to take action against {member} as i don't have a higher role then them",
-  "action_user_role_too_low": "You are not allowed to take action aginst {member} as you don't have a higher role then them"
+  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned",,,
+  "role_too_many_matches": "Multiple role names have ``{name}`` in their name, can you be a bit more specific on what role you mean?",
+  "role_no_matches": "I couldn't find any roles with a name like",
+  "role_add": "",
+  "role_remove": "",
+  "role_add_confirmation": "",
+  "role_remove_confirmation": "",
+  "role_denied_whitelist": "",
+  "role_denied_blacklist": ""
 }
