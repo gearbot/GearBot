@@ -96,6 +96,7 @@ class Moderation:
             return await ctx.send("Please pass a subcommand")
 
     @emote.command()
+    @commands.bot_has_permissions(manage_emojis=True)
     async def upload(self, ctx, name: str):
         for attachment in ctx.message.attachments:
             headers = { 'User-Agent': 'DiscordBot (test@test.com, v1)' }
@@ -103,43 +104,38 @@ class Moderation:
             async with aiohttp.ClientSession(headers=headers) as session:
                 async with session.get(attachment.proxy_url) as resp:
                     data = await resp.read()
-                    emote = None
+                    if len(name) < 2 or len(name) > 32:
+                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_name_length")
+                    if len(data) > 256000:
+                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_filesize", filesize=round(len(data)/1000))
                     try:
-                        if len(data) > 256000:
-                            try:
-                                return await message.edit(content=f'{Emoji.get_chat_emoji("NO")} {Translator.translate("emote_upload_invalid_filesize", ctx.guild.id, filesize=round(len(data)/1000))}')
-                            except HTTPException:
-                                return await GearbotLogging.send_to(ctx, "NO", "emote_upload_invalid_filesize", filesize=round(len(data)/1000))
-                        try:
-                            emote = await ctx.guild.create_custom_emoji(name=name, image=data)
-                            return await message.edit(content=f'{Emoji.get_chat_emoji("YES")} {Translator.translate("emote_upload_success", ctx.guild.id, emote=emote)}')
-                        except:
-                            return await GearbotLogging.send_to(ctx, "YES", "emote_upload_success", emote=emote)
-                    except Forbidden:
-                        try:
-                            return await message.edit(content=f'{Emoji.get_chat_emoji("NO")} {Translator.translate("emote_upload_missingpermissions", ctx.guild.id)}')
-                        except HTTPException:
-                            return await GearbotLogging.send_to(ctx, "NO", "emote_upload_missingpermissions")
+                        emote = await ctx.guild.create_custom_emoji(name=name, image=data)
+                        return await GearbotLogging.try_edit(ctx, message, emoji="YES", string_name="emote_upload_success", emote=emote)
                     except HTTPException as msg:
+                        #This shouldn't be called, ever. But just in case.
                         return await ctx.send(msg.text)
                     except InvalidArgument as msg:
-                        try:
-                            return await message.edit(content=f'{Emoji.get_chat_emoji("NO")} {Translator.translate("emote_upload_invalid_file", ctx.guild.id)}')
-                        except:
-                            return await GearbotLogging.send_to(ctx, "NO", "emote_upload_invalid_file")
+                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_file")
 
-    @emote.command()
+    @emote.command(aliases=["change"])
     async def update(self, ctx, emote: discord.Emoji, new_name: str):
         old_name = emote.name;
         if len(new_name) < 2 or len(new_name) > 32:
             return await GearbotLogging.send_to(ctx, "NO", "emote_update_invalid_name_length")
         try:
             await emote.edit(name=new_name, roles=emote.roles, reason=Translator.translate("emote_update_reason", ctx.guild.id, user=Utils.clean_user(ctx.author)))
-        except Forbidden:
-            return await GearbotLogging.send_to(ctx, "NO", "emote_update_missingpermissions")
         except HTTPException as msg:
             return await ctx.send(msg.text)
         return await GearbotLogging.send_to(ctx, "YES", "emote_update_success", old_name=old_name, new_name=new_name)
+
+    @emote.command(aliases=["remove"])
+    async def delete(self, ctx, emote: discord.Emoji):
+        try:
+            emote_name = emote.name
+            await emote.delete()
+            return await GearbotLogging.send_to(ctx, "YES", "emote_delete_success")
+        except HTTPException as msg:
+            return await ctx.send(msg.text)
 
     @commands.command()
     @commands.guild_only()
