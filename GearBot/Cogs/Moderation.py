@@ -3,10 +3,13 @@ import datetime
 import time
 
 import discord
+from discord import Object
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter
+from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
 from discord import Object
+from discord.errors import Forbidden, HTTPException, InvalidArgument
+import aiohttp
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
@@ -76,67 +79,91 @@ class Moderation:
         await Pages.create_new("roles", ctx, mode=mode)
 
     @staticmethod
-    def _can_act(action, ctx, user: discord.Member):
+    def _can_act(action, ctx, user: discord.Member, check_bot=True):
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
-            if ctx.me.top_role > user.top_role:
+            if ctx.me.top_role > user.top_role or not check_bot:
                 return True, None
             else:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
 
+    @commands.group()
+    @commands.guild_only()
+    async def emote(self, ctx):
+        if ctx.subcommand_passed is None:
+            return await ctx.send("Please pass a subcommand")
+
+    @emote.command()
+    async def upload(self, ctx, name: str):
+        for attachment in ctx.message.attachments:
+            headers = { 'User-Agent': 'DiscordBot (test@test.com, v1)' }
+            async with aiohttp.ClientSession(headers=headers) as session:
+                async with session.get(attachment.proxy_url) as resp:
+                    data = await resp.read()
+                    try:
+                        await ctx.guild.create_custom_emoji(name=name, image=data)
+                    except Forbidden:
+                        return await ctx.send("forbidden")
+                    except HTTPException as msg:
+                        return await ctx.send(msg.text)
+                    except InvalidArgument as msg:
+                        return await GearbotLogging.send_to(ctx, "NO", "emote_upload_invalid_file")
+                    return await ctx.send("done")
+
     @commands.command()
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
-        messages = LoggedMessage.select().where((LoggedMessage.server==ctx.guild.id) & (LoggedMessage.author==user.id)).order_by(LoggedMessage.messageid.desc()).limit(1)
-        if(len(messages)==0):
-            return await ctx.send(f"{Translator.translate('seen_fail', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user))}")
-        return await ctx.send(f"{Translator.translate('seen_success', ctx, user_id=user.id, cleaneduser=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)}");
+        messages = LoggedMessage.select().where(LoggedMessage.author == user.id).order_by(LoggedMessage.messageid.desc()).limit(1)
+        if len(messages) is 0:
+            await GearbotLogging.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await GearbotLogging.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
 
 
-    # @commands.group()
-    # @commands.guild_only()
-    # async def mrole(self, ctx: commands.Context):
-    #     """Allows variety of roles to be pinged."""
-    #     if ctx.subcommand_passed is None:
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_no_subcommand', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
-    #
-    # @mrole.command()
-    # async def add(self, ctx, user: discord.Member, *, rolename:str):
-    #     """Adds an role to someone."""
-    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
-    #     if not role:
-    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
-    #     elif role > ctx.guild.me.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_add_too_high', ctx, user=Utils.clean(user), role=role.name)}")
-    #     elif user.top_role > ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_add_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     elif role == ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_add_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     try:
-    #         await user.add_roles(role)
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     except discord.Forbidden:
-    #         await ctx.send("I need **Manage Roles** for this!")
-    #
-    # @mrole.command()
-    # async def remove(self, ctx, user: discord.Member, *, rolename:str):
-    #     """Removes an role to someone."""
-    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
-    #     if not role:
-    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
-    #     elif role > ctx.guild.me.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_remove_too_high', ctx, user=Utils.clean(user), role=role.name)}")
-    #     elif user.top_role > ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_remove_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     elif role == ctx.author.top_role:
-    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_remove_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     try:
-    #         await user.remove_roles(role)
-    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
-    #     except discord.Forbidden:
-    #         await ctx.send("I need **Manage Roles** for this!")
+    @commands.group()
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_roles=True)
+    async def role(self, ctx: commands.Context):
+        """mod_role_help"""
+        if ctx.subcommand_passed is None:
+            await ctx.invoke(self.bot.get_command("help"), "role")
+
+    async def role_handler(self, ctx, user, role, action):
+        try:
+            drole = RoleConverter().convert(ctx, role)
+        except BadArgument:
+            role_search = role.lower().replace(" ", "")
+            roles = [r for r in ctx.roles if role_search in r.name.lower().replace(" ", "")]
+            if len(roles) is 1:
+                drole = roles[0]
+            elif len(roles) > 1:
+                await GearbotLogging.send_to(ctx, "NO", "role_too_many_matches", name=role)
+                return
+            else:
+                await GearbotLogging.send_to(ctx, "NO", "role_no_matches", name=role)
+                return
+
+        if self._can_act(f"role_{action}", ctx, user, check_bot=False):
+            role_list = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
+            mode = Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST")
+            mode_name = "whitelist" if mode else "blacklist"
+            if (role.id in role_list) is mode:
+                await getattr(user, f"{action}_roles")(drole)
+                await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=role.name)
+            else:
+                await GearbotLogging.send_to(ctx, "NO", f"role_denied_{mode_name}", role=role.name)
+
+    @role.command()
+    async def add(self, ctx, user: discord.Member, *, role: str):
+        """role_add_help"""
+        await self.role_handler(ctx, user, role, "add")
+
+    @role.command()
+    async def remove(self, ctx, user: discord.Member, *, role: str):
+        """role_remove_help"""
+        await self.role_handler(ctx, user, role, "remove")
 
     @commands.command(aliases=["👢"])
     @commands.guild_only()

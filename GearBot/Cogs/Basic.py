@@ -3,6 +3,7 @@ import random
 import time
 from datetime import datetime
 
+import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
@@ -179,10 +180,10 @@ class Basic:
                 count = 1
         return Pages.paginate(current_roles, max_lines=20)
 
-    @commands.command()
+    @commands.command(aliases=["selfroles"])
     @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
-    async def role(self, ctx: commands.Context, *, role: str = None):
+    async def selfrole(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
         if role is None:
             await Pages.create_new("role", ctx)
@@ -259,6 +260,46 @@ class Basic:
     async def jumbo(self, ctx, *, emojis: str):
         """Jumbo emoji"""
         await JumboGenerator(ctx, emojis).generate()
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def dog(self, ctx):
+        """dog_help"""
+        await ctx.trigger_typing()
+        session: aiohttp.ClientSession = self.bot.aiosession
+        async with session.get("https://dog-api.kinduff.com/api/facts?number=1") as reply:
+            o = await reply.json()
+            fact = o["facts"][0]
+        embed = discord.Embed(description=fact)
+        key = Configuration.get_master_var("DOG_KEY", "")
+        if key != "":
+            headers = {'x-api-key': key}
+            async with session.get("https://api.thedogapi.com/v1/images/search?limit=1&size=full",
+                                   headers=headers) as reply:
+                o = await reply.json()
+                image = o[0]["url"]
+            embed.set_image(url=image)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def cat(self, ctx):
+        """cat_help"""
+        await ctx.trigger_typing()
+        session: aiohttp.ClientSession = self.bot.aiosession
+        async with session.get("https://catfact.ninja/fact") as reply:
+            o = await reply.json()
+            fact = o["fact"]
+
+        embed = discord.Embed(description=fact)
+        key = Configuration.get_master_var("CAT_KEY", "")
+        if  key != "":
+            headers = {'x-api-key' : key}
+            async with session.get("https://api.thecatapi.com/v1/images/search?limit=1&size=full", headers=headers) as reply:
+                o = await reply.json()
+                image = o[0]["url"]
+            embed.set_image(url=image)
+        await ctx.send(embed=embed)
 
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
