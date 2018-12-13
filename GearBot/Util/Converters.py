@@ -1,7 +1,7 @@
 import re
 
-from discord import NotFound, Forbidden, Member
-from discord.ext.commands import UserConverter, BadArgument, Converter, MemberConverter, Context
+from discord import NotFound, Forbidden
+from discord.ext.commands import UserConverter, BadArgument, Converter
 
 from Util import Utils, Configuration, Translator
 from database import DBUtils
@@ -231,3 +231,13 @@ class RangedInt(Converter):
                 raise TranslatedBadArgument('number_too_big', ctx, max=self.max)
             else:
                 return argument
+
+class ListMode(Converter):
+    async def convert(self, ctx, argument):
+        argument = argument.lower()
+        if argument == "whitelist":
+            return True
+        elif argument == "blacklist":
+            return False
+        else:
+            raise TranslatedBadArgument("invalid_mode", ctx)

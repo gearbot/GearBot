@@ -105,10 +105,10 @@ class Moderation:
 
     async def role_handler(self, ctx, user, role, action):
         try:
-            drole = RoleConverter().convert(ctx, role)
+            drole = await RoleConverter().convert(ctx, role)
         except BadArgument:
             role_search = role.lower().replace(" ", "")
-            roles = [r for r in ctx.roles if role_search in r.name.lower().replace(" ", "")]
+            roles = [r for r in ctx.guild.roles if role_search in r.name.lower().replace(" ", "")]
             if len(roles) is 1:
                 drole = roles[0]
             elif len(roles) > 1:
@@ -122,18 +122,24 @@ class Moderation:
             role_list = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
             mode = Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST")
             mode_name = "whitelist" if mode else "blacklist"
-            if (role.id in role_list) is mode:
-                await getattr(user, f"{action}_roles")(drole)
-                await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=role.name)
+            if (drole.id in role_list) is mode:
+                if drole < ctx.me.top_role:
+                    if role <= user.ctx.author.top_role or user == ctx.guild.owner:
+                        await getattr(user, f"{action}_roles")(drole)
+                        await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=Utils.escape_markdown(drole.name))
+                    else:
+                        await GearbotLogging.send_to(ctx, "NO", f"user_role_too_low_{action}", role=Utils.escape_markdown(drole.name))
+                else:
+                    await GearbotLogging.send_to(ctx, "NO", f"role_too_high_{action}", role=Utils.escape_markdown(drole.name))
             else:
-                await GearbotLogging.send_to(ctx, "NO", f"role_denied_{mode_name}", role=role.name)
+                await GearbotLogging.send_to(ctx, "NO", f"role_denied_{mode_name}", role=Utils.escape_markdown(drole.name))
 
     @role.command()
     async def add(self, ctx, user: discord.Member, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
 
-    @role.command()
+    @role.command(aliases=["rmv"])
     async def remove(self, ctx, user: discord.Member, *, role: str):
         """role_remove_help"""
         await self.role_handler(ctx, user, role, "remove")
