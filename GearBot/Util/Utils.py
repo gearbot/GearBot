@@ -92,7 +92,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     if guild is not None:
         # resolve user mentions
         for uid in set(ID_MATCHER.findall(text)):
-            name = "@" + await username(int(uid), False)
+            name = "@" + await username(int(uid), False, False)
             text = text.replace(f"<@{uid}>", name)
             text = text.replace(f"<@!{uid}>", name)
 
@@ -142,11 +142,14 @@ known_invalid_users = []
 user_cache = {}
 
 
-async def username(uid, fetch=True):
+async def username(uid, fetch=True, clean=True):
     user = await get_user(uid, fetch)
     if user is None:
         return "UNKNOWN USER"
-    return clean_user(user)
+    if clean:
+        return clean_user(user)
+    else:
+        return str(user)
 
 
 async def get_user(uid, fetch=True):
