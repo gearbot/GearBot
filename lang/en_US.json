@@ -419,5 +419,6 @@
   "role_list_rmv_confirmation_whitelist": "The **{role}** role has been removed from the whitelist.",
   "role_list_rmv_confirmation_blacklist": "The **{role}** role has been removed from the blacklist.",
   "user_role_too_low_add": "You need to have a role above the **{role}** role to add this role to others.",
-  "user_role_too_low_remove": "You need to have a role above the **{role}** role to remove it from others."
+  "user_role_too_low_remove": "You need to have a role above the **{role}** role to remove it from others.",
+  "message_wrong_channel": "The specified message was from another channel instead of this one."
 }
