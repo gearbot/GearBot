@@ -135,7 +135,7 @@ def escape_markdown(text):
 def clean_name(text):
     if text is None:
         return None
-    return text.replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
+    return str(text).replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
 
 
 known_invalid_users = []
