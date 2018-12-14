@@ -117,7 +117,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     if markdown:
         text = escape_markdown(text)
     else:
-        text = text.replace("@", "@\u200b")
+        text = text.replace("@", "@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
 
     if links:
         #find urls last so the < escaping doesn't break it
