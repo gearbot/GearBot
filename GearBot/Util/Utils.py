@@ -223,3 +223,13 @@ def server_info(guild):
         embed.add_field(name=Translator.translate('emoji', guild),
                         value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji")
     return embed
+
+
+def time_difference(begin, end, location):
+    diff = begin - end
+    minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return (Translator.translate('days', location, days=diff.days)) if diff.days > 0 else Translator.translate('hours',
+                                                                                                               location,
+                                                                                                               hours=hours,
+                                                                                                               minutes=minutes)

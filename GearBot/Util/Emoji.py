@@ -44,7 +44,9 @@ BACKUPS = {
     "DELETE": "⛏",
     "VOICE": "🔊",
     "EYES": "👀",
-    "SPY": "🕵"
+    "SPY": "🕵",
+    "QUESTION": "❓",
+    "CLOCK": "⏰"
 }
 
 

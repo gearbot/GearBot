@@ -241,3 +241,10 @@ class ListMode(Converter):
             return False
         else:
             raise TranslatedBadArgument("invalid_mode", ctx)
+
+
+class ReminderText(Converter):
+    async def convert(self, ctx, argument):
+        if len(argument) > 1800:
+            raise TranslatedBadArgument('reminder_too_long', ctx)
+        return argument
