@@ -8,7 +8,8 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, GlobalHandlers
-from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, RangedInt
+from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
+    RangedInt, Message
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -82,7 +83,50 @@ class Moderation:
                 return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-
+        
+    # @commands.group()
+    # @commands.guild_only()
+    # async def mrole(self, ctx: commands.Context):
+    #     """Allows variety of roles to be pinged."""
+    #     if ctx.subcommand_passed is None:
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_no_subcommand', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
+    #
+    # @mrole.command()
+    # async def add(self, ctx, user: discord.Member, *, rolename:str):
+    #     """Adds an role to someone."""
+    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+    #     if not role:
+    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
+    #     elif role > ctx.guild.me.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_add_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+    #     elif user.top_role > ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_add_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     elif role == ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_add_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     try:
+    #         await user.add_roles(role)
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_added', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     except discord.Forbidden:
+    #         await ctx.send("I need **Manage Roles** for this!")
+    #
+    # @mrole.command()
+    # async def remove(self, ctx, user: discord.Member, *, rolename:str):
+    #     """Removes an role to someone."""
+    #     role = discord.utils.find(lambda m: rolename.lower() in m.name.lower(), ctx.guild.roles)
+    #     if not role:
+    #         return await ctx.send(f"{Translator.translate('role_not_found', ctx)}")
+    #     elif role > ctx.guild.me.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mrole_remove_too_high', ctx, user=Utils.clean(user), role=role.name)}")
+    #     elif user.top_role > ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('user_mrole_remove_too_high', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     elif role == ctx.author.top_role:
+    #         return await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('author_mrole_remove_same', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     try:
+    #         await user.remove_roles(role)
+    #         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mrole_removed', ctx, user=await Utils.clean(user), user_id=user.id, role=role.name)}")
+    #     except discord.Forbidden:
+    #         await ctx.send("I need **Manage Roles** for this!")
+            
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
@@ -299,7 +343,18 @@ class Moderation:
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                                   f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
-            Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") &
+
+            tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
+                                          (Infraction.guild_id == ctx.guild.id)))
+            if len(tempbans) > 0:
+                inf = tempbans[0]
+                timeframe = datetime.datetime.utcfromtimestamp(inf.end.timestamp()) - datetime.datetime.utcfromtimestamp(time.time())
+                hours, remainder = divmod(int(timeframe.total_seconds()), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                tt = Translator.translate("hours", ctx, hours=hours, minutes=minutes)
+                await GearbotLogging.send_to(ctx, "WARNING", "forceban_override_tempban", user=Utils.clean_user(user), timeframe=tt, inf_id=inf.id)
+
+            Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Unban") | (Infraction.type == "Tempban")) &
                                                   (Infraction.guild_id == ctx.guild.id)).execute()
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
         else:
@@ -444,7 +499,7 @@ class Moderation:
     @commands.group()
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
-        """"archive_help"""
+        """archive_help"""
         if ctx.subcommand_passed is None:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
@@ -488,6 +543,7 @@ class Moderation:
 
     @commands.group()
     @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean(self, ctx):
         """clean_help"""
         if ctx.invoked_subcommand == self.clean:
@@ -507,6 +563,26 @@ class Moderation:
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
         await self._clean(ctx, amount, lambda m: True)
+
+    @clean.command("last")
+    async def clean_last(self, ctx, durationNumber: int, durationIdentifier: Duration):
+        """clean_last_help"""
+        duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
+        until = datetime.datetime.utcfromtimestamp(time.time() - duration)
+        await self._clean(ctx, 2000, lambda m: m.created_at > until)
+
+    @clean.command("until")
+    async def clean_until(self, ctx, message:Message(local_only=True)):
+        """clean_until_help"""
+        await self._clean(ctx, 2000, lambda m: m.id > message.id)
+
+    @clean.command("between")
+    async def clean_between(self, ctx, start: Message(local_only=True), end: Message(local_only=True)):
+        """clean_between_help"""
+        a = min(start.id, end.id)
+        b = max(start.id, end.id)
+        await self._clean(ctx, 2000, lambda m: a <= m.id <= b)
+
 
     @staticmethod
     async def _clean(ctx, amount, checker):
@@ -554,7 +630,9 @@ class Moderation:
     async def on_member_join(self, member: discord.Member):
         now = datetime.datetime.fromtimestamp(time.time())
         if Infraction.get_or_none(Infraction.type == "Mute", Infraction.active == True,
-                                                            Infraction.end <= now):
+                                                            Infraction.end >= now,
+                                  Infraction.guild_id == member.guild.id,
+                                  Infraction.user_id == member.id):
             roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
             if roleid is not 0:
                 role = member.guild.get_role(roleid)

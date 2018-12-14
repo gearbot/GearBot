@@ -85,53 +85,53 @@ class Basic:
     @commands.bot_has_permissions(embed_links=True)
     async def quote(self, ctx: commands.Context, *, message:Message):
         """quote_help"""
-        async with ctx.typing():
-            member = message.guild.get_member(ctx.author.id)
-            if member is None:
-                await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
-            else:
-                permissions = message.channel.permissions_for(member)
-                if permissions.read_message_history and permissions.read_message_history:
-                    if message.channel.is_nsfw() and not ctx.channel.is_nsfw():
-                        await GearbotLogging.send_to(ctx, 'NO', 'quote_nsfw_refused')
-                    else:
-                        attachment = None
-                        attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
-                        if len(attachments) == 1:
-                            attachment = attachments[0]
-                        embed = discord.Embed(colour=discord.Color(0xd5fff),
-                                              timestamp=message.created_at)
-                        if message.content is None or message.content == "":
-                            if attachment is not None:
-                                if attachment.isImage:
-                                    embed.set_image(url=attachment.url)
-                                else:
-                                    embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                    value=attachment.url)
-                        else:
-                            description = message.content
-                            embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
-                                                  timestamp=message.created_at)
-                            embed.add_field(name="​",
-                                            value=f"[Jump to message]({message.jump_url})")
-                            if attachment is not None:
-                                if attachment.isImage:
-                                    embed.set_image(url=attachment.url)
-                                else:
-                                    embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                    value=attachment.url)
-                        user = message.author
-                        embed.set_author(name=user.name, icon_url=user.avatar_url)
-                        embed.set_footer(
-                            text=Translator.translate("quote_footer", ctx,
-                                                      channel=message.channel.name,
-                                                      user=Utils.clean_user(ctx.author), message_id=message.id))
-                        await ctx.send(embed=embed)
-                        if ctx.channel.permissions_for(ctx.me).manage_messages:
-                            await ctx.message.delete()
-
+        await ctx.trigger_typing()
+        member = message.guild.get_member(ctx.author.id)
+        if member is None:
+            await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+        else:
+            permissions = message.channel.permissions_for(member)
+            if permissions.read_message_history and permissions.read_message_history:
+                if message.channel.is_nsfw() and not ctx.channel.is_nsfw():
+                    await GearbotLogging.send_to(ctx, 'NO', 'quote_nsfw_refused')
                 else:
-                    await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+                    attachment = None
+                    attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
+                    if len(attachments) == 1:
+                        attachment = attachments[0]
+                    embed = discord.Embed(colour=discord.Color(0xd5fff),
+                                          timestamp=message.created_at)
+                    if message.content is None or message.content == "":
+                        if attachment is not None:
+                            if attachment.isImage:
+                                embed.set_image(url=attachment.url)
+                            else:
+                                embed.add_field(name=Translator.translate("attachment_link", ctx),
+                                                value=attachment.url)
+                    else:
+                        description = message.content
+                        embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
+                                              timestamp=message.created_at)
+                        embed.add_field(name="​",
+                                        value=f"[Jump to message]({message.jump_url})")
+                        if attachment is not None:
+                            if attachment.isImage:
+                                embed.set_image(url=attachment.url)
+                            else:
+                                embed.add_field(name=Translator.translate("attachment_link", ctx),
+                                                value=attachment.url)
+                    user = message.author
+                    embed.set_author(name=user.name, icon_url=user.avatar_url)
+                    embed.set_footer(
+                        text=Translator.translate("quote_footer", ctx,
+                                                  channel=message.channel.name,
+                                                  user=Utils.clean_user(ctx.author), message_id=message.id))
+                    await ctx.send(embed=embed)
+                    if ctx.channel.permissions_for(ctx.me).manage_messages:
+                        await ctx.message.delete()
+
+            else:
+                await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
 
 
 

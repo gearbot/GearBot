@@ -245,7 +245,7 @@
   "unknown_nickname_removed": "{user} (``{user_id}``) removed their nickname: **``\u200b{before}\u200b``**",
   "own_nickname_removed": "{user} (``{user_id}``) has removed their nickname: **``\u200b{before}\u200b``**",
   "mod_nickname_removed": "{user} (``{user_id}``) got their nickname removed by {moderator} (``{moderator_id}``): **``\u200b{before}\u200b``**",
-  "username_changed": "{after} (``{user_id}``) has changed username from **``\u200b{before}\u200b``** to **``\u200b{after}\u200b``**.",
+  "username_changed": "{after_clean} (``{user_id}``) has changed username from **``\u200b{before}\u200b``** to **``\u200b{after}\u200b``**.",
   "recent_infractions": "Recent infractions",
   "log_channels": "Configured logging channels",
   "channel_removed": "This channel no longer exists!",
@@ -334,7 +334,7 @@
   "archive_user_help": "Archive messages from a user",
   "mban_help": "Bans multiple users with the same reason",
   "mkick_help": "Kicks multiple users with the same reason",
-  "NaN": "Not an number",
+  "NaN": "Not a number",
   "number_too_small": "Number too small, must be at least {min}",
   "number_too_big": "Number too big, must be at most {max}",
   "clean_help": "Gets out the broom to clean whatever mess needs cleaning",
@@ -381,5 +381,11 @@
   "voice_change_afk_false": "{user} (``{user_id}``) is no longer AFK in voice",
   "connected_to_voice": "{user} (``{user_id}``) has connected to **{channel_name}** (``{channel_id}``)",
   "moved_voice": "{user} (``{user_id}``) has moved from **{old_channel_name}** (``{old_channel_id}``) to **{new_channel_name}** (``{new_channel_id}``)",
-  "disconnected_voice": "{user} (``{user_id}``) has disconnected from **{channel_name}** (``{channel_id}``)"
+  "disconnected_voice": "{user} (``{user_id}``) has disconnected from **{channel_name}** (``{channel_id}``)",
+  "message_wrong_guild": "The requested message was from another guild instead of this one",
+  "clean_until_help": "Cleans until the given message (message is also removed)",
+  "clean_last_help": "Cleans all messages send in the last x time (5 m for example)",
+  "clean_between_help": "Cleans both messages given and everything in between",
+
+  "forceban_override_tempban": "{user} had a tempban that was supposed to expire in {timeframe} (infraction {inf_id}), the tempban is cancelled and they will not be automatically be unbanned"
 }
