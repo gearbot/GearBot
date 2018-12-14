@@ -777,7 +777,7 @@ class Serveradmin:
             if len(items) == 0:
                 desc = Translator.translate(f"no_role_{mode}", ctx)
             else:
-                desc = "\n".join(f"<@&{item}" for item in items)
+                desc = "\n".join(f"<@&{item}>" for item in items)
             embed = discord.Embed(title=Translator.translate(f"current_role_{mode}", ctx), description=desc)
             await ctx.send(embed=embed)
 

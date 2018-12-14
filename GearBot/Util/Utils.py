@@ -130,7 +130,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 def escape_markdown(text):
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
-    return text.replace("@", "@\u200b")
+    return str(text).replace("@", "@\u200b")
 
 def clean_name(text):
     if text is None:
