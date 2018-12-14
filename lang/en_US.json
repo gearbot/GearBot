@@ -430,6 +430,8 @@
   "reminder_time_travel": "I'm sorry but time travel has not been invented yet in this reality, maybe you want to try in an alternative one?",
   "reminder_confirmation_dm": "Alright, i'll DM you for that in {duration} {duration_identifier}",
   "reminder_confirmation_here": "Alright, i'll ping you here for that in {duration} {duration_identifier}",
-  "reminder_delivery_dm": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: You're reading this, who do you think?\nSend: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```",
-  "reminder_delivery_channel": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: {recipient} \nSend: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```"
+  "reminder_delivery_dm": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: You're reading this, who do you think?\nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```",
+  "reminder_delivery_channel": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: {recipient} \nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```",
+  "remind_help": "Base command for reminders",
+  "remind_me_help": "Schedule to be reminded about something"
 }

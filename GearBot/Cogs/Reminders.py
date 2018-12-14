@@ -31,12 +31,13 @@ class Reminders:
 
     @commands.group(aliases=["r", "reminder"])
     async def remind(self, ctx):
+        """remind_help"""
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
 
     @remind.command("me", aliases=["add", "m", "a"])
     async def remind_me(self, ctx, duration_number: int, duration_identifier: Duration, *, reminder: ReminderText):
-        """remind_help"""
+        """remind_me_help"""
         duration = Utils.convertToSeconds(duration_number, duration_identifier)
         if duration <= 0:
             await GearbotLogging.send_to(ctx, "NO", "reminder_time_travel")
@@ -63,10 +64,10 @@ class Reminders:
                 return
             else:
                 if reaction.emoji == no:
-                    await GearbotLogging.send_to(ctx, "no", "command_canceled")
+                    await GearbotLogging.send_to(ctx, "NO", "command_canceled")
                     return
                 else:
-                    dm = reaction == two
+                    dm = reaction.emoji == two
             finally:
                 await m.delete()
 
@@ -76,7 +77,7 @@ class Reminders:
                         to_remind=await Utils.clean(reminder, markdown=False),
                         time=time.time() + duration, status=ReminderStatus.Pending)
         mode = "dm" if dm else "here"
-        await GearbotLogging.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration,
+        await GearbotLogging.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration_number,
                                      duration_identifier=duration_identifier)
 
     async def delivery_service(self):
@@ -100,7 +101,7 @@ class Reminders:
             await action
 
     async def deliver(self, r):
-        channel = self.bot.get_channel(r.channel_id),
+        channel = self.bot.get_channel(r.channel_id)
         dm = self.bot.get_user(r.user_id)
         first = dm if r.dm else channel
         alternative = channel if r.dm else dm
@@ -114,13 +115,13 @@ class Reminders:
             return False
         mode = "dm" if isinstance(location, User) else "channel"
         now = datetime.utcfromtimestamp(time.time())
-        send_time = datetime.utcfromtimestamp(package.time.timestamp())
+        send_time = datetime.utcfromtimestamp(package.send.timestamp())
         parts = {
             "date": send_time.strftime('%c'),
-            "timediff": Utils.time_difference(now, send_time, location),
+            "timediff": Utils.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
             "now_date": now.strftime('%c'),
             "reminder": package.to_remind,
-            "recipient": location.mention if isinstance(location, User) else None
+            "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
         }
         parcel = Translator.translate(f"reminder_delivery_{mode}", location, **parts)
         try:
