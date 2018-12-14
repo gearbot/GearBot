@@ -105,19 +105,19 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
                 name = "@" + role.name
             text = text.replace(f"<@&{uid}>", name)
 
-            # resolve channel names
-            for uid in set(CHANNEL_ID_MATCHER.findall(text)):
-                channel = guild.get_channel(uid)
-                if channel is None:
-                    name = "#UNKNOWN CHANNEL"
-                else:
-                    name = "#" + channel.name
-                text = text.replace(f"<@#{uid}>", name)
+        # resolve channel names
+        for uid in set(CHANNEL_ID_MATCHER.findall(text)):
+            channel = guild.get_channel(uid)
+            if channel is None:
+                name = "#UNKNOWN CHANNEL"
+            else:
+                name = "#" + channel.name
+            text = text.replace(f"<@#{uid}>", name)
 
     if markdown:
         text = escape_markdown(text)
     else:
-        text = text.replace("@", "@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
+        text = text.replace("@", "@\u200b").replace("**", "*​*").replace("``", "`​`")
 
     if links:
         #find urls last so the < escaping doesn't break it
@@ -135,7 +135,7 @@ def escape_markdown(text):
 def clean_name(text):
     if text is None:
         return None
-    return text.replace("@","@\u200b")
+    return text.replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
 
 
 known_invalid_users = []
