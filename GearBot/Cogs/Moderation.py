@@ -124,7 +124,7 @@ class Moderation:
             mode_name = "whitelist" if mode else "blacklist"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
-                    if role <= ctx.author.top_role or user == ctx.guild.owner:
+                    if drole <= ctx.author.top_role or user == ctx.guild.owner:
                         await getattr(user, f"{action}_roles")(drole)
                         await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=Utils.escape_markdown(drole.name))
                     else:
