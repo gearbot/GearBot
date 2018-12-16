@@ -5,23 +5,15 @@ import discord
 from discord.ext import commands
 
 import Util
+from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, GlobalHandlers
 
 
 def prefix_callable(bot, message):
     return GlobalHandlers.prefix_callable(bot, message)
 
-bot = commands.AutoShardedBot(command_prefix=prefix_callable, case_insensitive=True)
-bot.STARTUP_COMPLETE = False
-bot.user_messages = 0
-bot.bot_messages = 0
-bot.self_messages = 0
-bot.commandCount = 0
-bot.custom_command_count = 0
-bot.errors = 0
-bot.eaten = 0
-bot.database_errors = 0
-bot.hot_reloading = False
+GearBot = GearBot(command_prefix=prefix_callable, case_insensitive=True)
+
 
 @bot.event
 async def on_ready():

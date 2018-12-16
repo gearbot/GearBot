@@ -17,16 +17,6 @@ from Util import Configuration, Emoji, Utils, Translator, GearbotLogging, DocUti
 from database import DatabaseConnector
 
 
-def prefix_callable(bot, message):
-    user_id = bot.user.id
-    prefixes = [f'<@!{user_id}> ', f'<@{user_id}> '] #execute commands by mentioning
-    if message.guild is None or not bot.STARTUP_COMPLETE:
-        prefixes.append('!') #use default ! prefix in DMs
-    else:
-        prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
-    return prefixes
-
-
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
         GearbotLogging.initialize_pump(bot)
