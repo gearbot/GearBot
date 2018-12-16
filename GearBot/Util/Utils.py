@@ -92,7 +92,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     if guild is not None:
         # resolve user mentions
         for uid in set(ID_MATCHER.findall(text)):
-            name = "@" + await username(int(uid), False)
+            name = "@" + await username(int(uid), False, False)
             text = text.replace(f"<@{uid}>", name)
             text = text.replace(f"<@!{uid}>", name)
 
@@ -105,19 +105,19 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
                 name = "@" + role.name
             text = text.replace(f"<@&{uid}>", name)
 
-            # resolve channel names
-            for uid in set(CHANNEL_ID_MATCHER.findall(text)):
-                channel = guild.get_channel(uid)
-                if channel is None:
-                    name = "#UNKNOWN CHANNEL"
-                else:
-                    name = "#" + channel.name
-                text = text.replace(f"<@#{uid}>", name)
+        # resolve channel names
+        for uid in set(CHANNEL_ID_MATCHER.findall(text)):
+            channel = guild.get_channel(uid)
+            if channel is None:
+                name = "#UNKNOWN CHANNEL"
+            else:
+                name = "#" + channel.name
+            text = text.replace(f"<@#{uid}>", name)
 
     if markdown:
         text = escape_markdown(text)
     else:
-        text = text.replace("@", "@\u200b")
+        text = text.replace("@", "@\u200b").replace("**", "*​*").replace("``", "`​`")
 
     if links:
         #find urls last so the < escaping doesn't break it
@@ -128,6 +128,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     return text
 
 def escape_markdown(text):
+    text = str(text)
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
     return text.replace("@", "@\u200b")
@@ -135,18 +136,21 @@ def escape_markdown(text):
 def clean_name(text):
     if text is None:
         return None
-    return text.replace("@","@\u200b")
+    return str(text).replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
 
 
 known_invalid_users = []
 user_cache = {}
 
 
-async def username(uid, fetch=True):
+async def username(uid, fetch=True, clean=True):
     user = await get_user(uid, fetch)
     if user is None:
         return "UNKNOWN USER"
-    return clean_user(user)
+    if clean:
+        return clean_user(user)
+    else:
+        return str(user)
 
 
 async def get_user(uid, fetch=True):
@@ -220,3 +224,13 @@ def server_info(guild):
         embed.add_field(name=Translator.translate('emoji', guild),
                         value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji")
     return embed
+
+
+def time_difference(begin, end, location):
+    diff = begin - end
+    minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return (Translator.translate('days', location, days=diff.days)) if diff.days > 0 else Translator.translate('hours',
+                                                                                                               location,
+                                                                                                               hours=hours,
+                                                                                                               minutes=minutes)

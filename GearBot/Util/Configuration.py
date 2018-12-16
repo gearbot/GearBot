@@ -74,6 +74,9 @@ def v4(config):
 def v5(config):
     config["ROLE_WHITELIST"] = True
     config["ROLE_LIST"] = []
+    if "Basic" in config["PERM_OVERRIDES"] and "role" in config["PERM_OVERRIDES"]:
+        config["PERM_OVERRIDES"]["self_role"] = config["PERM_OVERRIDES"]["role"]
+        del config["PERM_OVERRIDES"]["role"]
     return config
 
 
