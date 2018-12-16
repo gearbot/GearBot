@@ -101,7 +101,7 @@ class Moderation:
     async def role(self, ctx: commands.Context):
         """mod_role_help"""
         if ctx.subcommand_passed is None:
-            await ctx.invoke(self.bot.get_command("help"), "role")
+            await ctx.invoke(self.bot.get_command("help"), query="role")
 
     async def role_handler(self, ctx, user, role, action):
         try:
