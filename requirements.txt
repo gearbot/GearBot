@@ -19,3 +19,4 @@ six==1.11.0
 urllib3==1.24.1
 websockets==6.0
 yarl==1.2.6
+aioredis==1.2.0
