@@ -141,7 +141,7 @@ class Message(Converter):
             if logged is not None and logged.content != message.content:
                 logged.content = message.content
                 logged.save()
-        if message.channel != ctx.channel.id and self.local_only:
+        if message.channel != ctx.channel and self.local_only:
             raise TranslatedBadArgument('message_wrong_channel', ctx)
         return message
 
