@@ -3,7 +3,6 @@ import random
 import time
 from datetime import datetime
 
-import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
@@ -266,19 +265,14 @@ class Basic:
     async def dog(self, ctx):
         """dog_help"""
         await ctx.trigger_typing()
-        session: aiohttp.ClientSession = self.bot.aiosession
-        async with session.get("https://dog-api.kinduff.com/api/facts?number=1") as reply:
-            o = await reply.json()
-            fact = o["facts"][0]
-        embed = discord.Embed(description=fact)
+        future_fact = self.get_json("https://dog-api.kinduff.com/api/facts?number=1")
         key = Configuration.get_master_var("DOG_KEY", "")
+        future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key},
+                                   key != "")
+        fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
+        embed = discord.Embed(description=fact_json["facts"][0])
         if key != "":
-            headers = {'x-api-key': key}
-            async with session.get("https://api.thedogapi.com/v1/images/search?limit=1&size=full",
-                                   headers=headers) as reply:
-                o = await reply.json()
-                image = o[0]["url"]
-            embed.set_image(url=image)
+            embed.set_image(url=dog_json[0]["url"])
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -286,20 +280,20 @@ class Basic:
     async def cat(self, ctx):
         """cat_help"""
         await ctx.trigger_typing()
-        session: aiohttp.ClientSession = self.bot.aiosession
-        async with session.get("https://catfact.ninja/fact") as reply:
-            o = await reply.json()
-            fact = o["fact"]
-
-        embed = discord.Embed(description=fact)
+        future_fact = self.get_json("https://catfact.ninja/fact")
         key = Configuration.get_master_var("CAT_KEY", "")
+        future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key' : key}, key != "")
+        fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
+        embed = discord.Embed(description=fact_json["fact"])
         if  key != "":
-            headers = {'x-api-key' : key}
-            async with session.get("https://api.thecatapi.com/v1/images/search?limit=1&size=full", headers=headers) as reply:
-                o = await reply.json()
-                image = o[0]["url"]
-            embed.set_image(url=image)
+            embed.set_image(url=cat_json[0]["url"])
         await ctx.send(embed=embed)
+
+    async def get_json(self, link, headers=None, do_request=True):
+        if do_request:
+            async with self.bot.aiosession.get(link, headers=headers) as reply:
+                return await reply.json()
+
 
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
