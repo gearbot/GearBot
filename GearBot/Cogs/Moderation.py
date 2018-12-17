@@ -7,8 +7,10 @@ from discord import Object
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
+import GearBot
+from Bot import TheRealGearBot
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, GlobalHandlers
+    Archive, Confirmation
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -27,7 +29,7 @@ class Moderation:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.timed_actions())
@@ -728,7 +730,7 @@ class Moderation:
         except Exception as ex:
             translated = Translator.translate("unmute_unknown_error", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            await GlobalHandlers.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
+            await TheRealGearBot.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
         else:
             translated = Translator.translate('unmuted', guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('INNOCENT')} {translated}")
@@ -773,7 +775,7 @@ class Moderation:
             self.bot.data["unbans"].remove(fid)
             translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            await GlobalHandlers.handle_exception("Lift tempban", self.bot, ex, **info)
+            await TheRealGearBot.handle_exception("Lift tempban", self.bot, ex, **info)
         else:
             translated = Translator.translate("tempban_lifted", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")

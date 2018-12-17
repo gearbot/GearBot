@@ -6,9 +6,9 @@ import time
 import discord
 from discord import AuditLogAction, Role
 from discord.embeds import EmptyEmbed
-from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
@@ -16,7 +16,7 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infracti
 class ModLog:
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.cache_message = None
         self.to_cache = []

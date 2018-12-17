@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
     Pages
 from Util.Converters import LoggingChannel, ListMode
@@ -80,7 +81,7 @@ class Serveradmin:
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot:commands.AutoShardedBot = bot
+        self.bot:GearBot = bot
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):

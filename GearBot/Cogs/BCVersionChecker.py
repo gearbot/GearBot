@@ -8,6 +8,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, VersionInfo, Permissioncheckers
 
 
@@ -20,7 +21,7 @@ class BCVersionChecker:
     }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
         self.running = True

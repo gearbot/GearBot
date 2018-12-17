@@ -7,6 +7,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers, Translator
 
 
@@ -19,7 +20,7 @@ class Minecraft:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.cf_cache = dict()
         self.fetching = []
         self.running = True

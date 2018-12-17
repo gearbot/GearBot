@@ -1,9 +1,9 @@
 import re
 
 import discord
-from discord.ext import commands
 from discord.ext.commands import clean_content
 
+from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, InfractionUtils, Emoji
 from database.DatabaseConnector import Infraction
 
@@ -26,7 +26,7 @@ async def censor_invite(ctx, code, server_name):
 class Censor:
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
 
     async def on_message(self, message: discord.Message):
         await self.censor_message(message)

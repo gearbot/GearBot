@@ -27,7 +27,7 @@ class CacheCleaner:
             await asyncio.sleep(5 * 60)
 
 
-def on_ready(actual_bot):
+def initialize(actual_bot):
     global BOT, cache_task
     BOT = actual_bot
     cache_task = CacheCleaner()

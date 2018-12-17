@@ -9,12 +9,13 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 from discord.ext import commands
 
-from Util import Configuration, GlobalHandlers, Utils, Translator, Emoji
+from Bot import TheRealGearBot
+from Util import Configuration, Utils, Translator, Emoji
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
 
-BOT_LOG_CHANNEL: discord.TextChannel
+BOT_LOG_CHANNEL: discord.TextChannel = None
 STARTUP_ERRORS = []
 BOT: commands.AutoShardedBot = None
 LOG_PUMP = None
@@ -46,7 +47,7 @@ def init_logger():
     # DISCORD_LOGGER.addHandler(handler)
 
 
-async def onReady(bot: commands.Bot, channelID):
+async def initialize(bot: commands.Bot, channelID):
     global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS, LOG_PUMP
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
@@ -95,6 +96,7 @@ def exception(message, error):
 
 
 async def bot_log(message=None, embed=None):
+    global BOT_LOG_CHANNEL
     if BOT_LOG_CHANNEL is not None:
         return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
     else:
@@ -191,7 +193,7 @@ class LogPump:
                         try:
                             senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
                         except Exception as e:
-                            await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                            await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                                   cid=cid, todo=todo, to_send=to_send,
                                                                   LOG_CACHE=self.todo, embed=embed,
                                                                   file=file, empty=empty)
@@ -206,7 +208,7 @@ class LogPump:
                         pass
                     except Exception as e:
                         await log_error()
-                        await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                        await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                               cid=cid, todo=todo, to_send=to_send,
                                                               LOG_CACHE=self.todo, embed=embed, file=file,
                                                               empty=empty)
@@ -215,7 +217,7 @@ class LogPump:
                 await asyncio.sleep(0.1)
             except Exception as e:
                 await log_error()
-                await GlobalHandlers.handle_exception("LOG PUMP", BOT, e,
+                await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                       cid=cid, todo=todo, to_send=to_send,
                                                       LOG_CACHE=self.todo, embed=embed, file=file,
                                                       empty=empty)

@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
+from Bot.GearBot import GearBot
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from Util.Converters import Message
 from Util.JumboGenerator import JumboGenerator
@@ -23,7 +24,7 @@ class Basic:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
         self.running = True

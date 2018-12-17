@@ -1,17 +1,16 @@
-import asyncio
-import importlib
 import os
 
 from discord.ext import commands
 
-import Util
+from Bot import TheRealGearBot
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils
 
 
 class Reload:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
 
     async def __local_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author)
@@ -52,23 +51,10 @@ class Reload:
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
-        self.bot.hot_reloading = True
-        GearbotLogging.SHOULD_TERMINATE = True
         message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
         ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
         GearbotLogging.info("Initiating hot reload")
-        await asyncio.sleep(2)
-        utils = importlib.reload(Util)
-        await utils.reload(self.bot)
-        GearbotLogging.info("Reloading all cogs...")
-        temp = []
-        for cog in ctx.bot.cogs:
-            temp.append(cog)
-        for cog in temp:
-            self.bot.unload_extension(f"Cogs.{cog}")
-            GearbotLogging.info(f'{cog} has been unloaded.')
-            self.bot.load_extension(f"Cogs.{cog}")
-            GearbotLogging.info(f'{cog} has been loaded.')
+        await TheRealGearBot.initialize(self.bot, reload=True)
         GearbotLogging.info("Hot reload complete.")
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
         await message.edit(content=m)

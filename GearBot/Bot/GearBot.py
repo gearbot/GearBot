@@ -14,7 +14,8 @@ class GearBot(AutoShardedBot):
     custom_command_count = 0
     errors = 0
     eaten = 0
-    database_errors = 0
+    database_errors = 0,
+    database_connection = None
     locked = True
     running_events = []
 
@@ -26,9 +27,8 @@ class GearBot(AutoShardedBot):
         """
         intercept events, block them from running while locked and track
         """
-        while self.locked and event_name != "on_ready":
-            await asyncio.sleep(1)
-        print(f"running {event_name}")
+        while (self.locked or not self.STARTUP_COMPLETE) and event_name != "on_ready":
+            await asyncio.sleep(0.2)
         self.running_events.append(coro)
         try:
             await super()._run_event(coro, event_name, *args, **kwargs)
@@ -39,10 +39,10 @@ class GearBot(AutoShardedBot):
             self.running_events.remove(coro)
 
 
-    #### event handlers
+    #### event handlers, basically bouncing everything to TheRealGearBot file so we can hotreload our listeners
 
     async def on_ready(self):
-        print('Logged on as {0}!'.format(self.user))
+        await TheRealGearBot.on_ready(self)
 
     async def on_message(self, message):
         await TheRealGearBot.on_message(self, message)
