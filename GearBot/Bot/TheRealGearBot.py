@@ -9,3 +9,7 @@ def prefix_callable(bot, message):
     elif bot.STARTUP_COMPLETE:
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
+
+
+async def on_ready(bot):
+    print(bot)

@@ -1,9 +1,6 @@
 import os
 from argparse import ArgumentParser
 
-import discord
-from discord.ext import commands
-
 import Util
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, GlobalHandlers
@@ -12,34 +9,10 @@ from Util import Configuration, GearbotLogging, GlobalHandlers
 def prefix_callable(bot, message):
     return GlobalHandlers.prefix_callable(bot, message)
 
-GearBot = GearBot(command_prefix=prefix_callable, case_insensitive=True)
+gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True)
 
 
-@bot.event
-async def on_ready():
-    await GlobalHandlers.on_ready(bot)
 
-@bot.event
-async def on_message(message:discord.Message):
-    await GlobalHandlers.on_message(bot, message)
-
-
-@bot.event
-async def on_guild_join(guild: discord.Guild):
-    await GlobalHandlers.on_guild_join(guild)
-
-@bot.event
-async def on_guild_remove(guild: discord.Guild):
-    await GlobalHandlers.on_guild_remove(guild)
-
-@bot.event
-async def on_command_error(ctx: commands.Context, error):
-    await GlobalHandlers.on_command_error(bot, ctx, error)
-
-
-@bot.event
-async def on_error(event, *args, **kwargs):
-    await GlobalHandlers.on_error(bot, event, *args, **kwargs)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -56,11 +29,11 @@ if __name__ == '__main__':
         token = Configuration.get_master_var("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
-    bot.remove_command("help")
-    Util.prepDatabase(bot)
+    # gearbot.remove_command("help")
+    Util.prepDatabase(gearbot)
     GearbotLogging.info("Ready to go, spinning up the gears")
-    bot.run(token)
+    gearbot.run(token)
     GearbotLogging.info("GearBot shutting down, cleaning up")
-    bot.database_connection.close()
+    gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
 
