@@ -426,7 +426,7 @@
   "remind_option_here": "Right here",
   "remind_option_dm": "With a DM",
   "remind_option_cancel": "I changed my mind, don't remind me",
-  "confirmation_timeout": "I got no answer within {timeout} seconds.. Aborting.",
+  "confirmation_timeout": "I got no answer within {timeout} seconds... Aborting.",
   "reminder_time_travel": "I'm sorry but time travel has not been invented yet in this reality, maybe you want to try in an alternative one?",
   "reminder_confirmation_dm": "Alright, i'll DM you for that in {duration} {duration_identifier}",
   "reminder_confirmation_here": "Alright, i'll ping you here for that in {duration} {duration_identifier}",
