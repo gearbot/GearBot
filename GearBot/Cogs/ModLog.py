@@ -9,7 +9,8 @@ from discord.embeds import EmptyEmbed
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
 from Bot.GearBot import GearBot
-from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
+    MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
 
@@ -85,11 +86,7 @@ class ModLog:
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
-            LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                                 channel=message.channel.id, server=message.guild.id)
-            for a in message.attachments:
-                LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
-                                        messageid=message.id)
+            await MessageUtils.insert_message(self.bot, message)
 
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         if data.message_id in self.bot.data["message_deletes"]:

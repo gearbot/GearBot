@@ -18,6 +18,7 @@ class GearBot(AutoShardedBot):
     database_connection = None
     locked = True
     running_events = []
+    redis_pool = None
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)

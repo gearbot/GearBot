@@ -9,6 +9,7 @@ import traceback
 from datetime import datetime
 
 import aiohttp
+import aioredis
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
 from discord.abc import PrivateChannel
 from discord.ext import commands
@@ -84,6 +85,15 @@ async def initialize(bot, reload=False):
             "message_deletes": set()
         }
 
+        if bot.redis_pool is None:
+            try:
+                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST'), Configuration.get_master_var('REDIS_PORT')), encoding="utf-8")
+            except OSError:
+                GearbotLogging.error("==============Failed to connect to redis==============")
+            else:
+                GearbotLogging.info("Redis connection esteablished")
+
+        bot.aiosession = aiohttp.ClientSession()
         await Configuration.initialize(bot)
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
     except Exception as ex:
@@ -105,7 +115,6 @@ async def on_ready(bot):
         except Exception:
             pass #doesn't work on windows
 
-        bot.aiosession = aiohttp.ClientSession()
         bot.start_time = datetime.utcnow()
         GearbotLogging.info("Loading cogs...")
         for extension in Configuration.get_master_var("COGS"):
