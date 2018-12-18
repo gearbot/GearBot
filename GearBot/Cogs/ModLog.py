@@ -6,9 +6,9 @@ import time
 import discord
 from discord import AuditLogAction, Role
 from discord.embeds import EmptyEmbed
-from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
@@ -16,7 +16,7 @@ from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infracti
 class ModLog:
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.cache_message = None
         self.to_cache = []
@@ -347,7 +347,7 @@ class ModLog:
         if before.name != after.name or before.discriminator != after.discriminator:
             for guild in self.bot.guilds:
                 if guild.get_member(before.id) is not None:
-                    after_clean_name = Utils.clean_user(after)
+                    after_clean_name = Utils.clean_name(after)
                     GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                           f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after_clean=after_clean_name, before=before, user_id=after.id, after=after)}")
 
@@ -467,7 +467,7 @@ class ModLog:
             else:
                 # permission override removed
                 key = "permission_override_removed"
-                parts = dict(channel=after, target_name=Utils.escape_markdown(target), target_id=target.id)
+                parts = dict(channel=after, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
                 def finder(e):
                     if e.target.id == after.id and e.extra.id == target.id:

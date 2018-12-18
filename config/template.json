@@ -1,5 +1,5 @@
 {
-  "VERSION": 4,
+  "VERSION": 5,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -20,5 +20,7 @@
   "SELF_ROLES": [],
   "TRUSTED_ROLES": [],
   "TIMESTAMPS": true,
-  "DM_ON_WARN": false
+  "DM_ON_WARN": false,
+  "ROLE_WHITELIST": true,
+  "ROLE_LIST": []
 }

@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
     Confirmation
 from Util.Converters import UserID, Reason, RangedInt
@@ -23,7 +24,7 @@ class Infractions:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         Pages.register("inf_search", self.inf_init, self.update_infs)
 
     def __unload(self):

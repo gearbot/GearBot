@@ -1,9 +1,10 @@
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
     Pages
-from Util.Converters import LoggingChannel
+from Util.Converters import LoggingChannel, ListMode
 
 
 class ServerHolder(object):
@@ -80,8 +81,7 @@ class Serveradmin:
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot:commands.AutoShardedBot = bot
-        self.validate_configs()
+        self.bot:GearBot = bot
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
@@ -90,17 +90,6 @@ class Serveradmin:
     async def __local_check(self, ctx:commands.Context):
         return Permissioncheckers.check_permission(ctx)
 
-    def validate_configs(self):
-        for guild in self.bot.guilds:
-            for type in ("TRUSTED", "MOD", "ADMIN"):
-                to_remove = []
-                roles = Configuration.get_var(guild.id, type + "_ROLES")
-                for role in roles:
-                    if guild.get_role(role) is None:
-                        to_remove.append(role)
-                for role in to_remove:
-                    roles.remove(role)
-            Configuration.save(guild.id)
 
     @commands.guild_only()
     @commands.group()
@@ -201,7 +190,7 @@ class Serveradmin:
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_setup_complete', ctx)}")
 
-    @configure.group(aliases=["selfroles"])
+    @configure.group(aliases=["selfrole"])
     async def self_roles(self, ctx:commands.Context):
         """Allows adding/removing roles from the self assignable list"""
         if ctx.invoked_subcommand is self.self_roles:
@@ -776,6 +765,69 @@ class Serveradmin:
             blacklist.remove(word)
             await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
+
+
+    @configure.group()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
+    async def role_list(self, ctx):
+        """configure_role_list_help"""
+        if ctx.invoked_subcommand is self.role_list:
+            items = Configuration.get_var(ctx.guild.id, f"ROLE_LIST")
+            mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
+            if len(items) == 0:
+                desc = Translator.translate(f"no_role_{mode}", ctx)
+            else:
+                desc = "\n".join(f"<@&{item}>" for item in items)
+            embed = discord.Embed(title=Translator.translate(f"current_role_{mode}", ctx), description=desc)
+            await ctx.send(embed=embed)
+
+    @role_list.command("add")
+    async def role_list_add(self, ctx, *, role:discord.Role):
+        """configure_role_list_add"""
+        roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
+        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
+        if role == ctx.guild.default_role:
+            await GearbotLogging.send_to(ctx, "NO", "default_role_forbidden")
+        elif role.id in roles:
+            await GearbotLogging.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
+        else:
+            roles.append(role.id)
+            Configuration.save(ctx.guild.id)
+            await GearbotLogging.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+
+
+    @role_list.command("remove", aliases=["rmv"])
+    async def role_list_remove(self, ctx, *, role: discord.Role):
+        """configure_role_list_remove"""
+        roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
+        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
+        if role.id not in roles:
+            await GearbotLogging.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
+        else:
+            roles.remove(role.id)
+            Configuration.save(ctx.guild.id)
+            await GearbotLogging.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+
+    @role_list.command("mode")
+    async def role_list_mode(self, ctx, mode:ListMode):
+        """configure_role_list_mode"""
+        Configuration.set_var(ctx.guild.id, "ROLE_WHITELIST", mode)
+        mode = "whitelist" if mode else "blacklist"
+        await GearbotLogging.send_to(ctx, "YES", f"role_list_mode_{mode}")
+
+
+
+    async def on_guild_role_delete(self, role):
+        lists = ["ROLE_LIST", "TRUSTED_ROLES", "MOD_ROLES", "ADMIN_ROLES"]
+        changed = False
+        for l in lists:
+            roles = Configuration.get_var(role.guild.id, l)
+            if role.id in roles:
+                roles.remove(role.id)
+                changed = True
+        if changed:
+            Configuration.save(role.guild.id)
 
 
 

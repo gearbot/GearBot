@@ -1,13 +1,13 @@
 import discord
-from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Pages, Emoji
 
 
 class PageHandler:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
 
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         guild = self.bot.get_guild(payload.guild_id)

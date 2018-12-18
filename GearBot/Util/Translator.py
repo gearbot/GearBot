@@ -13,7 +13,7 @@ from Util import Configuration, GearbotLogging, Emoji
 LANGS = dict()
 BOT = None
 
-def on_ready(bot_in):
+def initialize(bot_in):
     global BOT
     BOT = bot_in
     load_translations()

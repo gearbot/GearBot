@@ -7,7 +7,7 @@ page_handlers = dict()
 known_messages = dict()
 
 
-def on_ready(bot):
+def initialize(bot):
     load_from_disc()
 
 

@@ -1,44 +1,102 @@
 import asyncio
-import datetime
+import importlib
 import json
 import os
 import signal
 import sys
 import time
 import traceback
+from datetime import datetime
 
 import aiohttp
-import discord
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
+from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-import Util
-from Util import Configuration, Emoji, Utils, Translator, GearbotLogging, DocUtils, Pages
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
+    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator
 from database import DatabaseConnector
+
+components = [
+    Configuration,
+    DatabaseConnector,
+    Converters,
+    GearbotLogging,
+    Permissioncheckers,
+    Utils,
+    VersionInfo,
+    Emoji,
+    Confirmation,
+    HelpGenerator,
+    Pages,
+    InfractionUtils,
+    Archive,
+    Translator,
+    DocUtils,
+    JumboGenerator
+]
 
 
 def prefix_callable(bot, message):
     user_id = bot.user.id
     prefixes = [f'<@!{user_id}> ', f'<@{user_id}> '] #execute commands by mentioning
-    if message.guild is None or not bot.STARTUP_COMPLETE:
+    if message.guild is None:
         prefixes.append('!') #use default ! prefix in DMs
-    else:
+    elif bot.STARTUP_COMPLETE:
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
+
+async def initialize(bot, reload=False):
+    #lock event handling while we get ready
+    bot.locked = True
+    try:
+        if reload:
+            GearbotLogging.LOG_PUMP.running = False
+            Utils.cache_task.running = False
+            for c in components:
+                importlib.reload(c)
+
+            GearbotLogging.info("Reloading all cogs...")
+            temp = []
+            for cog in bot.cogs:
+                temp.append(cog)
+            for cog in temp:
+                bot.unload_extension(f"Cogs.{cog}")
+                GearbotLogging.info(f'{cog} has been unloaded.')
+                bot.load_extension(f"Cogs.{cog}")
+                GearbotLogging.info(f'{cog} has been loaded.')
+
+        #database
+        GearbotLogging.info("Connecting to the database.")
+        DatabaseConnector.init()
+        bot.database_connection = DatabaseConnector.connection
+        GearbotLogging.info("Database connection established.")
+
+        GearbotLogging.initialize_pump(bot)
+        Emoji.initialize(bot)
+        Pages.initialize(bot)
+        Utils.initialize(bot)
+        Translator.initialize(bot)
+        bot.data = {
+            "forced_exits": set(),
+            "unbans": set(),
+            "message_deletes": set()
+        }
+
+        await Configuration.initialize(bot)
+        await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
+    except Exception as ex:
+        #make sure we always unlock, even when something went wrong!
+        bot.locked = False
+        raise ex
+    bot.locked = False
+
 
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
-        GearbotLogging.initialize_pump(bot)
-        await GearbotLogging.onReady(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
-        info = await bot.application_info()
-        await GearbotLogging.bot_log(message="Spinning up the gears!")
-        await Util.readyBot(bot)
-        Emoji.on_ready(bot)
-        Utils.on_ready(bot)
-        Translator.on_ready(bot)
-        bot.loop.create_task(keepDBalive(bot)) # ping DB every hour so it doesn't run off
-
+        await initialize(bot)
         #shutdown handler for clean exit on linux
         try:
             for signame in ('SIGINT', 'SIGTERM'):
@@ -48,7 +106,7 @@ async def on_ready(bot):
             pass #doesn't work on windows
 
         bot.aiosession = aiohttp.ClientSession()
-        bot.start_time = datetime.datetime.utcnow()
+        bot.start_time = datetime.utcnow()
         GearbotLogging.info("Loading cogs...")
         for extension in Configuration.get_master_var("COGS"):
             try:
@@ -61,19 +119,20 @@ async def on_ready(bot):
             bot.loop.create_task(translation_task(bot))
 
         await DocUtils.update_docs(bot)
-
         bot.STARTUP_COMPLETE = True
+        info = await bot.application_info()
+        bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
         await GearbotLogging.bot_log(message=f"All gears turning at full speed, {info.name} ready to go!")
-        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
+        await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
     else:
-        await bot.change_presence(activity=discord.Activity(type=3, name='the gears turn'))
-
+        await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
 
 
 async def keepDBalive(bot):
     while not bot.is_closed():
         bot.database_connection.connection().ping(True)
         await asyncio.sleep(3600)
+
 
 async def translation_task(bot):
     while not bot.is_closed():
@@ -82,8 +141,8 @@ async def translation_task(bot):
         except Exception as ex:
             GearbotLogging.error("Something went wrong during translation updates")
             GearbotLogging.error(traceback.format_exc())
-            embed = discord.Embed(colour=discord.Colour(0xff0000),
-                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            embed = Embed(colour=Colour(0xff0000),
+                                  timestamp=datetime.utcfromtimestamp(time.time()))
             embed.set_author(name="Something went wrong during translation updates")
             embed.add_field(name="Exception", value=str(ex))
             v = ""
@@ -102,7 +161,7 @@ async def translation_task(bot):
             pass # bot shutting down
 
 
-async def on_message(bot, message:discord.Message):
+async def on_message(bot, message:Message):
     if message.author.bot:
         if message.author.id == bot.user.id:
             bot.self_messages += 1
@@ -112,21 +171,21 @@ async def on_message(bot, message:discord.Message):
     bot.user_messages += 1
     if ctx.valid and ctx.command is not None:
         bot.commandCount = bot.commandCount + 1
-        if isinstance(ctx.channel, discord.TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
+        if isinstance(ctx.channel, TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
             try:
                 await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
-            except discord.Forbidden:
+            except Forbidden:
                 pass #closed DMs
         else:
             await bot.invoke(ctx)
 
 
-async def on_guild_join(guild: discord.Guild):
+async def on_guild_join(guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.load_config(guild.id)
     await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
 
-async def on_guild_remove(guild: discord.Guild):
+async def on_guild_remove(guild):
     GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
     await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
 
@@ -240,8 +299,8 @@ async def handle_database_error(bot):
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
 
-    embed = discord.Embed(colour=discord.Colour(0xff0000),
-                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+    embed = Embed(colour=Colour(0xff0000),
+                          timestamp=datetime.utcfromtimestamp(time.time()))
 
     # something went wrong and it might have been in on_command_error, make sure we log to the log file first
     lines = [
@@ -304,7 +363,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         lines.append(f"Command: {ctx.command}")
         embed.add_field(name="Command", value=ctx.command)
 
-        channel_name = 'Private Message' if isinstance(ctx.channel, discord.abc.PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
+        channel_name = 'Private Message' if isinstance(ctx.channel, PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
         lines.append(f"Channel: {channel_name}")
         embed.add_field(name="Channel", value=channel_name, inline=False)
 

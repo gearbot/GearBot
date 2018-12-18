@@ -141,8 +141,8 @@ class Message(Converter):
             if logged is not None and logged.content != message.content:
                 logged.content = message.content
                 logged.save()
-        if message.guild != ctx.guild and self.local_only:
-            raise TranslatedBadArgument('message_wrong_guild', ctx)
+        if message.channel != ctx.channel and self.local_only:
+            raise TranslatedBadArgument('message_wrong_channel', ctx)
         return message
 
     @staticmethod
@@ -231,3 +231,20 @@ class RangedInt(Converter):
                 raise TranslatedBadArgument('number_too_big', ctx, max=self.max)
             else:
                 return argument
+
+class ListMode(Converter):
+    async def convert(self, ctx, argument):
+        argument = argument.lower()
+        if argument == "whitelist":
+            return True
+        elif argument == "blacklist":
+            return False
+        else:
+            raise TranslatedBadArgument("invalid_mode", ctx)
+
+
+class ReminderText(Converter):
+    async def convert(self, ctx, argument):
+        if len(argument) > 1800:
+            raise TranslatedBadArgument('reminder_too_long', ctx)
+        return argument

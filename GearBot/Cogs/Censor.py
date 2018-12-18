@@ -1,9 +1,9 @@
 import re
 
 import discord
-from discord.ext import commands
 from discord.ext.commands import clean_content
 
+from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, InfractionUtils, Emoji
 from database.DatabaseConnector import Infraction
 
@@ -18,7 +18,7 @@ async def censor_invite(ctx, code, server_name):
         clean_message = await clean_content().convert(ctx, ctx.message.content)
         clean_name = Utils.clean_user(ctx.message.author)
         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                                    f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name)}")
+                                    f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)}")
     except discord.NotFound:
         pass  # we failed? guess we lost the race
 
@@ -26,7 +26,7 @@ async def censor_invite(ctx, code, server_name):
 class Censor:
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
 
     async def on_message(self, message: discord.Message):
         await self.censor_message(message)
@@ -61,7 +61,7 @@ class Censor:
                 try:
                     invite: discord.Invite = await self.bot.get_invite(code)
                 except discord.NotFound:
-                    pass
+                    await censor_invite(ctx, code, "INVALID INVITE")
                 except KeyError:
                     await censor_invite(ctx, code, "DM group")
                     censored = True
@@ -82,7 +82,7 @@ class Censor:
                         else:
                             clean_message = await clean_content().convert(ctx, message.content)
                             GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                                                        f":no_entry_sign: {Translator.translate('censored_message', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad)}")
+                                                        f":no_entry_sign: {Translator.translate('censored_message', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)}")
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
                         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",

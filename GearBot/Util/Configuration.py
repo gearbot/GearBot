@@ -71,11 +71,19 @@ def v4(config):
             info.append("VOICE_CHANGES_DETAILED")
     return config
 
+def v5(config):
+    config["ROLE_WHITELIST"] = True
+    config["ROLE_LIST"] = []
+    if "Basic" in config["PERM_OVERRIDES"] and "role" in config["PERM_OVERRIDES"]:
+        config["PERM_OVERRIDES"]["self_role"] = config["PERM_OVERRIDES"]["role"]
+        del config["PERM_OVERRIDES"]["role"]
+    return config
+
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4]
+MIGRATORS = [initial_migration, v2, v3, v4, v5]
 
-async def on_ready(bot: commands.Bot):
+async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
     CONFIG_VERSION = Utils.fetch_from_disk("config/template")["VERSION"]
     GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")

@@ -7,6 +7,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
 from Util.Converters import UserID
 
@@ -14,7 +15,7 @@ from Util.Converters import UserID
 class Admin:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
 
     def __unload(self):
@@ -29,6 +30,13 @@ class Admin:
         """Restarts the bot"""
         await ctx.send("Restarting...")
         await Utils.cleanExit(self.bot, ctx.author.name)
+
+
+    @commands.command(hidden=True)
+    async def nuke_tasks(self, ctx):
+        """nukes pending tasks"""
+        for r in self.bot.running_events:
+            r.cancel()
 
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
@@ -81,7 +89,7 @@ class Admin:
         """Reloads all server configs from disk"""
         async with ctx.typing():
             Configuration.load_master()
-            await Configuration.on_ready(self.bot)
+            await Configuration.initialize(self.bot)
         await ctx.send("Configs reloaded")
 
     @commands.command(hidden=True)

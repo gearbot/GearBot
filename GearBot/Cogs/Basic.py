@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
+from Bot.GearBot import GearBot
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
 from Util.Converters import Message
 from Util.JumboGenerator import JumboGenerator
@@ -23,7 +24,7 @@ class Basic:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
@@ -179,10 +180,10 @@ class Basic:
                 count = 1
         return Pages.paginate(current_roles, max_lines=20)
 
-    @commands.command()
+    @commands.command(aliases=["selfrole", "self_roles", "selfroles"])
     @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
-    async def role(self, ctx: commands.Context, *, role: str = None):
+    async def self_role(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
         if role is None:
             await Pages.create_new("role", ctx)
@@ -259,6 +260,41 @@ class Basic:
     async def jumbo(self, ctx, *, emojis: str):
         """Jumbo emoji"""
         await JumboGenerator(ctx, emojis).generate()
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def dog(self, ctx):
+        """dog_help"""
+        await ctx.trigger_typing()
+        future_fact = self.get_json("https://dog-api.kinduff.com/api/facts?number=1")
+        key = Configuration.get_master_var("DOG_KEY", "")
+        future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key},
+                                   key != "")
+        fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
+        embed = discord.Embed(description=fact_json["facts"][0])
+        if key != "":
+            embed.set_image(url=dog_json[0]["url"])
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def cat(self, ctx):
+        """cat_help"""
+        await ctx.trigger_typing()
+        future_fact = self.get_json("https://catfact.ninja/fact")
+        key = Configuration.get_master_var("CAT_KEY", "")
+        future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key' : key}, key != "")
+        fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
+        embed = discord.Embed(description=fact_json["fact"])
+        if  key != "":
+            embed.set_image(url=cat_json[0]["url"])
+        await ctx.send(embed=embed)
+
+    async def get_json(self, link, headers=None, do_request=True):
+        if do_request:
+            async with self.bot.aiosession.get(link, headers=headers) as reply:
+                return await reply.json()
+
 
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
