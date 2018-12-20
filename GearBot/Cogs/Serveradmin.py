@@ -92,7 +92,7 @@ class Serveradmin:
 
 
     @commands.guild_only()
-    @commands.group()
+    @commands.group(aliases = ["config", "cfg"])
     async def configure(self, ctx:commands.Context):
         """configure_help"""
         if ctx.subcommand_passed is None:
