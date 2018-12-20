@@ -6,7 +6,7 @@ from discord import Object
 
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
-Message = namedtuple("Message", "id author content channel server")
+Message = namedtuple("Message", "messageid author content channel server")
 
 def is_cache_enabled(bot):
     return bot.redis_pool is not None
