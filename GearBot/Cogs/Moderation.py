@@ -474,7 +474,7 @@ class Moderation:
                                       f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
-    @commands.command()
+    @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
     async def userinfo(self, ctx: commands.Context, *, user: DiscordUser = None):
         """Shows information about the chosen user"""
@@ -505,7 +505,7 @@ class Moderation:
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["server"])
     async def serverinfo(self, ctx, guild: Guild = None):
         """Shows information about the current server."""
         if guild is None:
