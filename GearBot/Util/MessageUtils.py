@@ -36,6 +36,6 @@ async def insert_message(bot, message):
 
 async def update_message(bot, message_id, content):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
-        await bot.redis_pool.hmset_dict(message_id, content=content,)
+        await bot.redis_pool.hmset_dict(message_id, content=content)
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id)
 
