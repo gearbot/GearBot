@@ -92,8 +92,10 @@ class ModLog:
         if data.message_id in self.bot.data["message_deletes"]:
             self.bot.data["message_deletes"].remove(data.message_id)
             return
-        message = LoggedMessage.get_or_none(messageid=data.message_id)
-        if message is not None and Features.is_logged(message.server, "EDIT_LOGS"):
+        if not Features.is_logged(data.guild_id, "EDIT_LOGS"):
+            return
+        message = await MessageUtils.get_message_data(self.bot, data.message_id)
+        if message is not None:
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
@@ -127,10 +129,14 @@ class ModLog:
                     count += 1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
-        if event.data["channel_id"] == Configuration.get_master_var("BOT_LOG_CHANNEL"):
+        cid = int(event.data["channel_id"])
+        if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
-        message = LoggedMessage.get_or_none(messageid=event.message_id)
-        if message is not None and "content" in event.data and Features.is_logged(message.server, "EDIT_LOGS"):
+        c = self.bot.get_channel(cid)
+        if c is None or c.guild is None or not Features.is_logged(c.guild.id, "EDIT_LOGS"):
+            return
+        message = await MessageUtils.get_message_data(self.bot, event.message_id)
+        if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
                 return
@@ -164,8 +170,7 @@ class ModLog:
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}", can_stamp=False)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}", can_stamp=False)
-            message.content = event.data["content"]
-            message.save()
+            await MessageUtils.update_message(self.bot, event.message_id, after)
 
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
@@ -379,7 +384,7 @@ class ModLog:
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
             message_list = dict()
             for mid in event.message_ids:
-                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+                message = await MessageUtils.get_message_data(self.bot, mid)
                 if message is not None:
                     message_list[mid] = message
             if len(message_list) > 0:

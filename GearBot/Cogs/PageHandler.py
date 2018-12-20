@@ -10,6 +10,8 @@ class PageHandler:
         self.bot:GearBot = bot
 
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if str(payload.message_id) not in Pages.known_messages.keys():
+            return
         guild = self.bot.get_guild(payload.guild_id)
         if guild is None:
             return
@@ -22,16 +24,16 @@ class PageHandler:
             pass
         else:
             if str(payload.emoji) == str(Emoji.get_emoji('LEFT')):
-                if await Pages.update(self.bot, message , "PREV", payload.user_id):
-                    try:
-                        await message.remove_reaction(Emoji.get_emoji('LEFT'), user)
-                    except discord.Forbidden:
-                        pass
+                await Pages.update(self.bot, message , "PREV", payload.user_id)
+                try:
+                    await message.remove_reaction(Emoji.get_emoji('LEFT'), user)
+                except discord.Forbidden:
+                    pass
             elif str(payload.emoji) == str(Emoji.get_emoji('RIGHT')):
-                if await Pages.update(self.bot, message, "NEXT", payload.user_id):
-                    try:
-                        await message.remove_reaction(Emoji.get_emoji('RIGHT'), user)
-                    except discord.Forbidden:
-                        pass
+                await Pages.update(self.bot, message, "NEXT", payload.user_id)
+                try:
+                    await message.remove_reaction(Emoji.get_emoji('RIGHT'), user)
+                except discord.Forbidden:
+                    pass
 def setup(bot):
     bot.add_cog(PageHandler(bot))

@@ -53,24 +53,20 @@ async def create_new(type, ctx, **kwargs):
 
 async def update(bot, message, action, user):
     message_id = str(message.id)
-    if message_id in known_messages.keys():
-        type = known_messages[message_id]["type"]
-        if type in page_handlers.keys():
-            data = known_messages[message_id]
-            if data["sender"] == user or page_handlers[type]["sender_only"] is False:
-                page_num = data["page"]
-                try:
-                    trigger_message = await message.channel.get_message(data["trigger"])
-                except discord.NotFound:
-                    trigger_message = None
-                ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
-                text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
-                await message.edit(content=text, embed=embed)
-                known_messages[message_id]["page"] = page
-                save_to_disc()
-                return True
-    return False
-
+    type = known_messages[message_id]["type"]
+    if type in page_handlers.keys():
+        data = known_messages[message_id]
+        if data["sender"] == user or page_handlers[type]["sender_only"] is False:
+            page_num = data["page"]
+            try:
+                trigger_message = await message.channel.get_message(data["trigger"])
+            except discord.NotFound:
+                trigger_message = None
+            ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
+            text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
+            await message.edit(content=text, embed=embed)
+            known_messages[message_id]["page"] = page
+            save_to_disc()
 
 def basic_pages(pages, page_num, action):
     if action == "PREV":

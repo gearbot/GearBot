@@ -84,18 +84,20 @@ async def initialize(bot, reload=False):
             "unbans": set(),
             "message_deletes": set()
         }
+        await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 
         if bot.redis_pool is None:
             try:
-                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST'), Configuration.get_master_var('REDIS_PORT')), encoding="utf-8")
+                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST'), Configuration.get_master_var('REDIS_PORT')), encoding="utf-8", db=0)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, cache mechanics disengaged")
             else:
                 GearbotLogging.info("Redis connection esteablished")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, cache mechanics engaged")
 
         bot.aiosession = aiohttp.ClientSession()
         await Configuration.initialize(bot)
-        await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
     except Exception as ex:
         #make sure we always unlock, even when something went wrong!
         bot.locked = False
@@ -131,7 +133,10 @@ async def on_ready(bot):
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
-        await GearbotLogging.bot_log(message=f"All gears turning at full speed, {info.name} ready to go!")
+        gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
+        a = " ".join(gears)
+        b = " ".join(reversed(gears))
+        await GearbotLogging.bot_log(message=f"{a} All gears turning at full speed, {info.name} ready to go! {b}")
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
     else:
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
