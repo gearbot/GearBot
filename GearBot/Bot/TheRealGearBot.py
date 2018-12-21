@@ -1,5 +1,4 @@
 import asyncio
-import importlib
 import json
 import os
 import signal
@@ -15,29 +14,8 @@ from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
-    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils
 from database import DatabaseConnector
-
-components = [
-    Configuration,
-    DatabaseConnector,
-    Converters,
-    GearbotLogging,
-    Permissioncheckers,
-    Utils,
-    VersionInfo,
-    Emoji,
-    Confirmation,
-    HelpGenerator,
-    Pages,
-    InfractionUtils,
-    Archive,
-    Translator,
-    DocUtils,
-    JumboGenerator,
-    MessageUtils
-]
 
 
 def prefix_callable(bot, message):
@@ -49,26 +27,10 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
 
-async def initialize(bot, reload=False):
+async def initialize(bot):
     #lock event handling while we get ready
     bot.locked = True
     try:
-        if reload:
-            GearbotLogging.LOG_PUMP.running = False
-            Utils.cache_task.running = False
-            for c in components:
-                importlib.reload(c)
-
-            GearbotLogging.info("Reloading all cogs...")
-            temp = []
-            for cog in bot.cogs:
-                temp.append(cog)
-            for cog in temp:
-                bot.unload_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been unloaded.')
-                bot.load_extension(f"Cogs.{cog}")
-                GearbotLogging.info(f'{cog} has been loaded.')
-
         #database
         GearbotLogging.info("Connecting to the database.")
         DatabaseConnector.init()

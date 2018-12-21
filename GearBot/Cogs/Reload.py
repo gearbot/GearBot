@@ -1,8 +1,9 @@
+import importlib
 import os
 
 from discord.ext import commands
 
-from Bot import TheRealGearBot
+from Bot import TheRealGearBot, Reloader
 from Bot.GearBot import GearBot
 from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages
 
@@ -55,7 +56,23 @@ class Reload:
         message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
         ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
         GearbotLogging.info("Initiating hot reload")
-        await TheRealGearBot.initialize(self.bot, reload=True)
+
+        GearbotLogging.LOG_PUMP.running = False
+        Utils.cache_task.running = False
+        importlib.reload(Reloader)
+        for c in Reloader.components:
+            importlib.reload(c)
+        GearbotLogging.info("Reloading all cogs...")
+        temp = []
+        for cog in self.bot.cogs:
+            temp.append(cog)
+        for cog in temp:
+            self.bot.unload_extension(f"Cogs.{cog}")
+            GearbotLogging.info(f'{cog} has been unloaded.')
+            self.bot.load_extension(f"Cogs.{cog}")
+            GearbotLogging.info(f'{cog} has been loaded.')
+
+        await TheRealGearBot.initialize(self.bot)
         GearbotLogging.info("Hot reload complete.")
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
         await message.edit(content=m)
