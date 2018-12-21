@@ -4,24 +4,26 @@ import datetime
 import time
 
 import discord
-from discord import AuditLogAction, Role
+from discord import AuditLogAction, Role, DMChannel
 from discord.embeds import EmptyEmbed
-from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
-from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features
+from Bot.GearBot import GearBot
+from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
+    MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
 
 class ModLog:
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.cache_message = None
         self.to_cache = []
         self.cache_start = 0
         self.bot.loop.create_task(cache_task(self))
+        self.clean_collector = dict()
 
     def __unload(self):
         self.running = False
@@ -85,18 +87,19 @@ class ModLog:
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
-            LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                                 channel=message.channel.id, server=message.guild.id)
-            for a in message.attachments:
-                LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
-                                        messageid=message.id)
+            await MessageUtils.insert_message(self.bot, message)
 
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         if data.message_id in self.bot.data["message_deletes"]:
             self.bot.data["message_deletes"].remove(data.message_id)
             return
-        message = LoggedMessage.get_or_none(messageid=data.message_id)
-        if message is not None and Features.is_logged(message.server, "EDIT_LOGS"):
+        if not Features.is_logged(data.guild_id, "EDIT_LOGS"):
+            return
+        message = await MessageUtils.get_message_data(self.bot, data.message_id)
+        if message.channel in self.bot.being_cleaned:
+            self.bot.being_cleaned[message.channel].add(data.message_id)
+            return
+        if message is not None:
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
@@ -130,10 +133,14 @@ class ModLog:
                     count += 1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
-        if event.data["channel_id"] == Configuration.get_master_var("BOT_LOG_CHANNEL"):
+        cid = int(event.data["channel_id"])
+        if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
-        message = LoggedMessage.get_or_none(messageid=event.message_id)
-        if message is not None and "content" in event.data and Features.is_logged(message.server, "EDIT_LOGS"):
+        c = self.bot.get_channel(cid)
+        if isinstance(c, DMChannel) or not Features.is_logged(c.guild.id, "EDIT_LOGS"):
+            return
+        message = await MessageUtils.get_message_data(self.bot, event.message_id)
+        if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
                 return
@@ -142,8 +149,9 @@ class ModLog:
             if message.content == event.data["content"]:
                 # prob just pinned
                 return
-            if message.content is None or message.content == "":
-                message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
+            mc = message.content
+            if mc is None or mc == "":
+                mc = f"<{Translator.translate('no_content', channel.guild.id)}>"
             after = event.data["content"]
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
@@ -158,17 +166,16 @@ class ModLog:
                     embed.set_footer(
                         text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
                     embed.add_field(name=Translator.translate('before', channel.guild.id),
-                                    value=Utils.trim_message(message.content, 1024), inline=False)
+                                    value=Utils.trim_message(mc, 1024), inline=False)
                     embed.add_field(name=Translator.translate('after', channel.guild.id),
                                     value=Utils.trim_message(after, 1024), inline=False)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", embed=embed)
                 else:
-                    clean_old = await Utils.clean(message.content, channel.guild)
+                    clean_old = await Utils.clean(mc, channel.guild)
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}", can_stamp=False)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}", can_stamp=False)
-            message.content = event.data["content"]
-            message.save()
+            await MessageUtils.update_message(self.bot, event.message_id, after)
 
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
@@ -380,9 +387,14 @@ class ModLog:
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
+            if event.channel_id in self.bot.being_cleaned:
+                for mid in event.message_ids:
+                    self.bot.being_cleaned[event.channel_id].add(mid)
+                return
             message_list = dict()
+            await MessageUtils.archive_purge(self.bot,event.message_ids, event.guild_id)
             for mid in event.message_ids:
-                message = LoggedMessage.get_or_none(LoggedMessage.messageid == mid)
+                message = await MessageUtils.get_message_data(self.bot, mid)
                 if message is not None:
                     message_list[mid] = message
             if len(message_list) > 0:
@@ -467,7 +479,7 @@ class ModLog:
             else:
                 # permission override removed
                 key = "permission_override_removed"
-                parts = dict(channel=after, target_name=Utils.escape_markdown(target), target_id=target.id)
+                parts = dict(channel=after, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
                 def finder(e):
                     if e.target.id == after.id and e.extra.id == target.id:

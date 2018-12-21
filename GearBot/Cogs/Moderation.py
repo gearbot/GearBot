@@ -7,8 +7,10 @@ from discord import Object
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
+import GearBot
+from Bot import TheRealGearBot
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, GlobalHandlers
+    Archive, Confirmation, MessageUtils
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -27,7 +29,7 @@ class Moderation:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.timed_actions())
@@ -101,7 +103,7 @@ class Moderation:
     async def role(self, ctx: commands.Context):
         """mod_role_help"""
         if ctx.subcommand_passed is None:
-            await ctx.invoke(self.bot.get_command("help"), "role")
+            await ctx.invoke(self.bot.get_command("help"), query="role")
 
     async def role_handler(self, ctx, user, role, action):
         try:
@@ -124,7 +126,7 @@ class Moderation:
             mode_name = "whitelist" if mode else "blacklist"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
-                    if role <= user.ctx.author.top_role or user == ctx.guild.owner:
+                    if drole <= ctx.author.top_role or user == ctx.guild.owner:
                         await getattr(user, f"{action}_roles")(drole)
                         await GearbotLogging.send_to(ctx, "YES", f"role_{action}_confirmation", user=Utils.clean_user(user), user_id=user.id, role=Utils.escape_markdown(drole.name))
                     else:
@@ -472,7 +474,7 @@ class Moderation:
                                       f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
                 InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
 
-    @commands.command()
+    @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
     async def userinfo(self, ctx: commands.Context, *, user: DiscordUser = None):
         """Shows information about the chosen user"""
@@ -488,22 +490,35 @@ class Moderation:
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
         embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
-        if member is not None:
-            account_joined = member.joined_at.strftime("%d-%m-%Y")
-            embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
-            embed.add_field(name=Translator.translate('top_role', ctx), value=member.top_role.name, inline=True)
-            embed.add_field(name=Translator.translate('joined_at', ctx),
-                            value=f"{account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)",
-                            inline=True)
-        account_made = user.created_at.strftime("%d-%m-%Y")
-        embed.add_field(name=Translator.translate('account_created_at', ctx),
-                        value=f"{account_made} ({(ctx.message.created_at - user.created_at).days} days ago)",
-                        inline=True)
         embed.add_field(name=Translator.translate('avatar_url', ctx),
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
+        if member is not None:
+            embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
+
+            role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
+            if len(role_list) > 0:
+                member_roles = Pages.paginate(" ".join(role_list))
+            else:
+                member_roles = [Translator.translate("no_roles", ctx)]
+            embed.add_field(name=Translator.translate('all_roles', ctx), value=member_roles[0])
+            if len(member_roles) > 1:
+                for p in member_roles[1:]:
+                    embed.add_field(name=Translator.translate("more_roles", ctx), value=p)
+
+            embed.add_field(name=Translator.translate('joined_at', ctx),
+                            value=f"{(ctx.message.created_at - member.joined_at).days} days ago (``{member.joined_at}``)",
+                            inline=True)
+        embed.add_field(name=Translator.translate('account_created_at', ctx),
+                        value=f"{(ctx.message.created_at - user.created_at).days} days ago (``{user.created_at}``)",
+                        inline=True)
+        il = Infraction.select(Infraction.guild_id).where(Infraction.user_id == user.id).count()
+        ild = Infraction.select(Infraction.guild_id).distinct().where(Infraction.user_id == user.id).count()
+        emoji = "SINISTER" if il >= 2 else "INNOCENT"
+        embed.add_field(name=Translator.translate("infractions", ctx), value=MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild))
+
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["server"])
     async def serverinfo(self, ctx, guild: Guild = None):
         """Shows information about the current server."""
         if guild is None:
@@ -579,50 +594,63 @@ class Moderation:
     @clean.command("all")
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
-        await self._clean(ctx, amount, lambda m: True)
+        await self._clean(ctx, amount, lambda m: True, check_amount=amount)
 
     @clean.command("last")
     async def clean_last(self, ctx, durationNumber: int, durationIdentifier: Duration):
         """clean_last_help"""
         duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
         until = datetime.datetime.utcfromtimestamp(time.time() - duration)
-        await self._clean(ctx, 2000, lambda m: m.created_at > until)
+        await self._clean(ctx, 5000, lambda m: True, after=until)
 
     @clean.command("until")
     async def clean_until(self, ctx, message:Message(local_only=True)):
         """clean_until_help"""
-        await self._clean(ctx, 2000, lambda m: m.id > message.id)
+        await self._clean(ctx, 5000, lambda m: True, after=Object(message.id-1))
 
     @clean.command("between")
     async def clean_between(self, ctx, start: Message(local_only=True), end: Message(local_only=True)):
         """clean_between_help"""
         a = min(start.id, end.id)
         b = max(start.id, end.id)
-        await self._clean(ctx, 2000, lambda m: a <= m.id <= b)
+        await self._clean(ctx, 5000, lambda m: True , before=Object(b+1), after=Object(a+1))
 
 
-    @staticmethod
-    async def _clean(ctx, amount, checker):
+    async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
         counter = 0
-
-        def check(message):
-            nonlocal counter
-            match = checker(message) and counter < amount
-            if match:
-                counter += 1
-            return match
-
+        if ctx.channel.id in self.bot.being_cleaned:
+            await GearbotLogging.send_to(ctx, "NO", "already_cleaning")
+            return
+        self.bot.being_cleaned[ctx.channel.id] = set()
+        message = await GearbotLogging.send_to(ctx, "REFRESH", "processing")
         try:
-            deleted = await ctx.channel.purge(limit=min(amount * 5, 5000), check=check, before=ctx.message)
-        except discord.NotFound:
-            # sleep for a sec just in case the other bot is still purging so we don't get removed as well
-            await asyncio.sleep(1)
+            def check(message):
+                nonlocal counter
+                match = checker(message) and counter < amount
+                if match:
+                    counter += 1
+                return match
             try:
-                await GearbotLogging.send_to(ctx, 'YES', 'purge_fail_not_found')
+                deleted = await ctx.channel.purge(limit=min(amount * 5, 5000) if check_amount is None else check_amount, check=check, before=ctx.message if before is None else before, after=after)
             except discord.NotFound:
-                pass  # sometimes people remove channels mid purge
-        else:
-            await GearbotLogging.send_to(ctx, "YES", "purge_confirmation", count=len(deleted))
+                # sleep for a sec just in case the other bot is still purging so we don't get removed as well
+                await asyncio.sleep(1)
+                try:
+                    await message.edit(content=MessageUtils.assemble(ctx, 'YES', 'purge_fail_not_found'))
+                except discord.NotFound:
+                    pass  # sometimes people remove channels mid purge
+            else:
+                await message.edit(content=MessageUtils.assemble(ctx, "YES", "purge_confirmation", count=len(deleted)))
+        except Exception as ex:
+            self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
+            raise ex
+        self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
+
+    async def finish_cleaning(self, channel_id, guild_id):
+        await asyncio.sleep(1) # make sure we received all delete events
+        l = self.bot.being_cleaned[channel_id]
+        del self.bot.being_cleaned[channel_id]
+        await MessageUtils.archive_purge(self.bot, l, guild_id)
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
@@ -728,7 +756,7 @@ class Moderation:
         except Exception as ex:
             translated = Translator.translate("unmute_unknown_error", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            await GlobalHandlers.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
+            await TheRealGearBot.handle_exception("Automatic unmuting", self.bot, ex, infraction=infraction)
         else:
             translated = Translator.translate('unmuted', guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('INNOCENT')} {translated}")
@@ -773,7 +801,7 @@ class Moderation:
             self.bot.data["unbans"].remove(fid)
             translated = Translator.translate("tempban_expired_missing_perms", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")
-            await GlobalHandlers.handle_exception("Lift tempban", self.bot, ex, **info)
+            await TheRealGearBot.handle_exception("Lift tempban", self.bot, ex, **info)
         else:
             translated = Translator.translate("tempban_lifted", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")

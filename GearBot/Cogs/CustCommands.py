@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, GearbotLogging
 from database.DatabaseConnector import CustomCommand
 
@@ -23,7 +24,7 @@ class CustCommands:
     }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False

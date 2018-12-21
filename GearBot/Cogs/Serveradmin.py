@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
     Pages
 from Util.Converters import LoggingChannel, ListMode
@@ -80,7 +81,7 @@ class Serveradmin:
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot:commands.AutoShardedBot = bot
+        self.bot:GearBot = bot
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
@@ -91,7 +92,7 @@ class Serveradmin:
 
 
     @commands.guild_only()
-    @commands.group()
+    @commands.group(aliases = ["config", "cfg"])
     async def configure(self, ctx:commands.Context):
         """configure_help"""
         if ctx.subcommand_passed is None:
@@ -777,7 +778,7 @@ class Serveradmin:
             if len(items) == 0:
                 desc = Translator.translate(f"no_role_{mode}", ctx)
             else:
-                desc = "\n".join(f"<@&{item}" for item in items)
+                desc = "\n".join(f"<@&{item}>" for item in items)
             embed = discord.Embed(title=Translator.translate(f"current_role_{mode}", ctx), description=desc)
             await ctx.send(embed=embed)
 

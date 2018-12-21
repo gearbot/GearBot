@@ -46,11 +46,12 @@ BACKUPS = {
     "EYES": "👀",
     "SPY": "🕵",
     "QUESTION": "❓",
-    "CLOCK": "⏰"
+    "CLOCK": "⏰",
+    "SINISTER": "😈"
 }
 
 
-def on_ready(bot):
+def initialize(bot):
     for name, eid in Configuration.get_master_var("EMOJI", {}).items():
         emojis[name] = utils.get(bot.emojis, id=eid)
 

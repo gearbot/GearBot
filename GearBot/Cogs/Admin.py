@@ -7,6 +7,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
 from Util.Converters import UserID
 
@@ -14,7 +15,7 @@ from Util.Converters import UserID
 class Admin:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
 
     def __unload(self):
@@ -30,10 +31,17 @@ class Admin:
         await ctx.send("Restarting...")
         await Utils.cleanExit(self.bot, ctx.author.name)
 
+
+    @commands.command(hidden=True)
+    async def nuke_tasks(self, ctx):
+        """nukes pending tasks"""
+        for r in self.bot.running_events:
+            r.cancel()
+
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
-        await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
-        await GearbotLogging.bot_log(f"Upgrade initiated by {ctx.author.name}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} I'll be right back with new gears! {Emoji.get_chat_emoji('WOOD')} {Emoji.get_chat_emoji('STONE')} {Emoji.get_chat_emoji('IRON')} {Emoji.get_chat_emoji('GOLD')} {Emoji.get_chat_emoji('DIAMOND')}")
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Upgrade initiated by {ctx.author.name}")
         GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
         file = open("upgradeRequest", "w")
         file.write("upgrade requested")
@@ -81,7 +89,7 @@ class Admin:
         """Reloads all server configs from disk"""
         async with ctx.typing():
             Configuration.load_master()
-            await Configuration.on_ready(self.bot)
+            await Configuration.initialize(self.bot)
         await ctx.send("Configs reloaded")
 
     @commands.command(hidden=True)

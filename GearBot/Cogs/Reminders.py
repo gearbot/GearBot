@@ -4,8 +4,8 @@ from datetime import datetime
 
 from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
-from discord.ext.commands import AutoShardedBot
 
+from Bot.GearBot import GearBot
 from Util import Utils, GearbotLogging, Emoji, Translator
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
@@ -21,7 +21,7 @@ class Reminders:
     }
 
     def __init__(self, bot) -> None:
-        self.bot: AutoShardedBot = bot
+        self.bot: GearBot = bot
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())

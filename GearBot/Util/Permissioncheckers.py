@@ -108,8 +108,8 @@ def get_user_lvl(ctx:commands.Context):
         pieces = ctx.message.content.lower()[len(ctx.prefix):].split(" ")
         while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
             target = target["commands"][pieces.pop(0)]
-        if ctx.author.id in target["people"]:
-            return 4
+            if ctx.author.id in target["people"]:
+                return 4
     if is_admin(ctx):
         return 3
     if is_mod(ctx):

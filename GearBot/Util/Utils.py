@@ -27,7 +27,7 @@ class CacheCleaner:
             await asyncio.sleep(5 * 60)
 
 
-def on_ready(actual_bot):
+def initialize(actual_bot):
     global BOT, cache_task
     BOT = actual_bot
     cache_task = CacheCleaner()
@@ -128,6 +128,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     return text
 
 def escape_markdown(text):
+    text = str(text)
     for c in ("\\", "`", "*", "_", "~", "<"):
         text = text.replace(c, f"\{c}\u200b")
     return text.replace("@", "@\u200b")
@@ -135,7 +136,7 @@ def escape_markdown(text):
 def clean_name(text):
     if text is None:
         return None
-    return text.replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
+    return str(text).replace("@","@\u200b").replace("**", "*\u200b*").replace("``", "`\u200b`")
 
 
 known_invalid_users = []
