@@ -96,7 +96,9 @@ async def initialize(bot, reload=False):
                 GearbotLogging.info("Redis connection esteablished")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, cache mechanics engaged")
 
-        bot.aiosession = aiohttp.ClientSession()
+        if bot.aiosession is None:
+            bot.aiosession = aiohttp.ClientSession()
+        bot.being_cleaned.clear()
         await Configuration.initialize(bot)
     except Exception as ex:
         #make sure we always unlock, even when something went wrong!

@@ -433,5 +433,6 @@
   "reminder_delivery_dm": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: You're reading this, who do you think?\nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```",
   "reminder_delivery_channel": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: {recipient} \nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder: ```\n{reminder}\n```",
   "remind_help": "Base command for reminders",
-  "remind_me_help": "Schedule to be reminded about something"
+  "remind_me_help": "Schedule to be reminded about something",
+  "already_cleaning": "I'm already cleaning here up in this channel, pls wait until that's done before executing the clean command again"
 }

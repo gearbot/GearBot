@@ -23,6 +23,7 @@ class ModLog:
         self.to_cache = []
         self.cache_start = 0
         self.bot.loop.create_task(cache_task(self))
+        self.clean_collector = dict()
 
     def __unload(self):
         self.running = False
@@ -95,6 +96,9 @@ class ModLog:
         if not Features.is_logged(data.guild_id, "EDIT_LOGS"):
             return
         message = await MessageUtils.get_message_data(self.bot, data.message_id)
+        if message.channel.id in self.bot.being_cleaned:
+            self.bot.being_cleaned[message.channel.id].add(data.message_id)
+            return
         if message is not None:
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
@@ -383,7 +387,12 @@ class ModLog:
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
+            if event.channel_id in self.bot.being_cleaned:
+                for mid in event.message_ids:
+                    self.bot.being_cleaned[event.channel_id].add(mid)
+                return
             message_list = dict()
+            await MessageUtils.archive_purge(self.bot,event.message_ids, event.guild_id)
             for mid in event.message_ids:
                 message = await MessageUtils.get_message_data(self.bot, mid)
                 if message is not None:

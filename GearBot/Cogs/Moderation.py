@@ -10,7 +10,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConve
 import GearBot
 from Bot import TheRealGearBot
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation
+    Archive, Confirmation, MessageUtils
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -581,50 +581,63 @@ class Moderation:
     @clean.command("all")
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
-        await self._clean(ctx, amount, lambda m: True)
+        await self._clean(ctx, amount, lambda m: True, check_amount=amount)
 
     @clean.command("last")
     async def clean_last(self, ctx, durationNumber: int, durationIdentifier: Duration):
         """clean_last_help"""
         duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
         until = datetime.datetime.utcfromtimestamp(time.time() - duration)
-        await self._clean(ctx, 2000, lambda m: m.created_at > until)
+        await self._clean(ctx, 5000, lambda m: True, after=until)
 
     @clean.command("until")
     async def clean_until(self, ctx, message:Message(local_only=True)):
         """clean_until_help"""
-        await self._clean(ctx, 2000, lambda m: m.id > message.id)
+        await self._clean(ctx, 5000, lambda m: True, after=Object(message.id-1))
 
     @clean.command("between")
     async def clean_between(self, ctx, start: Message(local_only=True), end: Message(local_only=True)):
         """clean_between_help"""
         a = min(start.id, end.id)
         b = max(start.id, end.id)
-        await self._clean(ctx, 2000, lambda m: a <= m.id <= b)
+        await self._clean(ctx, 5000, lambda m: True , before=Object(b+1), after=Object(a+1))
 
 
-    @staticmethod
-    async def _clean(ctx, amount, checker):
+    async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
         counter = 0
-
-        def check(message):
-            nonlocal counter
-            match = checker(message) and counter < amount
-            if match:
-                counter += 1
-            return match
-
+        if ctx.channel.id in self.bot.being_cleaned:
+            await GearbotLogging.send_to(ctx, "NO", "already_cleaning")
+            return
+        self.bot.being_cleaned[ctx.channel.id] = set()
+        message = await GearbotLogging.send_to(ctx, "REFRESH", "processing")
         try:
-            deleted = await ctx.channel.purge(limit=min(amount * 5, 5000), check=check, before=ctx.message)
-        except discord.NotFound:
-            # sleep for a sec just in case the other bot is still purging so we don't get removed as well
-            await asyncio.sleep(1)
+            def check(message):
+                nonlocal counter
+                match = checker(message) and counter < amount
+                if match:
+                    counter += 1
+                return match
             try:
-                await GearbotLogging.send_to(ctx, 'YES', 'purge_fail_not_found')
+                deleted = await ctx.channel.purge(limit=min(amount * 5, 5000) if check_amount is None else check_amount, check=check, before=ctx.message if before is None else before, after=after)
             except discord.NotFound:
-                pass  # sometimes people remove channels mid purge
-        else:
-            await GearbotLogging.send_to(ctx, "YES", "purge_confirmation", count=len(deleted))
+                # sleep for a sec just in case the other bot is still purging so we don't get removed as well
+                await asyncio.sleep(1)
+                try:
+                    await message.edit(content=MessageUtils.assemble(ctx, 'YES', 'purge_fail_not_found'))
+                except discord.NotFound:
+                    pass  # sometimes people remove channels mid purge
+            else:
+                await message.edit(content=MessageUtils.assemble(ctx, "YES", "purge_confirmation", count=len(deleted)))
+        except Exception as ex:
+            self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
+            raise ex
+        self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
+
+    async def finish_cleaning(self, channel_id, guild_id):
+        await asyncio.sleep(1) # make sure we received all delete events
+        l = self.bot.being_cleaned[channel_id]
+        del self.bot.being_cleaned[channel_id]
+        await MessageUtils.archive_purge(self.bot, l, guild_id)
 
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild

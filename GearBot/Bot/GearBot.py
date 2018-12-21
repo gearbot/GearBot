@@ -19,6 +19,8 @@ class GearBot(AutoShardedBot):
     locked = True
     running_events = []
     redis_pool = None
+    aiosession = None
+    being_cleaned = dict()
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)

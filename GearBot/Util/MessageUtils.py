@@ -1,9 +1,11 @@
+import collections
 import time
 from collections import namedtuple
 from datetime import datetime
 
 from discord import Object
 
+from Util import Translator, Emoji, Archive
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 Message = namedtuple("Message", "messageid author content channel server")
@@ -39,3 +41,16 @@ async def update_message(bot, message_id, content):
         await bot.redis_pool.hmset_dict(message_id, content=content)
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id)
 
+def assemble(destination, emoji, message, translate=True, **kwargs):
+    translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
+    return f"{Emoji.get_chat_emoji(emoji)} {translated}"
+
+async def archive_purge(bot, id_list, guild_id):
+    message_list = dict()
+    for mid in id_list:
+        message = await get_message_data(bot, mid)
+        if message is not None:
+            message_list[mid] = message
+    if len(message_list) > 0:
+        await Archive.archive_purge(bot, guild_id,
+                                    collections.OrderedDict(sorted(message_list.items())))
