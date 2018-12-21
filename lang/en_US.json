@@ -438,5 +438,11 @@
   "more_roles": "More roles",
   "no_roles": "No roles",
   "infractions": "Infractions",
-  "total_infractions": "{total} infractions on {servers} servers"
+  "total_infractions": "{total} infractions on {servers} servers",
+  "profile": "Profile",
+  "status": "Status",
+  "online": "Online",
+  "idle": "idle",
+  "dnd": "Do not disturb",
+  "offline": "Offline"
 }
