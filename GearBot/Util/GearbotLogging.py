@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import traceback
+from concurrent.futures import CancelledError
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
@@ -215,6 +216,8 @@ class LogPump:
                 for c in cleaners:
                     c()
                 await asyncio.sleep(0.1)
+            except CancelledError :
+                pass # we're shutting down
             except Exception as e:
                 await log_error()
                 await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,

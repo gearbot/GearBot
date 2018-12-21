@@ -40,8 +40,8 @@ class Admin:
 
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
-        await ctx.send("<:BCWrench:344163417981976578> I'll be right back with new gears! <:woodGear:344163118089240596> <:stoneGear:344163146325295105> <:ironGear:344163170664841216> <:goldGear:344163202684289024> <:diamondGear:344163228101640192>")
-        await GearbotLogging.bot_log(f"Upgrade initiated by {ctx.author.name}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} I'll be right back with new gears! {Emoji.get_chat_emoji('WOOD')} {Emoji.get_chat_emoji('STONE')} {Emoji.get_chat_emoji('IRON')} {Emoji.get_chat_emoji('GOLD')} {Emoji.get_chat_emoji('DIAMOND')}")
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Upgrade initiated by {ctx.author.name}")
         GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
         file = open("upgradeRequest", "w")
         file.write("upgrade requested")
