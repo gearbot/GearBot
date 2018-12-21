@@ -35,8 +35,8 @@ async def get_infraction_pages(guild_id, query, amount):
             longest_mod = max(longest_mod, len(mod))
             longest_type = max(longest_type, len(inf.type))
         for inf in infs:
-            user = await Utils.username(inf.user_id)
-            mod = await Utils.username(inf.mod_id)
+            user = await Utils.username(inf.user_id, clean=False)
+            mod = await Utils.username(inf.mod_id, clean=False)
             out += f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod, longest_mod)} | {inf.start} | {Utils.pad(inf.type, longest_type)} | {inf.reason}\n"
         prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user-1)}| {Utils.pad('moderator', longest_mod-1)}| timestamp           | {Utils.pad('type', longest_type)} | reason"
         prefix = f"```md\n{prefix}\n{'-' * len(prefix)}\n"
