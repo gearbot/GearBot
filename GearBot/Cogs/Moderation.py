@@ -490,19 +490,32 @@ class Moderation:
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
         embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
-        if member is not None:
-            account_joined = member.joined_at.strftime("%d-%m-%Y")
-            embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
-            embed.add_field(name=Translator.translate('top_role', ctx), value=member.top_role.name, inline=True)
-            embed.add_field(name=Translator.translate('joined_at', ctx),
-                            value=f"{account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)",
-                            inline=True)
-        account_made = user.created_at.strftime("%d-%m-%Y")
-        embed.add_field(name=Translator.translate('account_created_at', ctx),
-                        value=f"{account_made} ({(ctx.message.created_at - user.created_at).days} days ago)",
-                        inline=True)
         embed.add_field(name=Translator.translate('avatar_url', ctx),
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
+        if member is not None:
+            embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
+
+            role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
+            if len(role_list) > 0:
+                member_roles = Pages.paginate(" ".join(role_list))
+            else:
+                member_roles = [Translator.translate("no_roles", ctx)]
+            embed.add_field(name=Translator.translate('all_roles', ctx), value=member_roles[0])
+            if len(member_roles) > 1:
+                for p in member_roles[1:]:
+                    embed.add_field(name=Translator.translate("more_roles", ctx), value=p)
+
+            embed.add_field(name=Translator.translate('joined_at', ctx),
+                            value=f"{(ctx.message.created_at - member.joined_at).days} days ago (``{member.joined_at}``)",
+                            inline=True)
+        embed.add_field(name=Translator.translate('account_created_at', ctx),
+                        value=f"{(ctx.message.created_at - user.created_at).days} days ago (``{user.created_at}``)",
+                        inline=True)
+        il = Infraction.select(Infraction.guild_id).where(Infraction.user_id == user.id).count()
+        ild = Infraction.select(Infraction.guild_id).distinct().where(Infraction.user_id == user.id).count()
+        emoji = "SINISTER" if il >= 2 else "INNOCENT"
+        embed.add_field(name=Translator.translate("infractions", ctx), value=MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild))
+
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["server"])
