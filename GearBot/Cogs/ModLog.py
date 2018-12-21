@@ -97,7 +97,7 @@ class ModLog:
             return
         message = await MessageUtils.get_message_data(self.bot, data.message_id)
         if message.channel.id in self.bot.being_cleaned:
-            self.bot.being_cleaned[message.channel.id].add(data.message_id)
+            self.bot.being_cleaned[message.channel].add(data.message_id)
             return
         if message is not None:
             guild = self.bot.get_guild(message.server)
