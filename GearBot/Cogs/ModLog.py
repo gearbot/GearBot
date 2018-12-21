@@ -145,8 +145,9 @@ class ModLog:
             if message.content == event.data["content"]:
                 # prob just pinned
                 return
-            if message.content is None or message.content == "":
-                message.content = f"<{Translator.translate('no_content', channel.guild.id)}>"
+            mc = message.content
+            if mc is None or mc == "":
+                mc = f"<{Translator.translate('no_content', channel.guild.id)}>"
             after = event.data["content"]
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
@@ -161,12 +162,12 @@ class ModLog:
                     embed.set_footer(
                         text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
                     embed.add_field(name=Translator.translate('before', channel.guild.id),
-                                    value=Utils.trim_message(message.content, 1024), inline=False)
+                                    value=Utils.trim_message(mc, 1024), inline=False)
                     embed.add_field(name=Translator.translate('after', channel.guild.id),
                                     value=Utils.trim_message(after, 1024), inline=False)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", embed=embed)
                 else:
-                    clean_old = await Utils.clean(message.content, channel.guild)
+                    clean_old = await Utils.clean(mc, channel.guild)
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}", can_stamp=False)
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}", can_stamp=False)
