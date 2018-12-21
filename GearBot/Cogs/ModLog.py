@@ -4,7 +4,7 @@ import datetime
 import time
 
 import discord
-from discord import AuditLogAction, Role
+from discord import AuditLogAction, Role, DMChannel
 from discord.embeds import EmptyEmbed
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
@@ -133,7 +133,7 @@ class ModLog:
         if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
         c = self.bot.get_channel(cid)
-        if c is None or c.guild is None or not Features.is_logged(c.guild.id, "EDIT_LOGS"):
+        if isinstance(c, DMChannel) or not Features.is_logged(c.guild.id, "EDIT_LOGS"):
             return
         message = await MessageUtils.get_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
