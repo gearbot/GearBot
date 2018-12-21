@@ -16,7 +16,7 @@ from discord.ext import commands
 from peewee import PeeweeException
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
-    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator
+    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils
 from database import DatabaseConnector
 
 components = [
@@ -35,7 +35,8 @@ components = [
     Archive,
     Translator,
     DocUtils,
-    JumboGenerator
+    JumboGenerator,
+    MessageUtils
 ]
 
 
