@@ -96,10 +96,10 @@ class ModLog:
         if not Features.is_logged(data.guild_id, "EDIT_LOGS"):
             return
         message = await MessageUtils.get_message_data(self.bot, data.message_id)
-        if message.channel in self.bot.being_cleaned:
-            self.bot.being_cleaned[message.channel].add(data.message_id)
-            return
         if message is not None:
+            if message.channel in self.bot.being_cleaned:
+                self.bot.being_cleaned[message.channel].add(data.message_id)
+                return
             guild = self.bot.get_guild(message.server)
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
