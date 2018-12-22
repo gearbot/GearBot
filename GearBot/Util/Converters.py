@@ -232,6 +232,12 @@ class RangedInt(Converter):
             else:
                 return argument
 
+class RangedIntInf(RangedInt):
+
+    def __init__(self,) -> None:
+        super().__init__(0, 50)
+
+
 class ListMode(Converter):
     async def convert(self, ctx, argument):
         argument = argument.lower()
@@ -248,3 +254,11 @@ class ReminderText(Converter):
         if len(argument) > 1800:
             raise TranslatedBadArgument('reminder_too_long', ctx)
         return argument
+
+
+class InfSearchLocation(Converter):
+    async def convert(self, ctx, argument):
+        values = ["user", "mod", "reason"]
+        if argument.lower() in values:
+            return argument.lower()
+        raise BadArgument("Does this even show up?")

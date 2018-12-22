@@ -97,7 +97,7 @@ def exception(message, error):
 
 
 async def bot_log(message=None, embed=None):
-    global BOT_LOG_CHANNEL
+    global BOT_LOG_CHANNEL, STARTUP_ERRORS
     if BOT_LOG_CHANNEL is not None:
         return await BOT_LOG_CHANNEL.send(content=message, embed=embed)
     else:
