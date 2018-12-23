@@ -49,7 +49,7 @@ Show the last 25 infractions from the server:
 !inf search
 ```
 
-Show the last 3 infractinos from the server:
+Show the last 3 infractions from the server:
 ```
 !inf search 3
 ```
