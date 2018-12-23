@@ -190,7 +190,7 @@ class Serveradmin:
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_setup_complete', ctx)}")
 
-    @configure.group(aliases=["selfrole"])
+    @configure.group(aliases=["selfrole", "self_role", "self_roles"])
     async def self_roles(self, ctx:commands.Context):
         """Allows adding/removing roles from the self assignable list"""
         if ctx.invoked_subcommand is self.self_roles:
