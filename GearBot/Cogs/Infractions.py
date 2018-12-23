@@ -73,7 +73,13 @@ class Infractions:
             parts = query.split(" ")
             try:
                 amount = int(parts[-1])
-                query = " ".join(parts[:-1])
+                if len(parts) is 2:
+                    try:
+                        query = int(query[1])
+                    except ValueError:
+                        query = query[1]
+                else:
+                    query = " ".join(parts[:-1])
             except ValueError:
                 amount = 25
             else:
