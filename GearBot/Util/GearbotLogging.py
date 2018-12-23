@@ -120,7 +120,8 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
                 message = f"{message} {tag_on}"
             else:
                 remaining = tag_on
-    message = Utils.trim_message(f"{message}\u200b", 1998)
+    if message is not None:
+        message = Utils.trim_message({message}, 2000)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
 
     pushed_cleaner = False
