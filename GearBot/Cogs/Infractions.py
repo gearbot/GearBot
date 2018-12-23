@@ -75,9 +75,9 @@ class Infractions:
                 amount = int(parts[-1])
                 if len(parts) is 2:
                     try:
-                        query = int(query[1])
+                        query = int(parts[0])
                     except ValueError:
-                        query = query[1]
+                        query = parts[0]
                 else:
                     query = " ".join(parts[:-1])
             except ValueError:
