@@ -82,6 +82,11 @@ class Infractions:
                     amount = 25
         else:
             amount=25
+        GearbotLogging.info("-----------------------")
+        GearbotLogging.info(f"Fields: {fields}")
+        GearbotLogging.info(f"Query: {query}")
+        GearbotLogging.info(f"Amount: {amount}")
+        GearbotLogging.info("-----------------------")
         await Pages.create_new("inf_search", ctx, guild_id=ctx.guild.id, query=query, amount=amount, fields=fields)
 
     async def inf_init(self, ctx:commands.Context, query, guild_id, amount, fields):
