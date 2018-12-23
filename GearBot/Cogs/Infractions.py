@@ -6,7 +6,7 @@ from discord.ext import commands
 from Bot.GearBot import GearBot
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
     Confirmation
-from Util.Converters import UserID, Reason, InfSearchLocation, RangedIntInf
+from Util.Converters import UserID, Reason, InfSearchLocation
 from database.DatabaseConnector import Infraction
 
 
@@ -65,10 +65,23 @@ class Infractions:
         pass
 
     @inf.command()
-    async def search(self, ctx:commands.Context, query:typing.Union[UserID, str]=None, amount:typing.Optional[RangedIntInf]=25, fields:commands.Greedy[InfSearchLocation]=["user", "mod", "reason"], *, everything_else:str = None):
+    async def search(self, ctx:commands.Context, fields:commands.Greedy[InfSearchLocation]=None, *, query:typing.Union[UserID, str]=""):
         """inf_search_help"""
-        if everything_else is not None and amount is 25:
-            query += " " + everything_else
+        if fields is None or len(fields) is 0:
+            fields = ["[user]", "[mod]", "[reason]"]
+        if isinstance(query, str):
+            parts = query.split(" ")
+            try:
+                amount = int(parts[-1])
+                query = " ".join(parts[:-1])
+            except ValueError:
+                amount = 25
+            else:
+                if 1 < amount > 50:
+                    query += f" {amount}"
+                    amount = 25
+        else:
+            amount=25
         await Pages.create_new("inf_search", ctx, guild_id=ctx.guild.id, query=query, amount=amount, fields=fields)
 
     async def inf_init(self, ctx:commands.Context, query, guild_id, amount, fields):

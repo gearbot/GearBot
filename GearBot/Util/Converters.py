@@ -235,7 +235,7 @@ class RangedInt(Converter):
 class RangedIntInf(RangedInt):
 
     def __init__(self,) -> None:
-        super().__init__(0, 50)
+        super().__init__(1, 50)
 
 
 class ListMode(Converter):
@@ -258,7 +258,7 @@ class ReminderText(Converter):
 
 class InfSearchLocation(Converter):
     async def convert(self, ctx, argument):
-        values = ["user", "mod", "reason"]
+        values = ["[mod]", "[reason]", "[user]"]
         if argument.lower() in values:
             return argument.lower()
         raise BadArgument("Does this even show up?")

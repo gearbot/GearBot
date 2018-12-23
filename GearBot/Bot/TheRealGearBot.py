@@ -14,7 +14,7 @@ from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils
 from database import DatabaseConnector
 
 
@@ -42,6 +42,7 @@ async def initialize(bot):
         Pages.initialize(bot)
         Utils.initialize(bot)
         Translator.initialize(bot)
+        InfractionUtils.initialize(bot)
         bot.data = {
             "forced_exits": set(),
             "unbans": set(),
