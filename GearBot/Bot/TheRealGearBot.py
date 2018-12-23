@@ -61,10 +61,6 @@ async def initialize(bot):
 <<<<<<< Updated upstream
                 GearbotLogging.info("Redis connection esteablished")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, caching and anti-raid connections established")
-=======
-                GearbotLogging.info("Redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, cache mechanics engaged")
->>>>>>> Stashed changes
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()
