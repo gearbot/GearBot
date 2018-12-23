@@ -141,26 +141,26 @@ async def username(uid, fetch=True, clean=True):
 
 
 async def get_user(uid, fetch=True):
-    UserClass = namedtuple("UserClass", "name id discriminator avatar bot avatar_url defaultAvatarUrl created_at is_avatar_animated")
+    UserClass = namedtuple("UserClass", "name id discriminator avatar bot avatar_url created_at is_avatar_animated mention")
     user = BOT.get_user(uid)
     if user is None:
         if uid in known_invalid_users:
             return None
 
         if BOT.redis_pool != None:
-            userCacheInfo = await BOT.redis_pool.hvals(uid)
+            userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
-            if userCacheInfo != []: # It existed in the Redis cache
+            if userCacheInfo != {}: # It existed in the Redis cache
                 userFormed = UserClass(
-                    userCacheInfo[6], # name
-                    userCacheInfo[3], # id
-                    userCacheInfo[1], # discriminator
-                    userCacheInfo[4], # avatar
-                    bool(userCacheInfo[5]), # bot
-                    userCacheInfo[0], # avatar_url
-                    userCacheInfo[2], # default avatar url
-                    datetime.fromtimestamp(float(userCacheInfo[7])), # created_at
-                    bool(userCacheInfo[8]) # is_avatar animated
+                    userCacheInfo["name"],
+                    userCacheInfo["id"],
+                    userCacheInfo["discriminator"],
+                    userCacheInfo["avatar"],
+                    bool(userCacheInfo["bot"]),
+                    userCacheInfo["avatar_url"],
+                    datetime.fromtimestamp(float(userCacheInfo["created_at"])),
+                    bool(userCacheInfo["is_avatar_animated"]),
+                    userCacheInfo["mention"]
                 )
 
                 return userFormed
@@ -176,14 +176,14 @@ async def get_user(uid, fetch=True):
                         avatar = user.avatar,
                         bot = str(user.bot),
                         avatar_url = user.avatar_url,
-                        defaultAvatarUrl = user.default_avatar_url,
                         created_at = int(datetime.timestamp(user.created_at)),
-                        is_avatar_animated = str(user.is_avatar_animated())
+                        is_avatar_animated = str(user.is_avatar_animated()),
+                        mention = user.mention
                     )
 
-                    pipeline.expire(uid, 500) # 5 minute cache life
+                    pipeline.expire(uid, 300) # 5 minute cache life
                     
-                    await pipeline.execute()
+                    BOT.loop.create_task(pipeline.execute())
 
                 except NotFound:
                     known_invalid_users.append(uid)
