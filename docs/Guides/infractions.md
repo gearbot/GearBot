@@ -4,7 +4,9 @@ There are several types of infractions:
 - Warn
     - Added by the warn command
 - Kick
-    - Added when someone gets ban (manual or through the ``ban`` command)
+    - Added when someone gets kicked (manual or through the ``kick`` command)
+-Ban
+    - Added when someone gets banned (manual or throught the ``ban`` command)
 - Forced ban
     - Added when someone was banned by the ```forceban``` command
 - Mute
@@ -19,7 +21,7 @@ There are several types of infractions:
     - Ban is automatically lifted when the ban expires (unless you unban+ban or forceban the user again before the time is up)
     
 #**Finding infractions**
-To find infractions there is simple yet powerfull command: ``inf search [fields...] [query] [amount]``
+To find infractions there is simple yet powerful command: ``inf search [fields...] [query] [amount]``
 All parameters are optional, if you don't give any you get the last 25 infractions for the guild.
 ###**Fields**
 Optional multi param, determines where to look.
@@ -29,7 +31,7 @@ Possible values the [] are part of the param, to avoid confusing them with the q
 - [reason]
 
 Multiple values can be passed. If omitted it defaults to ``[mod] [user] [reason]``.
-Pls also see the **Examples** section below
+Also see the **examples** section below
 
 ###**Query**
 Optional param, can be any userID, mention, full username (only if the user is on the server) or plain text.
