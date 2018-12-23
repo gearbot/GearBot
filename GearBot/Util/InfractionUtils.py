@@ -53,14 +53,14 @@ async def get_infraction_pages(guild_id, query, amount, fields):
             longest_user = max(longest_user, len(user))
             mod = await Utils.username(inf.mod_id, clean=False)
             longest_mod = max(longest_mod, len(mod))
-            longest_type = max(longest_type, len(Translator.translate(inf.type)))
+            longest_type = max(longest_type, len(Translator.translate(inf.type, guild_id)))
         if cache:
             pipe = redis_pool.pipeline()
         count = 0
         for inf in infs:
             user = await Utils.username(inf.user_id, clean=False)
             mod = await Utils.username(inf.mod_id, clean=False)
-            i = f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod,longest_mod)} | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower()), longest_type)} | {inf.reason}\n"
+            i = f"{Utils.pad(str(inf.id), longest_id)} | {Utils.pad(user, longest_user)} | {Utils.pad(mod,longest_mod)} | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {inf.reason}\n"
             if count < amount:
                 out += i
                 count +=1
