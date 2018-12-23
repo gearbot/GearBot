@@ -181,7 +181,7 @@ async def get_user(uid, fetch=True):
                         is_avatar_animated = str(user.is_avatar_animated())
                     )
 
-                    pipeline.expire(uid, 500) # 5 minute cache life
+                    pipeline.expire(uid, 300) # 5 minute cache life
                     
                     await pipeline.execute()
 
