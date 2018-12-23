@@ -47,7 +47,9 @@ BACKUPS = {
     "SPY": "🕵",
     "QUESTION": "❓",
     "CLOCK": "⏰",
-    "SINISTER": "😈"
+    "SINISTER": "😈",
+    "THINK": "🤔",
+    "WINK": "😉"
 }
 
 
