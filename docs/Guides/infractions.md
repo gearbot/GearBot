@@ -1,17 +1,19 @@
 #**Infractions**
 
 There are several types of infractions:
+
 - Warn
     - Added by the warn command
 - Kick
-    - Added when someone gets kicked (manual or through the ``kick`` command)
--Ban
-    - Added when someone gets banned (manual or throught the ``ban`` command)
+    - Added when someone gets kicked (manual or through the `kick` command) 
+- Ban
+    - Added when someone gets banned (manual or throught the `ban` command)
 - Forced ban
-    - Added when someone was banned by the ```forceban``` command
+    - Added when someone was banned by the ``forceban`` command
 - Mute
     - Added when someone gets muted with the ``mute`` command
     - Mute role is automatically removed again once the mute expires or the ``unmute`` command has been used
+    
 - Unban
     - Added when a ban is lifted (manual or through the ``unban`` command)
 - Unmute
@@ -19,6 +21,7 @@ There are several types of infractions:
 - Tempban
     - Added when someone is temp banned
     - Ban is automatically lifted when the ban expires (unless you unban+ban or forceban the user again before the time is up)
+    
     
 #**Finding infractions**
 To find infractions there is simple yet powerful command: ``inf search [fields...] [query] [amount]``
