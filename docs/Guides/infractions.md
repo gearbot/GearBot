@@ -12,8 +12,7 @@ There are several types of infractions:
     - Added when someone was banned by the ``forceban`` command
 - Mute
     - Added when someone gets muted with the ``mute`` command
-    - Mute role is automatically removed again once the mute expires or the ``unmute`` command has been used
-    
+    - Mute role is automatically removed again once the mute expires or the ``unmute`` command has been used   
 - Unban
     - Added when a ban is lifted (manual or through the ``unban`` command)
 - Unmute
