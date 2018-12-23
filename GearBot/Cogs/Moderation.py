@@ -171,8 +171,7 @@ class Moderation:
                                           moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                           reason=reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":boot: {translated}")
-        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id),
-                                       reason, active=False)
+        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, 'Kick', reason, active=False)
         if confirm:
             await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
                                          user_id=user.id, reason=reason)

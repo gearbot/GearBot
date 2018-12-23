@@ -447,5 +447,7 @@
   "offline": "Offline",
   "m_nobody": "You want be to {action} nobody? Sure, done! \n\nWait, why did you invoke this command then?",
   "m_nobody_2": "Oh you wanted to make a point and look threatening? Got it!",
-  "intimidation": "<insert intimidating look here>"
+  "intimidation": "<insert intimidating look here>",
+  "softban": "softban",
+  "tempban": "tempban"
 }
