@@ -58,8 +58,7 @@ async def initialize(bot):
                 GearbotLogging.error("==============Failed to connect to redis==============")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching and anti-raid connections unavailable")
             else:
-<<<<<<< Updated upstream
-                GearbotLogging.info("Redis connection esteablished")
+                GearbotLogging.info("Redis connection established")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, caching and anti-raid connections established")
 
         if bot.aiosession is None:
