@@ -171,8 +171,7 @@ class Moderation:
                                           moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                           reason=reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":boot: {translated}")
-        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, Translator.translate('kick', ctx.guild.id),
-                                       reason, active=False)
+        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, 'Kick', reason, active=False)
         if confirm:
             await GearbotLogging.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
                                          user_id=user.id, reason=reason)
@@ -207,7 +206,10 @@ class Moderation:
                 await Pages.create_new("mass_failures", ctx, action="kick",
                                        failures=Pages.paginate("\n".join(failures)))
 
-        await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
+        else:
+            await self.empty_list(ctx, "kick")
 
     @staticmethod
     async def _mass_failures_init(ctx, action, failures):
@@ -314,8 +316,19 @@ class Moderation:
             if len(failures) > 0:
                 await Pages.create_new("mass_failures", ctx, action="ban",
                                        failures=Pages.paginate("\n".join(failures)))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
+        else:
+            await self.empty_list(ctx, "ban")
 
-        await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
+    @staticmethod
+    async def empty_list(ctx, action):
+        message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
+        await asyncio.sleep(3)
+        message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
+        await asyncio.sleep(3)
+        await message.edit(content=Translator.translate('intimidation', ctx))
+        await message2.delete()
 
     @commands.command()
     @commands.guild_only()
@@ -489,10 +502,15 @@ class Moderation:
         embed.add_field(name=Translator.translate('name', ctx), value=f"{user.name}#{user.discriminator}", inline=True)
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
-        embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
+        if type(user.is_avatar_animated) != type(True): # When from the Redis cache, this comes back as a boolean
+            embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
+        else:
+            embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated, inline=True)
         embed.add_field(name=Translator.translate('avatar_url', ctx),
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
+        embed.add_field(name=Translator.translate("profile", ctx), value=user.mention)
         if member is not None:
+            embed.add_field(name=Translator.translate("status", ctx), value=Translator.translate(str(member.status), ctx))
             embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
 
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]

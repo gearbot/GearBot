@@ -1,6 +1,6 @@
 from Bot import TheRealGearBot
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
-    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils
+    VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils, Enums
 from database import DatabaseConnector
 
 components = [
@@ -21,5 +21,6 @@ components = [
     DocUtils,
     JumboGenerator,
     MessageUtils,
-    TheRealGearBot
+    TheRealGearBot,
+    Enums
 ]

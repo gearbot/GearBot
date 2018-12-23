@@ -58,7 +58,6 @@ class Reload:
         GearbotLogging.info("Initiating hot reload")
 
         GearbotLogging.LOG_PUMP.running = False
-        Utils.cache_task.running = False
         importlib.reload(Reloader)
         for c in Reloader.components:
             importlib.reload(c)
