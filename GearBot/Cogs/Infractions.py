@@ -112,9 +112,8 @@ class Infractions:
             infraction.mod_id = ctx.author.id
             infraction.reason = reason
             infraction.save()
-            if f"{ctx.guild.id}_{infraction.user_id}" in InfractionUtils.cache.keys():
-                del InfractionUtils.cache[f"{ctx.guild.id}_{infraction.user_id}"]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
+            await InfractionUtils.clear_cache(ctx.guild.id)
 
     @inf.command(aliases=["del", "remove"])
     async def delete(self, ctx:commands.Context, inf_id:int):
@@ -128,12 +127,10 @@ class Infractions:
             mod = await Utils.get_user(infraction.mod_id)
             async def yes():
                 infraction.delete_instance()
-                key = f"{ctx.guild.id}_{infraction.user_id}"
-                if key in InfractionUtils.cache.keys():
-                    del InfractionUtils.cache[key]
                 await GearbotLogging.send_to(ctx, "YES", "inf_delete_deleted", id=inf_id)
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                     f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), target_id=target.id, mod=str(mod), mod_id=mod.id, reason=reason, user=str(ctx.author), user_id=ctx.author.id)}")
+                await InfractionUtils.clear_cache(ctx.guild.id)
             await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=inf_id, user=str(target), user_id=target.id, reason=reason)}", on_yes=yes)
 
 def setup(bot):
