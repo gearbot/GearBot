@@ -23,7 +23,8 @@ async def clear_cache(guild_id):
     keys = set()
     async for key in bot.redis_pool.iscan(match=f"{guild_id}*"):
         keys.add(key)
-    await bot.redis_pool.unlink(*keys)
+    if len(keys) > 0:
+        await bot.redis_pool.unlink(*keys)
 
 
 async def get_infraction_pages(guild_id, query, amount, fields):
