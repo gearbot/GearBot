@@ -21,7 +21,7 @@ async def clear_cache(guild_id):
     if bot.redis_pool is None:
         return
     keys = set()
-    async for key in bot.redis_pool.iscan(f"{guild_id}*"):
+    async for key in bot.redis_pool.iscan(match=f"{guild_id}*"):
         keys.add(key)
     await bot.redis_pool.unlink(*keys)
 
