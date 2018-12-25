@@ -14,10 +14,10 @@ INVITE_MATCHER = re.compile(
 
 async def censor_invite(ctx, code, server_name):
     ctx.bot.data["message_deletes"].add(ctx.message.id)
+    clean_message = await clean_content().convert(ctx, ctx.message.content)
+    clean_name = Utils.clean_user(ctx.message.author)
     try:
         await ctx.message.delete()
-        clean_message = await clean_content().convert(ctx, ctx.message.content)
-        clean_name = Utils.clean_user(ctx.message.author)
         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                               f":no_entry_sign: {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)}")
     except discord.NotFound:
