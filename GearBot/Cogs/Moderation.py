@@ -341,7 +341,7 @@ class Moderation:
         allowed, message = self._can_act("softban", ctx, user)
         if allowed:
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-            self.bot.data["unbans"].add(user.id)
+            self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
             await ctx.guild.ban(user, reason=Utils.trim_message(
                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                 delete_message_days=1)
