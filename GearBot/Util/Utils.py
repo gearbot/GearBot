@@ -6,6 +6,8 @@ import re
 import subprocess
 import time
 from subprocess import Popen
+from collections import namedtuple, OrderedDict
+from datetime import datetime
 
 import discord
 from discord import NotFound
@@ -13,26 +15,11 @@ from discord import NotFound
 from Util import GearbotLogging, Translator
 
 BOT = None
-cache_task = None
-
-class CacheCleaner:
-
-    def __init__(self) :
-        self.running = True
-
-    async def run(self):
-        while not BOT.is_closed() and self.running:
-            known_invalid_users.clear()
-            user_cache.clear()
-            await asyncio.sleep(5 * 60)
 
 
 def initialize(actual_bot):
-    global BOT, cache_task
+    global BOT
     BOT = actual_bot
-    cache_task = CacheCleaner()
-    BOT.loop.create_task(cache_task.run())
-
 
 
 def fetch_from_disk(filename, alternative=None):
@@ -140,7 +127,7 @@ def clean_name(text):
 
 
 known_invalid_users = []
-user_cache = {}
+user_cache = OrderedDict()
 
 
 async def username(uid, fetch=True, clean=True):
@@ -154,21 +141,65 @@ async def username(uid, fetch=True, clean=True):
 
 
 async def get_user(uid, fetch=True):
+    UserClass = namedtuple("UserClass", "name id discriminator avatar bot avatar_url created_at is_avatar_animated mention")
     user = BOT.get_user(uid)
     if user is None:
         if uid in known_invalid_users:
             return None
 
-        if uid in user_cache:
-            return user_cache[uid]
+        if BOT.redis_pool != None:
+            userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
-        if fetch:
-            try:
-                user = await BOT.get_user_info(uid)
-                user_cache[uid] = user
-            except NotFound:
-                known_invalid_users.append(uid)
-                return None
+            if userCacheInfo != {}: # It existed in the Redis cache
+                userFormed = UserClass(
+                    userCacheInfo["name"],
+                    userCacheInfo["id"],
+                    userCacheInfo["discriminator"],
+                    userCacheInfo["avatar"],
+                    bool(userCacheInfo["bot"]),
+                    userCacheInfo["avatar_url"],
+                    datetime.fromtimestamp(float(userCacheInfo["created_at"])),
+                    bool(userCacheInfo["is_avatar_animated"]),
+                    userCacheInfo["mention"]
+                )
+
+                return userFormed
+            if fetch:
+                try:
+                    user = await BOT.get_user_info(uid)
+                    pipeline = BOT.redis_pool.pipeline()
+
+                    pipeline.hmset_dict(uid,
+                        name = user.name,
+                        id = user.id,
+                        discriminator = user.discriminator,
+                        avatar = user.avatar,
+                        bot = str(user.bot),
+                        avatar_url = user.avatar_url,
+                        created_at = int(datetime.timestamp(user.created_at)),
+                        is_avatar_animated = str(user.is_avatar_animated()),
+                        mention = user.mention
+                    )
+
+                    pipeline.expire(uid, 300) # 5 minute cache life
+                    
+                    BOT.loop.create_task(pipeline.execute())
+
+                except NotFound:
+                    known_invalid_users.append(uid)
+                    return None
+        else: # No Redis, using the dict method instead
+            if uid in user_cache:
+                return user_cache[uid]
+            if fetch:
+                try:
+                    user = await BOT.get_user_info(uid)
+                    if len(user_cache) >= 10: # Limit the cache size to the most recent 10
+                        user_cache.popitem()
+                    user_cache[uid] = user
+                except NotFound:
+                    known_invalid_users.append(uid)
+                    return None
     return user
 
 
