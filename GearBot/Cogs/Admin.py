@@ -170,10 +170,6 @@ class Admin:
         for page in Pages.paginate("\n".join(f"{guild.id} - {guild.name}" for guild in mutuals), prefix="```py\n", suffix="```"):
             await ctx.send(page)
 
-    @commands.command()
-    async def test(self, ctx):
-        print(nothing)
-
 
 
 def setup(bot):
