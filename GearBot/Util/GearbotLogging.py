@@ -8,6 +8,7 @@ from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
 import discord
+import sentry_sdk
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -23,8 +24,20 @@ LOG_PUMP = None
 LOG_ERRORS = 0
 
 
+def before_send(event, hint):
+    if event['level'] == "error" and 'logger' in event.keys() and event['logger'] == 'gearbot':
+        return None # we send errors manually, in a much cleaner way
+    return event
+
 def init_logger():
+    #track commits to make sentry versions
+    dsn = Configuration.get_master_var('SENTRY_DSN', '')
+    if dsn != '':
+        sentry_sdk.init(dsn, before_send=before_send)
+
+
     LOGGER.setLevel(logging.DEBUG)
+
     DISCORD_LOGGER.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')

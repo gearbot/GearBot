@@ -9,6 +9,7 @@ from datetime import datetime
 
 import aiohttp
 import aioredis
+import sentry_sdk
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
 from discord.abc import PrivateChannel
 from discord.ext import commands
@@ -279,97 +280,105 @@ async def handle_database_error(bot):
 
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
+    with sentry_sdk.configure_scope() as scope:
 
-    embed = Embed(colour=Colour(0xff0000),
-                          timestamp=datetime.utcfromtimestamp(time.time()))
+        embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
 
-    # something went wrong and it might have been in on_command_error, make sure we log to the log file first
-    lines = [
-        "\n===========================================EXCEPTION CAUGHT, DUMPING ALL AVAILABLE INFO===========================================",
-        f"Type: {exception_type}"
-    ]
+        # something went wrong and it might have been in on_command_error, make sure we log to the log file first
+        lines = [
+            "\n===========================================EXCEPTION CAUGHT, DUMPING ALL AVAILABLE INFO===========================================",
+            f"Type: {exception_type}"
+        ]
 
-    arg_info = ""
-    for arg in list(args):
-        arg_info += extract_info(arg) + "\n"
-    if arg_info == "":
-        arg_info = "No arguments"
+        arg_info = ""
+        for arg in list(args):
+            arg_info += extract_info(arg) + "\n"
+        if arg_info == "":
+            arg_info = "No arguments"
 
-    kwarg_info = ""
-    for name, arg in kwargs.items():
-        kwarg_info += "{}: {}\n".format(name, extract_info(arg))
-    if kwarg_info == "":
-        kwarg_info = "No keyword arguments"
+        kwarg_info = ""
+        for name, arg in kwargs.items():
+            kwarg_info += "{}: {}\n".format(name, extract_info(arg))
+        if kwarg_info == "":
+            kwarg_info = "No keyword arguments"
 
-    lines.append("======================Exception======================")
-    lines.append(f"{str(exception)} ({type(exception)})")
+        lines.append("======================Exception======================")
+        lines.append(f"{str(exception)} ({type(exception)})")
 
-    lines.append("======================ARG INFO======================")
-    lines.append(arg_info)
+        lines.append("======================ARG INFO======================")
+        lines.append(arg_info)
+        sentry_sdk.add_breadcrumb(category='arg info', message=arg_info, level='info')
 
-    lines.append("======================KWARG INFO======================")
-    lines.append(kwarg_info)
-
-    lines.append("======================STACKTRACE======================")
-    tb = "".join(traceback.format_tb(exception.__traceback__))
-    lines.append(tb)
-
-    if message is None and event is not None and hasattr(event, "message"):
-        message = event.message
-
-    if message is None and ctx is not None:
-        message = ctx.message
-
-    if message is not None and hasattr(message, "content"):
-        lines.append("======================ORIGINAL MESSAGE======================")
-        lines.append(message.content)
-        if message.content is None or message.content == "":
-            content = "<no content>"
-        else:
-            content = message.content
-        embed.add_field(name="Original message", value=Utils.trim_message(content, 1000), inline=False)
-
-        lines.append("======================ORIGINAL MESSAGE (DETAILED)======================")
-        lines.append(extract_info(message))
-
-    if event is not None:
-        lines.append("======================EVENT NAME======================")
-        lines.append(event)
-        embed.add_field(name="Event", value=event)
+        lines.append("======================KWARG INFO======================")
+        lines.append(kwarg_info)
+        sentry_sdk.add_breadcrumb(category='kwarg info', message=kwarg_info, level='info')
 
 
-    if ctx is not None:
-        lines.append("======================COMMAND INFO======================")
+        lines.append("======================STACKTRACE======================")
+        tb = "".join(traceback.format_tb(exception.__traceback__))
+        lines.append(tb)
 
-        lines.append(f"Command: {ctx.command}")
-        embed.add_field(name="Command", value=ctx.command)
+        if message is None and event is not None and hasattr(event, "message"):
+            message = event.message
 
-        channel_name = 'Private Message' if isinstance(ctx.channel, PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
-        lines.append(f"Channel: {channel_name}")
-        embed.add_field(name="Channel", value=channel_name, inline=False)
+        if message is None and ctx is not None:
+            message = ctx.message
 
-        sender = f"{ctx.author.name}#{ctx.author.discriminator} (`{ctx.author.id}`)"
-        lines.append(f"Sender: {sender}")
-        embed.add_field(name="Sender", value=sender, inline=False)
+        if message is not None and hasattr(message, "content"):
+            lines.append("======================ORIGINAL MESSAGE======================")
+            lines.append(message.content)
+            if message.content is None or message.content == "":
+                content = "<no content>"
+            else:
+                content = message.content
+            scope.set_tag('message content', content)
+            embed.add_field(name="Original message", value=Utils.trim_message(content, 1000), inline=False)
 
-    lines.append("===========================================DATA DUMP COMPLETE===========================================")
-    GearbotLogging.error("\n".join(lines))
+            lines.append("======================ORIGINAL MESSAGE (DETAILED)======================")
+            lines.append(extract_info(message))
+
+        if event is not None:
+            lines.append("======================EVENT NAME======================")
+            lines.append(event)
+            scope.set_tag('event name', event)
+            embed.add_field(name="Event", value=event)
 
 
-    if isinstance(exception, PeeweeException):
-        await handle_database_error(bot)
+        if ctx is not None:
+            lines.append("======================COMMAND INFO======================")
 
-    #nice embed for info on discord
+            lines.append(f"Command: {ctx.command}")
+            embed.add_field(name="Command", value=ctx.command)
+            scope.set_tag('command', ctx.command)
+
+            channel_name = 'Private Message' if isinstance(ctx.channel, PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
+            lines.append(f"Channel: {channel_name}")
+            embed.add_field(name="Channel", value=channel_name, inline=False)
+            scope.set_tag('channel', channel_name)
+
+            sender = f"{str(ctx.author)} (`{ctx.author.id}`)"
+            scope.user = dict(id=ctx.author.id, username=str(ctx.author))
+            lines.append(f"Sender: {sender}")
+            embed.add_field(name="Sender", value=sender, inline=False)
+
+        lines.append("===========================================DATA DUMP COMPLETE===========================================")
+        GearbotLogging.error("\n".join(lines))
 
 
-    embed.set_author(name=exception_type)
-    embed.add_field(name="Exception", value=f"{str(exception)} (`{type(exception)}`)", inline=False)
-    parts = Pages.paginate(tb, max_chars=1024)
-    num = 1
-    for part in parts:
-        embed.add_field(name=f"Traceback {num}/{len(parts)}", value=part)
-        num += 1
+        if isinstance(exception, PeeweeException):
+            await handle_database_error(bot)
 
+        #nice embed for info on discord
+
+
+        embed.set_author(name=exception_type)
+        embed.add_field(name="Exception", value=f"{str(exception)} (`{type(exception)}`)", inline=False)
+        parts = Pages.paginate(tb, max_chars=1024)
+        num = 1
+        for part in parts:
+            embed.add_field(name=f"Traceback {num}/{len(parts)}", value=part)
+            num += 1
+        sentry_sdk.capture_exception(exception)
     # try logging to botlog, wrapped in an try catch as there is no higher lvl catching to prevent taking down the bot (and if we ended here it might have even been due to trying to log to botlog
     try:
         await GearbotLogging.bot_log(embed=embed)

@@ -4,3 +4,4 @@ Pillow==5.3.0
 PyMySQL==0.9.2
 requests==2.20.0
 aioredis==1.2.0
+sentry-sdk==0.6.4

@@ -156,10 +156,10 @@ async def get_user(uid, fetch=True):
                     userCacheInfo["id"],
                     userCacheInfo["discriminator"],
                     userCacheInfo["avatar"],
-                    bool(userCacheInfo["bot"]),
+                    userCacheInfo["bot"] == "1",
                     userCacheInfo["avatar_url"],
                     datetime.fromtimestamp(float(userCacheInfo["created_at"])),
-                    bool(userCacheInfo["is_avatar_animated"]),
+                    bool(userCacheInfo["is_avatar_animated"]) == "1",
                     userCacheInfo["mention"]
                 )
 
@@ -173,10 +173,10 @@ async def get_user(uid, fetch=True):
                         id = user.id,
                         discriminator = user.discriminator,
                         avatar = user.avatar,
-                        bot = str(user.bot),
+                        bot = int(user.bot),
                         avatar_url = user.avatar_url,
                         created_at = user.created_at.timestamp(),
-                        is_avatar_animated = str(user.is_avatar_animated()),
+                        is_avatar_animated = int(user.is_avatar_animated()),
                         mention = user.mention
                     )
 
