@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import json
 import os
 import re
@@ -226,7 +225,7 @@ def server_info(guild):
     if guild_features == "":
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=0x7289DA, timestamp=datetime.datetime.fromtimestamp(time.time()))
+    embed = discord.Embed(color=0x7289DA, timestamp=datetime.fromtimestamp(time.time()))
     embed.set_thumbnail(url=guild.icon_url)
     embed.add_field(name=Translator.translate('name', guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', guild), value=guild.id, inline=True)
@@ -240,7 +239,7 @@ def server_info(guild):
                     value=str(len(guild.text_channels) + len(guild.voice_channels)),
                     inline=True)
     embed.add_field(name=Translator.translate('created_at', guild),
-                    value=f"{guild_made} ({(datetime.datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
+                    value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
                     inline=True)
     embed.add_field(name=Translator.translate('vip_features', guild), value=guild_features, inline=True)
     if guild.icon_url != "":
