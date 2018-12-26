@@ -347,9 +347,9 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         if ctx is not None:
             lines.append("======================COMMAND INFO======================")
 
-            lines.append(f"Command: {ctx.command}")
-            embed.add_field(name="Command", value=ctx.command)
-            scope.set_tag('command', ctx.command)
+            lines.append(f"Command: {ctx.command.name}")
+            embed.add_field(name="Command", value=ctx.command.name)
+            scope.set_tag('command', ctx.command.name)
 
             channel_name = 'Private Message' if isinstance(ctx.channel, PrivateChannel) else f"{ctx.channel.name} (`{ctx.channel.id}`)"
             lines.append(f"Channel: {channel_name}")
