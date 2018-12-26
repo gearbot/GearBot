@@ -5,9 +5,9 @@ import os
 import re
 import subprocess
 import time
-from subprocess import Popen
 from collections import namedtuple, OrderedDict
 from datetime import datetime
+from subprocess import Popen
 
 import discord
 from discord import NotFound
@@ -147,7 +147,7 @@ async def get_user(uid, fetch=True):
         if uid in known_invalid_users:
             return None
 
-        if BOT.redis_pool != None:
+        if BOT.redis_pool is not None:
             userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
             if userCacheInfo != {}: # It existed in the Redis cache
@@ -168,7 +168,6 @@ async def get_user(uid, fetch=True):
                 try:
                     user = await BOT.get_user_info(uid)
                     pipeline = BOT.redis_pool.pipeline()
-
                     pipeline.hmset_dict(uid,
                         name = user.name,
                         id = user.id,
@@ -176,7 +175,7 @@ async def get_user(uid, fetch=True):
                         avatar = user.avatar,
                         bot = str(user.bot),
                         avatar_url = user.avatar_url,
-                        created_at = int(datetime.timestamp(user.created_at)),
+                        created_at = user.created_at.timestamp(),
                         is_avatar_animated = str(user.is_avatar_animated()),
                         mention = user.mention
                     )
