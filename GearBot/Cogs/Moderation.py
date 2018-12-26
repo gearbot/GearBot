@@ -502,7 +502,10 @@ class Moderation:
         embed.add_field(name=Translator.translate('name', ctx), value=f"{user.name}#{user.discriminator}", inline=True)
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
-        embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
+        if type(user.is_avatar_animated) != type(True): # When from the Redis cache, this comes back as a boolean
+            embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated(), inline=True)
+        else:
+            embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.is_avatar_animated, inline=True)
         embed.add_field(name=Translator.translate('avatar_url', ctx),
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
         embed.add_field(name=Translator.translate("profile", ctx), value=user.mention)
