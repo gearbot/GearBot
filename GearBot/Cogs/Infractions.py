@@ -47,7 +47,7 @@ class Infractions:
                     async def yes():
                         channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
                         if channel is not None:
-                            await channel.send(f"[`{message.created_at.strftime('%c')}`] {message.author} (`{message.author.id}`) submitted feedback: {reason}")
+                            await channel.send(f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
                             await GearbotLogging.send_to(ctx, 'YES', 'feedback_submitted')
                     message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
                     await Confirmation.confirm(ctx, message, on_yes=yes)
