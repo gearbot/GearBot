@@ -451,7 +451,7 @@
   "softban": "softban",
   "tempban": "tempban",
   "invite_censor_fail": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems another bot already removed it\n```{message}```",
-  "warn_to_feedback": "Oh i'm sorry if i did something wrong, but warning me doesn't help much. Would like me to forward warning to my creator as feedback?",
+  "warn_to_feedback": "Oh I'm sorry if I did something wrong, but warning me doesn't help much. Would you like me to forward the warning to my creator as feedback?",
   "feedback_submitted": "Your feedback has been relayed!",
   "member_statuses": "Member statuses"
 }
