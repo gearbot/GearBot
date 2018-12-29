@@ -226,13 +226,15 @@ class Basic:
             return await clean_content().convert(ctx, Translator.translate(
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
                 query=query_clean)), None, False, []
-        return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(
+        eyes = Emoji.get_chat_emoji('EYES')
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
             pages) > 1, []
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data["query"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**```diff\n{page}```", None, page_num
+        eyes = Emoji.get_chat_emoji('EYES')
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, page_num
 
     async def get_help_pages(self, ctx, query):
         if query is None:
@@ -325,8 +327,8 @@ class Basic:
                 info = Pages.known_messages[str(payload.message_id)]
                 if info["type"] == "role":
                     for i in range(10):
-                        e = Emoji.get_emoji(str(i + 1))
-                        if payload.emoji.name == e:
+                        e = str(Emoji.get_emoji(str(i + 1)))
+                        if str(payload.emoji) == e:
                             roles = Configuration.get_var(guild.id, "SELF_ROLES")
                             channel = self.bot.get_channel(payload.channel_id)
                             number = info['page'] * 10 + i
@@ -361,7 +363,7 @@ class Basic:
                                     pass
 
                             if channel.permissions_for(guild.me).manage_messages:
-                                await message.remove_reaction(e, member)
+                                await message.remove_reaction(payload.emoji, member)
                             break
 
 

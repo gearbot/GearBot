@@ -11,7 +11,7 @@ from subprocess import Popen
 import discord
 from discord import NotFound
 
-from Util import GearbotLogging, Translator
+from Util import GearbotLogging, Translator, Emoji
 
 BOT = None
 
@@ -252,6 +252,10 @@ def server_info(guild):
         emoji = "".join(str(e) for e in guild.emojis)
         embed.add_field(name=Translator.translate('emoji', guild),
                         value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji")
+    statuses = dict(online=0, idle=0, dnd=0, offline=0)
+    for m in guild.members:
+        statuses[str(m.status)] += 1
+    embed.add_field(name=Translator.translate('member_statuses', guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, guild)}: {count}" for status, count in statuses.items()))
     return embed
 
 
