@@ -232,9 +232,10 @@ class RangedInt(Converter):
             else:
                 return argument
 
+
 class RangedIntInf(RangedInt):
 
-    def __init__(self,) -> None:
+    def __init__(self, ) -> None:
         super().__init__(1, 50)
 
 
@@ -262,3 +263,35 @@ class InfSearchLocation(Converter):
         if argument.lower() in values:
             return argument.lower()
         raise BadArgument("Does this even show up?")
+
+
+MODIFIER_MATCHER = re.compile(r"^\[(.*):(.*)\]$")
+
+
+class CommandModifier(Converter):
+    def __init__(self, allowed_values, should_lower=True) -> None:
+        self.allowed_values = allowed_values
+        self.should_lower = should_lower
+        super().__init__()
+
+    async def convert(self, ctx, argument):
+        if self.should_lower:
+            argument = argument.lower()
+        match = MODIFIER_MATCHER.match(argument)
+        if match is None:
+            raise BadArgument("Not a modifier")
+        key = match.group(1)
+        value = match.group(2)
+        if key not in self.allowed_values:
+            raise BadArgument("Invalid key")
+        for v in self.allowed_values[key]:
+            if isinstance(v, Converter):
+                return key, v.convert(ctx, value)
+            elif v == value:
+                return key, value
+        raise BadArgument("Not an acceptable value")
+
+
+class InfSearchModifiers(CommandModifier):
+    def __init__(self) -> None:
+        super().__init__(allowed_values=dict(search=["mod", "reason", "user"]))

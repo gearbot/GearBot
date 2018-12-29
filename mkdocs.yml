@@ -5,7 +5,10 @@ nav:
   - Home: 'index.md'
   - Commands: 'commands.md'
   - Guides:
-      - Quickstart: 'Guides/quickstart.md'
+      - Adding Gearbot: 'Guides/adding_gearbot.md'
+      - Configuring the prefix: 'Guides/prefix.md'
+      - Introduction to permissions: 'Guides/basic_permissions.md'
+      - Assigning special roles: 'Guides/management_roles.md'
       - Self assignable roles: 'Guides/selfroles.md'
       - Custom Commands: 'Guides/custom_commands.md'
       - Advanced Logging: 'Guides/logging.md'
