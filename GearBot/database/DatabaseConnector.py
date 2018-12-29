@@ -83,11 +83,6 @@ class Reminder(Model):
     class Meta:
         database = connection
 
-class Raid(Model):
-    id= PrimaryKeyField()
-    guild = BigIntegerField()
-
-
 
 def init():
     global connection

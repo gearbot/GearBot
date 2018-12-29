@@ -510,7 +510,9 @@ class Moderation:
                         value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar_url})")
         embed.add_field(name=Translator.translate("profile", ctx), value=user.mention)
         if member is not None:
-            embed.add_field(name=Translator.translate("status", ctx), value=Translator.translate(str(member.status), ctx))
+            status = str(member.status)
+            status_emoji = Emoji.get_chat_emoji(status.upper())
+            embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
             embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
 
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]

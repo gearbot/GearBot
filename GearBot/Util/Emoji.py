@@ -49,7 +49,13 @@ BACKUPS = {
     "CLOCK": "⏰",
     "SINISTER": "😈",
     "THINK": "🤔",
-    "WINK": "😉"
+    "WINK": "😉",
+    "ONLINE": "💚",
+    "IDLE": "💛",
+    "DND": "❤",
+    "OFFLINE": "💙",
+    "STREAMING": "💜",
+    "SEARCH": "🔎"
 }
 
 

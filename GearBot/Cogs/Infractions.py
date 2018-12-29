@@ -102,7 +102,7 @@ class Infractions:
     async def inf_init(self, ctx:commands.Context, query, guild_id, amount, fields):
         pages = await InfractionUtils.get_infraction_pages(guild_id, query, amount, fields)
         name = await Utils.username(query) if isinstance(query, int) else ctx.guild.name
-        return f"{Translator.translate('inf_search_header', ctx.guild.id, name=name, page_num=1, pages=len(pages))}{pages[0]}", None, len(pages) > 1, []
+        return f"{MessageUtils.assemble(ctx, 'SEARCH', 'inf_search_header', name=name, page_num=1, pages=len(pages))}{pages[0]}", None, len(pages) > 1, []
 
     async def update_infs(self, ctx, message, page_num, action, data):
         pages = await InfractionUtils.get_infraction_pages(data["guild_id"], data["query"], data["amount"] if "amount" in data else 25, data["fields"] if "fields" in data else ["user", "mod", "reason"])
