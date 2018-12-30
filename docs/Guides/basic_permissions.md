@@ -16,7 +16,7 @@ At it's core GearBot uses a very basic permissions system that determines who is
 ```
 **NOTE**: Bot owner commands to manage and update the bot fall outside of this permissions system and are handled separately, similarly bot ownership is not part of these permissions checks and has no effect on that. 
 
-For example: all commands in the basic cog have a default permission requirement of 0, allowing anyone to run them. This can be changed with an override (see the next section for more details) to only allow mods, or even nobody to run these commands.
+For example: all commands in the basic cog have a default permission requirement of 0, allowing anyone to run them. This can be changed with an override (see [Reconfiguring command requirements](overrides.md) for details later on) to only allow mods, or even nobody to run these commands.
 
 And similarly you can also lower the requirement for some commands (up to a point), commands like userinfo are by default mod only but can be made public.
 

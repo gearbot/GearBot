@@ -73,11 +73,16 @@ def generate_command_list(bot):
         "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages"
     ]
     page = ""
+    handled = set()
     for cog in bot.cogs:
         if cog not in excluded:
-            page += f"#{cog}\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
+            cogo = bot.get_cog(cog)
+            perm_lvl = cogo.permissions["required"]
+            page += f"#{cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
             for command in bot.get_cog_commands(cog):
-                page += gen_command_listing(command)
+                if command.qualified_name not in handled:
+                    page += gen_command_listing(command)
+                    handled.add(command.qualified_name)
             page += "\n\n"
     with open("docs/commands.md", "w") as file:
         file.write(page)
@@ -90,6 +95,9 @@ def gen_command_listing(command):
         raise ex
     else:
         if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
+            handled = set()
             for c in command.all_commands.values():
-                listing += gen_command_listing(c)
+                if c.qualified_name not in handled:
+                    listing += gen_command_listing(c)
+                    handled.add(c.qualified_name)
         return listing
