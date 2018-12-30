@@ -318,53 +318,55 @@ class Basic:
             return
         if guild.me.id == payload.user_id:
             return
+        if str(payload.message_id) not in Pages.known_messages:
+            return
+        info = Pages.known_messages[str(payload.message_id)]
+        if info["type"] != "role":
+            return
         try:
             message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
-        except discord.NotFound:
+        except (discord.NotFound, discord.Forbidden):
             pass
         else:
-            if str(payload.message_id) in Pages.known_messages:
-                info = Pages.known_messages[str(payload.message_id)]
-                if info["type"] == "role":
-                    for i in range(10):
-                        e = str(Emoji.get_emoji(str(i + 1)))
-                        if str(payload.emoji) == e:
-                            roles = Configuration.get_var(guild.id, "SELF_ROLES")
-                            channel = self.bot.get_channel(payload.channel_id)
-                            number = info['page'] * 10 + i
-                            if number >= len(roles):
-                                await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
-                                return
-                            role = guild.get_role(roles[number])
-                            if role is None:
-                                return
-                            member = guild.get_member(payload.user_id)
+            for i in range(10):
+                e = str(Emoji.get_emoji(str(i + 1)))
+                if str(payload.emoji) == e:
+                    roles = Configuration.get_var(guild.id, "SELF_ROLES")
+                    channel = self.bot.get_channel(payload.channel_id)
+                    number = info['page'] * 10 + i
+                    if number >= len(roles):
+                        await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                        return
+                    role = guild.get_role(roles[number])
+                    if role is None:
+                        return
+                    member = guild.get_member(payload.user_id)
+                    try:
+                        if role in member.roles:
+                            await member.remove_roles(role)
+                            added = False
+                        else:
+                            await member.add_roles(role)
+                            added = True
+                    except discord.Forbidden:
+                        emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
+                        try:
+                            await channel.send(emessage)
+                        except discord.Forbidden:
                             try:
-                                if role in member.roles:
-                                    await member.remove_roles(role)
-                                    added = False
-                                else:
-                                    await member.add_roles(role)
-                                    added = True
+                                member.send(emessage)
                             except discord.Forbidden:
-                                emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
-                                try:
-                                    await channel.send(emessage)
-                                except discord.Forbidden:
-                                    try:
-                                        member.send(emessage)
-                                    except discord.Forbidden:
-                                        pass
-                            else:
-                                try:
-                                    action_type = 'role_joined' if added else 'role_left'
-                                    await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
-                                except discord.Forbidden:
-                                    pass
+                                pass
+                    else:
+                        try:
+                            action_type = 'role_joined' if added else 'role_left'
+                            await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
+                        except discord.Forbidden:
+                            pass
 
-                            if channel.permissions_for(guild.me).manage_messages:
-                                await message.remove_reaction(payload.emoji, member)
-                            break
+                    if channel.permissions_for(guild.me).manage_messages:
+                        await message.remove_reaction(payload.emoji, member)
+                    break
 
 
 def setup(bot):
