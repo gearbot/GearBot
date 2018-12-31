@@ -158,7 +158,7 @@ class ModLog:
             if not (hasUser and user.id in Configuration.get_var(channel.guild.id,
                                                                  "IGNORED_USERS") or user.id == channel.guild.me.id):
                 GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS",
-                                      f":pencil: {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}")
+                                      f"{Emoji.get_chat_emoji('EDIT')} {Translator.translate('edit_logging', channel.guild.id, user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)}")
                 if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
                     embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
                     embed.set_author(name=user.name if hasUser else message.author,

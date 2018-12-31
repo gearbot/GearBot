@@ -60,7 +60,7 @@ class Basic:
                                           f"{Emoji.get_chat_emoji('STONE')} {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
                                           f"{Emoji.get_chat_emoji('WOOD')} Working in {len(self.bot.guilds)} guilds\n"
                                           f"{Emoji.get_chat_emoji('INNOCENT')} With a total of {total} users ({unique} unique)\n"
-                                          f":taco: Together they could have eaten {tacos} tacos in this time\n"
+                                          f"{Emoji.get_chat_emoji('TACO')} Together they could have eaten {tacos} tacos in this time\n"
                                           f"{Emoji.get_chat_emoji('TODO')} Add more stats")
 
         embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")

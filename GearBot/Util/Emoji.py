@@ -55,7 +55,8 @@ BACKUPS = {
     "DND": "❤",
     "OFFLINE": "💙",
     "STREAMING": "💜",
-    "SEARCH": "🔎"
+    "SEARCH": "🔎",
+    "EDIT": "📝"
 }
 
 
