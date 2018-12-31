@@ -50,6 +50,7 @@ BACKUPS = {
     "TACO": "🌮",
     "THINK": "🤔",
     "TODO": "📋",
+    "TRASH": "🗑",
     "VOICE": "🔊",
     "WARNING": "⚠",
     "WHAT": "☹",

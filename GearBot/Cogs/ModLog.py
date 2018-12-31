@@ -109,7 +109,7 @@ class ModLog:
             channel = self.bot.get_channel(message.channel)
             name = Utils.clean_user(user) if hasUser else str(message.author)
             GearbotLogging.log_to(guild.id, "EDIT_LOGS",
-                                  f":wastebasket: {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}")
+                                  f"{Emoji.get_chat_emoji('TRASH')} {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}")
             if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
 
                 embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
