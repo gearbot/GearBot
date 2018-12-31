@@ -543,7 +543,7 @@ class Moderation:
         """Shows information about the current server."""
         if guild is None:
             guild = ctx.guild
-        embed = Utils.server_info(guild)
+        embed = Utils.server_info(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
