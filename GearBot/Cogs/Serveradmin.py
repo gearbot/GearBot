@@ -745,7 +745,7 @@ class Serveradmin:
         return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
     @blacklist.command("add")
-    async def blacklist_add(self, ctx, word: str):
+    async def blacklist_add(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word in blacklist:
             await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", word=word)
@@ -757,7 +757,7 @@ class Serveradmin:
             Configuration.save(ctx.guild.id)
 
     @blacklist.command("remove")
-    async def blacklist_remove(self, ctx, word: str):
+    async def blacklist_remove(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word not in blacklist:
             await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", word=word)
