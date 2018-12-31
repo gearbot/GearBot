@@ -499,7 +499,7 @@ class Moderation:
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
                          icon_url=ctx.author.avatar_url)
-        embed.add_field(name=Translator.translate('name', ctx), value=f"{user.name}#{user.discriminator}", inline=True)
+        embed.add_field(name=Translator.translate('name', ctx), value=Utils.escape_markdown(f"{user.name}#{user.discriminator}"), inline=True)
         embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
         embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
         if type(user.is_avatar_animated) != type(True): # When from the Redis cache, this comes back as a boolean
@@ -513,7 +513,7 @@ class Moderation:
             status = str(member.status)
             status_emoji = Emoji.get_chat_emoji(status.upper())
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
-            embed.add_field(name=Translator.translate('nickname', ctx), value=member.nick, inline=True)
+            embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick), inline=True)
 
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
             if len(role_list) > 0:
