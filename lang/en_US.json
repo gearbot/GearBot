@@ -442,7 +442,7 @@
   "profile": "Profile",
   "status": "Status",
   "online": "Online",
-  "idle": "idle",
+  "idle": "Idle",
   "dnd": "Do not disturb",
   "offline": "Offline",
   "m_nobody": "You want be to {action} nobody? Sure, done! \n\nWait, why did you invoke this command then?",
