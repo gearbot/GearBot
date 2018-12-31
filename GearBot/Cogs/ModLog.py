@@ -374,14 +374,14 @@ class ModLog:
                 parts = dict(user=Utils.clean_user(member), user_id=member.id)
                 if before.channel is None:
                     key = "connected_to_voice"
-                    parts.update(channel_name=after.channel, channel_id=after.channel.id)
+                    parts.update(channel_name=after.channel.name, channel_id=after.channel.id)
                 elif after.channel is None:
                     key = "disconnected_voice"
-                    parts.update(channel_name=before.channel, channel_id=before.channel.id)
+                    parts.update(channel_name=before.channel.name, channel_id=before.channel.id)
                 else:
                     key = "moved_voice"
-                    parts.update(old_channel_name=before.channel, old_channel_id=before.channel.id,
-                                 new_channel_name=after.channel, new_channel_id=after.channel.id)
+                    parts.update(old_channel_name=before.channel.name, old_channel_id=before.channel.id,
+                                 new_channel_name=after.channel.name, new_channel_id=after.channel.id)
                 logging = Translator.assemble("VOICE", key, member.guild.id, **parts)
                 GearbotLogging.log_to(member.guild.id, "VOICE_CHANGES", logging)
 

@@ -45,11 +45,13 @@ def translate(key, location, **kwargs):
     else:
         lang_key = Configuration.get_var(lid, "LANG")
     if key in LANGS[lang_key].keys():
-        return LANGS[lang_key][key].format(**kwargs)
-    else:
-        if key in LANGS["en_US"].keys():
-            return LANGS["en_US"][key].format(**kwargs)
-        return key
+        try:
+            return LANGS[lang_key][key].format(**kwargs)
+        except KeyError:
+            GearbotLogging.error(f"Corrupt translation detected: {key}")
+    if key in LANGS["en_US"].keys():
+        return LANGS["en_US"][key].format(**kwargs)
+    return key
 
 
 async def update():
