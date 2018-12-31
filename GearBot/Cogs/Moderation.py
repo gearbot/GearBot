@@ -180,7 +180,7 @@ class Moderation:
     @commands.command("mkick")
     @commands.bot_has_permissions(kick_members=True)
     async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
-        """mkick help"""
+        """mkick_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 

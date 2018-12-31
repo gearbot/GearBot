@@ -453,5 +453,7 @@
   "invite_censor_fail": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems another bot already removed it\n```{message}```",
   "warn_to_feedback": "Oh I'm sorry if I did something wrong, but warning me doesn't help much. Would you like me to forward the warning to my creator as feedback?",
   "feedback_submitted": "Your feedback has been relayed!",
-  "member_statuses": "Member statuses"
+  "member_statuses": "Member statuses",
+  "perm_denied_message_help": "Configure if a message should be shown if someone tries to run a command they do not have access to",
+  "mod_role_help": "Add or remove roles from members"
 }
