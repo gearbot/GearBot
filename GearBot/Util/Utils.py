@@ -72,6 +72,7 @@ ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
 URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n]*)?)', re.IGNORECASE)
+EMOJI_MATCHER = re.compile('<(a?):([^:]+):([0-9]+)>')
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     text = str(text)
@@ -99,6 +100,11 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
             else:
                 name = "#" + channel.name
             text = text.replace(f"<@#{uid}>", name)
+
+        # re-assemble emoji so such a way that they don't turn into twermoji
+        for e in set(EMOJI_MATCHER.findall(text)):
+            a, b, c = zip(e)
+            text.replace(f"<{a}:{b}:{c}>", f"<{a}:\u200b{b}:{c}>")
 
     if markdown:
         text = escape_markdown(text)
