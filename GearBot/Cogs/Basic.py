@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import time
 from datetime import datetime
 
@@ -9,7 +10,7 @@ from discord.ext.commands import clean_content, BadArgument
 
 from Bot.GearBot import GearBot
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
-from Util.Converters import Message
+from Util.Converters import Message, UserID
 from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedAttachment
 
@@ -291,6 +292,23 @@ class Basic:
         if  key != "":
             embed.set_image(url=cat_json[0]["url"])
         await ctx.send(embed=embed)
+
+
+    NUMBER_MATCHER = re.compile(r"\d+")
+
+    @commands.command()
+    async def uid(self, ctx, *, text:str):
+        """uid_help"""
+        parts = set()
+        for p in set(self.NUMBER_MATCHER.findall(text)):
+            try:
+                parts.add(str(await UserID().convert(ctx, p)))
+            except BadArgument:
+                pass
+        if len(parts) > 0:
+            await ctx.send("\n".join(parts))
+        else:
+            await GearbotLogging.send_to(ctx, "NO", "no_uids_found")
 
     async def get_json(self, link, headers=None, do_request=True):
         if do_request:

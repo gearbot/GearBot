@@ -1,6 +1,6 @@
 import re
 
-from discord import NotFound, Forbidden
+from discord import NotFound, Forbidden, HTTPException
 from discord.ext.commands import UserConverter, BadArgument, Converter
 
 from Util import Utils, Configuration, Translator
@@ -35,8 +35,8 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(await RangedInt(max=9223372036854775807).convert(ctx, argument))
-            except ValueError:
+                user = await Utils.get_user(await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument))
+            except (ValueError, HTTPException):
                 pass
 
         if user is None:

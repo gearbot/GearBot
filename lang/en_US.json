@@ -455,5 +455,7 @@
   "feedback_submitted": "Your feedback has been relayed!",
   "member_statuses": "Member statuses",
   "perm_denied_message_help": "Configure if a message should be shown if someone tries to run a command they do not have access to",
-  "mod_role_help": "Add or remove roles from members"
+  "mod_role_help": "Add or remove roles from members",
+  "no_uids_found": "There don't seem to be any valid user ids in that message.",
+  "uid_help": "Prints out any discord user ids found in the specified text"
 }
