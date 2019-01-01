@@ -10,7 +10,7 @@ from discord.ext.commands import clean_content, BadArgument
 
 from Bot.GearBot import GearBot
 from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
-from Util.Converters import Message, UserID
+from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedAttachment
 
@@ -302,7 +302,7 @@ class Basic:
         parts = set()
         for p in set(self.NUMBER_MATCHER.findall(text)):
             try:
-                parts.add(str(await UserID().convert(ctx, p)))
+                parts.add(str((await DiscordUser(id_only=True).convert(ctx, p)).id))
             except BadArgument:
                 pass
         if len(parts) > 0:

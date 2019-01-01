@@ -26,6 +26,12 @@ ID_MATCHER = re.compile("<@!?([0-9]+)>")
 
 
 class DiscordUser(Converter):
+
+
+    def __init__(self, id_only=False) -> None:
+        super().__init__()
+        self.id_only = id_only
+
     async def convert(self, ctx, argument):
         user = None
         match = ID_MATCHER.match(argument)
@@ -39,7 +45,7 @@ class DiscordUser(Converter):
             except (ValueError, HTTPException):
                 pass
 
-        if user is None:
+        if user is None or (self.id_only and str(user.id) != argument):
             raise TranslatedBadArgument('user_conversion_failed', ctx, arg=argument)
         return user
 
