@@ -81,7 +81,7 @@ def check_permission(ctx:commands.Context):
 
 
 def get_required(ctx, perm_dict):
-    return get_perm_dict(ctx.message.content[len(ctx.prefix):].split(" "), perm_dict)["required"]
+    return get_perm_dict(ctx.command.qualified_name.split(" "), perm_dict)["required"]
 
 def get_perm_dict(pieces, perm_dict, strict=False):
     found = True
