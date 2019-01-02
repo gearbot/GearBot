@@ -260,7 +260,7 @@ class Moderation:
                                                   moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                                   reason=reason,
                                                   until=datetime.datetime.utcfromtimestamp(until))
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f":door: {translated}")
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('BAN')} {translated}")
                 await GearbotLogging.send_to(ctx, "YES", "tempban_confirmation", user=Utils.clean_user(user),
                                              user_id=user.id, reason=reason,
                                              until=datetime.datetime.utcfromtimestamp(until))
@@ -276,7 +276,7 @@ class Moderation:
                     Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                              f":door: {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                              f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
         if confirm:
             await GearbotLogging.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason)
@@ -349,7 +349,7 @@ class Moderation:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('YES')} {Translator.translate('softban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                  f":door: {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('softban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
             InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason, active=False)
 
         else:
@@ -373,7 +373,7 @@ class Moderation:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, reason=reason)}")
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                  f":door: {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
 
             tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
