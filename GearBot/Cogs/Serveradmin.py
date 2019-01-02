@@ -317,7 +317,7 @@ class Serveradmin:
             if not hasattr(cog, "permissions"):
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
             elif perm_lvl in range(7):
-                perm_dict = Permissioncheckers.get_perm_dict(command.split(" "), cog.permissions)
+                perm_dict = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), cog.permissions)
                 if perm_lvl < perm_dict["min"]:
                     lvl = cog.permissions['min']
                     await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
@@ -333,7 +333,7 @@ class Serveradmin:
                             "people": []
                         }
                     override = overrides[cog_name]
-                    parts = command.split(" ")
+                    parts = command_object.qualified_name.split(" ")
                     while len(parts) > 0:
                         part = parts.pop(0)
                         if not part in override["commands"]:
@@ -362,7 +362,7 @@ class Serveradmin:
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             found = False
             if cog_name in overrides:
-                override = Permissioncheckers.get_perm_dict(command.split(" "), overrides[cog_name], True)
+                override = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), overrides[cog_name], True)
                 if override is not None:
                     found = True
                     override["required"] = -1
