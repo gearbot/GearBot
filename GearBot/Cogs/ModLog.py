@@ -228,26 +228,25 @@ class ModLog:
         fid = f"{guild.id}-{user.id}"
         if fid in self.bot.data["forced_exits"]:
             return
-        if guild.me.guild_permissions.view_audit_log:
-            async for entry in guild.audit_logs(action=AuditLogAction.ban, limit=25):
-                if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
-                    if entry.reason is None:
-                        reason = Translator.translate("no_reason", guild.id)
-                    else:
-                        reason = entry.reason
-                    Infraction.update(active=False).where((Infraction.user_id == user.id) &
-                                                          (Infraction.type == "Unban") &
-                                                          (Infraction.guild_id == guild.id)).execute()
-                    InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Ban",
-                                                   "No reason given." if entry.reason is None else entry.reason)
-                    GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                          f":door: {Translator.translate('ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
-                    return
-        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                              f":door: {Translator.translate('manual_ban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                               (Infraction.type == "Unban") &
                                               (Infraction.guild_id == guild.id)).execute()
+        limit = datetime.datetime.utcfromtimestamp(time.time() - 60)
+        log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
+        if log is None:
+            #this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
+            log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
+        if log is not None:
+            if log.reason is None:
+                reason = Translator.translate("no_reason", guild.id)
+            else:
+                reason = log.reason
+            InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(log.user), moderator_id=log.user.id, reason=reason))
+        else:
+            InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id))
+
         self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
@@ -257,23 +256,26 @@ class ModLog:
             return
         elif not Features.is_logged(guild.id, "MOD_ACTIONS"):
             return
-        else:
-            if guild.me.guild_permissions.view_audit_log:
-                async for entry in guild.audit_logs(action=AuditLogAction.unban, limit=2):
-                    if entry.target == user and entry.created_at > datetime.datetime.utcfromtimestamp(time.time() - 30):
-                        Infraction.update(active=False).where((Infraction.user_id == user.id) &
-                                                              (Infraction.type == "Ban") &
-                                                              (Infraction.guild_id == guild.id)).execute()
-                        InfractionUtils.add_infraction(guild.id, entry.target.id, entry.user.id, "Unban",
-                                                       "Manual unban")
-                        GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                              f":door: {Translator.translate('unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=entry.user, moderator_id=entry.user.id, reason='Manual unban')}")
-                        return
+        Infraction.update(active=False).where((Infraction.user_id == user.id) &
+                                              (Infraction.type == "Ban") &
+                                              (Infraction.guild_id == guild.id)).execute()
+
+        limit = datetime.datetime.utcfromtimestamp(time.time() - 60)
+        log = await self.find_log(guild, AuditLogAction.unban, lambda e: e.target == user and e.created_at > limit)
+        if log is None:
+            # this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
+            log = await self.find_log(guild, AuditLogAction.unban, lambda e: e.target == user and e.created_at > limit)
+        if log is not None:
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
-                                  f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('manual_unban_log', guild.id, user=Utils.clean_user(user), user_id=user.id)}")
-            Infraction.update(active=False).where((Infraction.user_id == user.id) &
-                                                  (Infraction.type == "Ban") &
-                                                  (Infraction.guild_id == guild.id)).execute()
+                                  MessageUtils.assemble(guild.id, 'INNOCENT', 'unban_log', user=Utils.clean_user(user),
+                                                        user_id=user.id, moderator=log.user,
+                                                        moderator_id=log.user.id, reason='Manual unban'))
+            InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual ban")
+
+
+        else:
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, 'INNOCENT', 'manual_unban_log',  user=Utils.clean_user(user),user_id=user.id))
+            InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
 
     async def on_member_update(self, before:discord.Member, after):
         guild = before.guild

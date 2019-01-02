@@ -16,6 +16,8 @@ BACKUPS = {
     "9": "9⃣",
     "10": "🔟",
     "ALTER": "🛠",
+    "BAN": "🚪",
+    "BOOT": "👢",
     "CLOCK": "⏰",
     "CREATE": "🔨",
     "DELETE": "⛏",

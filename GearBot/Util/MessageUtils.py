@@ -42,7 +42,7 @@ async def update_message(bot, message_id, content):
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id)
 
 def assemble(destination, emoji, message, translate=True, **kwargs):
-    translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
+    translated = Translator.translate(message, destination, **kwargs) if translate else message
     return f"{Emoji.get_chat_emoji(emoji)} {translated}"
 
 async def archive_purge(bot, id_list, guild_id):
