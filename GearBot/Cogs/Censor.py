@@ -8,7 +8,7 @@ from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, 
 from database.DatabaseConnector import Infraction
 
 INVITE_MATCHER = re.compile(
-    r"(?:https?:\/\/)?(?:www\.)?(?:discord\.(?:gg|io|me|li)|discordapp\.com\/invite)\/([\w|\d|-]+)",
+    r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[dot\])(?:gg|io|me|li)|discordapp\.com/invite)/+(\w|\d|-)+",
     flags=re.IGNORECASE)
 
 
@@ -58,7 +58,7 @@ class Censor:
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
         max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
-        content = message.content.lower()
+        content = message.content.lower().replace('\\', '')
         censored = False
         if len(guilds) is not 0:
             codes = INVITE_MATCHER.findall(message.content)
