@@ -102,14 +102,15 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
             text = text.replace(f"<@#{uid}>", name)
 
         # re-assemble emoji so such a way that they don't turn into twermoji
-        for e in set(EMOJI_MATCHER.findall(text)):
-            a, b, c = zip(e)
-            text.replace(f"<{a}:{b}:{c}>", f"<{a}:\u200b{b}:{c}>")
 
     if markdown:
         text = escape_markdown(text)
     else:
         text = text.replace("@", "@\u200b").replace("**", "*​*").replace("``", "`​`")
+
+    for e in set(EMOJI_MATCHER.findall(text)):
+        a, b, c = zip(e)
+        text.replace(f"<{a}:{b}:{c}>", f"<{a}:\u200b{b}:{c}>".replace('\\\\', '\\'))
 
     if links:
         #find urls last so the < escaping doesn't break it
