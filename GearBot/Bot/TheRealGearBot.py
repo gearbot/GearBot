@@ -199,7 +199,8 @@ async def on_command_error(bot, ctx: commands.Context, error):
     else:
         await handle_exception("Command execution failed", bot, error.original, ctx=ctx)
         # notify caller
-        await ctx.send(":rotating_light: Something went wrong while executing that command :rotating_light:")
+        e = Emoji.get_chat_emoji('BUG')
+        await ctx.send(f"{e} Something went wrong while executing that command {e}")
 
 
 
