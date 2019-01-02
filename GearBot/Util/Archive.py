@@ -28,7 +28,7 @@ def clean(file, filename):
 async def pack_messages(messages):
     out = ""
     for message in messages:
-        name = await Utils.username(message.author)
+        name = await Utils.username(message.author, clean=False)
         out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\r\n"
     return out
 
