@@ -460,5 +460,6 @@
   "uid_help": "Prints out any discord user ids found in the specified text",
   "purge_everywhere_complete": "Purged {count} messages in {channels} channels (was unable to purge in {failed})",
   "clean_missing_targets": "You didn't specify who's messages i should be cleaning and i doubt you want me cleaning yours. Can we try that again? But this time with a bit more ~~feeling~~ targets.",
-  "clean_everywhere_help": "Removes messages by one or more users in all channels"
+  "clean_everywhere_help": "Removes messages by one or more users in all channels",
+  "clean_ban_help": "Same as a regular ban, but removes one day of messages by default, can go up to 7"
 }
