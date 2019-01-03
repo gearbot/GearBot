@@ -221,7 +221,18 @@ class Moderation:
     async def _mass_failures_update(ctx, message, page_num, action, data):
         page, page_num = Pages.basic_pages(data["failures"], page_num, action)
         action_type = data["action"]
-        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, page_num
+        return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, page_num
+
+    @commands.guild_only()
+    @commands.command()
+    async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+        allowed, message = self._can_act("bean", ctx, user)
+        if allowed:
+            await GearbotLogging.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
+        else:
+            await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
