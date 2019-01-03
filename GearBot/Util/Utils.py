@@ -143,7 +143,7 @@ async def username(uid, fetch=True, clean=True):
     if clean:
         return clean_user(user)
     else:
-        return str(user)
+        return f"{user.name}#{user.discriminator}"
 
 
 async def get_user(uid, fetch=True):
@@ -156,7 +156,7 @@ async def get_user(uid, fetch=True):
         if BOT.redis_pool is not None:
             userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
-            if userCacheInfo != {}: # It existed in the Redis cache
+            if len(userCacheInfo) != 9: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
                     userCacheInfo["name"],
                     userCacheInfo["id"],
@@ -209,7 +209,7 @@ async def get_user(uid, fetch=True):
 
 
 def clean_user(user):
-    return f"\u200b{escape_markdown(user.name)}\u200b#{user.discriminator}"
+    return f"{escape_markdown(user.name)}#{user.discriminator}"
 
 def pad(text, length, char=' '):
     return f"{text}{char * (length-len(text))}"

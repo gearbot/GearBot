@@ -44,7 +44,7 @@ async def get_infraction_pages(guild_id, query, amount, fields):
             infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
                     ("[user]" in fields and isinstance(query, int) and Infraction.user_id == query ) |
                     ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
-                     ("[reason]" in fields and isinstance(query, str) and fn.lower(Infraction.reason).contains(query.lower())))).order_by(Infraction.id.desc()).limit(50)
+                     ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(Infraction.id.desc()).limit(50)
 
         out = ""
         longest_user = 0
