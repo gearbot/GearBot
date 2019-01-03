@@ -394,7 +394,6 @@ class ModLog:
                     self.bot.being_cleaned[event.channel_id].add(mid)
                 return
             message_list = dict()
-            await MessageUtils.archive_purge(self.bot,event.message_ids, event.guild_id)
             for mid in event.message_ids:
                 message = await MessageUtils.get_message_data(self.bot, mid)
                 if message is not None:
