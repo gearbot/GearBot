@@ -231,6 +231,12 @@ class Moderation:
         allowed, message = self._can_act("bean", ctx, user)
         if allowed:
             await GearbotLogging.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
+            try :
+                message = await self.bot.wait_for("message", timeout=60, check=lambda m: m.author == user)
+            except asyncio.TimeoutError:
+                pass
+            else:
+                await message.add_reaction(Emoji.get_emoji('BEAN'))
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 

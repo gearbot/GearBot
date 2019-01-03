@@ -17,6 +17,7 @@ BACKUPS = {
     "10": "🔟",
     "ALTER": "🛠",
     "BAN": "🚪",
+    "BEAN": "🌱",
     "BOOT": "👢",
     "BUG": "🐛",
     "CLOCK": "⏰",
