@@ -156,7 +156,7 @@ async def get_user(uid, fetch=True):
         if BOT.redis_pool is not None:
             userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
-            if len(userCacheInfo) != 9: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
+            if len(userCacheInfo) == 9: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
                     userCacheInfo["name"],
                     userCacheInfo["id"],
