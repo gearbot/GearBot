@@ -338,7 +338,7 @@
   "number_too_small": "Number too small, must be at least {min}",
   "number_too_big": "Number too big, must be at most {max}",
   "clean_help": "Gets out the broom to clean whatever mess needs cleaning",
-  "clean_user_help": "Removes messages by a specific user",
+  "clean_user_help": "Removes messages by one or more users",
   "clean_bots_help": "Removes messages send by any bot",
   "clean_all_help": "Just clean everything",
   "channel_created": "A new channel was created: {channel} (``{channel.id}``)",
@@ -457,5 +457,8 @@
   "perm_denied_message_help": "Configure if a message should be shown if someone tries to run a command they do not have access to",
   "mod_role_help": "Add or remove roles from members",
   "no_uids_found": "There don't seem to be any valid user ids in that message.",
-  "uid_help": "Prints out any discord user ids found in the specified text"
+  "uid_help": "Prints out any discord user ids found in the specified text",
+  "purge_everywhere_complete": "Purged {count} messages in {channels} channels (was unable to purge in {failed})",
+  "clean_missing_targets": "You didn't specify who's messages i should be cleaning and i doubt you want me cleaning yours. Can we try that again? But this time with a bit more ~~feeling~~ targets.",
+  "clean_everywhere_help": "Removes messages by one or more users in all channels"
 }

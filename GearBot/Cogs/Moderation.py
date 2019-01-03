@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import time
+from typing import Optional
 
 import discord
 from discord import Object
@@ -12,7 +13,7 @@ from Bot import TheRealGearBot
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message
+    RangedInt, Message, RangedIntBan
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -227,12 +228,22 @@ class Moderation:
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
         """ban_help"""
+        await self._ban_command(ctx, user, reason, 0)
+
+    @commands.command(aliases=["clean_ban"])
+    @commands.guild_only()
+    @commands.bot_has_permissions(ban_members=True)
+    async def cleanban(self, ctx: commands.Context, user: discord.Member, days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
+        """clean_ban_help"""
+        await self._ban_command(ctx, user, reason, days)
+
+    async def _ban_command(self, ctx, user, reason, days):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
         allowed, message = self._can_act("ban", ctx, user)
         if allowed:
-            await self._ban(ctx, user, reason, True)
+            await self._ban(ctx, user, reason, True, days=days)
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
@@ -267,11 +278,11 @@ class Moderation:
         else:
             await GearbotLogging.send_to(ctx, "NO", message, translate=False)
 
-    async def _ban(self, ctx, user, reason, confirm):
+    async def _ban(self, ctx, user, reason, confirm, days=0):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
-                            delete_message_days=0)
+                            delete_message_days=days)
         Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (
                     Infraction.guild_id == ctx.guild.id)).execute()
         InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
@@ -604,6 +615,8 @@ class Moderation:
     @clean.command("user")
     async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_user_help"""
+        if len(users) is 0:
+            await GearbotLogging.send_to(ctx, 'NO', 'clean_missing_targets')
         await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
 
     @clean.command("bots")
@@ -635,6 +648,34 @@ class Moderation:
         b = max(start.id, end.id)
         await self._clean(ctx, 5000, lambda m: True , before=Object(b+1), after=Object(a+1))
 
+    @clean.command("everywhere")
+    async def clean_everywhere(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
+        """clean_everywhere_help"""
+        if len(users) is 0:
+            await GearbotLogging.send_to(ctx, 'NO', 'clean_missing_targets')
+        total = 0
+        if any(channel.id in self.bot.being_cleaned for channel in ctx.guild.text_channels):
+            await GearbotLogging.send_to(ctx, "NO", "already_cleaning")
+            return
+        self.bot.being_cleaned[ctx.channel.id] = set()
+        message = await GearbotLogging.send_to(ctx, "REFRESH", "processing")
+        failed = set()
+        for channel in ctx.guild.text_channels:
+            self.bot.being_cleaned[channel.id] = set()
+            try:
+                counter = 0
+                def check(message):
+                    nonlocal counter
+                    match = any(message.author.id == user.id for user in users) and counter < amount
+                    if match:
+                        counter += 1
+                    return match
+                deleted = await channel.purge(limit=250, check=check, before=ctx.message)
+                total += len(deleted)
+            except discord.HTTPException:
+                failed.add(channel)
+        await message.edit(content=MessageUtils.assemble(ctx, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed)))
+
 
     async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
         counter = 0
@@ -656,7 +697,7 @@ class Moderation:
                 # sleep for a sec just in case the other bot is still purging so we don't get removed as well
                 await asyncio.sleep(1)
                 try:
-                    await message.edit(content=MessageUtils.assemble(ctx, 'YES', 'purge_fail_not_found'))
+                    await message.edit(content=MessageUtils.assemble(ctx, 'NO', 'purge_fail_not_found'))
                 except discord.NotFound:
                     pass  # sometimes people remove channels mid purge
             else:

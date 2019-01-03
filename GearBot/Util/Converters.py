@@ -239,10 +239,10 @@ class RangedInt(Converter):
                 return argument
 
 
-class RangedIntInf(RangedInt):
+class RangedIntBan(RangedInt):
 
     def __init__(self, ) -> None:
-        super().__init__(1, 50)
+        super().__init__(1, 7)
 
 
 class ListMode(Converter):
