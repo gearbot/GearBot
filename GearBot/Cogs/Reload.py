@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
 from Bot.GearBot import GearBot
-from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages
+from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages, Configuration
 
 
 class Reload:
@@ -70,6 +70,9 @@ class Reload:
             GearbotLogging.info(f'{cog} has been unloaded.')
             self.bot.load_extension(f"Cogs.{cog}")
             GearbotLogging.info(f'{cog} has been loaded.')
+        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
+        for c in to_unload:
+            self.bot.remove_command(c)
 
         await TheRealGearBot.initialize(self.bot)
         GearbotLogging.info("Hot reload complete.")

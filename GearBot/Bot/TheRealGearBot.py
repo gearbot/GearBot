@@ -94,6 +94,10 @@ async def on_ready(bot):
                 GearbotLogging.exception(f"Failed to load extention {extension}", e)
         GearbotLogging.info("Cogs loaded")
 
+        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
+        for c in to_unload:
+            bot.remove_command(c)
+
         if Configuration.get_master_var("CROWDIN_KEY") is not None:
             bot.loop.create_task(translation_task(bot))
 
