@@ -92,8 +92,9 @@ class Moderation:
     @commands.group()
     @commands.guild_only()
     async def emote(self, ctx):
+        """emote_help"""
         if ctx.subcommand_passed is None:
-            return await ctx.send("Please pass a subcommand")
+            await ctx.invoke(self.bot.get_command("help"), query="emote")
 
     @emote.command()
     @commands.bot_has_permissions(manage_emojis=True)
@@ -136,6 +137,45 @@ class Moderation:
             return await GearbotLogging.send_to(ctx, "YES", "emote_delete_success")
         except HTTPException as msg:
             return await ctx.send(msg.text)
+
+    @emote.group("roles")
+    async def emote_roles(self, ctx):
+        """emote_roles_help"""
+        if ctx.invoked_subcommand is self.emote_roles:
+            await ctx.invoke(self.bot.get_command("help"), query="emote roles")
+
+    @emote_roles.command("add")
+    async def emote_roles_add(self, ctx, emote: discord.Emoji, role: discord.Role):
+        emote_roles = emote.roles
+        if role in emote_roles:
+            await GearbotLogging.send_to(ctx, "NO", "emote_role_add_role_already_in_list")
+        else:
+            emote_roles.append(role)
+            await emote.edit(name=emote.name, roles=emote_roles)
+            await GearbotLogging.send_to(ctx, "YES", "emote_role_add_success")
+
+    @emote_roles.command("remove")
+    async def emote_roles_remove(self, ctx, emote: discord.Emoji, role: discord.Role):
+        emote_roles = emote.roles
+        if role not in emote_roles:
+            await GearbotLogging.send_to(ctx, "NO", "emote_role_remove_role_not_in_list")
+        else:
+            emote_roles.remove(role)
+            await emote.edit(name=emote.name, roles=emote_roles)
+            await GearbotLogging.send_to(ctx, "YES", "emote_role_remove_success")
+
+    @emote_roles.command()
+    async def list(self, ctx, emote: discord.Emoji):
+        role_list = dict()
+        longest_name = 1
+        for role in emote.roles:
+            role_list[f"{role.name} - {role.id}"] = role
+            longest_name = max(longest_name, len(role.name))
+        pages = Pages.paginate("\n".join(
+            f"{role_list[r].name} {' ' * (longest_name - len(role_list[r].name))} - {role_list[r].id}" for r in
+            sorted(role_list.keys())))
+        page = pages[0]
+        await ctx.send(f"```{pages[0]}```")
 
     @commands.command()
     @commands.guild_only()
