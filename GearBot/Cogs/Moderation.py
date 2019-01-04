@@ -102,42 +102,43 @@ class Moderation:
     @emote.command()
     @commands.bot_has_permissions(manage_emojis=True)
     async def upload(self, ctx, name: str):
+        """emote_upload_help"""
         for attachment in ctx.message.attachments:
-            headers = { 'User-Agent': 'DiscordBot (test@test.com, v1)' }
-            message = await GearbotLogging.send_to(ctx, "YES", "emote_upload_downloading")
-            async with aiohttp.ClientSession(headers=headers) as session:
-                async with session.get(attachment.proxy_url) as resp:
-                    data = await resp.read()
-                    if len(name) < 2 or len(name) > 32:
-                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_name_length")
-                    if len(data) > 256000:
-                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_filesize", filesize=round(len(data)/1000))
-                    try:
-                        emote = await ctx.guild.create_custom_emoji(name=name, image=data)
-                        return await GearbotLogging.try_edit(ctx, message, emoji="YES", string_name="emote_upload_success", emote=emote)
-                    except HTTPException as msg:
-                        #This shouldn't be called, ever. But just in case.
-                        return await ctx.send(msg.text)
-                    except InvalidArgument as msg:
-                        return await GearbotLogging.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_file")
+            message = await MessageUtils.send_to(ctx, "YES", "emote_upload_downloading")
+            async with self.bot.aiosession.get(attachment.proxy_url) as resp:
+                data = await resp.read()
+                if len(name) < 2 or len(name) > 32:
+                    return await MessageUtils.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_name_length")
+                if len(data) > 256000:
+                    return await MessageUtils.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_filesize", filesize=round(len(data)/1000))
+                try:
+                    emote = await ctx.guild.create_custom_emoji(name=name, image=data)
+                    return await MessageUtils.try_edit(ctx, message, emoji="YES", string_name="emote_upload_success", emote=emote)
+                except HTTPException as msg:
+                    #This shouldn't be called, like.. ever. But just in case.
+                    return await ctx.send(msg.text)
+                except InvalidArgument as msg:
+                    return await MessageUtils.try_edit(ctx, message, emoji="NO", string_name="emote_upload_invalid_file")
 
     @emote.command(aliases=["change"])
     async def update(self, ctx, emote: discord.Emoji, new_name: str):
+        """emote_update_help"""
         old_name = emote.name;
         if len(new_name) < 2 or len(new_name) > 32:
-            return await GearbotLogging.send_to(ctx, "NO", "emote_update_invalid_name_length")
+            return await MessageUtils.send_to(ctx, "NO", "emote_update_invalid_name_length")
         try:
             await emote.edit(name=new_name, roles=emote.roles, reason=Translator.translate("emote_update_reason", ctx.guild.id, user=Utils.clean_user(ctx.author)))
         except HTTPException as msg:
             return await ctx.send(msg.text)
-        return await GearbotLogging.send_to(ctx, "YES", "emote_update_success", old_name=old_name, new_name=new_name)
+        return await MessageUtils.send_to(ctx, "YES", "emote_update_success", old_name=old_name, new_name=new_name)
 
     @emote.command(aliases=["remove"])
     async def delete(self, ctx, emote: discord.Emoji):
+        """emote_delete_help"""
         try:
             emote_name = emote.name
             await emote.delete()
-            return await GearbotLogging.send_to(ctx, "YES", "emote_delete_success")
+            return await MessageUtils.send_to(ctx, "YES", "emote_delete_success")
         except HTTPException as msg:
             return await ctx.send(msg.text)
 
@@ -151,21 +152,21 @@ class Moderation:
     async def emote_roles_add(self, ctx, emote: discord.Emoji, role: discord.Role):
         emote_roles = emote.roles
         if role in emote_roles:
-            await GearbotLogging.send_to(ctx, "NO", "emote_role_add_role_already_in_list")
+            await MessageUtils.send_to(ctx, "NO", "emote_role_add_role_already_in_list")
         else:
             emote_roles.append(role)
             await emote.edit(name=emote.name, roles=emote_roles)
-            await GearbotLogging.send_to(ctx, "YES", "emote_role_add_success")
+            await MessageUtils.send_to(ctx, "YES", "emote_role_add_success")
 
     @emote_roles.command("remove")
     async def emote_roles_remove(self, ctx, emote: discord.Emoji, role: discord.Role):
         emote_roles = emote.roles
         if role not in emote_roles:
-            await GearbotLogging.send_to(ctx, "NO", "emote_role_remove_role_not_in_list")
+            await MessageUtils.send_to(ctx, "NO", "emote_role_remove_role_not_in_list")
         else:
             emote_roles.remove(role)
             await emote.edit(name=emote.name, roles=emote_roles)
-            await GearbotLogging.send_to(ctx, "YES", "emote_role_remove_success")
+            await MessageUtils.send_to(ctx, "YES", "emote_role_remove_success")
 
     @emote_roles.command()
     async def list(self, ctx, emote: discord.Emoji):
