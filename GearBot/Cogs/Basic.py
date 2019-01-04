@@ -66,7 +66,7 @@ class Basic:
                                           f"{Emoji.get_chat_emoji('TODO')} Add more stats")
 
         embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")
-        embed.add_field(name=f"Website", value="[Click here](https://gearbot.aenterprise.info)")
+        embed.add_field(name=f"Website", value="[Click here](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value="[Click here](https://github.com/AEnterprise/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
 
