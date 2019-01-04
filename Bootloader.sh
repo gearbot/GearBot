@@ -4,5 +4,5 @@ if [ -s upgradeRequest ]; then
         rm -rf upgradeRequest
 fi
 if ! [ -s stage_3.txt ]; then
-        python3 GearBot/Bot.py
+        python3 GearBot/GearBot.py
 fi

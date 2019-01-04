@@ -81,7 +81,7 @@ def check_permission(ctx:commands.Context):
 
 
 def get_required(ctx, perm_dict):
-    return get_perm_dict(ctx.message.content[len(ctx.prefix):].split(" "), perm_dict)["required"]
+    return get_perm_dict(ctx.command.qualified_name.split(" "), perm_dict)["required"]
 
 def get_perm_dict(pieces, perm_dict, strict=False):
     found = True
@@ -105,11 +105,11 @@ def get_user_lvl(ctx:commands.Context):
     overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
     if cog_name in overrides:
         target = overrides[cog_name]
-        pieces = ctx.message.content.lower()[len(ctx.prefix):].split(" ")
+        pieces = ctx.command.qualified_name.lower()[len(ctx.prefix):].split(" ")
         while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
             target = target["commands"][pieces.pop(0)]
-        if ctx.author.id in target["people"]:
-            return 4
+            if ctx.author.id in target["people"]:
+                return 4
     if is_admin(ctx):
         return 3
     if is_mod(ctx):

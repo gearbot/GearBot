@@ -1,6 +1,6 @@
 import re
 
-from discord import NotFound, Forbidden
+from discord import NotFound, Forbidden, HTTPException
 from discord.ext.commands import UserConverter, BadArgument, Converter
 
 from Util import Utils, Configuration, Translator
@@ -26,6 +26,12 @@ ID_MATCHER = re.compile("<@!?([0-9]+)>")
 
 
 class DiscordUser(Converter):
+
+
+    def __init__(self, id_only=False) -> None:
+        super().__init__()
+        self.id_only = id_only
+
     async def convert(self, ctx, argument):
         user = None
         match = ID_MATCHER.match(argument)
@@ -35,11 +41,11 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(await RangedInt(max=9223372036854775807).convert(ctx, argument))
-            except ValueError:
+                user = await Utils.get_user(await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument))
+            except (ValueError, HTTPException):
                 pass
 
-        if user is None:
+        if user is None or (self.id_only and str(user.id) != argument):
             raise TranslatedBadArgument('user_conversion_failed', ctx, arg=argument)
         return user
 
@@ -232,6 +238,13 @@ class RangedInt(Converter):
             else:
                 return argument
 
+
+class RangedIntBan(RangedInt):
+
+    def __init__(self, ) -> None:
+        super().__init__(1, 7)
+
+
 class ListMode(Converter):
     async def convert(self, ctx, argument):
         argument = argument.lower()
@@ -248,3 +261,43 @@ class ReminderText(Converter):
         if len(argument) > 1800:
             raise TranslatedBadArgument('reminder_too_long', ctx)
         return argument
+
+
+class InfSearchLocation(Converter):
+    async def convert(self, ctx, argument):
+        values = ["[mod]", "[reason]", "[user]"]
+        if argument.lower() in values:
+            return argument.lower()
+        raise BadArgument("Does this even show up?")
+
+
+MODIFIER_MATCHER = re.compile(r"^\[(.*):(.*)\]$")
+
+
+class CommandModifier(Converter):
+    def __init__(self, allowed_values, should_lower=True) -> None:
+        self.allowed_values = allowed_values
+        self.should_lower = should_lower
+        super().__init__()
+
+    async def convert(self, ctx, argument):
+        if self.should_lower:
+            argument = argument.lower()
+        match = MODIFIER_MATCHER.match(argument)
+        if match is None:
+            raise BadArgument("Not a modifier")
+        key = match.group(1)
+        value = match.group(2)
+        if key not in self.allowed_values:
+            raise BadArgument("Invalid key")
+        for v in self.allowed_values[key]:
+            if isinstance(v, Converter):
+                return key, v.convert(ctx, value)
+            elif v == value:
+                return key, value
+        raise BadArgument("Not an acceptable value")
+
+
+class InfSearchModifiers(CommandModifier):
+    def __init__(self) -> None:
+        super().__init__(allowed_values=dict(search=["mod", "reason", "user"]))

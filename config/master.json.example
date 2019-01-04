@@ -29,5 +29,6 @@
   ],
   "DOCS": true,
   "DOG_KEY": "",
-  "CAT_KEY": ""
+  "CAT_KEY": "",
+  "DISABLED_COMMANDS": []
 }

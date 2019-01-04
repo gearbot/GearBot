@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import time
 from datetime import datetime
 
@@ -7,8 +8,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
-from Util.Converters import Message
+from Bot.GearBot import GearBot
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging, \
+    MessageUtils
+from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedAttachment
 
@@ -23,7 +26,7 @@ class Basic:
     }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
@@ -59,7 +62,7 @@ class Basic:
                                           f"{Emoji.get_chat_emoji('STONE')} {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
                                           f"{Emoji.get_chat_emoji('WOOD')} Working in {len(self.bot.guilds)} guilds\n"
                                           f"{Emoji.get_chat_emoji('INNOCENT')} With a total of {total} users ({unique} unique)\n"
-                                          f":taco: Together they could have eaten {tacos} tacos in this time\n"
+                                          f"{Emoji.get_chat_emoji('TACO')} Together they could have eaten {tacos} tacos in this time\n"
                                           f"{Emoji.get_chat_emoji('TODO')} Add more stats")
 
         embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")
@@ -88,12 +91,12 @@ class Basic:
         await ctx.trigger_typing()
         member = message.guild.get_member(ctx.author.id)
         if member is None:
-            await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+            await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
         else:
             permissions = message.channel.permissions_for(member)
             if permissions.read_message_history and permissions.read_message_history:
                 if message.channel.is_nsfw() and not ctx.channel.is_nsfw():
-                    await GearbotLogging.send_to(ctx, 'NO', 'quote_nsfw_refused')
+                    await MessageUtils.send_to(ctx, 'NO', 'quote_nsfw_refused')
                 else:
                     attachment = None
                     attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
@@ -131,7 +134,7 @@ class Basic:
                         await ctx.message.delete()
 
             else:
-                await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+                await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
 
 
 
@@ -225,13 +228,15 @@ class Basic:
             return await clean_content().convert(ctx, Translator.translate(
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
                 query=query_clean)), None, False, []
-        return f"**{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}**```diff\n{pages[0]}```", None, len(
+        eyes = Emoji.get_chat_emoji('EYES')
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
             pages) > 1, []
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data["query"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**```diff\n{page}```", None, page_num
+        eyes = Emoji.get_chat_emoji('EYES')
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, page_num
 
     async def get_help_pages(self, ctx, query):
         if query is None:
@@ -289,6 +294,23 @@ class Basic:
             embed.set_image(url=cat_json[0]["url"])
         await ctx.send(embed=embed)
 
+
+    NUMBER_MATCHER = re.compile(r"\d+")
+
+    @commands.command()
+    async def uid(self, ctx, *, text:str):
+        """uid_help"""
+        parts = set()
+        for p in set(self.NUMBER_MATCHER.findall(text)):
+            try:
+                parts.add(str((await DiscordUser(id_only=True).convert(ctx, p)).id))
+            except BadArgument:
+                pass
+        if len(parts) > 0:
+            await ctx.send("\n".join(parts))
+        else:
+            await MessageUtils.send_to(ctx, "NO", "no_uids_found")
+
     async def get_json(self, link, headers=None, do_request=True):
         if do_request:
             async with self.bot.aiosession.get(link, headers=headers) as reply:
@@ -315,53 +337,55 @@ class Basic:
             return
         if guild.me.id == payload.user_id:
             return
+        if str(payload.message_id) not in Pages.known_messages:
+            return
+        info = Pages.known_messages[str(payload.message_id)]
+        if info["type"] != "role":
+            return
         try:
             message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
-        except discord.NotFound:
+        except (discord.NotFound, discord.Forbidden):
             pass
         else:
-            if str(payload.message_id) in Pages.known_messages:
-                info = Pages.known_messages[str(payload.message_id)]
-                if info["type"] == "role":
-                    for i in range(10):
-                        e = Emoji.get_emoji(str(i + 1))
-                        if payload.emoji.name == e:
-                            roles = Configuration.get_var(guild.id, "SELF_ROLES")
-                            channel = self.bot.get_channel(payload.channel_id)
-                            number = info['page'] * 10 + i
-                            if number >= len(roles):
-                                await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
-                                return
-                            role = guild.get_role(roles[number])
-                            if role is None:
-                                return
-                            member = guild.get_member(payload.user_id)
+            for i in range(10):
+                e = str(Emoji.get_emoji(str(i + 1)))
+                if str(payload.emoji) == e:
+                    roles = Configuration.get_var(guild.id, "SELF_ROLES")
+                    channel = self.bot.get_channel(payload.channel_id)
+                    number = info['page'] * 10 + i
+                    if number >= len(roles):
+                        await MessageUtils.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                        return
+                    role = guild.get_role(roles[number])
+                    if role is None:
+                        return
+                    member = guild.get_member(payload.user_id)
+                    try:
+                        if role in member.roles:
+                            await member.remove_roles(role)
+                            added = False
+                        else:
+                            await member.add_roles(role)
+                            added = True
+                    except discord.Forbidden:
+                        emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
+                        try:
+                            await channel.send(emessage)
+                        except discord.Forbidden:
                             try:
-                                if role in member.roles:
-                                    await member.remove_roles(role)
-                                    added = False
-                                else:
-                                    await member.add_roles(role)
-                                    added = True
+                                member.send(emessage)
                             except discord.Forbidden:
-                                emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
-                                try:
-                                    await channel.send(emessage)
-                                except discord.Forbidden:
-                                    try:
-                                        member.send(emessage)
-                                    except discord.Forbidden:
-                                        pass
-                            else:
-                                try:
-                                    action_type = 'role_joined' if added else 'role_left'
-                                    await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
-                                except discord.Forbidden:
-                                    pass
+                                pass
+                    else:
+                        try:
+                            action_type = 'role_joined' if added else 'role_left'
+                            await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
+                        except discord.Forbidden:
+                            pass
 
-                            if channel.permissions_for(guild.me).manage_messages:
-                                await message.remove_reaction(e, member)
-                            break
+                    if channel.permissions_for(guild.me).manage_messages:
+                        await message.remove_reaction(payload.emoji, member)
+                    break
 
 
 def setup(bot):

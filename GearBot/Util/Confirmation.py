@@ -29,7 +29,6 @@ async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=No
         await message.delete()
         await GearbotLogging.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
         return
-    GearbotLogging.info(f"CONFIRMATOR RESPONCE RECEIVED:\nreaction: {reaction}\nemoji: {reaction.emoji}\non_yes: {on_yes}\non_no: {on_no}")
     if reaction.emoji == yes and on_yes is not None:
         if delete:
             try:

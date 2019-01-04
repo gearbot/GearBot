@@ -1,17 +1,18 @@
-import asyncio
 import importlib
 import os
 
 from discord.ext import commands
 
-import Util
-from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils
+from Bot import TheRealGearBot, Reloader
+from Bot.GearBot import GearBot
+from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages, Configuration
 
 
 class Reload:
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
+        Pages.register("pull", self.init_pull, self.update_pull, sender_only=True)
 
     async def __local_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author)
@@ -52,23 +53,28 @@ class Reload:
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
-        self.bot.hot_reloading = True
-        GearbotLogging.SHOULD_TERMINATE = True
         message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
         ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
         GearbotLogging.info("Initiating hot reload")
-        await asyncio.sleep(2)
-        utils = importlib.reload(Util)
-        await utils.reload(self.bot)
+
+        GearbotLogging.LOG_PUMP.running = False
+        importlib.reload(Reloader)
+        for c in Reloader.components:
+            importlib.reload(c)
         GearbotLogging.info("Reloading all cogs...")
         temp = []
-        for cog in ctx.bot.cogs:
+        for cog in self.bot.cogs:
             temp.append(cog)
         for cog in temp:
             self.bot.unload_extension(f"Cogs.{cog}")
             GearbotLogging.info(f'{cog} has been unloaded.')
             self.bot.load_extension(f"Cogs.{cog}")
             GearbotLogging.info(f'{cog} has been loaded.')
+        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
+        for c in to_unload:
+            self.bot.remove_command(c)
+
+        await TheRealGearBot.initialize(self.bot)
         GearbotLogging.info("Hot reload complete.")
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
         await message.edit(content=m)
@@ -83,10 +89,20 @@ class Reload:
         async with ctx.typing():
             code, out, error = await Utils.execute(["git pull origin master"])
         if code is 0:
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}```")
+            await Pages.create_new("pull", ctx, title=f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}", pages=Pages.paginate(out.decode('utf-8')))
         else:
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}\n{error.decode('utf-8')}```")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}\n{error.decode('utf-8')}```")
+
+    async def init_pull(self, ctx, title, pages):
+        page = pages[0]
+        num = len(pages)
+        return f"**{title} (1/{num})**\n```yaml\n{page}```", None, num > 1, []
+
+    async def update_pull(self, ctx, message, page_num, action, data):
+        pages = data["pages"]
+        title = data["title"]
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        return f"**{title} ({page_num + 1}/{len(pages)})**\n```yaml\n{page}```", None, page_num
 
 def setup(bot):
     bot.add_cog(Reload(bot))

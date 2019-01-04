@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
-    Pages
+from Bot.GearBot import GearBot
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
+    MessageUtils
 from Util.Converters import LoggingChannel, ListMode
 
 
@@ -80,7 +81,7 @@ class Serveradmin:
 
     def __init__(self, bot):
         bot.to_cache = []
-        self.bot:commands.AutoShardedBot = bot
+        self.bot:GearBot = bot
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
@@ -91,7 +92,7 @@ class Serveradmin:
 
 
     @commands.guild_only()
-    @commands.group()
+    @commands.group(aliases = ["config", "cfg"])
     async def configure(self, ctx:commands.Context):
         """configure_help"""
         if ctx.subcommand_passed is None:
@@ -189,7 +190,7 @@ class Serveradmin:
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_setup_complete', ctx)}")
 
-    @configure.group(aliases=["selfrole"])
+    @configure.group(aliases=["selfrole", "self_role"])
     async def self_roles(self, ctx:commands.Context):
         """Allows adding/removing roles from the self assignable list"""
         if ctx.invoked_subcommand is self.self_roles:
@@ -316,7 +317,7 @@ class Serveradmin:
             if not hasattr(cog, "permissions"):
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
             elif perm_lvl in range(7):
-                perm_dict = Permissioncheckers.get_perm_dict(command.split(" "), cog.permissions)
+                perm_dict = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), cog.permissions)
                 if perm_lvl < perm_dict["min"]:
                     lvl = cog.permissions['min']
                     await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
@@ -332,7 +333,7 @@ class Serveradmin:
                             "people": []
                         }
                     override = overrides[cog_name]
-                    parts = command.split(" ")
+                    parts = command_object.qualified_name.split(" ")
                     while len(parts) > 0:
                         part = parts.pop(0)
                         if not part in override["commands"]:
@@ -361,7 +362,7 @@ class Serveradmin:
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             found = False
             if cog_name in overrides:
-                override = Permissioncheckers.get_perm_dict(command.split(" "), overrides[cog_name], True)
+                override = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), overrides[cog_name], True)
                 if override is not None:
                     found = True
                     override["required"] = -1
@@ -729,7 +730,7 @@ class Serveradmin:
 
     @configure.group()
     async def blacklist(self, ctx):
-        if ctx.command == self.blacklist and ctx.invoked_subcommand is None:
+        if ctx.invoked_subcommand is self.blacklist:
             await Pages.create_new("blacklist", ctx)
 
     @staticmethod
@@ -744,25 +745,25 @@ class Serveradmin:
         return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
     @blacklist.command("add")
-    async def blacklist_add(self, ctx, word: str):
+    async def blacklist_add(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", word=word)
+            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
-            await GearbotLogging.send_to(ctx, "NO", "entry_too_short")
+            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
         else:
             blacklist.append(word)
-            await GearbotLogging.send_to(ctx, "YES", "entry_added", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
 
     @blacklist.command("remove")
-    async def blacklist_remove(self, ctx, word: str):
+    async def blacklist_remove(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word not in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", word=word)
+            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
         else:
             blacklist.remove(word)
-            await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
 
@@ -787,13 +788,13 @@ class Serveradmin:
         roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
         mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
         if role == ctx.guild.default_role:
-            await GearbotLogging.send_to(ctx, "NO", "default_role_forbidden")
+            await MessageUtils.send_to(ctx, "NO", "default_role_forbidden")
         elif role.id in roles:
-            await GearbotLogging.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
         else:
             roles.append(role.id)
             Configuration.save(ctx.guild.id)
-            await GearbotLogging.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
 
 
     @role_list.command("remove", aliases=["rmv"])
@@ -802,18 +803,18 @@ class Serveradmin:
         roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
         mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
         if role.id not in roles:
-            await GearbotLogging.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
         else:
             roles.remove(role.id)
             Configuration.save(ctx.guild.id)
-            await GearbotLogging.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
 
     @role_list.command("mode")
     async def role_list_mode(self, ctx, mode:ListMode):
         """configure_role_list_mode"""
         Configuration.set_var(ctx.guild.id, "ROLE_WHITELIST", mode)
         mode = "whitelist" if mode else "blacklist"
-        await GearbotLogging.send_to(ctx, "YES", f"role_list_mode_{mode}")
+        await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
 
 
 

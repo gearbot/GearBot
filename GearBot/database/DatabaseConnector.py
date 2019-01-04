@@ -1,8 +1,7 @@
-from enum import Enum
-
 from peewee import *
 
 from Util import Configuration
+from Util.Enums import ReminderStatus
 
 connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
                            user=Configuration.get_master_var("DATABASE_USER"),
@@ -69,12 +68,6 @@ class Infraction(Model):
 
     class Meta:
         database = connection
-
-
-class ReminderStatus(Enum):
-    Pending = 1
-    Delivered = 2
-    Failed = 3
 
 
 class Reminder(Model):

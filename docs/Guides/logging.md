@@ -2,14 +2,19 @@
 So you want to do more then just log everything in a single channel? Then this guide is for you.
 
 GearBot can log the following things (these are also the keys you use in the configure commands):
- - EDIT_LOGS
- - NAME_CHANGES
- - ROLE_CHANGES
- - CENSORED_MESSAGES
- - JOIN_LOGS
- - MOD_ACTIONS
- - COMMAND_EXECUTED
- - FUTURE_LOGS
+
+- EDIT_LOGS
+- NAME_CHANGES
+- ROLE_CHANGES
+- CENSORED_MESSAGES
+- JOIN_LOGS
+- MOD_ACTIONS
+- COMMAND_EXECUTED
+- ROLE_CHANGES
+- CHANNEL_CHANGES
+- VOICE_CHANGES
+- VOICE_CHANGES_DETAILED
+- FUTURE_LOGS
 
 FUTURE_LOGS is a special one, this one doesnt log anything, it is merely a placeholder. When new logging types are added, having this one configured means they will automatically be added and enabled.
 Another special case is "EVERYONE", this isn't a key on it's own, but when running a command this will get replaced by the full list of available keys. So if you want all of them you do not have to type them one by one (also means that if you want all but one type, you can add everything, and then just remove the on you don't want).

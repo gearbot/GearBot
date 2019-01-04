@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, GearbotLogging
+from Bot.GearBot import GearBot
+from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, MessageUtils
 from database.DatabaseConnector import CustomCommand
 
 
@@ -23,7 +24,7 @@ class CustCommands:
     }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
@@ -74,7 +75,7 @@ class CustCommands:
         elif reply is None or reply == "":
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply', ctx.guild.id)}")
         elif len(trigger) > 20:
-            await GearbotLogging.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
+            await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         else:
             trigger = trigger.lower()
             command = CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
@@ -96,7 +97,7 @@ class CustCommands:
         """Removes a custom command"""
         trigger = trigger.lower()
         if len(trigger) > 20:
-            await GearbotLogging.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
+            await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         elif trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
