@@ -233,7 +233,7 @@ class Moderation:
         if allowed:
             await MessageUtils.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
             try :
-                message = await self.bot.wait_for("message", timeout=60*5, check=lambda m: m.author == user)
+                message = await self.bot.wait_for("message", timeout=60*5, check=lambda m: m.author == user and m.channel.guild == ctx.guild)
             except asyncio.TimeoutError:
                 pass
             else:
