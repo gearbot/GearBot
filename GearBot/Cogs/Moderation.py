@@ -226,6 +226,7 @@ class Moderation:
     @commands.guild_only()
     @commands.command()
     async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
+        """bean_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         allowed, message = self._can_act("bean", ctx, user)
