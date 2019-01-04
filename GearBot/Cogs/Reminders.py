@@ -40,7 +40,7 @@ class Reminders:
         """remind_me_help"""
         duration = Utils.convertToSeconds(duration_number, duration_identifier)
         if duration <= 0:
-            await GearbotLogging.send_to(ctx, "NO", "reminder_time_travel")
+            await MessageUtils.send_to(ctx, "NO", "reminder_time_travel")
             return
         if ctx.guild is not None:
             message = f'{Emoji.get_chat_emoji("QUESTION")} {Translator.translate("remind_question", ctx)}'
@@ -60,11 +60,11 @@ class Reminders:
                 reaction, user = await ctx.bot.wait_for('reaction_add', timeout=30, check=lambda reaction,
                                                                                                  user: user == ctx.message.author and reaction.emoji in [one, two, no])
             except asyncio.TimeoutError:
-                await GearbotLogging.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
+                await MessageUtils.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
                 return
             else:
                 if reaction.emoji == no:
-                    await GearbotLogging.send_to(ctx, "NO", "command_canceled")
+                    await MessageUtils.send_to(ctx, "NO", "command_canceled")
                     return
                 else:
                     dm = reaction.emoji == two
@@ -77,7 +77,7 @@ class Reminders:
                         to_remind=await Utils.clean(reminder, markdown=False),
                         time=time.time() + duration, status=ReminderStatus.Pending)
         mode = "dm" if dm else "here"
-        await GearbotLogging.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration_number,
+        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration_number,
                                      duration_identifier=duration_identifier)
 
     async def delivery_service(self):

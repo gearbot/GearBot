@@ -54,3 +54,8 @@ async def archive_purge(bot, id_list, guild_id):
     if len(message_list) > 0:
         await Archive.archive_purge(bot, guild_id,
                                     collections.OrderedDict(sorted(message_list.items())))
+
+
+async def send_to(destination, emoji, message, delete_after=None, translate=True, **kwargs):
+    translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
+    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after)

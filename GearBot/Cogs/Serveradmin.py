@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 
 from Bot.GearBot import GearBot
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, GearbotLogging, \
-    Pages
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
+    MessageUtils
 from Util.Converters import LoggingChannel, ListMode
 
 
@@ -748,22 +748,22 @@ class Serveradmin:
     async def blacklist_add(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "already_blacklisted", word=word)
+            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
-            await GearbotLogging.send_to(ctx, "NO", "entry_too_short")
+            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
         else:
             blacklist.append(word)
-            await GearbotLogging.send_to(ctx, "YES", "entry_added", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
 
     @blacklist.command("remove")
     async def blacklist_remove(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
         if word not in blacklist:
-            await GearbotLogging.send_to(ctx, "NO", "not_blacklisted", word=word)
+            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
         else:
             blacklist.remove(word)
-            await GearbotLogging.send_to(ctx, "YES", "entry_removed", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
 
@@ -788,13 +788,13 @@ class Serveradmin:
         roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
         mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
         if role == ctx.guild.default_role:
-            await GearbotLogging.send_to(ctx, "NO", "default_role_forbidden")
+            await MessageUtils.send_to(ctx, "NO", "default_role_forbidden")
         elif role.id in roles:
-            await GearbotLogging.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
         else:
             roles.append(role.id)
             Configuration.save(ctx.guild.id)
-            await GearbotLogging.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
 
 
     @role_list.command("remove", aliases=["rmv"])
@@ -803,18 +803,18 @@ class Serveradmin:
         roles = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
         mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
         if role.id not in roles:
-            await GearbotLogging.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
         else:
             roles.remove(role.id)
             Configuration.save(ctx.guild.id)
-            await GearbotLogging.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
 
     @role_list.command("mode")
     async def role_list_mode(self, ctx, mode:ListMode):
         """configure_role_list_mode"""
         Configuration.set_var(ctx.guild.id, "ROLE_WHITELIST", mode)
         mode = "whitelist" if mode else "blacklist"
-        await GearbotLogging.send_to(ctx, "YES", f"role_list_mode_{mode}")
+        await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
 
 
 

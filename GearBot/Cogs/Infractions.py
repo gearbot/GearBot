@@ -48,7 +48,7 @@ class Infractions:
                         channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
                         if channel is not None:
                             await channel.send(f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
-                            await GearbotLogging.send_to(ctx, 'YES', 'feedback_submitted')
+                            await MessageUtils.send_to(ctx, 'YES', 'feedback_submitted')
                     message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
                     await Confirmation.confirm(ctx, message, on_yes=yes)
                 else:
@@ -136,7 +136,7 @@ class Infractions:
             mod = await Utils.get_user(infraction.mod_id)
             async def yes():
                 infraction.delete_instance()
-                await GearbotLogging.send_to(ctx, "YES", "inf_delete_deleted", id=inf_id)
+                await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=inf_id)
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
                     f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), target_id=target.id, mod=str(mod), mod_id=mod.id, reason=reason, user=str(ctx.author), user_id=ctx.author.id)}")
                 await InfractionUtils.clear_cache(ctx.guild.id)

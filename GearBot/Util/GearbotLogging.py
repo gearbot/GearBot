@@ -12,7 +12,7 @@ import sentry_sdk
 from discord.ext import commands
 
 from Bot import TheRealGearBot
-from Util import Configuration, Utils, Translator, Emoji
+from Util import Configuration, Utils
 
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
@@ -26,15 +26,15 @@ LOG_ERRORS = 0
 
 def before_send(event, hint):
     if event['level'] == "error" and 'logger' in event.keys() and event['logger'] == 'gearbot':
-        return None # we send errors manually, in a much cleaner way
+        return None  # we send errors manually, in a much cleaner way
     return event
 
+
 def init_logger():
-    #track commits to make sentry versions
+    # track commits to make sentry versions
     dsn = Configuration.get_master_var('SENTRY_DSN', '')
     if dsn != '':
         sentry_sdk.init(dsn, before_send=before_send)
-
 
     LOGGER.setLevel(logging.DEBUG)
 
@@ -148,11 +148,6 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
             pushed_cleaner = True
 
 
-async def send_to(destination, emoji, message, delete_after=None, translate=True, **kwargs):
-    translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
-    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after)
-
-
 async def message_owner(bot, message):
     if bot.owner_id is None:
         app = await bot.application_info()
@@ -230,8 +225,8 @@ class LogPump:
                 for c in cleaners:
                     c()
                 await asyncio.sleep(0.1)
-            except CancelledError :
-                pass # we're shutting down
+            except CancelledError:
+                pass  # we're shutting down
             except Exception as e:
                 await log_error()
                 await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,

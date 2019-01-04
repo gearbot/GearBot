@@ -9,7 +9,8 @@ from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
 from Bot.GearBot import GearBot
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging
+from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging, \
+    MessageUtils
 from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
 from database.DatabaseConnector import LoggedAttachment
@@ -90,12 +91,12 @@ class Basic:
         await ctx.trigger_typing()
         member = message.guild.get_member(ctx.author.id)
         if member is None:
-            await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+            await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
         else:
             permissions = message.channel.permissions_for(member)
             if permissions.read_message_history and permissions.read_message_history:
                 if message.channel.is_nsfw() and not ctx.channel.is_nsfw():
-                    await GearbotLogging.send_to(ctx, 'NO', 'quote_nsfw_refused')
+                    await MessageUtils.send_to(ctx, 'NO', 'quote_nsfw_refused')
                 else:
                     attachment = None
                     attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
@@ -133,7 +134,7 @@ class Basic:
                         await ctx.message.delete()
 
             else:
-                await GearbotLogging.send_to(ctx, 'NO', 'quote_not_visible_to_user')
+                await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
 
 
 
@@ -308,7 +309,7 @@ class Basic:
         if len(parts) > 0:
             await ctx.send("\n".join(parts))
         else:
-            await GearbotLogging.send_to(ctx, "NO", "no_uids_found")
+            await MessageUtils.send_to(ctx, "NO", "no_uids_found")
 
     async def get_json(self, link, headers=None, do_request=True):
         if do_request:
@@ -353,7 +354,7 @@ class Basic:
                     channel = self.bot.get_channel(payload.channel_id)
                     number = info['page'] * 10 + i
                     if number >= len(roles):
-                        await GearbotLogging.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
+                        await MessageUtils.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
                         return
                     role = guild.get_role(roles[number])
                     if role is None:
