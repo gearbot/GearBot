@@ -6,8 +6,7 @@ from discord.ext import commands
 from Bot.GearBot import GearBot
 from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils
-from Util.Converters import UserID, Reason, InfSearchLocation
-from database.DatabaseConnector import Infraction
+from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
 
 
 class Infractions:
@@ -112,35 +111,34 @@ class Infractions:
 
 
     @inf.command()
-    async def update(self, ctx:commands.Context, inf_id:int, *, reason:str):
+    async def update(self, ctx:commands.Context, infraction:ServerInfraction, *, reason:str):
         """inf_update_help"""
-        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
-        if infraction is None:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('inf_not_found', ctx.guild.id, id=inf_id)}")
-        else:
-            infraction.mod_id = ctx.author.id
-            infraction.reason = reason
-            infraction.save()
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
-            await InfractionUtils.clear_cache(ctx.guild.id)
+        infraction.mod_id = ctx.author.id
+        infraction.reason = reason
+        infraction.save()
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
+        await InfractionUtils.clear_cache(ctx.guild.id)
 
     @inf.command(aliases=["del", "remove"])
-    async def delete(self, ctx:commands.Context, inf_id:int):
+    async def delete(self, ctx:commands.Context, infraction:ServerInfraction):
         """inf_delete_help"""
-        infraction = Infraction.get_or_none(id=inf_id, guild_id=ctx.guild.id)
-        if infraction is None:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('inf_not_found', ctx.guild.id, id=inf_id)}")
-        else:
-            reason = infraction.reason
-            target = await Utils.get_user(infraction.user_id)
-            mod = await Utils.get_user(infraction.mod_id)
-            async def yes():
-                infraction.delete_instance()
-                await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=inf_id)
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                    f":wastebasket: {Translator.translate('inf_delete_log', ctx.guild.id, id=inf_id, target=str(target), target_id=target.id, mod=str(mod), mod_id=mod.id, reason=reason, user=str(ctx.author), user_id=ctx.author.id)}")
-                await InfractionUtils.clear_cache(ctx.guild.id)
-            await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=inf_id, user=str(target), user_id=target.id, reason=reason)}", on_yes=yes)
+        reason = infraction.reason
+        target = await Utils.get_user(infraction.user_id)
+        mod = await Utils.get_user(infraction.mod_id)
+        async def yes():
+            infraction.delete_instance()
+            await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
+            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx, 'DELETE', 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target), target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason, user=Utils.clean_user(ctx.author), user_id=ctx.author.id))
+            await InfractionUtils.clear_cache(ctx.guild.id)
+        await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id, reason=reason)}", on_yes=yes)
+
+    @commands.command('claim')
+    async def claim(self, ctx, infraction:ServerInfraction):
+        """inf_claim_help"""
+        infraction.mod_id = ctx.author.id
+        infraction.save()
+
+
 
 def setup(bot):
     bot.add_cog(Infractions(bot))

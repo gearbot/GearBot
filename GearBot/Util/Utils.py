@@ -209,6 +209,8 @@ async def get_user(uid, fetch=True):
 
 
 def clean_user(user):
+    if user is None:
+        return "UNKNOWN USER"
     return f"{escape_markdown(user.name)}#{user.discriminator}"
 
 def pad(text, length, char=' '):

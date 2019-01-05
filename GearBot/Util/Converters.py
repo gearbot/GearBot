@@ -5,7 +5,7 @@ from discord.ext.commands import UserConverter, BadArgument, Converter
 
 from Util import Utils, Configuration, Translator
 from database import DBUtils
-from database.DatabaseConnector import LoggedMessage
+from database.DatabaseConnector import LoggedMessage, Infraction
 
 
 class TranslatedBadArgument(BadArgument):
@@ -301,3 +301,13 @@ class CommandModifier(Converter):
 class InfSearchModifiers(CommandModifier):
     def __init__(self) -> None:
         super().__init__(allowed_values=dict(search=["mod", "reason", "user"]))
+
+
+class ServerInfraction(Converter):
+
+    async def convert(self, ctx, argument):
+        infraction = Infraction.get_or_none(id=argument, guild_id=ctx.guild.id)
+        if infraction is None:
+            raise TranslatedBadArgument('inf_not_found', ctx, id=argument)
+        else:
+            return infraction

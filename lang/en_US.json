@@ -465,5 +465,6 @@
   "bean_help": "Beans a user on the server.",
   "bean_unable": "Unable to bean {user} as I do not have a higher role than them.",
   "bean_confirmation": "{user} (``{user_id}``) was beaned. Reason: `{reason}`",
-  "bean_not_allowed": "You are not allowed to bean {user}."
+  "bean_not_allowed": "You are not allowed to bean {user}.",
+  "inf_claim_help": "Claim responsibility for an infraction as moderator"
 }
