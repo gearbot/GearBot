@@ -91,7 +91,7 @@ async def on_ready(bot):
             try:
                 bot.load_extension("Cogs." + extension)
             except Exception as e:
-                GearbotLogging.exception(f"Failed to load extention {extension}", e)
+                await handle_exception(f"Failed to load cog {extension}", bot, e)
         GearbotLogging.info("Cogs loaded")
 
         to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
