@@ -39,30 +39,27 @@ class Infractions:
     async def warn(self, ctx:commands.Context, member:discord.Member, *, reason:Reason):
         """warn_help"""
         if (ctx.author != member  and ctx.author.top_role > member.top_role) or ctx.guild.owner == ctx.author:
-            if len(reason) > 1800:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_to_long', ctx.guild.id)}")
+            if member.id == self.bot.user.id:
+                async def yes():
+                    channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
+                    if channel is not None:
+                        await channel.send(f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
+                        await MessageUtils.send_to(ctx, 'YES', 'feedback_submitted')
+                message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
+                await Confirmation.confirm(ctx, message, on_yes=yes)
             else:
-                if member.id == self.bot.user.id:
-                    async def yes():
-                        channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
-                        if channel is not None:
-                            await channel.send(f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
-                            await MessageUtils.send_to(ctx, 'YES', 'feedback_submitted')
-                    message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
-                    await Confirmation.confirm(ctx, message, on_yes=yes)
-                else:
-                    InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
-                    name = Utils.clean_user(member)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
-                    aname = Utils.clean_user(ctx.author)
-                    GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
-                    if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
-                        try:
-                            dm_channel = await member.create_dm()
-                            await dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-                        except discord.Forbidden:
-                            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                                  f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)}")
+                InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
+                name = Utils.clean_user(member)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
+                aname = Utils.clean_user(ctx.author)
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
+                    try:
+                        dm_channel = await member.create_dm()
+                        await dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+                    except discord.Forbidden:
+                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                                              f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)}")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
 

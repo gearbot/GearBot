@@ -62,6 +62,8 @@ class Reason(Converter):
     async def convert(self, ctx, argument):
         for match in EMOJI_MATCHER.finditer(argument):
             argument = argument.replace(match.group(0), f":{match.group(1)}:")
+        if len(argument) > 1800:
+            raise TranslatedBadArgument('reason_too_long', ctx)
         return argument
 
 

@@ -36,7 +36,6 @@
   "help_title": "Gearbot help {page_num}/{pages}",
   "help_help": "Lists all commands, the commands from a cog or info about a command.",
   "warn_help": "Adds a new warning, the user is not informed of this.",
-  "warning_too_long": "Warning is too long, I can only store warnings up to 1800 characters.",
   "warning_added": "Warning for {user} added.",
   "warning_added_modlog": "{user} has been warned by {moderator}: ``{reason}``",
   "warning_not_allowed": "You are not allowed to warn {user}.",
@@ -466,5 +465,6 @@
   "bean_unable": "Unable to bean {user} as I do not have a higher role than them.",
   "bean_confirmation": "{user} (``{user_id}``) was beaned. Reason: `{reason}`",
   "bean_not_allowed": "You are not allowed to bean {user}.",
-  "inf_claim_help": "Claim responsibility for an infraction as moderator"
+  "inf_claim_help": "Claim responsibility for an infraction as moderator",
+  "reason_too_long": "Too long, I can only store reasons up to 1800 characters."
 }
