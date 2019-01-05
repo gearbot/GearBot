@@ -485,5 +485,6 @@
   "user_id": "User ID",
   "inf_added": "Infraction added at",
   "inf_end": "Infraction end",
-  "inf_active": "Infraction active"
+  "inf_active": "Infraction active",
+  "inf_claimed": "You have claimed infraction #{inf_id} and are now listed responsible moderator for this infraction"
 }
