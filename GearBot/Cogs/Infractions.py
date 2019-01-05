@@ -1,3 +1,4 @@
+import re
 import typing
 
 import discord
@@ -113,7 +114,7 @@ class Infractions:
         infraction.mod_id = ctx.author.id
         infraction.reason = reason
         infraction.save()
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('inf_updated', ctx.guild.id, id=inf_id)}")
+        await MessageUtils.send_to(ctx, 'YES', 'inf_updated', id=infraction.id)
         await InfractionUtils.clear_cache(ctx.guild.id)
 
     @inf.command(aliases=["del", "remove"])
@@ -129,11 +130,51 @@ class Infractions:
             await InfractionUtils.clear_cache(ctx.guild.id)
         await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id, reason=reason)}", on_yes=yes)
 
-    @commands.command('claim')
+    @inf.command('claim')
     async def claim(self, ctx, infraction:ServerInfraction):
         """inf_claim_help"""
         infraction.mod_id = ctx.author.id
         infraction.save()
+        await InfractionUtils.clear_cache(ctx.guild.id)
+
+    IMAGE_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',re.IGNORECASE)
+
+    @inf.command("info", aliases=["details"])
+    async def info(self, ctx, infraction:ServerInfraction):
+        """inf_info_help"""
+        embed = discord.Embed(color=0x00cea2, description=f"**{Translator.translate('reason', ctx)}**\n{infraction.reason}", timestamp=infraction.start)
+        user = await Utils.get_user(infraction.user_id)
+        mod = await Utils.get_user(infraction.mod_id)
+        key = f"inf_{infraction.type.lower().replace(' ', '_')}"
+        if infraction.end is None:
+            duration = Translator.translate("unknown_duration", ctx)
+        else:
+            time = (infraction.end - infraction.start).total_seconds()
+            if time % (60 * 60 * 24 * 7) == 0:
+                duration = Translator.translate('weeks', ctx, weeks=int(time / (60 * 60 * 24 * 7)))
+            elif time % (60 * 60 * 24) == 0:
+                duration = Translator.translate('days', ctx, days=int(time / (60 * 60 * 24)))
+            elif time % (60 * 60) == 0:
+                duration = Translator.translate('hours_solo', ctx, hours=int(time / (60 * 60)))
+            elif time % 60 == 0:
+                duration = Translator.translate('minutes', ctx, minutes=int(time / 60))
+            else:  # if you wana mute for someone for an arbitrary amount of seconds that isn't round minute, hour, day or week then it's not my problem it shows arbitrary amount of seconds
+                duration = Translator.translate('seconds', ctx, seconds=int(time))
+        embed.set_author(name=Translator.translate(key, ctx, mod=Utils.username_from_user(mod), user=Utils.username_from_user(user), duration=duration),
+                         icon_url=mod.avatar_url)
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.add_field(name=Translator.translate('moderator', ctx), value=Utils.clean_user(mod))
+        embed.add_field(name=Translator.translate('user', ctx), value=Utils.clean_user(user))
+        embed.add_field(name=Translator.translate('mod_id', ctx), value=infraction.mod_id)
+        embed.add_field(name=Translator.translate('user_id', ctx), value=infraction.user_id)
+        embed.add_field(name=Translator.translate('inf_added', ctx), value=infraction.start)
+        if infraction.end is not None:
+            embed.add_field(name=Translator.translate('inf_end', ctx), value=infraction.end)
+        embed.add_field(name=Translator.translate('inf_active', ctx), value=Emoji.get_chat_emoji('YES' if infraction.active else 'NO'))
+        images = self.IMAGE_MATCHER.findall(infraction.reason)
+        if len(images) > 0:
+            embed.set_image(url=images[0])
+        await ctx.send(embed=embed)
 
 
 

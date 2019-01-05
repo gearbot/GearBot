@@ -278,11 +278,12 @@ class Moderation:
         if allowed:
             duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
             if duration > 0:
-                until = time.time() + duration
+
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
+                until = time.time() + duration
                 InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
                 translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user),
                                                   user_id=user.id,
@@ -476,10 +477,10 @@ class Moderation:
                         ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
                     duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
                     if duration > 0:
-                        until = time.time() + duration
                         await target.add_roles(role, reason=Utils.trim_message(
                             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
                             500))
+                        until = time.time() + duration
                         InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
                                                        end=until)
                         await ctx.send(
@@ -524,7 +525,7 @@ class Moderation:
             user = member = ctx.author
         else:
             member = None if ctx.guild is None else ctx.guild.get_member(user.id)
-        embed = discord.Embed(color=0x7289DA, timestamp=ctx.message.created_at)
+        embed = discord.Embed(color=user.top_role.color, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
                          icon_url=ctx.author.avatar_url)

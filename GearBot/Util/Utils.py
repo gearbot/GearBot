@@ -71,7 +71,7 @@ def trim_message(message, limit):
 ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
-URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n]*)?)', re.IGNORECASE)
+URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)?)', re.IGNORECASE)
 EMOJI_MATCHER = re.compile('<(a?):([^:]+):([0-9]+)>')
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
@@ -114,7 +114,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
     if links:
         #find urls last so the < escaping doesn't break it
-        for url in URL_MATCHER.findall(text):
+        for url in set(URL_MATCHER.findall(text)):
             text = text.replace(url, f"<{url}>")
 
 
@@ -212,6 +212,11 @@ def clean_user(user):
     if user is None:
         return "UNKNOWN USER"
     return f"{escape_markdown(user.name)}#{user.discriminator}"
+
+def username_from_user(user):
+    if user is None:
+        return "UNKNOWN USER"
+    return user.name
 
 def pad(text, length, char=' '):
     return f"{text}{char * (length-len(text))}"
