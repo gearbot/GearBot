@@ -525,7 +525,7 @@ class Moderation:
             user = member = ctx.author
         else:
             member = None if ctx.guild is None else ctx.guild.get_member(user.id)
-        embed = discord.Embed(color=user.top_role.color, timestamp=ctx.message.created_at)
+        embed = discord.Embed(color=member.top_role.color if member is not None else 0x00cea2, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
                          icon_url=ctx.author.avatar_url)
