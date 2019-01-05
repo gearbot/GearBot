@@ -101,7 +101,7 @@ class ModLog:
                 self.bot.being_cleaned[message.channel].add(data.message_id)
                 return
             guild = self.bot.get_guild(message.server)
-            user: discord.User = self.bot.get_user(message.author)
+            user: discord.User = Utils.get_user(message.author)
             hasUser = user is not None
             if not hasUser or user.id in Configuration.get_var(guild.id, "IGNORED_USERS") or user.id == guild.me.id:
                 return
