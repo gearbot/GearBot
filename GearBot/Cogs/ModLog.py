@@ -231,9 +231,11 @@ class ModLog:
         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                               (Infraction.type == "Unban") &
                                               (Infraction.guild_id == guild.id)).execute()
+        await asyncio.sleep(1) # sometimes we get the event before things are in the log for some reason
         limit = datetime.datetime.utcfromtimestamp(time.time() - 60)
         log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
         if log is None:
+            await asyncio.sleep(1) #is the api having a fit or so?
             #this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
             log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
         if log is not None:
