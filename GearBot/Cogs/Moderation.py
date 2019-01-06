@@ -769,7 +769,7 @@ class Moderation:
                         await member.add_roles(role,
                                                reason=Translator.translate('mute_reapply_reason', member.guild.id))
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
-                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_reapply_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
+                                              f"{Emoji.get_chat_emoji('MUTE_RESTORE')} {Translator.translate('mute_reapply_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
                     else:
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                               Translator.translate('mute_reapply_failed_log', member.build.id))
