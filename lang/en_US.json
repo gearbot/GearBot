@@ -338,7 +338,7 @@
   "number_too_big": "Number too big, must be at most {max}",
   "clean_help": "Gets out the broom to clean whatever mess needs cleaning",
   "clean_user_help": "Removes messages by one or more users",
-  "clean_bots_help": "Removes messages send by any bot",
+  "clean_bots_help": "Removes messages sent by any bot",
   "clean_all_help": "Just clean everything",
   "channel_created": "A new channel was created: {channel} (``{channel.id}``)",
   "channel_created_by": "A new channel was created: {channel} (``{channel.id}``) by {person} (``{person.id}``)",
