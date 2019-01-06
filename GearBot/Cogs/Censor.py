@@ -58,10 +58,10 @@ class Censor:
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
         max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
-        content = message.content.lower().replace('\\', '')
+        content = message.content.replace('\\', '')
         censored = False
         if len(guilds) is not 0:
-            codes = INVITE_MATCHER.findall(message.content)
+            codes = INVITE_MATCHER.findall(content)
             for code in codes:
                 try:
                     invite: discord.Invite = await self.bot.get_invite(code)
@@ -76,6 +76,7 @@ class Censor:
                         censored = True
 
         if not censored:
+            content = content.lower()
             for bad in (w.lower() for w in blacklist):
                 if bad in content:
                     if message.channel.permissions_for(message.guild.me).manage_messages:
