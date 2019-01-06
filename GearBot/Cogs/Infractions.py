@@ -90,7 +90,10 @@ class Infractions:
                 amount = 25
             else:
                 if 1 < amount > 50:
-                    query += amount
+                    if query == "":
+                        query = amount
+                    else:
+                        query += f" {amount}"
                     amount = 25
         else:
             amount = 25
