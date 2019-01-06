@@ -1,6 +1,6 @@
 {
   "seen_fail": "I've never seen {user} (``{user_id}``) before.",
-  "seen_success": " I've last seen {user} (``{user_id}``) at {date}.",
+  "seen_success": "I've last seen {user} (``{user_id}``) at {date}.",
   "ping_help": "See if the bot is still online.",
   "quote_help": "Quotes the requested message.",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
@@ -486,5 +486,6 @@
   "inf_added": "Infraction added at",
   "inf_end": "Infraction end",
   "inf_active": "Infraction active",
-  "inf_claimed": "You have claimed infraction #{inf_id} and are now listed responsible moderator for this infraction"
+  "inf_claimed": "You have claimed infraction #{inf_id} and are now listed responsible moderator for this infraction",
+  "ban_user_not_here": "{user} is not on this server (if they where here before they probably left to try and dodge the hammer). Do you want me to ban them anyways?"
 }

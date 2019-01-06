@@ -247,9 +247,15 @@ class Moderation:
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
+    async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
-        await self._ban_command(ctx, user, reason, 0)
+        if ctx.guild.get_member(user.id) is not None:
+            await self._ban_command(ctx, user, reason, 0)
+        else:
+            async def yes():
+                await ctx.invoke(self.forceban, user=user, reason=reason)
+
+            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx, "SINISTER", 'ban_user_not_here', user=Utils.clean_user(user)), on_yes=yes)
 
     @commands.command(aliases=["clean_ban"])
     @commands.guild_only()
@@ -391,22 +397,21 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def forceban(self, ctx: commands.Context, user_id: UserID, *, reason: Reason = ""):
+    async def forceban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         try:
-            member = await commands.MemberConverter().convert(ctx, str(user_id))
+            member = await commands.MemberConverter().convert(ctx, str(user.id))
         except BadArgument:
-            user = await ctx.bot.get_user_info(user_id)
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             await ctx.guild.ban(user, reason=Utils.trim_message(
                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                 delete_message_days=0)
             await ctx.send(
-                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, reason=reason)}")
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason)}")
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user_id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
 
 
             tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
