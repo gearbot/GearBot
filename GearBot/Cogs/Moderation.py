@@ -250,7 +250,8 @@ class Moderation:
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
         if ctx.guild.get_member(user.id) is not None:
-            await self._ban_command(ctx, user, reason, 0)
+            member = ctx.guild.get_member(user.id)
+            await self._ban_command(ctx, member, reason, 0)
         else:
             async def yes():
                 await ctx.invoke(self.forceban, user=user, reason=reason)
