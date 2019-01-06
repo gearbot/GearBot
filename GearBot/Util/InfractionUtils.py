@@ -3,7 +3,7 @@ from datetime import datetime
 from peewee import fn
 
 from Bot import GearBot
-from Util import Pages, Utils, Translator
+from Util import Pages, Utils, Translator, GearbotLogging
 from database.DatabaseConnector import Infraction
 
 bot:GearBot = None
@@ -23,9 +23,11 @@ async def clear_cache(guild_id):
     keys = set()
     async for key in bot.redis_pool.iscan(match=f"{guild_id}*"):
         keys.add(key)
+    if None in keys:
+        keys.remove(None)
     if len(keys) > 0:
-        if None in keys:
-            keys.remove(None)
+        text = '\n'.join(keys)
+        GearbotLogging.info(f"unlinking keys: {text}")
         await bot.redis_pool.unlink(*keys)
 
 
