@@ -224,6 +224,7 @@ class Moderation:
         return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, page_num
 
     @commands.guild_only()
+    @commands.bot_has_permissions(add_reactions=True)
     @commands.command()
     async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
         """bean_help"""
@@ -233,7 +234,7 @@ class Moderation:
         if allowed:
             await MessageUtils.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
             try :
-                message = await self.bot.wait_for("message", timeout=60*5, check=lambda m: m.author == user and m.channel.guild == ctx.guild)
+                message = await self.bot.wait_for("message", timeout=60*5, check=lambda m: m.author == user and m.channel.guild == ctx.guild and m.channel.permissions_for(m.guild.me).add_reactions)
             except asyncio.TimeoutError:
                 pass
             else:
