@@ -117,7 +117,7 @@ async def bot_log(message=None, embed=None):
         STARTUP_ERRORS.append(bot_log(message, embed))
 
 
-def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, cleaner=None, tag_on=None):
+def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, tag_on=None):
     remaining = None
     if message is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
@@ -137,15 +137,13 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
         message = Utils.trim_message(message, 1999)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
 
-    pushed_cleaner = False
     for cid, info in channels.items():
         if type in info:
             if remaining is None:
-                LOG_PUMP.receive(cid, (message, embed, file, cleaner if not pushed_cleaner else None))
+                LOG_PUMP.receive(cid, (message, embed, file))
             else:
                 LOG_PUMP.receive(cid, (message, None, None, None))
-                LOG_PUMP.receive(cid, (tag_on, embed, file, cleaner if not pushed_cleaner else None))
-            pushed_cleaner = True
+                LOG_PUMP.receive(cid, (tag_on, embed, file))
 
 
 async def message_owner(bot, message):
@@ -171,7 +169,6 @@ class LogPump:
         embed = file = cid = todo = to_send = None
         while (self.running or len(self.todo) > 0) and not self.NUKED:
             try:
-                cleaners = []
                 empty = []
                 senders = []
                 embed = file = None
@@ -181,21 +178,17 @@ class LogPump:
                         permissions = channel.permissions_for(channel.guild.me)
                         to_send = ""
                         while len(todo) > 0:
-                            message, embed, file, cleaner = todo[0]
+                            message, embed, file = todo[0]
                             if message is None or message.strip() == "":
                                 message = ""
                             if (not permissions.send_messages) or (
                                     embed is not None and not permissions.embed_links) or (
                                     file is not None and not permissions.attach_files):
                                 todo.pop(0)
-                                if cleaner is not None:
-                                    cleaners.append(cleaner)
                                 continue
                             elif len(to_send) + len(message) <= 1999:
                                 to_send += f"{message}\n"
                                 todo.pop(0)
-                                if cleaner is not None:
-                                    cleaners.append(cleaner)
                             else:
                                 break
                             if embed is not None or file is not None:
@@ -222,8 +215,6 @@ class LogPump:
                                                               cid=cid, todo=todo, to_send=to_send,
                                                               LOG_CACHE=self.todo, embed=embed, file=file,
                                                               empty=empty)
-                for c in cleaners:
-                    c()
                 await asyncio.sleep(0.1)
             except CancelledError:
                 pass  # we're shutting down
