@@ -138,11 +138,13 @@ class Moderation:
                 await MessageUtils.send_to(ctx, "NO", f"role_denied_{mode_name}", role=Utils.escape_markdown(drole.name))
 
     @role.command()
+    @commands.bot_has_permissions(manage_roles=True)
     async def add(self, ctx, user: discord.Member, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
 
     @role.command(aliases=["rmv"])
+    @commands.bot_has_permissions(manage_roles=True)
     async def remove(self, ctx, user: discord.Member, *, role: str):
         """role_remove_help"""
         await self.role_handler(ctx, user, role, "remove")
