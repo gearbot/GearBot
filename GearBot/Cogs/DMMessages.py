@@ -16,6 +16,8 @@ class DMMessages:
             channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
             if channel is not None:
                 await channel.send(f"[`{message.created_at.strftime('%c')}`] {message.author} (`{message.author.id}`) said: {message.clean_content}")
+            for attachement in message.attachments:
+                await channel.send(attachement.url)
 
 
 def setup(bot):
