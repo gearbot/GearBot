@@ -135,7 +135,7 @@ class Admin:
         if output is not None:
             await Pages.create_new("eval", ctx, pages=Pages.paginate(output))
         else:
-            await ctx.message.add_reaction(Emoji.emojis["YES"])
+            await ctx.message.add_reaction(Emoji.get_emoji("YES"))
 
     async def init_eval(self, ctx, pages):
         page = pages[0]
