@@ -278,22 +278,25 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def tempban(self, ctx: commands.Context, user: discord.Member, durationNumber: int,
-                      durationIdentifier: Duration, *, reason: Reason = ""):
+    async def tempban(self, ctx: commands.Context, user: discord.Member, duration: Duration, *, reason: Reason = ""):
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
+        if duration.unit is None:
+            parts = reason.split(" ")
+            duration.unit = parts[0]
+            reason = " ".join(parts[1:])
 
         allowed, message = self._can_act("ban", ctx, user)
         if allowed:
-            duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
-            if duration > 0:
+            duration_seconds = duration.to_seconds(ctx)
+            if duration_seconds > 0:
 
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
-                until = time.time() + duration
+                until = time.time() + duration_seconds
                 InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
                 translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user),
                                                   user_id=user.id,
@@ -466,12 +469,14 @@ class Moderation:
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, durationNumber: int,
-                   durationIdentifier: Duration, *,
-                   reason: Reason = ""):
+    async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
+        if duration.unit is None:
+            parts = reason.split(" ")
+            duration.unit = parts[0]
+            reason = " ".join(parts[1:])
         roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
@@ -484,21 +489,21 @@ class Moderation:
             else:
                 if (
                         ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
-                    duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
-                    if duration > 0:
+                    duration_seconds = duration.to_seconds(ctx)
+                    if duration_seconds > 0:
                         await target.add_roles(role, reason=Utils.trim_message(
                             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
                             500))
-                        until = time.time() + duration
+                        until = time.time() + duration_seconds
                         InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
                                                        end=until)
                         await ctx.send(
-                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{durationNumber} {durationIdentifier}')}")
+                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{duration.length} {duration.unit}')}")
                         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{durationNumber} {durationIdentifier}', reason=reason)}")
+                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{duration.length} {duration.unit}', reason=reason)}")
                     else:
                         await ctx.send(
-                            f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{durationNumber} {durationIdentifier}')} {Emoji.get_chat_emoji('WHAT')}")
+                            f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{duration.length} {duration.unit}')} {Emoji.get_chat_emoji('WHAT')}")
                 else:
                     await ctx.send(
                         f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_not_allowed', ctx.guild.id, user=target)}")
@@ -658,10 +663,11 @@ class Moderation:
         await self._clean(ctx, amount, lambda m: True, check_amount=amount)
 
     @clean.command("last")
-    async def clean_last(self, ctx, durationNumber: int, durationIdentifier: Duration):
+    async def clean_last(self, ctx, duration: Duration, excess=""):
         """clean_last_help"""
-        duration = Utils.convertToSeconds(durationNumber, durationIdentifier)
-        until = datetime.datetime.utcfromtimestamp(time.time() - duration)
+        if duration.unit is None:
+            duration.unit = excess
+        until = datetime.datetime.utcfromtimestamp(time.time() - duration.to_seconds(ctx))
         await self._clean(ctx, 5000, lambda m: True, after=until)
 
     @clean.command("until")

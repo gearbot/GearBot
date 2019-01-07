@@ -1,15 +1,10 @@
-import re
-
 import discord
 from discord.ext.commands import clean_content
 
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, InfractionUtils, Emoji
+from Util.Matchers import INVITE_MATCHER
 from database.DatabaseConnector import Infraction
-
-INVITE_MATCHER = re.compile(
-    r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[dot\])(?:gg|io|me|li)|discordapp\.com/invite)/+((?:(?!https?)[\w\d-])+)",
-    flags=re.IGNORECASE)
 
 
 async def censor_invite(ctx, code, server_name):

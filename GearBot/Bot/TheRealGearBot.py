@@ -175,6 +175,14 @@ async def on_guild_remove(guild):
     GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
     await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
 
+class PostParseError(commands.BadArgument):
+
+    def __init__(self, type, error):
+        super().__init__(None)
+        self.type = type
+        self.error=error
+
+
 async def on_command_error(bot, ctx: commands.Context, error):
     if isinstance(error, commands.NoPrivateMessage):
         await ctx.send("This command cannot be used in private messages.")
@@ -192,6 +200,8 @@ async def on_command_error(bot, ctx: commands.Context, error):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
         await ctx.send(
             f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+    elif isinstance(error, PostParseError):
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=error.error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
     elif isinstance(error, commands.BadArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
         await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")

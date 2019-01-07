@@ -1,9 +1,9 @@
-import re
-
 from discord import NotFound, Forbidden, HTTPException
 from discord.ext.commands import UserConverter, BadArgument, Converter
 
+from Bot.TheRealGearBot import PostParseError
 from Util import Utils, Configuration, Translator
+from Util.Matchers import *
 from database import DBUtils
 from database.DatabaseConnector import LoggedMessage, Infraction
 
@@ -22,11 +22,7 @@ class BannedMember(Converter):
         return entity
 
 
-ID_MATCHER = re.compile("<@!?([0-9]+)>")
-
-
 class DiscordUser(Converter):
-
 
     def __init__(self, id_only=False) -> None:
         super().__init__()
@@ -41,7 +37,8 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument))
+                user = await Utils.get_user(
+                    await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument))
             except (ValueError, HTTPException):
                 pass
 
@@ -55,9 +52,6 @@ class UserID(Converter):
         return (await DiscordUser().convert(ctx, argument)).id
 
 
-EMOJI_MATCHER = re.compile('<a*:([^:]+):(?:[0-9]+)>')
-
-
 class Reason(Converter):
     async def convert(self, ctx, argument):
         for match in EMOJI_MATCHER.finditer(argument):
@@ -66,13 +60,6 @@ class Reason(Converter):
             raise TranslatedBadArgument('reason_too_long', ctx)
         return argument
 
-
-class Duration(Converter):
-    async def convert(self, ctx, argument):
-        if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second",
-                                    "seconds", "w", "d", "h", "m", "s"]:
-            raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
-        return argument
 
 
 class PotentialID(Converter):
@@ -86,9 +73,6 @@ class PotentialID(Converter):
             raise TranslatedBadArgument("no_potential_id", ctx, arg=argument)
         else:
             return argument
-
-
-CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
 
 
 class LoggingChannel(Converter):
@@ -127,9 +111,6 @@ class Guild(Converter):
                 raise TranslatedBadArgument("unknown_server", ctx, arg=argument)
             else:
                 return guild
-
-
-JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channels/\d*/(\d*)/(\d*)")
 
 
 class Message(Converter):
@@ -273,9 +254,6 @@ class InfSearchLocation(Converter):
         raise BadArgument("Does this even show up?")
 
 
-MODIFIER_MATCHER = re.compile(r"^\[(.*):(.*)\]$")
-
-
 class CommandModifier(Converter):
     def __init__(self, allowed_values, should_lower=True) -> None:
         self.allowed_values = allowed_values
@@ -313,3 +291,54 @@ class ServerInfraction(Converter):
             raise TranslatedBadArgument('inf_not_found', ctx, id=argument)
         else:
             return infraction
+
+class DurationHolder:
+
+    def __init__(self, length) -> None:
+        super().__init__()
+        self.length = length
+        self.unit = None
+
+    def to_seconds(self, ctx):
+        unit = self.unit.lower()
+        length = self.length
+        if len(unit) > 1 and unit[-1:] == 's':  # plural -> singular
+            unit = unit[:-1]
+        if unit == 'w' or unit == 'week':
+            length = length * 7
+            unit = 'd'
+        if unit == 'd' or unit == 'day':
+            length = length * 24
+            unit = 'h'
+        if unit == 'h' or unit == 'hour':
+            length = length * 60
+            unit = 'm'
+        if unit == 'm' or unit == 'minute':
+            length = length * 60
+            unit = 's'
+        if unit != 's' and unit != 'second':
+            raise PostParseError('Duration', 'Not a valid duration identifier')
+        if length > 60 * 60 * 24 * 365:
+            raise PostParseError('Duration', Translator.translate('max_duration', ctx))
+        else:
+            return length
+
+
+class Duration(Converter):
+    async def convert(self, ctx, argument):
+        match = START_WITH_NUMBER_MATCHER.match(argument)
+        if match is None:
+            raise TranslatedBadArgument('NaN', ctx)
+        group = match.group(1)
+        holder = DurationHolder(int(group))
+        if len(argument) > len(group):
+            holder.unit = await DurationIdentifier().convert(ctx, argument[len(group):])
+        return holder
+
+
+class DurationIdentifier(Converter):
+    async def convert(self, ctx, argument):
+        if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second",
+                                    "seconds", "w", "d", "h", "m", "s"]:
+            raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
+        return argument

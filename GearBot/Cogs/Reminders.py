@@ -36,10 +36,14 @@ class Reminders:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
 
     @remind.command("me", aliases=["add", "m", "a"])
-    async def remind_me(self, ctx, duration_number: int, duration_identifier: Duration, *, reminder: ReminderText):
+    async def remind_me(self, ctx, duration: Duration, *, reminder: ReminderText):
         """remind_me_help"""
-        duration = Utils.convertToSeconds(duration_number, duration_identifier)
-        if duration <= 0:
+        if duration.unit is None:
+            parts = reminder.split(" ")
+            duration.unit = parts[0]
+            reminder = " ".join(parts[1:])
+        duration_seconds = duration.to_seconds(ctx)
+        if duration_seconds <= 0:
             await MessageUtils.send_to(ctx, "NO", "reminder_time_travel")
             return
         if ctx.guild is not None:
@@ -77,8 +81,8 @@ class Reminders:
                         to_remind=await Utils.clean(reminder, markdown=False),
                         time=time.time() + duration, status=ReminderStatus.Pending)
         mode = "dm" if dm else "here"
-        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration_number,
-                                     duration_identifier=duration_identifier)
+        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
+                                     duration_identifier=duration.unit)
 
     async def delivery_service(self):
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")

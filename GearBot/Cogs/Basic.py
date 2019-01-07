@@ -1,6 +1,5 @@
 import asyncio
 import random
-import re
 import time
 from datetime import datetime
 
@@ -13,6 +12,7 @@ from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji,
     MessageUtils
 from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
+from Util.Matchers import NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
 
 
@@ -295,13 +295,13 @@ class Basic:
         await ctx.send(embed=embed)
 
 
-    NUMBER_MATCHER = re.compile(r"\d+")
+
 
     @commands.command()
     async def uid(self, ctx, *, text:str):
         """uid_help"""
         parts = set()
-        for p in set(self.NUMBER_MATCHER.findall(text)):
+        for p in set(NUMBER_MATCHER.findall(text)):
             try:
                 parts.add(str((await DiscordUser(id_only=True).convert(ctx, p)).id))
             except BadArgument:

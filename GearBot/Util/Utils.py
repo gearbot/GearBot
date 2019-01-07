@@ -1,7 +1,6 @@
 import asyncio
 import json
 import os
-import re
 import subprocess
 import time
 from collections import namedtuple, OrderedDict
@@ -12,6 +11,7 @@ import discord
 from discord import NotFound
 
 from Util import GearbotLogging, Translator, Emoji
+from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
 
@@ -68,11 +68,7 @@ def trim_message(message, limit):
     return f"{message[:limit-3]}..."
 
 
-ID_MATCHER = re.compile("<@!?([0-9]+)>")
-ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
-CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
-URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)?)', re.IGNORECASE)
-EMOJI_MATCHER = re.compile('<(a?):([^: \n]+):([0-9]+)>')
+
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     text = str(text)
