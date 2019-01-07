@@ -72,7 +72,7 @@ ID_MATCHER = re.compile("<@!?([0-9]+)>")
 ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
 CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
 URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)?)', re.IGNORECASE)
-EMOJI_MATCHER = re.compile('<(a?):([^:]+):([0-9]+)>')
+EMOJI_MATCHER = re.compile('<(a?):([^: \n]+):([0-9]+)>')
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     text = str(text)
