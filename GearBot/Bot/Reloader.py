@@ -7,7 +7,6 @@ from database import DatabaseConnector
 components = [
     Configuration,
     DatabaseConnector,
-    Converters,
     GearbotLogging,
     Permissioncheckers,
     Utils,
@@ -23,6 +22,7 @@ components = [
     JumboGenerator,
     MessageUtils,
     TheRealGearBot,
+    Converters,
     Enums,
     Matchers
 ]
