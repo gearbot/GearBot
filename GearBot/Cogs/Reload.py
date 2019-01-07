@@ -27,7 +27,7 @@ class Reload:
             self.bot.unload_extension(f"Cogs.{cog}")
             self.bot.load_extension(f"Cogs.{cog}")
             await ctx.send(f'**{cog}** has been reloaded.')
-            await GearbotLogging.bot_log(f'**{cog}** has been reloaded by {ctx.author.name}.', log=True)
+            await GearbotLogging.bot_log(f'**{cog}** has been reloaded by {ctx.author.name}.')
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} I can't find that cog.")
 
