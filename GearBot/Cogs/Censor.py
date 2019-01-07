@@ -8,7 +8,7 @@ from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, 
 from database.DatabaseConnector import Infraction
 
 INVITE_MATCHER = re.compile(
-    r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[dot\])(?:gg|io|me|li)|discordapp\.com/invite)/+([\w\d-]+)",
+    r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[dot\])(?:gg|io|me|li)|discordapp\.com/invite)/+((?:(?!https?)[\w\d-])+)",
     flags=re.IGNORECASE)
 
 
