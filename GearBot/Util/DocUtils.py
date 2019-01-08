@@ -74,7 +74,7 @@ def generate_command_list(bot):
     ]
     page = ""
     handled = set()
-    for cog in bot.cogs:
+    for cog in sorted(bot.cogs):
         if cog not in excluded:
             cogo = bot.get_cog(cog)
             perm_lvl = cogo.permissions["required"]
