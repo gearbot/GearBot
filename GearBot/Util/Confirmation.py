@@ -33,14 +33,14 @@ async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=No
         if delete:
             try:
                 await message.delete()
-            except discord.Forbidden:
+            except (discord.Forbidden, discord.NotFound):
                 pass
         await on_yes()
     elif reaction.emoji == no:
         if delete:
             try:
                 await message.delete()
-            except discord.Forbidden:
+            except (discord.Forbidden, discord.NotFound):
                 pass
         if on_no is not None:
             await on_no()
