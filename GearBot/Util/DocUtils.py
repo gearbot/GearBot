@@ -79,7 +79,7 @@ def generate_command_list(bot):
             cogo = bot.get_cog(cog)
             perm_lvl = cogo.permissions["required"]
             page += f"#{cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
-            for command in bot.get_cog_commands(cog):
+            for command in sorted(bot.get_cog_commands(cog), key= lambda c:c.qualified_name):
                 if command.qualified_name not in handled:
                     page += gen_command_listing(command)
                     handled.add(command.qualified_name)
