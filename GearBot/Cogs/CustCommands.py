@@ -14,6 +14,8 @@ class CustCommands:
         "commands": {
             "command|commands": {
                 "required": 0,
+                "min": 0,
+                "max": 6,
                 "commands": {
                     "create|add|new": {"required": 2, "min": 2, "max": 6, "commands": {}},
                     "remove": {"required": 2, "min": 2, "max": 6, "commands": {}},
