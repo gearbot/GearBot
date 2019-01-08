@@ -488,5 +488,17 @@
   "inf_active": "Infraction active",
   "inf_claimed": "You have claimed infraction #{inf_id} and are now listed responsible moderator for this infraction",
   "ban_user_not_here": "{user} is not on this server (if they where here before they probably left to try and dodge the hammer). Do you want me to ban them anyways?",
-  "max_duration": "Duration can not be longer then 1 year"
+  "max_duration": "Duration can not be longer then 1 year",
+  "unmute_fail_disabled": "The mute feature has been disabled on this server, as such i cannot unmute that person",
+  "unmtue_fail_role_removed": "Unable to comply, the role i've been told to use for muting no longer exists",
+  "unmute_confirmation": "{user} has been unmuted",
+  "unmute_modlog": "{user} (``{user_id}``) has been unmuted by {moderator} (``{moderator_id}``). Reason: ``{reason}``",
+  "unmute_not_muted": "{user} is not currently muted",
+  "mute_options": "This user is already muted (infraction {id}), what do you want me to do?",
+  "mute_option_extend": "Extend the current mute by {duration}",
+  "mute_option_until": "Overwrite the mute duration to end {duration} from now",
+  "mute_option_overwrite": "Overwrite the mute duration to be {duration}",
+  "mute_duration_extended": "Mute has been extended by {duration} and will now end at {end}",
+  "mute_duration_added": "Mute duration has been updated and will now end in {duration}",
+  "mute_duration_overwritten": "Mute duration has been overwritten to be {duration} and will now end at {end}"
 }

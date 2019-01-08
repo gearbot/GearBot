@@ -11,7 +11,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConve
 import GearBot
 from Bot import TheRealGearBot
 from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, MessageUtils
+    Archive, Confirmation, MessageUtils, Questions
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -487,26 +487,54 @@ class Moderation:
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_missing', ctx.guild.id, user=target.mention)}")
             else:
-                if (
-                        ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
+                if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
                     duration_seconds = duration.to_seconds(ctx)
                     if duration_seconds > 0:
-                        await target.add_roles(role, reason=Utils.trim_message(
-                            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
-                            500))
-                        until = time.time() + duration_seconds
-                        InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
-                                                       end=until)
-                        await ctx.send(
-                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_confirmation', ctx.guild.id, user=Utils.clean_user(target), duration=f'{duration.length} {duration.unit}')}")
-                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                              f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_log', ctx.guild.id, user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, duration=f'{duration.length} {duration.unit}', reason=reason)}")
+                        infraction = Infraction.get_or_none((Infraction.user_id == target.id) & (Infraction.type == "Mute") & (Infraction.guild_id == ctx.guild.id) & Infraction.active)
+                        if infraction is None:
+                            await target.add_roles(role, reason=Utils.trim_message(
+                                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
+                                500))
+                            until = time.time() + duration_seconds
+                            InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
+                                                           end=until)
+                            await MessageUtils.send_to(ctx, 'MUTE', 'mute_confirmation', user=Utils.clean_user(target),
+                                                       duration=f'{duration.length} {duration.unit}')
+                            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
+                                                  MessageUtils.assemble(ctx, 'MUTE', 'mute_log',
+                                                                        user=Utils.clean_user(target),
+                                                                        user_id=target.id,
+                                                                        moderator=Utils.clean_user(ctx.author),
+                                                                        moderator_id=ctx.author.id,
+                                                                        duration=f'{duration.length} {duration.unit}',
+                                                                        reason=reason))
+                        else:
+                            d = f'{duration.length} {duration.unit}'
+                            async def extend():
+                                infraction.end += datetime.timedelta(seconds=duration_seconds)
+                                infraction.save()
+                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_extended', duration=d, end=infraction.end)
+
+                            async def until():
+                                infraction.end = time.time() + duration_seconds
+                                infraction.save()
+                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_added', duration=d)
+
+                            async def overwrite():
+                                infraction.end = infraction.start + datetime.timedelta(seconds=duration_seconds)
+                                infraction.save()
+                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_overwritten', duration=d, end=infraction.end)
+
+
+                            await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
+                                Questions.Option(Emoji.get_emoji("1"), Translator.translate("mute_option_extend", ctx, duration=d), extend),
+                                Questions.Option(Emoji.get_emoji("2"), Translator.translate("mute_option_until", ctx, duration=d), until),
+                                Questions.Option(Emoji.get_emoji("3"), Translator.translate("mute_option_overwrite", ctx, duration=d), overwrite)
+                            ])
                     else:
-                        await ctx.send(
-                            f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('mute_negative_denied', ctx.guild.id, duration=f'{duration.length} {duration.unit}')} {Emoji.get_chat_emoji('WHAT')}")
+                        await MessageUtils.send_to(ctx, 'NO', 'mute_negative_denied', duration=f'{duration.length} {duration.unit}')
                 else:
-                    await ctx.send(
-                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_not_allowed', ctx.guild.id, user=target)}")
+                    await MessageUtils.send_to(ctx, 'NO', 'mute_not_allowed', user=target)
 
     @commands.command()
     @commands.guild_only()
@@ -517,19 +545,21 @@ class Moderation:
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
         if roleid is 0:
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('NO')} The mute feature has been disabled on this server, as such i cannot unmute that person")
+            await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
         else:
             role = ctx.guild.get_role(roleid)
             if role is None:
-                await ctx.send(
-                    f"{Emoji.get_chat_emoji('NO')} Unable to comply, the role i've been told to use for muting no longer exists")
+                await MessageUtils.send_to(ctx, 'NO', 'unmtue_fail_role_removed')
             else:
-                await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
-                await ctx.send(f"{Emoji.get_chat_emoji('INNOCENT')} {target.display_name} has been unmuted")
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                      f"{Emoji.get_chat_emoji('INNOCENT')} {target.name}#{target.discriminator} (`{target.id}`) has been unmuted by {ctx.author.name}")
-                InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
+                infraction = Infraction.get_or_none((Infraction.user_id == target.id) & (Infraction.type == "Mute") & (Infraction.guild_id == ctx.guild.id) & Infraction.active)
+                if role not in target.roles and infraction is None:
+                    await MessageUtils.send_to(ctx, 'WHAT', 'unmute_not_muted', user=Utils.clean_user(target))
+                else:
+                    await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
+                    await MessageUtils.send_to(ctx, 'INNOCENT', 'unmute_confirmation', user=Utils.clean_user(target))
+                    GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx, 'INNOCENT', 'unmute_modlog', user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason))
+                    InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
+                    Infraction.update(active=False).where((Infraction.user_id == target.id) & (Infraction.type == "Mute") & (Infraction.guild_id == ctx.guild.id)).execute()
 
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
