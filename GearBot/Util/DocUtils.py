@@ -84,12 +84,14 @@ def generate_command_list(bot):
                     page += gen_command_listing(command)
                     handled.add(command.qualified_name)
             page += "\n\n"
-    with open("docs/commands.md", "w") as file:
+    with open("docs/commands.md", "w", encoding="utf-8") as file:
         file.write(page)
 
 def gen_command_listing(command):
     try:
         listing = f"|{command.qualified_name}|{Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']}|{Translator.translate(command.short_doc, None)}|\n"
+        signature = str(command.signature)
+        listing += f"| | |Example: ``!{signature}``|\n"
     except Exception as ex:
         GearbotLogging.error(command.qualified_name)
         raise ex

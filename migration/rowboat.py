@@ -3,7 +3,8 @@ import math
 import time
 from datetime import datetime
 
-from peewee import PrimaryKeyField, Model, BigIntegerField, CharField, TimestampField, BooleanField, MySQLDatabase
+from peewee import PrimaryKeyField, Model, BigIntegerField, CharField, TimestampField, BooleanField, MySQLDatabase, \
+    IntegrityError
 
 
 def fetch_from_disk(filename, alternative=None):
@@ -15,6 +16,7 @@ def fetch_from_disk(filename, alternative=None):
             fetch_from_disk(alternative)
         return dict()
 
+
 c = fetch_from_disk("../config/master")
 
 connection = MySQLDatabase(c["DATABASE_NAME"],
@@ -22,6 +24,7 @@ connection = MySQLDatabase(c["DATABASE_NAME"],
                            password=c["DATABASE_PASS"],
                            host=c["DATABASE_HOST"],
                            port=c["DATABASE_PORT"], use_unicode=True, charset="utf8mb4")
+
 
 class Infraction(Model):
     id = PrimaryKeyField()
@@ -38,20 +41,30 @@ class Infraction(Model):
         database = connection
 
 
-
 infractions = fetch_from_disk("infractions")["infractions"]
 print(f"Importing {len(infractions)}, this can take a while...")
 done = 0
+dupes = 0
+failed = []
 last_reported = -1
 t = time.time()
 for i in infractions:
     start = datetime.strptime(i["created_at"], "%a, %d %b %Y %H:%M:%S %Z")
     end = datetime.strptime(i["expires_at"], "%a, %d %b %Y %H:%M:%S %Z") if i["expires_at"] is not None else None
-    Infraction.create(id=i["id"], guild_id=i["guild"]["id"], user_id=i["user"]["id"], mod_id=i["actor"]["id"],
-                      type=i["type"]["name"], reason=i["reason"] if i["reason"] is not None else "No reason specified",
-                      start=start, end=end, active=i["active"] == 'true')
+    reason = i["reason"] if i["reason"] is not None else "No reason specified"
+    active = i["active"] == 'true'
+    guild_id = i["guild"]["id"]
+    user_id = i["user"]["id"]
+    mod_id = i["actor"]["id"]
+    type = i["type"]["name"]
+    try:
+        Infraction.create(id=i["id"], guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
+                          start=start, end=end, active=active)
+    except IntegrityError:
+        infraction = Infraction.get_by_id(i["id"])
+
     done += 1
-    percent = math.floor((done/len(infractions)) * 100)
+    percent = math.floor((done / len(infractions)) * 100)
     if percent > last_reported:
         last_reported = percent
         print(f"{percent}% done, {len(infractions) - done} to go")
