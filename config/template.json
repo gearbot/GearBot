@@ -1,5 +1,5 @@
 {
-  "VERSION": 5,
+  "VERSION": 6,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -22,5 +22,7 @@
   "TIMESTAMPS": true,
   "DM_ON_WARN": false,
   "ROLE_WHITELIST": true,
-  "ROLE_LIST": []
+  "ROLE_LIST": [],
+  "IGNORED_CHANNELS_CHANGES": [],
+  "IGNORED_CHANNELS_OTHER": []
 }

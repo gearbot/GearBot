@@ -79,9 +79,13 @@ def v5(config):
         del config["PERM_OVERRIDES"]["role"]
     return config
 
+def v6(config):
+    config["IGNORED_CHANNELS_CHANGES"] = []
+    config["IGNORED_CHANNELS_OTHER"] = []
+    return config
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
