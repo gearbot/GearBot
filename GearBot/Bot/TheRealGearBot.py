@@ -15,7 +15,7 @@ from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils, MessageUtils
 from database import DatabaseConnector
 
 
@@ -184,16 +184,12 @@ class PostParseError(commands.BadArgument):
 
 
 async def on_command_error(bot, ctx: commands.Context, error):
-    if isinstance(error, commands.NoPrivateMessage):
-        await ctx.send("This command cannot be used in private messages.")
-    elif isinstance(error, commands.BotMissingPermissions):
+    if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
-    elif isinstance(error, commands.DisabledCommand):
-        await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "PERM_DENIED_MESSAGE"):
-            await ctx.send(":lock: You do not have the required permissions to run this command")
+            await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):

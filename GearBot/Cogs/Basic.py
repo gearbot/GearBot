@@ -56,18 +56,20 @@ class Basic:
         unique = "{:,}".format(len(self.bot.users))
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
-                              description=f"{Emoji.get_chat_emoji('DIAMOND')} Gears have been spinning for {days} {'day' if days is 1 else 'days'}, {hours} {'hour' if hours is 1 else 'hours'}, {minutes} {'minute' if minutes is 1 else 'minutes'} and {seconds} {'second' if seconds is 1 else 'seconds'}\n"
-                                          f"{Emoji.get_chat_emoji('GOLD')} I received {user_messages} user messages, {bot_messages} bot messages ({self_messages} were mine)\n"
-                                          f"{Emoji.get_chat_emoji('IRON')} Number of times people grinded my gears: {self.bot.errors}\n"
-                                          f"{Emoji.get_chat_emoji('STONE')} {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
-                                          f"{Emoji.get_chat_emoji('WOOD')} Working in {len(self.bot.guilds)} guilds\n"
-                                          f"{Emoji.get_chat_emoji('INNOCENT')} With a total of {total} users ({unique} unique)\n"
-                                          f"{Emoji.get_chat_emoji('TACO')} Together they could have eaten {tacos} tacos in this time\n"
-                                          f"{Emoji.get_chat_emoji('TODO')} Add more stats")
+                              description=
+                              MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears', duration=Translator.translate('dhms', ctx, days=days, hours=hours, minutes=minutes, seconds=seconds)) + "\n"+
+                              MessageUtils.assemble(ctx, 'GOLD', 'about_messages', user_messages=user_messages, bot_messages=bot_messages, self_messages=self_messages) + "\n"+
+                              MessageUtils.assemble(ctx, 'IRON', 'about_grinders', errors=self.bot.errors) + "\n" +
+                              MessageUtils.assemble(ctx, 'STONE', 'about_commands', commandCount=self.bot.commandCount, custom_command_count=self.bot.custom_command_count) + "\n" +
+                              MessageUtils.assemble(ctx, 'WOOD', 'about_guilds', guilds=len(self.bot.guilds)) + "\n" +
+                              MessageUtils.assemble(ctx, 'INNOCENT', 'about_users', total=total, unique=unique) + "\n" +
+                              MessageUtils.assemble(ctx, 'TACO', 'about_tacos', tacos=tacos) + "\n" +
+                              MessageUtils.assemble(ctx, 'TODO', 'about_stats'))
 
-        embed.add_field(name=f"Support server", value="[Click here](https://discord.gg/vddW3D9)")
-        embed.add_field(name=f"Website", value="[Click here](https://gearbot.rocks)")
-        embed.add_field(name=f"Github", value="[Click here](https://github.com/AEnterprise/GearBot)")
+        click_here = Translator.translate('click_here', ctx)
+        embed.add_field(name=Translator.translate('support_server', ctx), value=f"[{click_here}](https://discord.gg/vddW3D9)")
+        embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
+        embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/AEnterprise/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
 
         await ctx.send(embed=embed)

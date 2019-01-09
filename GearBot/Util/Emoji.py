@@ -35,6 +35,7 @@ BACKUPS = {
     "LEAVE": "📤",
     "LEFT": "◀",
     "LOADING": "⏳",
+    "LOCK": "🔒",
     "MUTE": "😶",
     "MUTE_RESTORE": "😶",
     "NAMETAG": "📛",

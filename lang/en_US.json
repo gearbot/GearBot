@@ -500,5 +500,18 @@
   "mute_option_overwrite": "Overwrite the mute duration to be {duration}",
   "mute_duration_extended": "Mute has been extended by {duration} and will now end at {end}",
   "mute_duration_added": "Mute duration has been updated and will now end in {duration}",
-  "mute_duration_overwritten": "Mute duration has been overwritten to be {duration} and will now end at {end}"
+  "mute_duration_overwritten": "Mute duration has been overwritten to be {duration} and will now end at {end}",
+  "permission_denied": "You do not have the required permissions to run this command",
+  "about_spinning_gears": "Gears have been spinning for {duration}",
+  "dhms": "{days} day(s), {hours} hour(s) {minutes} minute(s), {seconds} second(s)",
+  "about_messages": "I received {user_messages} user messages, {bot_messages} bot messages ({self_messages} were mine)",
+  "about_grinders": "Number of times people grinded my gears: {errors}",
+  "about_commands": "{commandCount} commands have been executed, as well as {custom_command_count} custom commands",
+  "about_guilds": "Working in {guilds} guilds",
+  "about_users": "With a total of {total} users ({unique} unique)",
+  "about_tacos": "Together they could have eaten {tacos} tacos in this time",
+  "about_stats": "Add more stats",
+  "support_server": "Support server",
+  "click_here": "Click here",
+  "website": "Website"
 }
