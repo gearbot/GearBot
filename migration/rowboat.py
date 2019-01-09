@@ -17,7 +17,7 @@ def fetch_from_disk(filename, alternative=None):
         return dict()
 
 
-c = fetch_from_disk("config/master")
+c = fetch_from_disk("../config/master")
 
 connection = MySQLDatabase(c["DATABASE_NAME"],
                            user=c["DATABASE_USER"],
