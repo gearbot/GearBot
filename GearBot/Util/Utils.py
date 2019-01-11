@@ -86,7 +86,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
     for e in set(EMOJI_MATCHER.findall(text)):
         a, b, c = zip(e)
-        text.replace(f"<{a}:{b}:{c}>", f"<{a}:\u200b{b}:{c}>".replace('\\\\', '\\'))
+        text.replace(f"<{a}:{b}:{c}>", f"<\u200b{a}:\u200b{b}:\u200b{c}>".replace('\\', ''))
 
     if links:
         #find urls last so the < escaping doesn't break it
@@ -123,7 +123,7 @@ async def username(uid, fetch=True, clean=True):
 
 
 async def get_user(uid, fetch=True):
-    UserClass = namedtuple("UserClass", "name id discriminator avatar bot avatar_url created_at is_avatar_animated mention")
+    UserClass = namedtuple("UserClass", "name id discriminator bot avatar_url created_at is_avatar_animated mention")
     user = BOT.get_user(uid)
     if user is None:
         if uid in known_invalid_users:
@@ -132,12 +132,11 @@ async def get_user(uid, fetch=True):
         if BOT.redis_pool is not None:
             userCacheInfo = await BOT.redis_pool.hgetall(uid)
 
-            if len(userCacheInfo) == 9: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
+            if len(userCacheInfo) == 8: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
                     userCacheInfo["name"],
                     userCacheInfo["id"],
                     userCacheInfo["discriminator"],
-                    userCacheInfo["avatar"],
                     userCacheInfo["bot"] == "1",
                     userCacheInfo["avatar_url"],
                     datetime.fromtimestamp(float(userCacheInfo["created_at"])),
@@ -154,7 +153,6 @@ async def get_user(uid, fetch=True):
                         name = user.name,
                         id = user.id,
                         discriminator = user.discriminator,
-                        avatar = user.avatar,
                         bot = int(user.bot),
                         avatar_url = user.avatar_url,
                         created_at = user.created_at.timestamp(),
@@ -246,6 +244,8 @@ def server_info(guild, request_guild=None):
     for m in guild.members:
         statuses[str(m.status)] += 1
     embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
+    if guild.icon_url != "":
+        embed.set_image(url=guild.icon_url)
     return embed
 
 
