@@ -10,6 +10,7 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 import sentry_sdk
 from discord.ext import commands
+from discord.errors import HTTPException
 
 from Bot import TheRealGearBot
 from Util import Configuration, Utils

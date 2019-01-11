@@ -59,3 +59,10 @@ async def archive_purge(bot, id_list, guild_id):
 async def send_to(destination, emoji, message, delete_after=None, translate=True, **kwargs):
     translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
     return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after)
+
+async def try_edit(ctx, message, emoji: str, string_name: str, **kwargs):
+    translated = Translator.translate(string_name, ctx.guild.id, **kwargs)
+    try:
+        return await message.edit(content=f'{Emoji.get_chat_emoji(emoji)} {translated}')
+    except HTTPException:
+        return await send_to(ctx, emoji, string_name, **kwargs)
