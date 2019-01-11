@@ -503,7 +503,7 @@
   "mute_duration_overwritten": "Mute duration has been overwritten to be {duration} and will now end at {end}",
   "permission_denied": "You do not have the required permissions to run this command",
   "about_spinning_gears": "Gears have been spinning for {duration}",
-  "dhms": "{days} day(s), {hours} hour(s) {minutes} minute(s), {seconds} second(s)",
+  "dhms": "{days} day(s), {hours} hour(s), {minutes} minute(s), {seconds} second(s)",
   "about_messages": "I received {user_messages} user messages, {bot_messages} bot messages ({self_messages} were mine)",
   "about_grinders": "Number of times people grinded my gears: {errors}",
   "about_commands": "{commandCount} commands have been executed, as well as {custom_command_count} custom commands",
