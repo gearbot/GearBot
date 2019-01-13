@@ -256,3 +256,7 @@ def time_difference(begin, end, location):
                                                                                                                location,
                                                                                                                hours=hours,
                                                                                                                minutes=minutes)
+
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i+n]

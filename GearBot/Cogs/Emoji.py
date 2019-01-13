@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Greedy
 
 import GearBot
-from Util import Permissioncheckers, MessageUtils, Translator, Pages
+from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
 
 
@@ -74,7 +74,8 @@ class Emoji:
         embed.set_author(name=Translator.translate('emoji_server', guild, server=guild.name, page=page + 1,
                                                    pages=len(guild.emojis) + 1), url=guild.icon_url)
         if page is 0:
-            embed.description = " ".join(str(e) for e in se)
+            for chunk in Utils.chunks(guild.emojis, 18):
+                embed.add_field(name="\u200b", value=" ".join(str(e) for e in chunk))
             animated = set()
             static = set()
             for e in guild.emojis:

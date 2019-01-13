@@ -490,7 +490,7 @@
   "inf_active": "Infraction active",
   "inf_claimed": "You have claimed infraction #{inf_id} and are now listed responsible moderator for this infraction",
   "ban_user_not_here": "{user} is not on this server (if they where here before they probably left to try and dodge the hammer). Do you want me to ban them anyways?",
-  "max_duration": "Duration can not be longer then 1 year",
+  "max_duration": "Duration can not be longer than 1 year",
   "unmute_fail_disabled": "The mute feature has been disabled on this server, as such i cannot unmute that person",
   "unmtue_fail_role_removed": "Unable to comply, the role i've been told to use for muting no longer exists",
   "unmute_confirmation": "{user} has been unmuted",
