@@ -178,8 +178,9 @@ class Emoji:
         refused = set()
         for role in roles:
             (refused if role in emote.roles else todo).add(role)
-        emote.roles.extend(todo)
-        await emote.edit(name=emote.name, roles=emote.roles)
+        new_roles = list(emote.roles)
+        new_roles.extend(todo)
+        await emote.edit(name=emote.name, roles=new_roles)
         await asyncio.sleep(1)  # sleep so the cache can update
         embed = Embed(color=0x2db1f3)
         self.add_emoji_info(ctx, embed, emote)
@@ -197,8 +198,10 @@ class Emoji:
         refused = set()
         for role in roles:
             (refused if role in emote.roles else todo).add(role)
-        emote.roles.extend(todo)
-        await emote.edit(name=emote.name, roles=emote.roles)
+        new_roles = list(emote.roles)
+        for role in todo:
+            new_roles.remove(role)
+        await emote.edit(name=emote.name, roles=new_roles)
         await asyncio.sleep(1)  # sleep so the cache can update
         embed = Embed(color=0x2db1f3)
         self.add_emoji_info(ctx, embed, emote)
