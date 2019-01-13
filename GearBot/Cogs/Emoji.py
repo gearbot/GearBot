@@ -110,10 +110,8 @@ class Emoji:
 
     @emoji.command("add", aliases=["upload", "create"])
     @commands.bot_has_permissions(manage_emojis=True)
-    async def emoji_add(self, ctx, name: EmojiName, *, roles: Greedy[Role] = None):
+    async def emoji_add(self, ctx, name: EmojiName, roles: Greedy[Role] = None):
         """emoji_upload_help"""
-        if isinstance(roles, Role):
-            roles = [roles]
         if len(ctx.message.attachments) is 0:
             await MessageUtils.send_to(ctx, "NO", "emoji_upload_no_attachments")
         use_counter = len(ctx.message.attachments) > 1
@@ -173,7 +171,9 @@ class Emoji:
             await ctx.invoke(self.bot.get_command("help"), query="emoji roles")
 
     @emoji_roles.command("add")
-    async def emoji_roles_add(self, ctx, emote: discord.Emoji, *, roles: Greedy[discord.Role]):
+    async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
+        if roles is None:
+            roles = []
         todo = set()
         refused = set()
         for role in roles:
@@ -183,14 +183,16 @@ class Emoji:
         await asyncio.sleep(1)  # sleep so the cache can update
         embed = Embed(color=0x2db1f3)
         self.add_emoji_info(ctx, embed, emote)
-        message = MessageUtils.assemble(ctx, "YES", "emoji_roles_add_success", )
+        message = MessageUtils.assemble(ctx, "YES", "emoji_roles_add_success", roles=self.pretty_role_list(todo, ctx))
         if len(refused) > 0:
             message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_roles_already_in_list",
                                                     roles=self.pretty_role_list(refused, ctx))
         await ctx.send(message)
 
     @emoji_roles.command("remove")
-    async def emoji_roles_remove(self, ctx, emote: discord.Emoji, *, roles: Greedy[discord.Role]):
+    async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
+        if roles is None:
+            roles = []
         todo = set()
         refused = set()
         for role in roles:
