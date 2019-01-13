@@ -86,20 +86,19 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
     for e in set(EMOJI_MATCHER.findall(text)):
         a, b, c = zip(e)
-        text.replace(f"<{a}:{b}:{c}>", f"<\u200b{a}:\u200b{b}:\u200b{c}>".replace('\\', ''))
+        text.replace(f"<{a}:{b}:{c}>", f"<{a}:{b}:{c}>")
 
     if links:
         #find urls last so the < escaping doesn't break it
         for url in set(URL_MATCHER.findall(text)):
             text = text.replace(url, f"<{url}>")
 
-
     return text
 
 def escape_markdown(text):
     text = str(text)
-    for c in ("\\", "`", "*", "_", "~", "|", "{"):
-        text = text.replace(c, f"\{c}")
+    for c in ["\\", "`", "*", "_", "~", "|", "{", ":"]:
+        text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 
 def clean_name(text):

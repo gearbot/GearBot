@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 from datetime import datetime
 
-from discord import Object
+from discord import Object, HTTPException
 
 from Util import Translator, Emoji, Archive
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
@@ -39,7 +39,7 @@ async def insert_message(bot, message):
 async def update_message(bot, message_id, content):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         await bot.redis_pool.hmset_dict(message_id, content=content)
-    LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id)
+    LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id).execute()
 
 def assemble(destination, emoji, message, translate=True, **kwargs):
     translated = Translator.translate(message, destination, **kwargs) if translate else message
@@ -56,13 +56,18 @@ async def archive_purge(bot, id_list, guild_id):
                                     collections.OrderedDict(sorted(message_list.items())))
 
 
-async def send_to(destination, emoji, message, delete_after=None, translate=True, **kwargs):
+async def send_to(destination, emoji, message, delete_after=None, translate=True, embed=None, **kwargs):
     translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
-    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after)
+    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after, embed=embed)
 
-async def try_edit(ctx, message, emoji: str, string_name: str, **kwargs):
-    translated = Translator.translate(string_name, ctx.guild.id, **kwargs)
+async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
+    translated = Translator.translate(string_name, message.channel, **kwargs)
     try:
-        return await message.edit(content=f'{Emoji.get_chat_emoji(emoji)} {translated}')
+        return await message.edit(content=f'{Emoji.get_chat_emoji(emoji)} {translated}', embed=embed)
     except HTTPException:
-        return await send_to(ctx, emoji, string_name, **kwargs)
+        return await send_to(message.channel, emoji, string_name, embed=embed, **kwargs)
+
+
+def day_difference(a, b, location):
+    diff = a - b
+    return Translator.translate('days_ago', location, days=diff.days, date=a)
