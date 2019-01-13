@@ -74,7 +74,7 @@ class Emoji:
         embed.set_author(name=Translator.translate('emoji_server', guild, server=guild.name, page=page + 1,
                                                    pages=len(guild.emojis) + 1), url=guild.icon_url)
         if page is 0:
-            for chunk in Utils.chunks(guild.emojis, 18):
+            for chunk in Utils.chunks(se, 18):
                 embed.add_field(name="\u200b", value=" ".join(str(e) for e in chunk))
             animated = set()
             static = set()
