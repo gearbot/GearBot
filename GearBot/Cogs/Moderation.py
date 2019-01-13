@@ -761,7 +761,7 @@ class Moderation:
                 # sleep for a sec just in case the other bot is still purging so we don't get removed as well
                 await asyncio.sleep(1)
                 try:
-                    await message.edit(content=MessageUtils.assemble(ctx, 'NO', 'purge_fail_not_found'))
+                    await MessageUtils.try_edit(message, 'NO', 'purge_fail_not_found')
                 except discord.NotFound:
                     pass  # sometimes people remove channels mid purge
             else:

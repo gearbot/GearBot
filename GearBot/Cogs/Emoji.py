@@ -140,6 +140,7 @@ class Emoji:
                     return await MessageUtils.try_edit(message, emoji="NO", string_name="emoji_upload_invalid_file")
 
     @emoji.command(aliases=["change", "rename", "redefine"])
+    @commands.bot_has_permissions(manage_emojis=True)
     async def update(self, ctx, emote: discord.Emoji, new_name: EmojiName):
         """emoji_update_help"""
         try:
@@ -156,6 +157,7 @@ class Emoji:
                                        embed=embed)
 
     @emoji.command(aliases=["remove", "nuke", "rmv", "del", "👋", "🗑"])
+    @commands.bot_has_permissions(manage_emojis=True)
     async def delete(self, ctx, emote: discord.Emoji):
         """emoji_delete_help"""
         try:
@@ -164,13 +166,14 @@ class Emoji:
         except HTTPException as msg:
             return await ctx.send(msg.text)
 
-    @emoji.group("roles")
+    @emoji.group("roles", aliases=["role"])
     async def emoji_roles(self, ctx):
         """emoji_roles_help"""
         if ctx.invoked_subcommand is self.emoji_roles:
             await ctx.invoke(self.bot.get_command("help"), query="emoji roles")
 
     @emoji_roles.command("add")
+    @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
         if roles is None:
             roles = []
@@ -184,20 +187,24 @@ class Emoji:
         await asyncio.sleep(1)  # sleep so the cache can update
         embed = Embed(color=0x2db1f3)
         self.add_emoji_info(ctx, embed, emote)
-        message = MessageUtils.assemble(ctx, "YES", "emoji_roles_add_success", roles=self.pretty_role_list(todo, ctx))
+        if len(todo) > 0:
+            message = MessageUtils.assemble(ctx, "YES", "emoji_roles_add_success", roles=self.pretty_role_list(todo, ctx))
+        else:
+            message = ""
         if len(refused) > 0:
             message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_roles_already_in_list",
                                                     roles=self.pretty_role_list(refused, ctx))
         await ctx.send(message)
 
     @emoji_roles.command("remove")
+    @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
         if roles is None:
             roles = []
         todo = set()
         refused = set()
         for role in roles:
-            (refused if role in emote.roles else todo).add(role)
+            (refused if role not in emote.roles else todo).add(role)
         new_roles = list(emote.roles)
         for role in todo:
             new_roles.remove(role)
