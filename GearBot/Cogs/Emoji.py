@@ -39,7 +39,7 @@ class Emoji:
         Pages.unregister("emoji")
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx) or ctx.permissions_for(ctx.author).manage_emoji
+        return Permissioncheckers.check_permission(ctx) or ctx.channel.permissions_for(ctx.author).manage_emojis
 
     @commands.group(aliases=["emote"])
     @commands.guild_only()
