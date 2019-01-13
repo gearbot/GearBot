@@ -343,3 +343,13 @@ class DurationIdentifier(Converter):
                                     "seconds", "w", "d", "h", "m", "s"]:
             raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
         return argument
+
+class EmojiName(Converter):
+    async def convert(self, ctx, argument):
+        if len(argument) < 2 or len(argument) > 32:
+            raise TranslatedBadArgument('emoji_name_too_short', ctx, argument)
+        if len(argument) > 32:
+            raise TranslatedBadArgument('emoji_name_too_long', ctx, argument)
+        if " " in argument:
+            raise TranslatedBadArgument('emoji_name_space', ctx, argument)
+        return argument

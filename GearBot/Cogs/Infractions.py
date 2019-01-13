@@ -174,7 +174,7 @@ class Infractions:
         embed.add_field(name=Translator.translate('inf_added', ctx), value=infraction.start)
         if infraction.end is not None:
             embed.add_field(name=Translator.translate('inf_end', ctx), value=infraction.end)
-        embed.add_field(name=Translator.translate('inf_active', ctx), value=Emoji.get_chat_emoji('YES' if infraction.active else 'NO'))
+        embed.add_field(name=Translator.translate('inf_active', ctx), value=MessageUtils.assemble(ctx, 'YES' if infraction.active else 'NO', str(infraction.active).lower()))
         images = self.IMAGE_MATCHER.findall(infraction.reason)
         if len(images) > 0:
             embed.set_image(url=images[0])
