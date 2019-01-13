@@ -32,7 +32,7 @@ class Censor:
         await self.censor_message(message)
 
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
-        channel = self.bot.get_channel(event.data["channel_id"])
+        channel = self.bot.get_channel(int(event.data["channel_id"]))
         if channel is not None:
             try:
                 message = await channel.get_message(event.message_id)
