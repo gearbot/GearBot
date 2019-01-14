@@ -287,6 +287,10 @@ class InfSearchModifiers(CommandModifier):
 class ServerInfraction(Converter):
 
     async def convert(self, ctx, argument):
+        try:
+            argument = int(argument)
+        except ValueError:
+            raise TranslatedBadArgument('NaN', ctx)
         infraction = Infraction.get_or_none(id=argument, guild_id=ctx.guild.id)
         if infraction is None:
             raise TranslatedBadArgument('inf_not_found', ctx, id=argument)

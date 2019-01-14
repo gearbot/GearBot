@@ -738,7 +738,7 @@ class Moderation:
                 total += len(deleted)
             except discord.HTTPException:
                 failed.add(channel)
-        await message.edit(content=MessageUtils.assemble(ctx, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed)))
+        await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
 
 
     async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
