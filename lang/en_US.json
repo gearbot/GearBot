@@ -544,7 +544,7 @@
   "emoji_roles_help": "Manage the role requirements to use emoji",
   "emoji_delete_help": "Removes an emoji",
   "emoji_update_help": "Changes the emoji name",
-  "emoji_upload_help": "Upload a new emoji",
+  "emoji_upload_help": "Uploads a new emoji",
   "emoji_upload_no_attachments": "Your message did not have any attachments to be uploaded as emoji",
   "emoji_name_space": "Emoji names can not have spaces",
   "emoji_upload_rejected": "Discord refused the emoji, maybe it has a bad name or is corrupt?"
