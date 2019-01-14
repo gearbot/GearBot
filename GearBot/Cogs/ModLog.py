@@ -289,13 +289,7 @@ class ModLog:
                 name = Utils.clean_user(after)
                 before_clean = "" if before.nick is None else Utils.clean_name(before.nick)
                 after_clean = "" if after.nick is None else Utils.clean_name(after.nick)
-                entry = None
-                if audit_log:
-                    async for e in guild.audit_logs(action=discord.AuditLogAction.member_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after,
-                                                                                                      "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(
-                                time.time() - 1):
-                            entry = e
+                entry = await self.find_log(guild, AuditLogAction.member_update, lambda e: e.target.id == before.id and hasattr(e.changes.before, "nick") and hasattr(e.changes.after, "nick") and before.nick == e.changes.before.nick and after.nick == e.changes.after.nick and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 2))
                 if before.nick is None:
                     type = "added"
                 elif after.nick is None:
@@ -317,26 +311,24 @@ class ModLog:
 
         # role changes
         if Features.is_logged(guild.id, "ROLE_CHANGES"):
-            if len(before.roles) != len(after.roles):
-                removed = []
-                added = []
-                for role in before.roles:
-                    if role not in after.roles:
-                        removed.append(role)
+            removed = []
+            added = []
+            for role in before.roles:
+               if role not in after.roles:
+                    removed.append(role)
 
-                for role in after.roles:
-                    if role not in before.roles:
-                        added.append(role)
+            for role in after.roles:
+                if role not in before.roles:
+                    added.append(role)
 
-                entry = None
-                if audit_log:
-                    async for e in guild.audit_logs(action=discord.AuditLogAction.member_role_update, limit=25):
-                        if e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(e.changes.after,
-                                                                                                       "roles") \
-                                and all(role in e.changes.before.roles for role in removed) \
-                                and all(role in e.changes.after.roles for role in added) \
-                                and e.created_at > datetime.datetime.utcfromtimestamp(time.time() - 1):
-                            entry = e
+            if (len(removed) + len(added)) > 0:
+                entry = await self.find_log(guild, AuditLogAction.member_role_update,
+                                            lambda e: e.target.id == before.id and hasattr(e.changes.before, "roles") and hasattr(
+                                                e.changes.after, "roles") and all(
+                                                r in e.changes.before.roles for r in removed) and all(
+                                                r in e.changes.after.roles for r in
+                                                added) and e.created_at > datetime.datetime.utcfromtimestamp(
+                                                time.time() - 1))
                 if entry is not None:
                     removed = entry.changes.before.roles
                     added = entry.changes.after.roles
