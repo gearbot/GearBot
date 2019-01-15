@@ -769,7 +769,7 @@ class Moderation:
                 except discord.NotFound:
                     pass  # sometimes people remove channels mid purge
             else:
-                await message.edit(content=MessageUtils.assemble(ctx, "YES", "purge_confirmation", count=len(deleted)))
+                await MessageUtils.try_edit(message, "YES", "purge_confirmation", count=len(deleted))
         except Exception as ex:
             self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
             raise ex
