@@ -138,7 +138,7 @@ class Infractions:
         """inf_claim_help"""
         infraction.mod_id = ctx.author.id
         infraction.save()
-        await MessageUtils.send_to(ctx, 'YES', 'inf_claimed')
+        await MessageUtils.send_to(ctx, 'YES', 'inf_claimed', inf_id=infraction.id)
         await InfractionUtils.clear_cache(ctx.guild.id)
 
     IMAGE_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',re.IGNORECASE)
