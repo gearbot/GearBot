@@ -86,7 +86,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
     for e in set(EMOJI_MATCHER.findall(text)):
         a, b, c = zip(e)
-        text.replace(f"<{a}:{b}:{c}>", f"<{a}:{b}:{c}>")
+        text = text.replace(f"<{a[0]}:{b[0]}:{c[0]}>", f"<{a[0]}\\:{b[0]}\\:{c[0]}>")
 
     if links:
         #find urls last so the < escaping doesn't break it
@@ -97,7 +97,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
 def escape_markdown(text):
     text = str(text)
-    for c in ["\\", "`", "*", "_", "~", "|", "{", ":"]:
+    for c in ["\\", "`", "*", "_", "~", "|", "{"]:
         text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 
