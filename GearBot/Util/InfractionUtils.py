@@ -71,7 +71,7 @@ async def get_infraction_pages(guild_id, query, amount, fields):
                 count +=1
             if cache:
                 pipe.rpush(key, i)
-        prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user - 1)}| {Utils.pad('moderator',longest_mod - 1)}| timestamp           | {Utils.pad('type', longest_type)} | reason"
+        prefix = f"{Utils.pad('id', longest_id)} | {Utils.pad('user', longest_user )} | {Utils.pad('moderator',longest_mod)} | timestamp           | {Utils.pad('type', longest_type)} | reason"
         prefix = f"```md\n{prefix}\n{'-' * len(prefix)}\n"
         if cache:
             pipe.lpush(key, prefix)
