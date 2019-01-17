@@ -7,7 +7,7 @@ import aiohttp
 import discord
 from PIL import Image
 
-from Util import GearbotLogging
+from Util import MessageUtils
 
 EMOJI_LOCKS = []
 JUMBO_NUM = 0
@@ -195,13 +195,13 @@ class JumboGenerator:
             await asyncio.wait_for(self.prep(), timeout=20)
             await asyncio.wait_for(self.build(), timeout=60)
         except asyncio.TimeoutError:
-            GearbotLogging.send_to(self.ctx, "WHAT", 'jumbo_timeout')
+            await MessageUtils.send_to(self.ctx, "WHAT", 'jumbo_timeout')
         else:
             if len(self.e_list) > 0:
                 await self.send()
                 self.cleanup()
             else:
-                GearbotLogging.send_to(self.ctx, "WRENCH", "jumbo_no_emoji")
+                await MessageUtils.send_to(self.ctx, "WRENCH", "jumbo_no_emoji")
 
     async def prep(self):
         for part in self.text.split(" "):
