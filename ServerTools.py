@@ -1,14 +1,10 @@
 import asyncio
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
 import GearBot
 from Bot import TheRealGearBot
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, Emoji, Translator, \
-   Confirmation, MessageUtils
-from Util.Converters import DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message
+from Util import Permissioncheckers, GearbotLogging, Emoji, Translator
 
 class ServerTools:
     permissions = {
