@@ -4,7 +4,7 @@ from discord.ext import commands
 
 import GearBot
 from Bot import TheRealGearBot
-from Util import Permissioncheckers, GearbotLogging, Emoji, Translator
+from Util import Permissioncheckers, GearbotLogging, Emoji, Translator, MessageUtils
 
 class ServerTools:
     permissions = {
@@ -27,7 +27,7 @@ class ServerTools:
             try:
                 await channel.send("{message}") 
             except discord.Forbidden:
-                MessageUtils.send_to(ctx, 'NO', 'announce_invaild_id')
+                await MessageUtils.send_to(ctx, 'NO', 'announce_invaild_id')
                 
 def setup(bot):
     bot.add_cog(ServerTools(bot))
