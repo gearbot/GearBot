@@ -547,6 +547,6 @@
   "emoji_upload_help": "Uploads a new emoji",
   "emoji_upload_no_attachments": "Your message did not have any attachments to be uploaded as emoji",
   "emoji_name_space": "Emoji names can not have spaces",
-  "emoji_upload_rejected": "Discord refused the emoji, maybe it has a bad name or is corrupt?"
+  "emoji_upload_rejected": "Discord refused the emoji, maybe it has a bad name or is corrupt?",
   "announce_invaild_id": "I was not able to talk in that channel. Are you sure that you have the correct channel and I have permission to view and talk in that particular channel?"
 }
