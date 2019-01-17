@@ -14,11 +14,8 @@ class ServerTools:
     }
     def __init__(self, bot):
         self.bot: GearBot = bot
-        self.running = True
         self.handling = set()
 
-    def __unload(self):
-        self.running = False
 
     async def __local_check(self, ctx):
         return Permissioncheckers.check_permission(ctx)
@@ -28,9 +25,9 @@ class ServerTools:
     async def announce(self, ctx: commands.Context, channel:discord.TextChannel, *, message):
         if message != None:
             try:
-                await channel.send(f"{message}") 
+                await channel.send("{message}") 
             except discord.Forbidden:
-                await ctx.send(
-                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('announce_invaild_id', ctx)}")
+                MessageUtils.send_to(ctx, 'NO', 'announce_invaild_id')
+                
 def setup(bot):
     bot.add_cog(ServerTools(bot))
