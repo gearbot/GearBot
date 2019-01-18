@@ -50,7 +50,7 @@ def trim_message(message, limit):
 
 
 
-async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
+async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True):
     text = str(text)
     if guild is not None:
         # resolve user mentions
@@ -84,9 +84,10 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
     else:
         text = text.replace("@", "@\u200b").replace("**", "*​*").replace("``", "`​`")
 
-    for e in set(EMOJI_MATCHER.findall(text)):
-        a, b, c = zip(e)
-        text = text.replace(f"<{a[0]}:{b[0]}:{c[0]}>", f"<{a[0]}\\:{b[0]}\\:{c[0]}>")
+    if emoji:
+        for e in set(EMOJI_MATCHER.findall(text)):
+            a, b, c = zip(e)
+            text = text.replace(f"<{a[0]}:{b[0]}:{c[0]}>", f"<{a[0]}\\:{b[0]}\\:{c[0]}>")
 
     if links:
         #find urls last so the < escaping doesn't break it
