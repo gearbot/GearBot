@@ -54,6 +54,7 @@ class UserID(Converter):
 
 class Reason(Converter):
     async def convert(self, ctx, argument):
+        argument = argument.strip("|").strip()
         argument = argument.replace("@everyone", "@\u200beveryone").replace("@here", "@\u200bhere")
         for match in EMOJI_MATCHER.finditer(argument):
             argument = argument.replace(match.group(0), f":{match.group(2)}:")
