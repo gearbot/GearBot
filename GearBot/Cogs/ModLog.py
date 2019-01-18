@@ -228,6 +228,7 @@ class ModLog:
         fid = f"{guild.id}-{user.id}"
         if fid in self.bot.data["forced_exits"]:
             return
+        self.bot.data["forced_exits"].add(fid)
         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                               (Infraction.type == "Unban") &
                                               (Infraction.guild_id == guild.id)).execute()
@@ -248,8 +249,6 @@ class ModLog:
         else:
             InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id))
-
-        self.bot.data["forced_exits"].add(fid)
 
     async def on_member_unban(self, guild, user):
         fid = f"{guild.id}-{user.id}"
