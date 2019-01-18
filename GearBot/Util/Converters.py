@@ -56,7 +56,7 @@ class Reason(Converter):
     async def convert(self, ctx, argument):
         argument = argument.replace("@everyone", "@\u200beveryone").replace("@here", "@\u200bhere")
         for match in EMOJI_MATCHER.finditer(argument):
-            argument = argument.replace(match.group(0), f":{match.group(1)}:")
+            argument = argument.replace(match.group(0), f":{match.group(2)}:")
         if len(argument) > 1800:
             raise TranslatedBadArgument('reason_too_long', ctx)
         return argument
