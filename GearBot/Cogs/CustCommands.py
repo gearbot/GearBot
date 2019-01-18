@@ -52,6 +52,7 @@ class CustCommands:
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     async def command(self, ctx:commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
