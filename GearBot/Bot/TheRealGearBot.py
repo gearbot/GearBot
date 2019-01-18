@@ -51,10 +51,10 @@ async def initialize(bot):
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 
-        if bot.redis_pool is None:
+        if bot.redis_pool is None or bot.redis_raid_pool is None:
             try:
                 bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
-                # bot.redis_raid_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=1)
+                bot.redis_raid_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=1)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching and anti-raid connections unavailable")

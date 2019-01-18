@@ -279,7 +279,7 @@ class Moderation:
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     async def tempban(self, ctx: commands.Context, user: DiscordUser, duration: Duration, *, reason: Reason = ""):
-        """ban_help"""
+        """tempban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         if duration.unit is None:

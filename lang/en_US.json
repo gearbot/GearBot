@@ -298,7 +298,7 @@
   "mass_failures_ban": "I was unable to ban the following users ({page_num}/{pages}):",
   "processing": "Processing...",
   "already_blacklisted": "``{word}`` was already on the blacklist.",
-  "entry_too_short": "Blacklist entries must be atleast 3 chars.",
+  "entry_too_short": "Blacklist entries must be at least 3 chars.",
   "entry_added": "Successfully added ``{entry}`` to the blacklist.",
   "not_blacklisted": "``{word}`` was not blacklisted.",
   "entry_removed": "Successfully removed ``{entry}`` from the blacklist.",
@@ -547,5 +547,15 @@
   "emoji_upload_help": "Uploads a new emoji",
   "emoji_upload_no_attachments": "Your message did not have any attachments to be uploaded as emoji",
   "emoji_name_space": "Emoji names can not have spaces",
-  "emoji_upload_rejected": "Discord refused the emoji, maybe it has a bad name or is corrupt?"
+  "emoji_upload_rejected": "Discord refused the emoji, maybe it has a bad name or is corrupt?",
+  "inf_info_help": "Shows details on a specific infraction",
+  "ignored_channels_help": "Configures ignored channels",
+  "ignored_channels_changes_help": "Configures channels to ignore for logging channel changes",
+  "ignored_channels_add_help": "Adds a channel to the ignored list",
+  "ignored_channels_remove_help": "Removes a channel from the ignored list again",
+  "ignored_channels_edits_help": "Configures channel to ignore for edit and delete logs",
+  "ignored_channels_list_help": "Shows the list of channels currently on the ignore list",
+  "tempban_help": "Temporarily bans someone from the server (regardless on if they are on the server atm or not)",
+  "ignored_channels_already_on_list": "{channel} is already being ignored",
+  "ignored_channels_not_on_list": "{channel} was not being ignored"
 }

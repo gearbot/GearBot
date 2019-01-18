@@ -421,7 +421,7 @@ class ModLog:
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
     async def on_guild_channel_update(self, before, after):
-        if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES"): return
+        if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES") or before.id in Configuration.get_var(before.guild.id, "IGNORED_CHANNELS_CHANGES"): return
         await self.handle_simple_changes(before, after, "channel_update_simple", "CHANNEL_CHANGES",
                                          AuditLogAction.channel_update,
                                          ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate",

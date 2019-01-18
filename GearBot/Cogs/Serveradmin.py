@@ -1,4 +1,5 @@
 import discord
+from discord import TextChannel
 from discord.ext import commands
 
 from Bot.GearBot import GearBot
@@ -697,6 +698,66 @@ class Serveradmin:
                     else:
                         unknown.append(t)
         return types, unknown
+
+    @configure.group()
+    @commands.guild_only()
+    async def ignored_channels(self, ctx):
+        """ignored_channels_help"""
+        if ctx.invoked_subcommand == self.ignored_channels:
+            await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels")
+
+    @ignored_channels.group("changes")
+    @commands.guild_only()
+    async def ignored_channels_changes(self, ctx):
+        """ignored_channels_changes_help"""
+        if ctx.invoked_subcommand == self.ignored_channels_changes:
+            await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels changes")
+
+    @ignored_channels_changes.command("add")
+    async def ignored_channels_changes_add(self, ctx, channel:TextChannel):
+        """ignored_channels_add_help"""
+        pass
+
+    @ignored_channels_changes.command("remove")
+    async def ignored_channels_changes_remove(self, ctx, channel: TextChannel):
+        """ignored_channels_remove_help"""
+        pass
+
+    @ignored_channels_changes.command("list")
+    async def ignored_channels_changes_list(self, ctx):
+        """ignored_channels_list_help"""
+        pass
+
+    @ignored_channels.group("edits", aliases=["edit"])
+    @commands.guild_only()
+    async def ignored_channels_edits(self, ctx):
+        """ignored_channels_edits_help"""
+        if ctx.invoked_subcommand == self.ignored_channels_edits:
+            await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels other")
+
+    @ignored_channels_edits.command("add")
+    async def ignored_channels_edits_add(self, ctx, channel: TextChannel):
+        """ignored_channels_add_help"""
+        channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_OTHER')
+        if channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list')
+        else:
+            channels.append(channel.id)
+
+    async def add_ignored_channel(self, ctx, channel):
+        pass
+
+    @ignored_channels_edits.command("remove")
+    async def ignored_channels_edits_remove(self, ctx, channel: TextChannel):
+        """ignored_channels_remove_help"""
+        pass
+
+    @ignored_channels_edits.command("list")
+    async def ignored_channels_edits_list(self, ctx):
+        """ignored_channels_list_help"""
+        pass
+
+
 
 
     @commands.group()
