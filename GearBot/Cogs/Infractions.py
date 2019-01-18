@@ -39,7 +39,7 @@ class Infractions:
     @commands.command()
     async def warn(self, ctx:commands.Context, member:discord.Member, *, reason:Reason):
         """warn_help"""
-        if (ctx.author != member  and ctx.author.top_role > member.top_role) or ctx.guild.owner == ctx.author:
+        if ctx.author != member and (ctx.author.top_role > member.top_role or ctx.guild.owner == ctx.author):
             if member.id == self.bot.user.id:
                 async def yes():
                     channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
