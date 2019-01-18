@@ -8,15 +8,20 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, VersionInfo, Permissioncheckers
 
 
 class BCVersionChecker:
-    critical = False
-    cog_perm = 0
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {}
+    }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
         self.running = True
@@ -32,7 +37,7 @@ class BCVersionChecker:
         self.running = False
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
     @commands.command()
     @Permissioncheckers.bc_only()
@@ -156,7 +161,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                 v = f"{v}\n{line}"
             if len(v) > 0:
                 embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.logToBotlog(embed=embed)
+            await GearbotLogging.bot_log(embed=embed)
         for i in range(1,60):
             if checkcog.force or not checkcog.running:
                 break

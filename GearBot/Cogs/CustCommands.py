@@ -1,33 +1,46 @@
-import asyncio
-from datetime import datetime
-
 import discord
 from discord.ext import commands
 
-from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator
+from Bot.GearBot import GearBot
+from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, MessageUtils
 from database.DatabaseConnector import CustomCommand
 
 
 class CustCommands:
-    critical = False
-    cog_perm = 0
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {
+            "command|commands": {
+                "required": 0,
+                "min": 0,
+                "max": 6,
+                "commands": {
+                    "create|add|new": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                    "remove": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                    "update": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                }
+            }
+        }
+    }
 
     def __init__(self, bot):
-        self.bot:commands.Bot = bot
+        self.bot:GearBot = bot
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
+        self.loaded = False
 
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
 
     async def reloadCommands(self):
-        while not self.bot.STARTUP_COMPLETE:
-            await asyncio.sleep(1)
         for guild in self.bot.guilds:
             self.commands[guild.id] = dict()
             for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):
                 self.commands[guild.id][command.trigger] = command.response
+        self.loaded = True
 
     async def on_guild_join(self, guild):
         self.commands[guild.id] = dict()
@@ -39,6 +52,7 @@ class CustCommands:
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     async def command(self, ctx:commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
@@ -57,16 +71,17 @@ class CustCommands:
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
-    async def create(self, ctx:commands.Context, trigger:str, *, reply:str = None):
+    async def create(self, ctx: commands.Context, trigger: str, *, reply: str = None):
         """Create a new command"""
         if len(trigger) == 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
-            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply')}")
+            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply', ctx.guild.id)}")
+        elif len(trigger) > 20:
+            await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         else:
             trigger = trigger.lower()
-            command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
+            command = CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
                 self.commands[ctx.guild.id][trigger] = reply
@@ -81,11 +96,12 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
     async def remove(self, ctx:commands.Context, trigger:str):
         """Removes a custom command"""
         trigger = trigger.lower()
-        if trigger in self.commands[ctx.guild.id]:
+        if len(trigger) > 20:
+            await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
+        elif trigger in self.commands[ctx.guild.id]:
             CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
             del self.commands[ctx.guild.id][trigger]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")
@@ -94,7 +110,6 @@ class CustCommands:
 
     @command.command()
     @commands.guild_only()
-    @Permissioncheckers.mod_only()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """Sets a new reply for the specified command"""
         trigger = trigger.lower()
@@ -104,24 +119,24 @@ class CustCommands:
             command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
-                await ctx.invoke(self.create, trigger, response=reply)
+                await ctx.invoke(self.create, trigger, reply=reply)
             else:
                 command.response = reply
                 command.save()
                 self.commands[ctx.guild.id][trigger] = reply
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id)}")
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        prefix = Configuration.getConfigVar(message.guild.id, "PREFIX")
+        prefix = Configuration.get_var(message.guild.id, "PREFIX")
         if message.content.startswith(prefix, 0):
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
                     await message.channel.send(self.commands[message.guild.id][trigger])
-                    self.bot.commandCount = self.bot.commandCount + 1
+                    self.bot.custom_command_count += 1
 
 
 

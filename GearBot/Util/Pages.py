@@ -1,23 +1,13 @@
 import discord
-from discord import utils
 
-from Util import Utils
+from Util import Utils, Emoji, Translator
 
 page_handlers = dict()
 
 known_messages = dict()
 
-prev_id = 465582003669041163
-next_id = 465582003677298708
 
-prev_emoji = None
-next_emoji = None
-
-
-def on_ready(bot):
-    global prev_emoji, next_emoji
-    prev_emoji = utils.get(bot.emojis, id=prev_id)
-    next_emoji = utils.get(bot.emojis, id=next_id)
+def initialize(bot):
     load_from_disc()
 
 
@@ -28,14 +18,16 @@ def register(type, init, update, sender_only=False):
         "sender_only": sender_only
     }
 
+
 def unregister(type_handler):
     if type_handler in page_handlers.keys():
         del page_handlers[type_handler]
 
+
 async def create_new(type, ctx, **kwargs):
-    text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
-    message:discord.Message = await ctx.channel.send(text, embed=embed)
-    if has_pages:
+    text, embed, has_pages, emoji = await page_handlers[type]["init"](ctx, **kwargs)
+    message: discord.Message = await ctx.channel.send(text, embed=embed)
+    if has_pages or len(emoji) > 0:
         data = {
             "type": type,
             "page": 0,
@@ -45,31 +37,36 @@ async def create_new(type, ctx, **kwargs):
         for k, v in kwargs.items():
             data[k] = v
         known_messages[str(message.id)] = data
-
-        await message.add_reaction(prev_emoji)
-        await message.add_reaction(next_emoji)
+        try:
+            if has_pages: await message.add_reaction(Emoji.get_emoji('LEFT'))
+            for e in emoji: await message.add_reaction(e)
+            if has_pages: await message.add_reaction(Emoji.get_emoji('RIGHT'))
+        except discord.Forbidden:
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms', ctx, prev=Emoji.get_chat_emoji('LEFT'), next=Emoji.get_chat_emoji('RIGHT'))} {Emoji.get_chat_emoji('WARNING')}")
 
     if len(known_messages.keys()) > 500:
         del known_messages[list(known_messages.keys())[0]]
 
     save_to_disc()
 
+
 async def update(bot, message, action, user):
     message_id = str(message.id)
-    if message_id in known_messages.keys():
-        type = known_messages[message_id]["type"]
-        if type in page_handlers.keys():
-            data = known_messages[message_id]
-            if data["sender"] == user or page_handlers[type]["sender_only"] is False:
-                page_num = data["page"]
+    type = known_messages[message_id]["type"]
+    if type in page_handlers.keys():
+        data = known_messages[message_id]
+        if data["sender"] == user or page_handlers[type]["sender_only"] is False:
+            page_num = data["page"]
+            try:
                 trigger_message = await message.channel.get_message(data["trigger"])
-                ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
-                text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
-                await message.edit(content=text, embed=embed)
-                known_messages[message_id]["page"] = page
-                save_to_disc()
-                return True
-    return False
+            except discord.NotFound:
+                trigger_message = None
+            ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
+            text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
+            await message.edit(content=text, embed=embed)
+            known_messages[message_id]["page"] = page
+            save_to_disc()
 
 def basic_pages(pages, page_num, action):
     if action == "PREV":
@@ -78,12 +75,13 @@ def basic_pages(pages, page_num, action):
         page_num += 1
     if page_num < 0:
         page_num = len(pages) - 1
-    if page_num == len(pages):
+    if page_num >= len(pages):
         page_num = 0
     page = pages[page_num]
     return page, page_num
 
-def paginate(input, max_lines = 20, max_chars = 1900, prefix = "", suffix = ""):
+
+def paginate(input, max_lines=20, max_chars=1900, prefix="", suffix=""):
     max_chars -= len(prefix) + len(suffix)
     lines = str(input).splitlines(keepends=True)
     pages = []
@@ -109,6 +107,7 @@ def paginate(input, max_lines = 20, max_chars = 1900, prefix = "", suffix = ""):
         count += 1
     pages.append(f"{prefix}{page}{suffix}")
     return pages
+
 
 def paginate_fields(input):
     pages = []
@@ -144,11 +143,10 @@ def paginate_fields(input):
     return real_pages
 
 
-
-
 def save_to_disc():
     Utils.saveToDisk("known_messages", known_messages)
 
+
 def load_from_disc():
     global known_messages
-    known_messages = Utils.fetchFromDisk("known_messages")
+    known_messages = Utils.fetch_from_disk("known_messages")

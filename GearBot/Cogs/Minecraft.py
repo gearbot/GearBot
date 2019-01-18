@@ -7,23 +7,31 @@ import aiohttp
 import discord
 from discord.ext import commands
 
+from Bot.GearBot import GearBot
 from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers, Translator
 
 
 class Minecraft:
-    critical = False
-    cog_perm = 0
+    permissions = {
+        "min": 0,
+        "max": 6,
+        "required": 0,
+        "commands": {}
+    }
 
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
+        self.bot: GearBot = bot
         self.cf_cache = dict()
         self.fetching = []
         self.running = True
         self.bot.loop.create_task(expire_cache(self))
         Pages.register("cf", self.init_cf, self.update_cf)
 
+    def __unload(self):
+        self.running = False
+
     async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx, True)
+        return Permissioncheckers.check_permission(ctx)
 
     async def get_info(self, ctx, project_name, log):
         while project_name in self.fetching:
@@ -117,7 +125,7 @@ class Minecraft:
             latest = Translator.translate('cf_latest', ctx, name=latest_v['name'], version=latest_v['version'],
                                           downloads='{:,}'.format(latest_v['downloads']))
             fields = {
-                Translator.translate('cf_project_name', ctx): info["title"],
+                Translator.translate('project_name', ctx): info["title"],
                 Translator.translate('downloads', ctx): "{:,}".format(info["downloads"]),
                 Translator.translate('latest', ctx): latest,
                 Translator.translate('project_categories', ctx): "\n".join(info["categories"]),
@@ -127,26 +135,27 @@ class Minecraft:
 
     @commands.group()
     async def cf(self, ctx):
+        """cf_help"""
         pass
 
     @cf.command()
     async def info(self, ctx, project_name: str):
         await Pages.create_new("cf", ctx, project_name=project_name)
 
-    @cf.command()
-    async def latest(self, ctx, project_name: str, version: str):
-        await Pages.create_new("cf", ctx, project_name=project_name, version=version)
+    # @cf.command()
+    # async def latest(self, ctx, project_name: str, version: str):
+    #     await Pages.create_new("cf", ctx, project_name=project_name, version=version)
 
     async def init_cf(self, ctx, project_name):
         info = await self.get_info(ctx, project_name, True)
         pages = await self.gen_cf_pages(ctx, project_name, True)
         if pages is None:
-            return Translator.translate('cf_not_found', ctx), None, False
+            return Translator.translate('cf_not_found', ctx), None, False, []
         embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=project_name))
         embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():
             embed.add_field(name=k, value=v)
-        return None, embed, len(pages) > 1
+        return None, embed, len(pages) > 1, []
 
     async def update_cf(self, ctx, message, page_num, action, data):
         pages = await self.gen_cf_pages(ctx, data["project_name"], False)
@@ -165,7 +174,7 @@ def setup(bot):
 
 async def expire_cache(self):
     GearbotLogging.info("Started CurseForge cache cleaning task")
-    while self.running == True:
+    while self.running:
         if self.cf_cache != {}:
             for cachedproject, projectinfo in self.cf_cache.items():
                 cachedtime = projectinfo["time"].minute
@@ -179,3 +188,4 @@ async def expire_cache(self):
             pass  # We have nothing to purge
 
         await asyncio.sleep(5)
+    GearbotLogging.info("CurseForge cache cleaning task terminated")

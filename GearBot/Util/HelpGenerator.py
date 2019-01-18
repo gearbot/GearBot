@@ -23,7 +23,8 @@ async def command_list(bot, ctx:Context):
         for command_name, info in commands.items():
             output += "  " + command_name + (" " * (longest - len(command_name) + 2)) + info + "\n"
         output_tree[cog] = output
-    return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{ctx.prefix}help <command>'\nCommands followed by ↪  have subcommands".replace(ctx.me.mention, f"@{ctx.me.name}"))
+    prefix = (ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") if ctx is not None else "@GearBot")
+    return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{prefix}help <command>'\nCommands followed by ↪  have subcommands")
 
 
 async def cog_commands(bot, ctx, cog):
@@ -68,6 +69,8 @@ async def gen_cog_help(bot, ctx, cog):
     return [output]
 
 async def gen_command_help(bot, ctx, command):
+    if ctx.prefix is None:
+        ctx.prefix = ""
     usage = ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
     sub_info = None
     if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
@@ -76,7 +79,7 @@ async def gen_command_help(bot, ctx, command):
             sub_info = "\nSub commands:\n"
             for command_name, info in subcommands.items():
                 sub_info += "  " + command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
-            sub_info += f"You can get more info about a command (params and subcommands) by using '{ctx.prefix}help {command.signature} <subcommand>'\nCommands followed by ↪  have subcommands".replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
+            sub_info += Translator.translate('help_footer', ctx, prefix=ctx.prefix, signature=command.signature).replace(ctx.me.mention, f"@{ctx.me.name}") + command.signature
 
     return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, ctx)}\n{'' if sub_info is None else sub_info}".replace(ctx.me.mention, f"@{ctx.me.name}"))
 
