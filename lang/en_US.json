@@ -323,7 +323,7 @@
   "not_banned": "This person isn't currently banned",
   "user_conversion_failed": "Unable to convert '{arg}' to a user",
   "no_potential_id": "'{arg}' isn't a potential userid",
-  "no_log_channel": "'{arg} is not configured as a logging channel",
+  "no_log_channel": "'{arg}' is not configured as a logging channel",
   "unknown_server": "Can't find a server with '{arg}' as ID, if you are sure this server exists then I'm not a part of it",
   "unknown_message": "Found the channel, but not the message, did it get removed or is it in a channel I can't read messages from?",
   "custom_command_trigger_too_long": "Custom command triggers can only be up to 20 chars long",
