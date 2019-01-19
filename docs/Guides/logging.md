@@ -10,7 +10,6 @@ GearBot can log the following things (these are also the keys you use in the con
 - JOIN_LOGS
 - MOD_ACTIONS
 - COMMAND_EXECUTED
-- ROLE_CHANGES
 - CHANNEL_CHANGES
 - VOICE_CHANGES
 - VOICE_CHANGES_DETAILED
