@@ -564,5 +564,6 @@
   "ignored_channels_changes_removed": "Changes to {channel} will be logged again",
   "no_ignored_channels": "There are no ignored channels, if i see it, i log it",
   "ignored_channels_list_changes": "No channel changes will be logged for the following channels",
-  "ignored_channels_list_other": "Edits and message deletions will not be logged for the following channels"
+  "ignored_channels_list_other": "Edits and message deletions will not be logged for the following channels",
+  "seen_help": "Shows when the last message by the user was logged"
 }
