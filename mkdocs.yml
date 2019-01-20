@@ -16,6 +16,7 @@ nav:
       - Self assignable roles: 'Guides/selfroles.md'
       - Custom Commands: 'Guides/custom_commands.md'
       - Misc tweaks: 'Guides/misc.md'
+      - Ignoring channels: 'Guides/ignored_channels'
       - Archiving: 'Guides/archiving.md'
       - Infractions: 'Guides/infractions.md'
   - Supporting: 'supporting.md'
