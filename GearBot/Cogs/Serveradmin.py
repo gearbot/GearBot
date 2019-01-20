@@ -716,17 +716,38 @@ class Serveradmin:
     @ignored_channels_changes.command("add")
     async def ignored_channels_changes_add(self, ctx, channel:TextChannel):
         """ignored_channels_add_help"""
-        pass
+        channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_CHANGES')
+        if channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list')
+        else:
+            channels.append(channel.id)
+            await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_added', channel=channel.mention)
 
     @ignored_channels_changes.command("remove")
     async def ignored_channels_changes_remove(self, ctx, channel: TextChannel):
         """ignored_channels_remove_help"""
-        pass
+        channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_CHANGES')
+        if not channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list')
+        else:
+            channels.append(channel.id)
+            await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_removed', channel=channel.mention)
 
     @ignored_channels_changes.command("list")
     async def ignored_channels_changes_list(self, ctx):
         """ignored_channels_list_help"""
-        pass
+        await self.list_channels(ctx, "changes")
+
+    @staticmethod
+    async def list_channels(ctx, type):
+        channel_list = Configuration.get_var(ctx.guild.id, f'IGNORED_CHANNELS_{type.upper()}')
+        if len(channel_list) > 0:
+            channels = "\n".join(c.mention for c in channel_list)
+        else:
+            channels = Translator.translate('no_ignored_channels', ctx)
+        embed = discord.Embed(color=ctx.guild.roles[-1].color, description=channels)
+        embed.set_author(name=Translator.translate(f'ignored_channels_list_{type}', ctx, guild=ctx.guild.name), icon_url=ctx.guild.icon_url)
+        await ctx.send(embed=embed)
 
     @ignored_channels.group("edits", aliases=["edit"])
     @commands.guild_only()
@@ -743,19 +764,22 @@ class Serveradmin:
             await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list')
         else:
             channels.append(channel.id)
-
-    async def add_ignored_channel(self, ctx, channel):
-        pass
+            await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_edits_added', channel=channel.mention)
 
     @ignored_channels_edits.command("remove")
     async def ignored_channels_edits_remove(self, ctx, channel: TextChannel):
         """ignored_channels_remove_help"""
-        pass
+        channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_OTHER')
+        if not channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list')
+        else:
+            channels.append(channel.id)
+            await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_edits_removed', channel=channel.mention)
 
     @ignored_channels_edits.command("list")
     async def ignored_channels_edits_list(self, ctx):
         """ignored_channels_list_help"""
-        pass
+        await self.list_channels(ctx, "other")
 
 
 

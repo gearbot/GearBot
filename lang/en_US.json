@@ -557,5 +557,12 @@
   "ignored_channels_list_help": "Shows the list of channels currently on the ignore list",
   "tempban_help": "Temporarily bans someone from the server (regardless on if they are on the server atm or not)",
   "ignored_channels_already_on_list": "{channel} is already being ignored",
-  "ignored_channels_not_on_list": "{channel} was not being ignored"
+  "ignored_channels_not_on_list": "{channel} was not being ignored",
+  "ignored_channels_changes_added": "Changes to {channel} will no longer be logged",
+  "ignored_channels_edits_added": "Edits and deleted messages from {channel} will no longer be logged",
+  "ignored_channels_edits_removed": "Edits and deleted messages from {channel} will be logged again",
+  "ignored_channels_changes_removed": "Changes to {channel} will be logged again",
+  "no_ignored_channels": "There are no ignored channels, if i see it, i log it",
+  "ignored_channels_list_changes": "No channel changes will be logged for the following channels",
+  "ignored_channels_list_other": "Edits and message deletions will not be logged for the following channels"
 }
