@@ -742,7 +742,7 @@ class Serveradmin:
     async def list_channels(ctx, type):
         channel_list = Configuration.get_var(ctx.guild.id, f'IGNORED_CHANNELS_{type.upper()}')
         if len(channel_list) > 0:
-            channels = "\n".join(c.mention for c in channel_list)
+            channels = "\n".join(ctx.guild.get_channel(c).mention for c in channel_list)
         else:
             channels = Translator.translate('no_ignored_channels', ctx)
         embed = discord.Embed(color=ctx.guild.roles[-1].color, description=channels)
@@ -913,6 +913,17 @@ class Serveradmin:
                 changed = True
         if changed:
             Configuration.save(role.guild.id)
+
+
+    async def on_guild_channel_delete(self, channel):
+        changed = False
+        for name in ["IGNORED_CHANNELS_CHANGES", "IGNORED_CHANNELS_OTHER"]:
+            channels = Configuration.get_var(channel.guild.id, name)
+            if channel.id in channels:
+                channels.remove(channel.id)
+                changed = True
+        if changed:
+            Configuration.save(channel.guild.id)
 
 
 
