@@ -78,7 +78,9 @@ class Moderation:
         await Pages.create_new("roles", ctx, mode=mode)
 
     @staticmethod
-    def _can_act(action, ctx, user: discord.Member, check_bot=True):
+    def _can_act(action, ctx, user, check_bot=True):
+        if not isinstance(user,  discord.Member):
+            return True
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
             if ctx.me.top_role > user.top_role or not check_bot:
@@ -261,7 +263,7 @@ class Moderation:
     @commands.command(aliases=["clean_ban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def cleanban(self, ctx: commands.Context, user: discord.Member, days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
+    async def cleanban(self, ctx: commands.Context, user: DiscordUser, days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
         """clean_ban_help"""
         await self._ban_command(ctx, user, reason, days)
 
