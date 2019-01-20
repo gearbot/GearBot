@@ -244,8 +244,8 @@ def server_info(guild, request_guild=None):
     for m in guild.members:
         statuses[str(m.status)] += 1
     embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
-    if guild.icon_url != "":
-        embed.set_image(url=guild.icon_url)
+    if guild.splash_url != "":
+        embed.set_image(url=guild.splash_url)
     return embed
 
 
