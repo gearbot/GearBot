@@ -51,7 +51,7 @@ async def initialize(bot):
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 
-        if bot.redis_pool is None:
+        if bot.redis_pool is None or not hasattr(bot, 'redis_raid_pool') or bot.redis_raid_pool is None:
             try:
                 bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
                 bot.redis_raid_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=1)
