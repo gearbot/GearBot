@@ -108,7 +108,7 @@ class Infractions:
         pages = await InfractionUtils.get_infraction_pages(data["guild_id"], data["query"], data["amount"] if "amount" in data else 25, data["fields"] if "fields" in data else ["user", "mod", "reason"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
         name = await Utils.username(data['query']) if isinstance(data['query'], int) else self.bot.get_guild(data["guild_id"]).name
-        return f"{Translator.translate('inf_search_header', ctx.guild.id, name=name, page_num=page_num + 1, pages=len(pages))}{page}", None, page_num
+        return f"{Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=len(pages))}{page}", None, page_num
 
 
     @inf.command()
