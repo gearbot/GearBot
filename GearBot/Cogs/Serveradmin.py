@@ -72,6 +72,14 @@ class Serveradmin:
         "max": 5,
         "required": 3,
         "commands": {
+            "configure": {
+                "min": 3,
+                "max": 5,
+                "required": 3,
+                "commands": {
+                    "lvl4": {"required": 5, "min": 4, "max": 6}
+                }
+            }
         }
     }
 
