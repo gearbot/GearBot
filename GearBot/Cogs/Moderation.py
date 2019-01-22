@@ -80,7 +80,7 @@ class Moderation:
     @staticmethod
     def _can_act(action, ctx, user, check_bot=True):
         if not isinstance(user,  discord.Member):
-            return True
+            return True, None
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
             if ctx.me.top_role > user.top_role or not check_bot:
