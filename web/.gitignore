@@ -3,4 +3,5 @@ node_modules
 /*.log
 *.lock
 
+!*.json
 package-lock.json
