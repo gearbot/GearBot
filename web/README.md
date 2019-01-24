@@ -1,22 +1,8 @@
-# GearBot
+# GearBot Dashboard
 
-## CLI Commands
+## Setup Process
+1. Install NodeJS and NPM
+2. `cd` into `/web` and run `npm install`
+3. Use `npm run dev` to launch a hot reloading dev server
 
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
-
-# test the production build locally
-npm run serve
-
-# run tests with jest and preact-render-spy 
-npm run test
-```
-
-For detailed explanation on how things work, checkout the [CLI Readme](https://github.com/developit/preact-cli/blob/master/README.md).
+Refer to the `package.json` for other avaliable NPM scripts

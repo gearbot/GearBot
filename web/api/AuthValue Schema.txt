@@ -1,0 +1,6 @@
+Schema
+
+9 - Header, is ignored during checks. Only here because you cant start an integer with 0
+1/0 - Infractions view permissions
+1/0 - View config permissions
+1/0 - Alter config permissions
