@@ -13,7 +13,7 @@ export default function (config, env, helpers) {
 	module: {
 		rules: [
             
-			{ test: /\.css$/, use: ["style-loader", "css-loader"] }
+			{ test: /\.(s*)css$/, use: ["sass-loader", "style-loader", "css-loader"] }
 		];
 	}
 

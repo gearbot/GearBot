@@ -12,19 +12,19 @@
     "dev": "preact watch",
     "lint": "tslint src/**/*.ts"
   },
-
   "devDependencies": {
+    "css-loader": "^2.1.0",
     "identity-obj-proxy": "^3.0.0",
+    "node-sass": "^4.11.0",
     "per-env": "^1.0.2",
     "preact-cli": "^2.1.0",
     "preact-cli-plugin-typescript": "^0.2.2",
     "preact-render-spy": "^1.2.1",
+    "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
-    "css-loader": "^2.1.0",
     "tslint": "^5.12.1",
     "typescript": "^3.2.4"
   },
-
   "dependencies": {
     "preact": "^8.2.6",
     "preact-compat": "^3.17.0",

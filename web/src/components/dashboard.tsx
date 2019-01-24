@@ -8,8 +8,6 @@ import Home from "../routes/home";
 
 import { DashboardState } from "./state";
 
-import "../style/styles.css";
-
 export default class Dashboard extends Component<{}, DashboardState> {
 
 	/** Gets fired when the route changes.

@@ -1,6 +1,5 @@
 import {h, Component} from "preact";
 
-import "../style/styles.css";
 
 export default class Home extends Component<{}, {}> {
 	render() {
