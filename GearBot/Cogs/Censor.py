@@ -1,4 +1,5 @@
 import discord
+from discord import DMChannel
 from discord.ext.commands import clean_content
 
 from Bot.GearBot import GearBot
@@ -33,6 +34,8 @@ class Censor:
 
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
+        if isinstance(channel, DMChannel):
+            return
         if channel is not None:
             permissions = channel.permissions_for(channel.guild.me)
             if permissions.read_messages and permissions.read_message_history:
