@@ -26,7 +26,7 @@ class EnumField(IntegerField):
 
 class LoggedMessage(Model):
     messageid = BigIntegerField(primary_key=True)
-    content = CharField(max_length=2048, collation="utf8mb4_general_ci", null=True)
+    content = CharField(max_length=2000, collation="utf8mb4_general_ci", null=True)
     author = BigIntegerField()
     channel = BigIntegerField()
     server = BigIntegerField()
