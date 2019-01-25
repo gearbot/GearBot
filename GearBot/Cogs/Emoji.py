@@ -177,7 +177,7 @@ class Emoji:
     @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
         if roles is None:
-            roles = []
+            return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()
         refused = set()
         for role in roles:
@@ -201,7 +201,7 @@ class Emoji:
     @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
         if roles is None:
-            roles = []
+            return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()
         refused = set()
         for role in roles:
