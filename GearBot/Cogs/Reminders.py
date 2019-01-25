@@ -127,7 +127,7 @@ class Reminders:
             "reminder": package.to_remind,
             "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
         }
-        parcel = Translator.translate(f"reminder_delivery_{mode}", location, **parts)
+        parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
         try:
             await location.send(parcel)
         except (Forbidden, NotFound):
