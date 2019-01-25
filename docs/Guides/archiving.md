@@ -15,7 +15,7 @@ When archiving a user's messages:
 ```!archive user <user> <amount>```
 In both cases the amount is optional (defaults to 100 when omitted), for archiving a channel you can also omit the channel and it will default to doing 100 messages in the current channel
 #**Examples:**
-Archiving a user's messages:
+Archiving a users messages:
 ```!archive user @AEnterprise#4693 ```
-Archiving a channel's messages:
+Archiving a channels messages:
 ```!archive channel #test-channel 5000```
