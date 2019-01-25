@@ -93,7 +93,7 @@ class Infractions:
                     if query == "":
                         query = amount
                     else:
-                        query += f" {amount}"
+                        query = f"{query} {amount}"
                     amount = 25
         else:
             amount = 25
