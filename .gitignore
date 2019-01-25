@@ -13,3 +13,5 @@ logs/
 
 !lang/*
 !config/template.json
+
+web/
