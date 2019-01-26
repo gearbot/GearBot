@@ -28,7 +28,7 @@ parse_command_line()
 loop = ioloop.IOLoop.current()
 
 
-messager = Messager("bot-dash-messages", "bot-dash-messages", loop.asyncio_loop)
+messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
 
 loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
 dashboardAPI = web.Application([

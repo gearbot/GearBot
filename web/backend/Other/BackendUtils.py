@@ -146,10 +146,7 @@ async def get_guilds_perms( userID):
 
 
     # TODO: caching
-    response = await MESSAGER.get_reply(dict(type="guild_perm_request", guild_list=guild_list))
-
-
-    perm_list = dict()
-    for data in response:
-        perm_list[data[0]] = data[1]
-    return perm_list
+    print(guild_ids)
+    response = await MESSAGER.get_reply(dict(type="guild_perm_request", guild_list=guild_ids, user_id=userID))
+    print(response)
+    return response["permissions"]
