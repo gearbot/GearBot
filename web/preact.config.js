@@ -1,20 +1,27 @@
-import preactCliTypeScript from "preact-cli-plugin-typescript";
-/**
- * Function that mutates original webpack config.
- * Supports asynchronous changes when promise is returned.
- *
- * @param {object} config - original webpack config.
- * @param {object} env - options passed to CLI.
- * @param {WebpackConfigHelpers} helpers - object with useful helpers when working with config.
- **/
-export default function (config, env, helpers) {
-	preactCliTypeScript(config);
+import { resolve } from "path";
 
-	module: {
-		rules: [
-            
-			{ test: /\.(s*)css$/, use: ["sass-loader", "style-loader", "css-loader"] }
-		];
-	}
+export default function(config, env, helpers) {
+  const entry = resolve(
+    process.cwd(),
+    "src",
+    "index"
+  );
 
+  // Use any `index` file, not just index.js
+  config.resolve.alias["preact-cli-entrypoint"] = entry;
+
+  if (env.ssr) {
+    config.entry["ssr-bundle"] = entry;
+  }
+
+  // typescript plugin
+  config.module.rules.unshift({
+    enforce: 'pre',
+    test: /\.tsx?$/,
+    loader: 'awesome-typescript-loader',
+    options: {
+      useBabel: false,
+      useCache: true
+    }
+  });
 }
