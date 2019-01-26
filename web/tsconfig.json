@@ -14,8 +14,7 @@
     "build",
     "node_modules",
     "preact.config.js",
-
-    "api"
+    "backend"
 	]
 
 }

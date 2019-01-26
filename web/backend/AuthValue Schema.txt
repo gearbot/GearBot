@@ -1,0 +1,7 @@
+Schema
+
+bitmask permissions
+1 << 0: dash access (just for simplicity)
+1 << 1: view infractions
+1 << 2: view config
+1 << 3: alter config

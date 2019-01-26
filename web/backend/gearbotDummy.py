@@ -1,10 +1,9 @@
-import aioredis
 import asyncio
-from time import perf_counter_ns
 import json
-import sys
 
-config = json.load(open("config.json"))
+import aioredis
+
+config = json.load(open("config/web.json"))
 
 redisCommChannelLookuptable = config["redisCommChannelsTable"]
 positionToPermissionLookupTable = config["positionToPermissionLookupTable"]
