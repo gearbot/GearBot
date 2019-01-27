@@ -1,5 +1,6 @@
 $backgroundColor: #EAEAEA;
 $headerColor: #f9f9f9;
+$navAccentColor: blue;
 
 html, body, .container {
   height: 100vh;
@@ -126,7 +127,7 @@ html, body, .container {
   }
 
   .home {
-	padding: 56px 20px;
+	padding: 5em 150px;
 	min-height: 100%;
 	width: 100%;
   }
@@ -135,5 +136,59 @@ html, body, .container {
 	position: absolute;
 	right: -250px;
 	bottom: -250px;
+  }
+
+  .dash-content {
+	position: relative;
+	left: 150px;
+	top: 80px;
+  }
+
+  .left-nav {
+	position: relative;
+	top: 130px;
+	float: left;
+
+	ul {
+	  background-color: $headerColor;
+	  float: left;
+	  margin-left: 1em;
+	  padding: 0;
+	  border: 2px solid $navAccentColor;
+	  border-radius: 20%;
+	  overflow: hidden;
+
+	  li {
+		list-style: none;
+		font-size: 18px;
+		border-bottom: 2px solid $navAccentColor;
+		padding-right: 1em;
+
+
+		&:hover,
+		&:active {
+		  background: rgba(0, 0, 0, 0.2);
+		}
+		a {
+		  text-decoration: none;
+		}
+
+		&:last-child {
+		  border: 0;
+		}
+
+
+		:before {
+		  content: url("../assets/gearYellow.png");
+		  &:hover,
+		  &:active {
+			content: url("../assets/gearGreen.png");
+		  }
+		  padding: 1em;
+		}
+
+
+	  }
+	}
   }
 }

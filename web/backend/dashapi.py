@@ -21,7 +21,7 @@ web_settings = {
 
 
 
-print("Starting Gearbot Dashboard")
+print("Starting Gearbot App")
 
 
 parse_command_line()

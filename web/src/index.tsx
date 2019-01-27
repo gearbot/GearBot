@@ -1,7 +1,6 @@
 import {h, render} from "preact";
-
 // Stylesheets
 import "./style/styles.scss";
-import Dashboard from "./components/dashboard";
+import App from "./components/app";
 
-render((<Dashboard></Dashboard>), document.body);
+render((<App></App>), document.body);
