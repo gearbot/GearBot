@@ -56,16 +56,16 @@ def translate(key, location, **kwargs):
 
 async def update():
     message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
-    project_key = Configuration.get_master_var("CROWDIN_KEY")
+    crowdin_data = Configuration.get_master_var("CROWDIN")
     session: aiohttp.ClientSession = BOT.aiosession
-    async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?key={project_key}&json",) as reply:
+    async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json",) as reply:
         if reply.status is not 200:
             await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('WARNING')} Crowdin api error, got response code {reply.status}")
         else:
             response  = await reply.json()
             if response["success"]["status"] == "built": # only update translations if we actually got a new build, should be every time though unless this runs 2x within 30 mins for some reason
                 async with session.get(
-                        f"https://api.crowdin.com/api/project/Gearbot/download/all.zip?key={project_key}") as reply:
+                        f"https://api.crowdin.com/api/project/Gearbot/download/all.zip?login={crowdin_data['login']}&account-key={crowdin_data['key']}") as reply:
                     data = await reply.read()
                     with open("zip.zip", "wb") as file:
                         file.write(data)
