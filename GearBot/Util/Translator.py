@@ -101,5 +101,5 @@ async def upload():
 
 def upload_file():
     data = {'files[master/lang/en_US.json]': open('lang/en_US.json', 'r')}
-    project_key = Configuration.get_master_var("CROWDIN_KEY")
-    requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?key={project_key}&json", files=data)
+    crowdin_data = Configuration.get_master_var("CROWDIN")
+    requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
