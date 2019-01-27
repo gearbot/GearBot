@@ -3,5 +3,6 @@ export interface HeaderProps {
 }
 
 export interface GearProps {
-	image: string;
+	image?: string;
+	size: number;
 }

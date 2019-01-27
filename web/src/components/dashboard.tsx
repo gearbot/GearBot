@@ -1,12 +1,11 @@
-import { h, Component } from "preact";
-import { Router } from "preact-router";
+import {Component, h} from "preact";
+import {Router} from "preact-router";
 
 import Header from "./header";
-
 // Code-splitting is automated for routes
 import Home from "../routes/home";
 
-import { DashboardState } from "./state";
+import {DashboardState} from "./state";
 
 export default class Dashboard extends Component<{}, DashboardState> {
 
@@ -18,18 +17,16 @@ export default class Dashboard extends Component<{}, DashboardState> {
 		this.setState({
 			currentUrl: e.url
 		});
-	}
+	};
 
 	render() {
 		return (
 			<div id="app">
-				<Header image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.webp?size=1024"/>
-				<div class="headerContainer">
+				<Header image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
 					<Router onChange={this.handleRoute}>
 						<Home path="/" />
 					</Router>
 				</div>
-			</div>
 		);
 	}
 }

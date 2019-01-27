@@ -1,6 +1,5 @@
 export interface GearState {
 	rotation: Number;
-	image: string;
 	timer: Number;
 }
 
