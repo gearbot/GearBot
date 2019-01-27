@@ -11,6 +11,7 @@ html, body, .container {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
 * {
@@ -20,6 +21,7 @@ html, body, .container {
 #app {
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
 
   .headerContainer {
 	background: $backgroundColor;
@@ -127,5 +129,11 @@ html, body, .container {
 	padding: 56px 20px;
 	min-height: 100%;
 	width: 100%;
+  }
+
+  .gearFooter {
+	position: absolute;
+	right: -250px;
+	bottom: -250px;
   }
 }

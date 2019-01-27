@@ -6,6 +6,7 @@ import Header from "./header";
 import Home from "../routes/home";
 
 import {DashboardState} from "./state";
+import Gear from "./gear";
 
 export default class Dashboard extends Component<{}, DashboardState> {
 
@@ -26,6 +27,9 @@ export default class Dashboard extends Component<{}, DashboardState> {
 					<Router onChange={this.handleRoute}>
 						<Home path="/" />
 					</Router>
+				<div class="gearFooter">
+					<Gear size={500}/>
+				</div>
 				</div>
 		);
 	}

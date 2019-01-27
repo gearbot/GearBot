@@ -1,6 +1,6 @@
 export interface GearState {
-	rotation: Number;
-	timer: Number;
+	rotation: number;
+	spinning: boolean;
 }
 
 export interface DashboardState {
