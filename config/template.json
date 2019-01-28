@@ -28,5 +28,6 @@
   "RAID_DETECTION": false,
   "RAID_TIME_LIMIT": 0,
   "RAID_TRIGGER_AMOUNT": 0,
+  "RAID_CHANNEL": 0,
   "TIMEZONE": "Europe/Brussels"
 }

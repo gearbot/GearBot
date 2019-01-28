@@ -13,7 +13,6 @@ GearBot can log the following things (these are also the keys you use in the con
 - CHANNEL_CHANGES
 - VOICE_CHANGES
 - VOICE_CHANGES_DETAILED
-- RAID_ALERTS
 - FUTURE_LOGS
 
 FUTURE_LOGS is a special one, this one doesnt log anything, it is merely a placeholder. When new logging types are added, having this one configured means they will automatically be added and enabled.
