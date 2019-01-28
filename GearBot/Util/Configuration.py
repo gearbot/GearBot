@@ -89,7 +89,14 @@ def v7(config):
     config["RAID_TIME_LIMIT"] = 0
     config["RAID_TRIGGER_AMOUNT"] = 0
     config["TIMEZONE"] = "Europe/Brussels"
+    add_logging(config, "RAID_ALERTS")
     return config
+
+
+def add_logging(config, *args):
+    for cid, info in config["LOG_CHANNELS"].items():
+        if "FUTURE_LOGS" in info:
+            info.extend(args)
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
 MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7]
