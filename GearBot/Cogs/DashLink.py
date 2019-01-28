@@ -43,12 +43,11 @@ class DashLink:
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
             try:
-                await self.handlers[message["type"]](message)
+                reply = await self.handlers[message["type"]](message)
+                reply["uid"] = message["uid"]
+                await self.redis_link.publish_json("bot-dash-messages", reply)
             except Exception as e:
                 await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
-
-    async def send_reply(self, data):
-        await self.redis_link.publish_json("bot-dash-messages", data)
 
 
     async def guild_perm_request(self, message):
@@ -71,7 +70,7 @@ class DashLink:
                     permission |= (1 << 3)  # config write access
 
             permissions[guid] = permission
-        await self.send_reply(dict(uid=message["uid"], permissions=permissions))
+        return dict(permissions=permissions)
 
 
 
