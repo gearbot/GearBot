@@ -125,21 +125,7 @@ async def translation_task(bot):
         try:
             await Translator.update()
         except Exception as ex:
-            GearbotLogging.error("Something went wrong during translation updates")
-            GearbotLogging.error(traceback.format_exc())
-            embed = Embed(colour=Colour(0xff0000),
-                                  timestamp=datetime.utcfromtimestamp(time.time()))
-            embed.set_author(name="Something went wrong during translation updates")
-            embed.add_field(name="Exception", value=str(ex))
-            v = ""
-            for line in traceback.format_exc().splitlines():
-                if len(v) + len(line) >= 1024:
-                    embed.add_field(name="Stacktrace", value=v)
-                    v = ""
-                v = f"{v}\n{line}"
-            if len(v) > 0:
-                embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.bot_log(embed=embed)
+            handle_exception("Translation task", bot, ex)
 
         try:
             await asyncio.sleep(6*60*60)

@@ -84,8 +84,15 @@ def v6(config):
     config["IGNORED_CHANNELS_OTHER"] = []
     return config
 
+def v7(config):
+    config["RAID_DETECTION"] = False
+    config["RAID_TIME_LIMIT"] = 0
+    config["RAID_TRIGGER_AMOUNT"] = 0
+    config["TIMEZONE"] = "Europe/Brussels"
+    return config
+
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION

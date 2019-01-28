@@ -1,6 +1,8 @@
 import discord
+import pytz
 from discord import TextChannel
 from discord.ext import commands
+from pytz import UnknownTimeZoneError
 
 from Bot.GearBot import GearBot
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
@@ -908,6 +910,25 @@ class Serveradmin:
         Configuration.set_var(ctx.guild.id, "ROLE_WHITELIST", mode)
         mode = "whitelist" if mode else "blacklist"
         await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
+
+    @configure.command()
+    @commands.guild_only()
+    async def timezone(self, ctx, new_zone=None):
+        current_zone = Configuration.get_var(ctx.guild.id, "TIMEZONE")
+        if new_zone is None:
+            #no new zone, spit out the current one
+            await MessageUtils.send_to(ctx, "CLOCK", "current_timezone", timezone=current_zone)
+        else:
+            try:
+                zone = str(pytz.timezone(new_zone))
+            except UnknownTimeZoneError:
+                await MessageUtils.send_to(ctx, "NO", "invalid_timezone")
+            else:
+                if current_zone == new_zone:
+                    await MessageUtils.send_to(ctx, "WHAT", "same_timezone", timezone=current_zone)
+                else:
+                    Configuration.set_var(ctx.guild.id, "TIMEZONE", zone)
+                    await MessageUtils.send_to(ctx, "YES", "timezone_set", timezone=zone)
 
 
 
