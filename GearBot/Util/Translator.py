@@ -90,7 +90,7 @@ async def update():
                 await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
 async def upload():
-    if Configuration.get_master_var("CROWDIN_KEY", None) is None:
+    if Configuration.get_master_var("CROWDIN", None) is None:
         return
     message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
     t = threading.Thread(target=upload_file)
