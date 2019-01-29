@@ -22,7 +22,7 @@ export default class Docs extends Component<DocProps, {}> {
 	render({folder, doc}) {
 		return <div class="docsMain">
 			<h1>Docs</h1>
-			<Link activeClassName="active" href="/docs">Docs Home</Link>
+			<Link activeClassName="active" to="/docs">Docs Home</Link>
 			<p>Folder: {folder}</p>
 			<p>Doc: {doc}</p>
 			<Markdown markdown={indexmarkdown} markdownOpts={this.markdownOptions}/>
