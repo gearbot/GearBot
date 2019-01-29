@@ -1,13 +1,11 @@
 import {Component, h} from "preact";
 import Markdown from "preact-markdown";
-import {Link} from "react-router-dom";
-import {DocProps} from "../components/props";
+import {Link} from "preact-router";
 
 import indexmarkdown from "../../../docs/index.md";
 
 
-export default class Docs extends Component<DocProps, {}> {
-
+export default class Docs extends Component<{}, {}> {
 
 	componentDidMount() {
 		console.log("We mounted!");
@@ -19,13 +17,13 @@ export default class Docs extends Component<DocProps, {}> {
 		"breaks": true
 	};
 
-	render({folder, doc}) {
+	render() {
 		return <div class="docsMain">
 			<h1>Docs</h1>
-			<Link activeClassName="active" to="/docs">Docs Home</Link>
 			<p>Folder: {folder}</p>
 			<p>Doc: {doc}</p>
-			<Markdown markdown={indexmarkdown} markdownOpts={this.markdownOptions}/>
+			<Link activeClassName="active" href="/docs">Docs Home</Link>
+			<Markdown markdown={indexmarkdown} markdownOpts={this.markdownOptions}></Markdown>
 		</div>;
 	}
 }

@@ -27,6 +27,6 @@
     "preact": "^8.4.2",
     "preact-compat": "^3.18.4",
     "preact-markdown": "^0.4.1",
-    "react-router-dom": "^4.3.1"
+    "preact-router": "^2.6.1"
   }
 }

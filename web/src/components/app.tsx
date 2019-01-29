@@ -1,5 +1,5 @@
 import {Component, h} from "preact";
-import {BrowserRouter as Router, Link, Route} from "react-router-dom";
+import {Router} from "preact-router";
 
 import Header from "./header";
 // Code-splitting is automated for routes
@@ -11,6 +11,11 @@ import {DashboardState} from "./state";
 import Gear from "./gear";
 
 export default class App extends Component<{}, DashboardState> {
+
+	/** Gets fired when the route changes.
+	 *	@param {Object} event		"change" event from [preact-router](http://git.io/preact-router)
+	 *	@param {string} event.url	The newly routed URL
+	 */
 	handleRoute = e => {
 		this.setState({
 			currentUrl: e.url
@@ -20,20 +25,16 @@ export default class App extends Component<{}, DashboardState> {
 	render() {
 		return (
 			<div id="app">
-
-				<Header
-					image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
-				<Router>
-					<Route path="/" component={Home}/>
-					<Route path="/dashboard" component={Dashboard}/>
-					<Route path="/docs/:folder?/:doc?/" component={Docs}/>
-				</Router>
+				<Header image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
+					<Router onChange={this.handleRoute}>
+						<Home path="/" />
+						<Dashboard path="/dashboard"/>
+						<Docs path="/docs"></Docs>
+					</Router>
 				<div class="gearFooter">
 					<Gear size={500}/>
 				</div>
-			</div>
-
-
+				</div>
 		);
 	}
 }

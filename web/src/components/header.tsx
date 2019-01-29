@@ -1,8 +1,9 @@
 import {Component, h} from "preact";
+import {Link} from "preact-router";
 
 import {HeaderProps} from "./props";
 import {HeaderState} from "./state";
-import {Link} from "react-router-dom";
+
 import Gear from "./gear";
 
 export default class Header extends Component<HeaderProps, HeaderState> {
@@ -24,6 +25,6 @@ export default class Header extends Component<HeaderProps, HeaderState> {
                     </div>
                 </nav>
             </div>
-        </header>
+        </header>;
     }
 }
