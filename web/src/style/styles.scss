@@ -29,166 +29,195 @@ html, body, .container {
   }
 
   .header {
-	position: fixed;
-	left: 0;
-	top: 0;
-	width: 100%;
-	padding: 0;
-
-	.bar {
-	  position: fixed;
-	  left: 0;
-	  top: 0;
-	  width: 100%;
-	  height: 5em;
-	  background: $headerColor;
-	  z-index: -1;
-	}
-
-	h1 {
-	  float: left;
-	  margin: 0;
-	  padding: 0 15px;
-	  font-size: 24px;
-	  line-height: 56px;
-	  font-weight: 400;
-	}
-
-	nav {
-	  position: relative;
-	  float: right;
-	  font-size: 100%;
-
-	  a {
-		display: inline-block;
-		height: 56px;
-		line-height: 56px;
-		padding: 0 1em;
-		margin: 1em 0;
-		min-width: 50px;
-		text-align: center;
-		background: rgba(223, 223, 223, 0);
-		color: black;
-		text-decoration: none;
-		will-change: background-color;
-
-		&:not(:last-child) {
-		  border-right: 2px solid black;
-		}
-
-		&:hover,
-		&:active {
-		  background: rgba(0, 0, 0, 0.2);
-		}
-
-		.active {
-		  background: rgba(0, 0, 0, 0.4);
-		}
-	  }
-	}
-
-	.gearbot {
-	  background: $headerColor;
-	  float: left;
-	  border-radius: 0 0 15% 0;
-	}
-
-
-	.profileGear {
-	  background: $headerColor;
-	  float: right;
-	  border-radius: 0 0 0 15%;
-	}
-
-	.gearContainer {
-	  position: relative;
-
-
-	  .gear {
-		padding: 1vw;
-		z-index: 0;
-		max-height: 100%;
-		max-width: 100%;
-		position: absolute;
+		position: fixed;
 		left: 0;
 		top: 0;
-	  }
+		width: 100%;
+		padding: 0;
+		z-index: 10;
 
-	  .gearImage {
-		z-index: 5;
-		position: absolute;
-		max-width: 50%;
-		max-height: 50%;
-		border-radius: 50%;
-		left: calc(12% + 1vw);
-		top: calc(12% + 1vw);
-	  }
+		.bar {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 5em;
+			background: $headerColor;
+			z-index: -1;
+		}
+
+		h1 {
+			float: left;
+			margin: 0;
+			padding: 0 15px;
+			font-size: 24px;
+			line-height: 56px;
+			font-weight: 400;
+		}
+
+		nav {
+			position: relative;
+			float: right;
+			font-size: 100%;
+
+			a {
+				display: inline-block;
+				height: 56px;
+				line-height: 56px;
+				padding: 0 1em;
+				margin: 1em 0;
+				min-width: 50px;
+				text-align: center;
+				background: rgba(223, 223, 223, 0);
+				color: black;
+				text-decoration: none;
+				will-change: background-color;
+
+				&:not(:last-child) {
+					border-right: 2px solid black;
+				}
+
+				&:hover,
+				&:active {
+					background: rgba(0, 0, 0, 0.2);
+				}
+
+				.active {
+					background: rgba(0, 0, 0, 0.4);
+				}
+			}
+		}
+
+		.gearbot {
+			background: $headerColor;
+			float: left;
+			border-radius: 0 0 15% 0;
+		}
+
+
+		.profileGear {
+			background: $headerColor;
+			float: right;
+			border-radius: 0 0 0 15%;
+		}
+
+		.gearContainer {
+			position: relative;
+			
+			@keyframes rotation {
+				0% {transform: rotate(0deg);}
+				100% {transform: rotate(359deg);}
+			}
+		
+			@-webkit-keyframes rotation {
+				0% {transform: rotate(0deg);}
+				100% {transform: rotate(359deg);}
+			}
+		
+			@-moz-keyframes rotation {
+				0% {transform: rotate(0deg);}
+				100% {transform: rotate(359deg);}
+			}
+
+			&:hover > .gear {
+				animation: rotation 2s infinite linear;
+				-webkit-animation: rotation 2s infinite linear;
+				-moz-animation: rotation 2s infinite linear;
+			}
+
+			.gear {
+				padding: 1vw;
+				max-height: 100%;
+				max-width: 100%;
+				position: relative;
+				top: 0;
+				left: 0;
+			}
+
+			.gearImage {
+				position: absolute;
+				max-width: 50%;
+				max-height: 50%;
+				border-radius: 50%;
+				
+				left: calc(14% + 1vw);
+				top: calc(16% + 1vh);
+			}
+		}
 	}
-  }
 
   .home {
-	padding: 5em 150px;
-	min-height: 100%;
-	width: 100%;
-  }
+		padding: 5em 150px;
+		min-height: 100%;
+		width: 100%;
+	}
+	
+	.docsMain {
+		position: absolute;
+		z-index: 2;
+		padding: 5em 150px;
+		min-height: 100%;
+		width: 100%;
+
+		.markup {
+			font-size: 14pt;
+		}
+	}
 
   .gearFooter {
-	position: absolute;
-	right: -250px;
-	bottom: -250px;
+		position: absolute;
+		right: -250px;
+		bottom: -250px;
+		z-index: 1;
   }
 
   .dash-content {
-	position: relative;
-	left: 150px;
-	top: 80px;
+		position: relative;
+		left: 150px;
+		top: 80px;
   }
 
   .left-nav {
-	position: relative;
-	top: 130px;
-	float: left;
+		position: relative;
+		top: 130px;
+		float: left;
 
-	ul {
-	  background-color: $headerColor;
-	  float: left;
-	  margin-left: 1em;
-	  padding: 0;
-	  border: 2px solid $navAccentColor;
-	  border-radius: 20%;
-	  overflow: hidden;
+		ul {
+			background-color: $headerColor;
+			float: left;
+			margin-left: 1em;
+			padding: 0;
+			border: 2px solid $navAccentColor;
+			border-radius: 20%;
+			overflow: hidden;
 
-	  li {
-		list-style: none;
-		font-size: 18px;
-		border-bottom: 2px solid $navAccentColor;
-		padding-right: 1em;
+			li {
+				list-style: none;
+				font-size: 18px;
+				border-bottom: 2px solid $navAccentColor;
+				padding-right: 1em;
 
+				&:hover,
+				&:active {
+					background: rgba(0, 0, 0, 0.2);
+				}
+				a {
+					text-decoration: none;
+				}
 
-		&:hover,
-		&:active {
-		  background: rgba(0, 0, 0, 0.2);
+				&:last-child {
+					border: 0;
+				}
+
+				:before {
+					content: url("../assets/gearYellow.png");
+					&:hover,
+					&:active {
+						content: url("../assets/gearGreen.png");
+					}
+					padding: 1em;
+				}
+	  	}
 		}
-		a {
-		  text-decoration: none;
-		}
-
-		&:last-child {
-		  border: 0;
-		}
-
-
-		:before {
-		  content: url("../assets/gearYellow.png");
-		  &:hover,
-		  &:active {
-			content: url("../assets/gearGreen.png");
-		  }
-		  padding: 1em;
-		}
-
-
-	  }
-	}
   }
 }

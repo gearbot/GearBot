@@ -4,10 +4,11 @@ import {Router} from "preact-router";
 import Header from "./header";
 // Code-splitting is automated for routes
 import Home from "../routes/home";
+import Dashboard from "../routes/dashboard";
+import Docs from "../routes/docs";
 
 import {DashboardState} from "./state";
 import Gear from "./gear";
-import Dashboard from "../routes/dashboard";
 
 export default class App extends Component<{}, DashboardState> {
 
@@ -28,6 +29,7 @@ export default class App extends Component<{}, DashboardState> {
 					<Router onChange={this.handleRoute}>
 						<Home path="/" />
 						<Dashboard path="/dashboard"/>
+						<Docs path="/docs"></Docs>
 					</Router>
 				<div class="gearFooter">
 					<Gear size={500}/>

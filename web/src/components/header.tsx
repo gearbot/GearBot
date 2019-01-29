@@ -1,4 +1,4 @@
-import {Component, h} from "preact";
+import {h, Component} from "preact";
 import {Link} from "preact-router";
 
 import {HeaderProps} from "./props";
@@ -19,6 +19,7 @@ export default class Header extends Component<HeaderProps, HeaderState> {
                 <nav>
                     <Link activeClassName="active" href="/">Home</Link>
                     <Link activeClassName="active" href="/dashboard">Dashboard</Link>
+                    <Link activeClassName="active" href="/docs">Docs</Link>
                     <div class="profileGear">
                         <Gear image={this.props.image} size={150}/>
                     </div>

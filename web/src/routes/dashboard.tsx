@@ -10,7 +10,6 @@ export default class Dashboard extends Component<{}, {}> {
                 <h1>Dashboard</h1>
                 <p>WIP</p>
             </div>
-
         </div>;
     }
 }

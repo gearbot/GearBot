@@ -7,10 +7,17 @@
     "sourceMap": true,
     "jsx": "react",
     "jsxFactory": "h",
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "declarations/*"
+      ]
+    }
   },
   "exclude": [
     "dist",
+    ".awcache",
     "build",
     "node_modules",
     "preact.config.js",
