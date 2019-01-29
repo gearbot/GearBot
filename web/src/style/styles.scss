@@ -155,7 +155,7 @@ html, body, .container {
 	.docsMain {
 		position: absolute;
 		padding: 0 2em 5em 310px;
-	  height: 100vh;
+	  height: calc(100% - 100px);
 		width: 100%;
 	  overflow: scroll;
 	  z-index: 500;
