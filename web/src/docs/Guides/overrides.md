@@ -1,4 +1,4 @@
-#Reconfiguring command requirements
+# Reconfiguring command requirements
 **Note:** While this is possible it is not required to do so on all servers, if the defaults work for you, there is no need to add any overrides.
 
 For determining the permission level required to run a command it looks in the following order and uses the first one it finds:
@@ -9,10 +9,10 @@ For determining the permission level required to run a command it looks in the f
 5) default permission requirement for the cog this command belongs to
 
 
-##About cogs
-Commands are grouped into cogs, groups of commands if you will. If you look at the [command list](../commands.md), the commands are listed there, together with their default command level.
+## About cogs
+Commands are grouped into cogs, groups of commands if you will. If you look at the [command list](../commands), the commands are listed there, together with their default command level.
 
-#Cog overrides
+# Cog overrides
 If you want to add a cog override:
 ```
 !configure cog_overrides add <cog> <level>
@@ -29,7 +29,7 @@ You can also get a list of all configured cog overrides:
 !configure cog_overrides
 ```
 
-#Command overrides
+# Command overrides
 If cog overrides are to big for what you want to adjust, you can also adjust it for individual commands (or subcommands if you wrap it in quotation marks):
 ```
 !configure command_overrides add <command> <level>

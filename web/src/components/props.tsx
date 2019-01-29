@@ -8,6 +8,6 @@ export interface GearProps {
 }
 
 export interface Docprops {
-	folder?: string,
-	doc?: string
+	doc?: string,
+	folder?: string
 }

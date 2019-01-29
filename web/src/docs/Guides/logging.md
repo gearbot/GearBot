@@ -1,4 +1,4 @@
-#**Advanced logging**
+# Advanced logging
 So you want to do more then just log everything in a single channel? Then this guide is for you.
 
 GearBot can log the following things (these are also the keys you use in the configure commands):
@@ -21,14 +21,14 @@ All keys are case insensitive so you can type them in upper or lower case when u
 
 These commands are also made to be user friendly and help you in figuring out why things do not work. As such things can be a bit verbose and when you try to enable/disable things that are already enabled/disabled it will inform you. It will also let you know if you specified any invalid logging keys (but still process the valid ones).
 
-##**Adding logging to channels**
+## Adding logging to channels
 To add logging to a channel you can simply use the following command
 ```
 !configure logging add <channel> <types>
 ```
 Types can be a single type, everything, or a list of types.
 
-###*Some examples*
+### Some examples
 ```
 !configure logging add #mod-logs everything
 ```
@@ -37,7 +37,7 @@ Types can be a single type, everything, or a list of types.
 !configure logging add #mod-logs EDIT_LOGS, NAME_CHANGES, ROLE_CHANGES
 ```
 
-##**Verifying logging status**
+## Verifying logging status
 If for some reason you are unsure of what exactly is configured to be logged or not you can use the following commands to help you figure out what is going on.
 ```
 !configure logging
@@ -50,7 +50,7 @@ This will show you all the currently configured channels, if all required permis
 Shows the enabled features, for most logging there is no special feature that needs to be enabled, but things like edit and censor logs are linked to features.
 
 
-##**Removing logging from a channel**
+## Removing logging from a channel
 If you no longer want some keys to be logged to the channel you can remove them again:
 ```
 !configure logging remove <channel> <keys>

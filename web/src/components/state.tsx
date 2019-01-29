@@ -10,3 +10,7 @@ export interface DashboardState {
 export interface HeaderState {
 
 }
+
+export interface DocState {
+	markdown: string
+}

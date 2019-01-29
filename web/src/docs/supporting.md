@@ -1,4 +1,4 @@
-#Supporting GearBot
+# <Supporting GearBot
 
 GearBot is free and open source, and will always be like that.
 

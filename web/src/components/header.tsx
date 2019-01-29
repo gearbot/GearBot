@@ -14,7 +14,6 @@ export default class Header extends Component<HeaderProps, HeaderState> {
     render() {
         return <header class="header">
             <img src="/assets/gearbot.png" class="gearbot"/>
-            <h1>GearBot</h1>
             <div class="bar">
                 <nav>
                     <Link activeClassName="active" href="/">Home</Link>

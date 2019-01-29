@@ -1,6 +1,6 @@
-# **What are custom commands?**
+# What are custom commands?
 Custom commands are very basic commands you can make yourself (provided you have permission lvl 2 or higher for these commands). You give gearbot a trigger and a reply. When someone does `!<trigger>`, gearbot will reply with the reply you gave him.
-# **How do I create custom commands?**
+# How do I create custom commands?
 You can create a custom command using the `!commands create` command. You may also use `!commands new` or `!commands add`, which are variations of this command that do the same function.
 You will need to provide both a trigger and a reply to create custom commands.
 ```
@@ -22,5 +22,5 @@ To remove a command, use
 ```
 !commands remove <trigger>
 ```
-# **Who can use custom commands?**
+# Who can use custom commands?
 Everyone can use them, everyone can also request the list of all custom commands by just executing ``!commands``.

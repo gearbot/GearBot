@@ -1,4 +1,4 @@
-#**Infractions**
+# Infractions
 
 There are several types of infractions:
 
@@ -22,10 +22,10 @@ There are several types of infractions:
     - Ban is automatically lifted when the ban expires (unless you unban+ban or forceban the user again before the time is up)
     
     
-#**Finding infractions**
+# Finding infractions
 To find infractions there is simple yet powerful command: ``inf search [fields...] [query] [amount]``
 All parameters are optional, if you don't give any you get the last 25 infractions for the guild.
-###**Fields**
+### Fields
 Optional multi param, determines where to look.
 Possible values the [] are part of the param, to avoid confusing them with the query:
 - [mod]
@@ -35,15 +35,15 @@ Possible values the [] are part of the param, to avoid confusing them with the q
 Multiple values can be passed. If omitted it defaults to ``[mod] [user] [reason]``.
 Also see the **examples** section below
 
-###**Query**
+### Query
 Optional param, can be any userID, mention, full username (only if the user is on the server) or plain text.
 It will use this query to search the fields specified with the fields param. Also see **Examples** below
 
-###**Amount**
+### Amount
 The simplest param of them all, how many infractions you want to see. If the last thing in your command is a number between 1 and 50 (inclusive), this will be used as max amount of infractions to show. Defaults to 25.
 If you instead want to do a reason search for something that is or ends with a number between 1 and 25, simply add another number as amount after it.
 
-###**Examples**
+### Examples
 The section where it all becomes clear!
 
 Show the last 25 infractions from the server:

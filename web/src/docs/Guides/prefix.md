@@ -1,4 +1,4 @@
-#**Prefix**
+# Prefix
 GearBots default prefix is ``!`` but this is one used by many bots, if you have any other bots that also reply to this you can give GearBot a new prefix (if you are a lvl 3 (admin) person, see the [permissions guide](basic_permissions.md))!
 It will also respond to you mentioning him (``@GearBot#7326``) instead of using ``!`` regardless of his configured server prefix.
 
