@@ -16,9 +16,9 @@ export default class Header extends Component<HeaderProps, HeaderState> {
             <h1>GearBot</h1>
             <div class="bar">
                 <nav>
-                    <Link activeClassName="active" to="/">Home</Link>
-                    <Link activeClassName="active" to="/dashboard">Dashboard</Link>
-                    <Link activeClassName="active" to="/docs">Docs</Link>
+                    <Link activeClassName="active" href="/">Home</Link>
+                    <Link activeClassName="active" href="/dashboard">Dashboard</Link>
+                    <Link activeClassName="active" href="/docs">Docs</Link>
                     <div class="profileGear">
                         <Gear image={this.props.image} size={150}/>
                     </div>

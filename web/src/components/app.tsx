@@ -20,14 +20,13 @@ export default class App extends Component<{}, DashboardState> {
 	render() {
 		return (
 			<div id="app">
+
+				<Header
+					image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
 				<Router>
-					<div>
-						<Header
-							image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
-						<Route exact path="/" component={Home}/>
-						<Route path="/dashboard" component={Dashboard}/>
-						<Route path="/docs/:folder?/:doc?/" component={Docs}/>
-					</div>
+					<Route path="/" component={Home}/>
+					<Route path="/dashboard" component={Dashboard}/>
+					<Route path="/docs/:folder?/:doc?/" component={Docs}/>
 				</Router>
 				<div class="gearFooter">
 					<Gear size={500}/>
