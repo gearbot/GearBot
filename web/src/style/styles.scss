@@ -136,31 +136,36 @@ html, body, .container {
 			border-radius: 0 0 0 15%;
 		}
 		
-		.gearContainer {
+		
+		
+		
+	}
+	
+	.gearContainer {
+		position: relative;
+		
+		@include gearspin(2s, infinite, linear);
+		
+		.gear {
+			padding: 1vw;
+			max-height: 100%;
+			max-width: 100%;
 			position: relative;
+			top: 0;
+			left: 0;
+		}
+		
+		.gearImage {
+			position: absolute;
+			max-width: 50%;
+			max-height: 50%;
+			border-radius: 50%;
 			
-			@include gearspin(2s, infinite, linear);
-			
-			.gear {
-				padding: 1vw;
-				max-height: 100%;
-				max-width: 100%;
-				position: relative;
-				top: 0;
-				left: 0;
-			}
-			
-			.gearImage {
-				position: absolute;
-				max-width: 50%;
-				max-height: 50%;
-				border-radius: 50%;
-				
-				left: calc(14% + 1vw);
-				top: calc(16% + 1vh);
-			}
+			left: calc(14% + 1vw);
+			top: calc(16% + 1vh);
 		}
 	}
+	
 	
 	.home {
 		padding: 5em 150px;
