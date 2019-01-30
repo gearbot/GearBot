@@ -8,32 +8,40 @@ import Gear from "./gear";
 export default class GuildNav extends Component<{}, GuildListNavState> {
 
     constructor(props, state) {
-        super(props, state)
+        super(props, state);
         
         this.setState({
-            guilds: [
-                {guildName: "The Gearbox", guildID: 39309044394302, guildIcon: "SomeURLHere"},
-                {guildName: "The Other Gearbox", guildID: 30943043023434, guildIcon: "AnotherURL"},
-                {guildName: "Blob Emotes 3", guildID: 3930349343333, guildIcon: "OneLastURL"}
-            ]
-        })
+            guilds: [],
+            guildsLoaded: false
+        });
+
+        //TODO: error handling and dynamic links
+        fetch("http://localhost:5000/api/guilds").then(r => r.json().then(data => this.setState({guilds: data, guildsLoaded: true})))
         
     }
     
     render() {
-        return (
-            <div class="guild-nav">
-                <ul>
-                {   
-                    (this.state.guilds != null) ? this.state.guilds.map((guild) => <div class="guildItem">
-                        <Gear image={guild.guildIcon} size={150}></Gear>
-						<li><Link href={"/dashboard/guild/"+ guild.guildID} activeClassName={"active"}>{guild.guildName}</Link></li>
-					</div>): <div class="noGuildsFoundMessage">No guilds currently avaliable</div>
-                }  
-                </ul>
-            </div>
-
-        );
+        if (!this.state.guildsLoaded) {
+            return (<h1>Loading</h1>)
+        } else {
+            let selections = [];
+            for (let guid in this.state.guilds) {
+                let info = this.state.guilds[guid];
+                selections.push(
+                    <div class="guildSelection">
+                        <Link href={"/dashboard/" + guid} activeClassName={"active"}>
+                            <Gear size={250} image={info.icon}/>
+                            <p>{info.name}</p>
+                        </Link>
+                    </div>
+                )
+            }
+            return(
+                <div class="guild-nav">
+                    {selections.length > 0 ? selections : <div class="noGuildsFoundMessage">No guilds currently avaliable</div>}
+                </div>
+            )
+        }
     }
 
 }

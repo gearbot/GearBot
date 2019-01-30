@@ -11,8 +11,8 @@ class DiscordOAuthCallback(PrimaryHandler):
 
         bearer_token = await BackendUtils.get_bearer_token(auth_code=auth_code, refresh=False)
 
-        userID = await BackendUtils.get_user_info(bearer_token)
-        await BackendUtils.get_guild_list(bearer_token, userID)  # Puts the data in the cache
+        userID = await BackendUtils.get_user_id(bearer_token)
+        await BackendUtils.get_guild_list(userID, token=bearer_token)  # Puts the data in the cache
 
         self.set_secure_cookie(
             name="userauthtoken",

@@ -5,10 +5,10 @@ from tornado.options import parse_command_line
 
 from web.backend.Other import BackendUtils
 from web.backend.Other.RedisMessager import Messager
+from web.backend.routes.api.guids import Guilds
 from web.backend.routes.discordcallback import DiscordOAuthCallback
 from web.backend.routes.root import Root
 from web.backend.routes.temp.checkauth import AuthGetTestingEndpoint
-from web.backend.routes.temp.dashboard import GearbotDashboard
 from web.backend.routes.temp.discordlogin import DiscordOAuthRedir
 from web.backend.routes.temp.frontend import FrontendAPIGuildInfo
 from web.backend.routes.temp.setauth import AuthSetTestingEndpoint
@@ -33,12 +33,13 @@ messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
 loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
 dashboardAPI = web.Application([
     (r"/", Root),
-    (r"/discordlogin2", DiscordOAuthRedir), #ihateredirectcaches
+    (r"/discordlogin", DiscordOAuthRedir), #ihateredirectcaches
     (r"/discord/callback", DiscordOAuthCallback),
-    (r"/dashboard", GearbotDashboard),
     (r"/setauth", AuthSetTestingEndpoint),
     (r"/checkauth", AuthGetTestingEndpoint),
-    (r"/testing", FrontendAPIGuildInfo)
+    (r"/testing", FrontendAPIGuildInfo),
+
+    (r"/api/guilds", Guilds),
 ], **web_settings, debug=True)
 dashboard_server = HTTPServer(dashboardAPI) # Create the Tornado server
 dashboard_server.listen(5000)

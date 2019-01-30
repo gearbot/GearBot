@@ -16,8 +16,6 @@ MESSAGER = None
 REQUESTER = AsyncHTTPClient()
 
 
-
-
 async def initialize(messager):
     global config, CLIENT_ID, TESTING_USERID, CLIENT_SECRET, REDIS_CONNECTION, MESSAGER, REDIRECT_URI
     with open("config/web.json") as file:
@@ -37,7 +35,7 @@ async def initialize(messager):
 
 
 async def get_bearer_token(*, auth_code=None, user_id=None, refresh):
-    #TODO: handle an attempted refresh where the auth code in storage expired
+    # TODO: handle an attempted refresh where the auth code in storage expired
     if refresh:
         key = f"discord_refresh_token:{user_id}"
         code = await REDIS_CONNECTION.get(key)
@@ -45,19 +43,19 @@ async def get_bearer_token(*, auth_code=None, user_id=None, refresh):
     else:
         code = auth_code
     body = urllib.parse.urlencode({
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "grant_type": "refresh_token" if refresh else "authorization_code",
-            "code":code,
-            "redirect_uri": REDIRECT_URI,
-            "scope": "identify guilds"
-        })
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token" if refresh else "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+        "scope": "identify guilds"
+    })
     print(body)
     token_fetch = HTTPRequest(
-        method = "POST",
-        headers = {"Content-Type": "application/x-www-form-urlencoded"},
-        body = body,
-        url = f"{API_LOCATION}/oauth2/token"
+        method="POST",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        body=body,
+        url=f"{API_LOCATION}/oauth2/token"
     )
     try:
         token_return = await REQUESTER.fetch(token_fetch)
@@ -67,7 +65,7 @@ async def get_bearer_token(*, auth_code=None, user_id=None, refresh):
         pipeline = REDIS_CONNECTION.pipeline()
         key = f"discord_refresh_token:{user_id}"
         pipeline.set(key, refresh_token)
-        pipeline.expire(key, 24*60*60)
+        pipeline.expire(key, 24 * 60 * 60)
         await pipeline.execute()
 
         return access_token
@@ -80,8 +78,7 @@ async def get_bearer_token(*, auth_code=None, user_id=None, refresh):
             return error.code
 
 
-
-async def get_guild_list(token, user_id):
+async def get_guild_list(user_id, *, token = None):
     # The token can come back as none if this is called from a location we know it should be cached
     # This will need to reimplement the bearer token update Soon:TM: otherwise it will error out
     guilds_fetch = HTTPRequest(
@@ -100,26 +97,25 @@ async def get_guild_list(token, user_id):
 
             guild_data_pipeline = REDIS_CONNECTION.pipeline()
             guild_data_pipeline.set(redis_search_key, guilds_return.body)
-            #guild_data_pipeline.expire(redis_search_key, 300)
+            # guild_data_pipeline.expire(redis_search_key, 300)
             await guild_data_pipeline.execute()
 
             return guilds_return
     except HTTPClientError as error:
         if error.code == 401:
             access_token = await get_bearer_token(user_id=user_id, refresh=True)
-            await get_guild_list(access_token, user_id)
+            await get_guild_list(user_id, token=access_token)
             return
         else:
             print(f"An unexpected error occured with code: {error.code}")
             return error.code
 
 
-
-async def get_user_info(token):
+async def get_user_id(token):
     user_fetch = HTTPRequest(
-        method = "GET",
-        headers = {"Authorization": f"Bearer {token}"},
-        url = f"{API_LOCATION}/users/@me"
+        method="GET",
+        headers={"Authorization": f"Bearer {token}"},
+        url=f"{API_LOCATION}/users/@me"
     )
 
     try:
@@ -129,24 +125,21 @@ async def get_user_info(token):
     except HTTPClientError as error:
         if error.code == 401:
             access_token = await get_bearer_token(auth_code=token, refresh=True)
-            await get_user_info(access_token)
-            return
+            return await get_user_id(access_token)
         else:
             print(f"An unexpected error occured with code: {error.code}")
             return error.code
 
 
-async def get_guilds_perms( userID):
-    guild_list = escape.json_decode(await get_guild_list(None, userID))
+async def get_guilds_info(user_id):
+    guild_list = escape.json_decode(await get_guild_list(user_id))
 
     guild_ids = []
     for guild in guild_list:
         guild_ids.append(guild["id"])
-    print(f"Sending AuthChecks for user: {userID}")
+    print(f"Sending AuthChecks for user: {user_id}")
 
 
-    # TODO: caching
-    print(guild_ids)
-    response = await MESSAGER.get_reply(dict(type="guild_perm_request", guild_list=guild_ids, user_id=userID))
-    print(response)
-    return response["permissions"]
+    # TODO: caching?
+    info = await MESSAGER.get_reply(dict(type="guild_perm_request", guild_list=guild_ids, user_id=user_id))
+    return info

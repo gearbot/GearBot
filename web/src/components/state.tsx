@@ -12,13 +12,13 @@ export interface HeaderState {
 }
 
 export interface GuildListNavState {
-	guilds: GuildListObject[]
+	guilds: GuildListObject[],
+	guildsLoaded: boolean
 }
 
 export interface GuildListObject {
-	guildName: string,
-	guildID: number,
-	guildIcon: string,
+	name: string,
+	icon: string
 }
 
 export interface DocState {

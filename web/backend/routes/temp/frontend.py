@@ -10,6 +10,6 @@ class FrontendAPIGuildInfo(PrimaryHandler):
     @removeslash
     async def post(self):
         userID = self.get_current_user()
-        guild_perms_data = await BackendUtils.get_guilds_perms(userID)
+        guild_perms_data = await BackendUtils.get_guilds_info(userID)
         self.write(escape.json_encode(guild_perms_data))
         self.finish()
