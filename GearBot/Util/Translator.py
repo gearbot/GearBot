@@ -47,8 +47,8 @@ def translate(key, location, **kwargs):
     if key in LANGS[lang_key].keys():
         try:
             return LANGS[lang_key][key].format(**kwargs)
-        except KeyError:
-            GearbotLogging.error(f"Corrupt translation detected: {key}")
+        except (KeyError, ValueError):
+            GearbotLogging.error(f"Corrupt translation detected in {lang_key}: {key}\n```\n{LANGS[lang_key][key]}```")
     if key in LANGS["en_US"].keys():
         return LANGS["en_US"][key].format(**kwargs)
     return key
