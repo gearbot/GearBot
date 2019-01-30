@@ -19,6 +19,29 @@ html, body, .container {
   box-sizing: border-box;
 }
 
+@mixin gearspin($spintime, $spincount, $spinstyle) {
+	@keyframes rotation {
+		0% {transform: rotate(0deg);}
+		100% {transform: rotate(359deg);}
+	}
+
+	@-webkit-keyframes rotation {
+		0% {transform: rotate(0deg);}
+		100% {transform: rotate(359deg);}
+	}
+
+	@-moz-keyframes rotation {
+		0% {transform: rotate(0deg);}
+		100% {transform: rotate(359deg);}
+	}
+
+	&:hover > .gear {
+		animation: rotation $spintime $spincount $spinstyle;
+		-webkit-animation: rotation $spintime $spincount $spinstyle;
+		-moz-animation: rotation $spintime $spincount $spinstyle;
+	}
+}
+
 #app {
   height: 100vh;
   width: 100vw;
@@ -103,27 +126,8 @@ html, body, .container {
 
 		.gearContainer {
 			position: relative;
-
-			@keyframes rotation {
-				0% {transform: rotate(0deg);}
-				100% {transform: rotate(359deg);}
-			}
-
-			@-webkit-keyframes rotation {
-				0% {transform: rotate(0deg);}
-				100% {transform: rotate(359deg);}
-			}
-
-			@-moz-keyframes rotation {
-				0% {transform: rotate(0deg);}
-				100% {transform: rotate(359deg);}
-			}
-
-			&:hover > .gear {
-				animation: rotation 2s infinite linear;
-				-webkit-animation: rotation 2s infinite linear;
-				-moz-animation: rotation 2s infinite linear;
-			}
+			
+			@include gearspin(2s, infinite, linear);	
 
 			.gear {
 				padding: 1vw;
@@ -174,28 +178,50 @@ html, body, .container {
   }
 
   .dash-content {
-		position: relative;
+		position: absolute;
 		left: 150px;
 		top: 80px;
   }
 
-  .left-nav {
+  .guild-nav {
 		position: relative;
 		top: 130px;
-		float: left;
+		left: 50%;
 
 		ul {
-			background-color: $headerColor;
 			float: left;
 			margin-left: 1em;
-			padding: 0;
-			border: 2px solid $navAccentColor;
-			border-radius: 20%;
+			padding: 4px;
+			//border: 2px solid $navAccentColor;
+			//border-radius: 20%;
 			overflow: hidden;
+
+			.guildItem {
+				z-index: 11;
+				position: relative;
+				.gearContainer {
+					@include gearspin(5s, infinite, linear);
+
+					.gear {
+						padding: 1vw;
+						max-height: 100%;
+						max-width: 100%;
+						position: relative;
+						top: 0;
+						left: 0;
+					}
+	
+					.gearImage {
+						position: relative;
+						bottom: 61%;
+						left: 43%;
+					}
+				}			
+			}
 
 			li {
 				list-style: none;
-				font-size: 18px;
+				font-size: 20px;
 				border-bottom: 2px solid $navAccentColor;
 				padding-right: 1em;
 
@@ -204,13 +230,15 @@ html, body, .container {
 					background: rgba(0, 0, 0, 0.2);
 				}
 				a {
+					color: black;
 					text-decoration: none;
 				}
 
 				&:last-child {
 					border: 0;
 				}
-
+				
+				/*
 				:before {
 					content: url("../assets/gearYellow.png");
 					&:hover,
@@ -219,7 +247,8 @@ html, body, .container {
 					}
 					padding: 1em;
 				}
-	  	}
+				*/
+	  		}
 		}
-  }
+  	}
 }

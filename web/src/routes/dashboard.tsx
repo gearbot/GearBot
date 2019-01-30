@@ -1,14 +1,13 @@
 import {Component, h} from "preact";
-import LeftNav from "../components/leftnav";
+import GuildNav from "../components/guildnav";
 
 
 export default class Dashboard extends Component<{}, {}> {
     render() {
         return <div class="dashboard">
-            <LeftNav/>
+            <GuildNav/>
             <div class="dash-content">
                 <h1>Dashboard</h1>
-                <p>WIP</p>
             </div>
         </div>;
     }

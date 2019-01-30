@@ -11,12 +11,7 @@ import {DashboardState} from "./state";
 import Gear from "./gear";
 
 export default class App extends Component<{}, DashboardState> {
-
-	/** Gets fired when the route changes.
-	 *	@param {Object} event		"change" event from [preact-router](http://git.io/preact-router)
-	 *	@param {string} event.url	The newly routed URL
-	 */
-	handleRoute = e => {
+	handleRoute = (e: { url: string; }) => {
 		this.setState({
 			currentUrl: e.url
 		});
