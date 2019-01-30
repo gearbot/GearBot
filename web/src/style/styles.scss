@@ -3,38 +3,50 @@ $headerColor: #f9f9f9;
 $navAccentColor: blue;
 
 html, body, .container {
-  height: 100vh;
-  width: 100vw;
-  padding: 0;
-  margin: 0;
-  background: $backgroundColor;
-  font-family: 'Helvetica Neue', arial, sans-serif;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
+	height: 100vh;
+	width: 100vw;
+	padding: 0;
+	margin: 0;
+	background: $backgroundColor;
+	font-family: 'Helvetica Neue', arial, sans-serif;
+	font-weight: 400;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow: hidden;
 }
 
 * {
-  box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 @mixin gearspin($spintime, $spincount, $spinstyle) {
 	@keyframes rotation {
-		0% {transform: rotate(0deg);}
-		100% {transform: rotate(359deg);}
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
 	}
-
+	
 	@-webkit-keyframes rotation {
-		0% {transform: rotate(0deg);}
-		100% {transform: rotate(359deg);}
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
 	}
-
+	
 	@-moz-keyframes rotation {
-		0% {transform: rotate(0deg);}
-		100% {transform: rotate(359deg);}
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
 	}
-
+	
 	&:hover > .gear {
 		animation: rotation $spintime $spincount $spinstyle;
 		-webkit-animation: rotation $spintime $spincount $spinstyle;
@@ -43,22 +55,22 @@ html, body, .container {
 }
 
 #app {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-
-  .headerContainer {
-	background: $backgroundColor;
-  }
-
-  .header {
+	height: 100vh;
+	width: 100vw;
+	overflow: hidden;
+	
+	.headerContainer {
+		background: $backgroundColor;
+	}
+	
+	.header {
 		position: fixed;
 		left: 0;
 		top: 0;
 		width: 100%;
 		padding: 0;
 		z-index: 10;
-
+		
 		.bar {
 			position: fixed;
 			left: 0;
@@ -68,7 +80,7 @@ html, body, .container {
 			background: $headerColor;
 			z-index: -1;
 		}
-
+		
 		h1 {
 			float: left;
 			margin: 0;
@@ -77,12 +89,12 @@ html, body, .container {
 			line-height: 56px;
 			font-weight: 400;
 		}
-
+		
 		nav {
 			position: relative;
 			float: right;
 			font-size: 100%;
-
+			
 			a {
 				display: inline-block;
 				height: 56px;
@@ -95,40 +107,40 @@ html, body, .container {
 				color: black;
 				text-decoration: none;
 				will-change: background-color;
-
+				
 				&:not(:last-child) {
 					border-right: 2px solid black;
 				}
-
+				
 				&:hover,
 				&:active {
 					background: rgba(0, 0, 0, 0.2);
 				}
-
+				
 				.active {
 					background: rgba(0, 0, 0, 0.4);
 				}
 			}
 		}
-
+		
 		.gearbot {
 			background: $headerColor;
 			float: left;
 			border-radius: 0 0 15% 0;
 		}
-
-
+		
+		
 		.profileGear {
 			background: $headerColor;
 			float: right;
 			border-radius: 0 0 0 15%;
 		}
-
+		
 		.gearContainer {
 			position: relative;
 			
-			@include gearspin(2s, infinite, linear);	
-
+			@include gearspin(2s, infinite, linear);
+			
 			.gear {
 				padding: 1vw;
 				max-height: 100%;
@@ -137,57 +149,86 @@ html, body, .container {
 				top: 0;
 				left: 0;
 			}
-
+			
 			.gearImage {
 				position: absolute;
 				max-width: 50%;
 				max-height: 50%;
 				border-radius: 50%;
-
+				
 				left: calc(14% + 1vw);
 				top: calc(16% + 1vh);
 			}
 		}
 	}
-
-  .home {
+	
+	.home {
 		padding: 5em 150px;
 		min-height: 100%;
 		width: 100%;
 	}
-
+	
+	.docsNav {
+		position: relative;
+		top: 160px;
+		z-index: 6;
+	}
+	
+	
 	.docsMain {
 		position: absolute;
-		padding: 0 2em 5em 310px;
-	  height: calc(100% - 100px);
+		padding: 80px 2em 5em 310px;
+		height: 100vh;
 		width: 100%;
-	  overflow: scroll;
-	  z-index: 500;
-	  margin-top: 100px;
-
+		overflow-y: scroll;
+		z-index: 5;
+		top: 0;
+		
 		.markup {
 			font-size: 14pt;
 		}
+		
+		code {
+			background-color: #bfbfbf;
+		}
+		
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			text-align: center;
+		}
+		tr:nth-child(3n) td, th {
+			border-bottom: 1px solid black;
+		}
+		tr:nth-child(3n+1) td {
+			padding-top: 0.2em;
+		}
+		tr:nth-child(3n) td {
+			padding-bottom: 0.2em;
+		}
+		td:nth-child(3n), th:nth-child(3n) {
+			text-align: left;
+		}
 	}
-
-  .gearFooter {
+	
+	.gearFooter {
 		position: absolute;
 		right: -250px;
 		bottom: -250px;
 		z-index: 1;
-  }
-
-  .dash-content {
+	}
+	
+	.dash-content {
 		position: absolute;
 		left: 150px;
 		top: 80px;
-  }
-
-  .guild-nav {
+	}
+	
+	.guild-nav {
 		position: relative;
 		top: 130px;
 		left: 50%;
-
+		
 		ul {
 			float: left;
 			margin-left: 1em;
@@ -195,13 +236,14 @@ html, body, .container {
 			//border: 2px solid $navAccentColor;
 			//border-radius: 20%;
 			overflow: hidden;
-
+			
 			.guildItem {
 				z-index: 11;
 				position: relative;
+				
 				.gearContainer {
 					@include gearspin(5s, infinite, linear);
-
+					
 					.gear {
 						padding: 1vw;
 						max-height: 100%;
@@ -210,30 +252,31 @@ html, body, .container {
 						top: 0;
 						left: 0;
 					}
-	
+					
 					.gearImage {
 						position: relative;
 						bottom: 61%;
 						left: 43%;
 					}
-				}			
+				}
 			}
-
+			
 			li {
 				list-style: none;
 				font-size: 20px;
 				border-bottom: 2px solid $navAccentColor;
 				padding-right: 1em;
-
+				
 				&:hover,
 				&:active {
 					background: rgba(0, 0, 0, 0.2);
 				}
+				
 				a {
 					color: black;
 					text-decoration: none;
 				}
-
+				
 				&:last-child {
 					border: 0;
 				}
@@ -248,7 +291,7 @@ html, body, .container {
 					padding: 1em;
 				}
 				*/
-	  		}
+			}
 		}
-  	}
+	}
 }

@@ -2,13 +2,15 @@ import {Component, h} from "preact";
 import Markdown from "preact-markdown";
 import {Docprops} from "../components/props";
 import {DocState} from "../components/state";
+import menu from "../docs/menu"
+import {Link} from "preact-router/match";
 
 
 export default class Docs extends Component<Docprops, DocState> {
 
 	componentDidMount() {
 		let url;
-		console.log(this.props)
+		console.log(menu);
 		if (this.props.doc == "")
 			if (this.props.folder == "")
 				url = "index.md";
@@ -31,9 +33,15 @@ export default class Docs extends Component<Docprops, DocState> {
 	};
 
 	render({doc}) {
+		let navmenu = [];
+		for (var prop in menu) {
+			let value = menu[prop];
+			let target = typeof value == "string" ? value : prop;
+			navmenu.push(<li><Link activeClassName={"active"} href={"/docs/" + target.replace(" ", "_")}>{prop}</Link></li>)
+		}
 		return <div>
 			<ul class="docsNav">
-
+				{navmenu}
 			</ul>
 			<div class="docsMain">
 				{this.state.markdown ?

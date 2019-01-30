@@ -70,7 +70,7 @@ async def update_site(bot):
 
 def generate_command_list(bot):
     excluded = [
-        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink"
+        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink", "AntiRaid"
     ]
     page = ""
     handled = set()
@@ -78,19 +78,21 @@ def generate_command_list(bot):
         if cog not in excluded:
             cogo = bot.get_cog(cog)
             perm_lvl = cogo.permissions["required"]
-            page += f"#{cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
+            page += f"# {cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
             for command in sorted(bot.get_cog_commands(cog), key= lambda c:c.qualified_name):
                 if command.qualified_name not in handled:
                     page += gen_command_listing(command)
                     handled.add(command.qualified_name)
             page += "\n\n"
-    with open("docs/commands.md", "w", encoding="utf-8") as file:
+    with open("web/src/docs/commands.md", "w", encoding="utf-8") as file:
         file.write(page)
 
 def gen_command_listing(command):
     try:
-        listing = f"|{command.qualified_name}|{Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']}|{Translator.translate(command.short_doc, None)}|\n"
-        signature = str(command.signature)
+        perm_lvl = Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']
+        listing = f"| | | {Translator.translate(command.short_doc, None)} |\n"
+        listing += f"|{command.qualified_name}|{Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})| |\n"
+        signature = str(command.signature).replace("|", "ǀ")
         listing += f"| | |Example: ``!{signature}``|\n"
     except Exception as ex:
         GearbotLogging.error(command.qualified_name)

@@ -1,4 +1,4 @@
-{
+export default {
   "Home": "index",
   "Commands": "commands",
   "Setup guides": {

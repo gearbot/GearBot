@@ -24,7 +24,8 @@ export default class App extends Component<{}, DashboardState> {
 					<Router onChange={this.handleRoute}>
 						<Home path="/" />
 						<Dashboard path="/dashboard"/>
-						<Docs path="/docs/:folder?/:doc?"/>
+						<Docs path="/docs/" doc="index"/>
+						<Docs path="/docs/:folder/:doc?"/>
 					</Router>
 				<div class="gearFooter">
 					<Gear size={500}/>
