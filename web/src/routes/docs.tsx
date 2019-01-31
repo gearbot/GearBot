@@ -9,7 +9,7 @@ import {Link} from "preact-router/match";
 export default class Docs extends Component<Docprops, DocState> {
 
 	componentDidMount() {
-		let url;
+		let url: RequestInfo;
 		console.log(menu);
 		if (this.props.doc == "")
 			if (this.props.folder == "")
@@ -19,6 +19,7 @@ export default class Docs extends Component<Docprops, DocState> {
 		else
 			url = this.props.doc + ".md";
 		fetch(url).then(data => {
+			console.log("We made a request and got a code of " + data.status)
 			if (data.status == 200) {
 				data.text().then(text => this.setState({markdown: text}))
 			} else {

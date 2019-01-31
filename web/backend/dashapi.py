@@ -3,19 +3,19 @@ from tornado import web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line
 
-from web.backend.Other import BackendUtils
-from web.backend.Other.RedisMessager import Messager
-from web.backend.routes.api.guids import Guilds
-from web.backend.routes.discordcallback import DiscordOAuthCallback
-from web.backend.routes.root import Root
-from web.backend.routes.temp.checkauth import AuthGetTestingEndpoint
-from web.backend.routes.temp.discordlogin import DiscordOAuthRedir
-from web.backend.routes.temp.frontend import FrontendAPIGuildInfo
-from web.backend.routes.temp.setauth import AuthSetTestingEndpoint
+from Other import BackendUtils
+from Other.RedisMessager import Messager
+from routes.api.guids import Guilds
+from routes.discordcallback import DiscordOAuthCallback
+from routes.root import Root
+from routes.temp.checkauth import AuthGetTestingEndpoint
+from routes.temp.discordlogin import DiscordOAuthRedir
+from routes.temp.frontend import FrontendAPIGuildInfo
+from routes.temp.setauth import AuthSetTestingEndpoint
 
 web_settings = {
     "cookie_secret": "4gjw63g34th3", #token_urlsafe(32),
-    "login_url": "/discordlogin",
+    "login_url": "/discord/discordlogin",
     "xsrf_cookies": False # Turn on when not testing
 }
 
@@ -42,5 +42,5 @@ dashboardAPI = web.Application([
     (r"/api/guilds", Guilds),
 ], **web_settings, debug=True)
 dashboard_server = HTTPServer(dashboardAPI) # Create the Tornado server
-dashboard_server.listen(5000)
+dashboard_server.listen(8081)
 loop.start()

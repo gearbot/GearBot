@@ -24,4 +24,9 @@ export default function(config, env, helpers) {
       useCache: true
     }
   });
+  config.devServer.headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "x-requested-with",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+  }
 }

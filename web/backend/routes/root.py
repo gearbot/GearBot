@@ -1,6 +1,6 @@
 from tornado.web import removeslash
 
-from web.backend.Other.PrimaryHandler import PrimaryHandler
+from Other.PrimaryHandler import PrimaryHandler
 
 
 class Root(PrimaryHandler):

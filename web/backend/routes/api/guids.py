@@ -1,12 +1,19 @@
 from tornado.web import authenticated, removeslash
 
-from web.backend.Other import BackendUtils
-from web.backend.Other.PrimaryHandler import PrimaryHandler
+from Other import BackendUtils
+from Other.PrimaryHandler import PrimaryHandler
 
 
 class Guilds(PrimaryHandler):
+    
 
+    # This is gonna need a fair bit of work to get going as intended
+    @removeslash
+    async def get(self):
+        self.write({"I Despise": "CORS"})
+        self.finish()
 
+    """
     @authenticated
     @removeslash
     async def get(self):
@@ -16,4 +23,4 @@ class Guilds(PrimaryHandler):
         else:
             info = await BackendUtils.get_guilds_info(userID)
             self.finish(info)
-
+    """

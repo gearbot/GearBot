@@ -5,6 +5,8 @@ import {GuildListNavState} from "./state";
 
 import Gear from "./gear";
 
+import config from "../config";
+
 export default class GuildNav extends Component<{}, GuildListNavState> {
 
 	constructor(props, state) {
@@ -16,13 +18,15 @@ export default class GuildNav extends Component<{}, GuildListNavState> {
 		});
 
 		//TODO: error handling and dynamic links
-		fetch("/api/guilds").then(r => r.json().then(data => this.setState({
+		fetch(config.apiUrl+"/api/guilds").then(r => r.json().then(data => this.setState({
 			guilds: data,
 			guildsLoaded: true
 		})))
+		
+		console.log(this.state.guilds)
 
-
-
+		// It kinda works? At least its a good start!
+		fetch(config.apiUrl+"/api/guilds").then(r => r.json().then(data => console.log(data)))
 	}
 
 	render() {
