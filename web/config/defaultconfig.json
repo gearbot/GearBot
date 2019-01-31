@@ -4,14 +4,7 @@
     "redirect_uri": "",
     "userIDForTestingCookie": "",
 
-    "positionToPermissionLookupTable": {
-        "1": "viewInfractions",
-        "2": "viewConfig",
-        "3": "alterConfig"
-    },
-    "redisCommChannelsTable": {
-        "1": "AuthRequests",
-        "2": "AuthResponses",
-        "3": "DataTransfer"
-    }
+    "CORS_ORGINS": [
+        ""
+    ]
 }

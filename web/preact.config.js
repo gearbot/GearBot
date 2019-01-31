@@ -27,6 +27,7 @@ export default function(config, env, helpers) {
   config.devServer.headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "x-requested-with",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Credentials": "true"
   }
 }

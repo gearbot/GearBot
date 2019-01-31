@@ -18,20 +18,25 @@ export default class GuildNav extends Component<{}, GuildListNavState> {
 		});
 
 		//TODO: error handling and dynamic links
-		fetch(config.apiUrl+"/api/guilds").then(r => r.json().then(data => this.setState({
-			guilds: data,
-			guildsLoaded: true
-		})))
-		
-		console.log(this.state.guilds)
-
-		// It kinda works? At least its a good start!
-		fetch(config.apiUrl+"/api/guilds").then(r => r.json().then(data => console.log(data)))
+		fetch(config.apiUrl+"/api/guilds", {credentials: "include"}).then(r => {
+			if (r.status != 200) {
+				console.log("Failed to retrieve the guild list!")
+				this.setState({
+					guildsLoaded: true, 
+					guilds: []
+				})
+			} else {
+				r.json().then(data => this.setState({
+					guilds: data,
+					guildsLoaded: true
+				}))
+			}
+		})
 	}
 
 	render() {
 		if (!this.state.guildsLoaded) {
-			return (<h1>Loading</h1>)
+			return (<h1>Loading guilds...</h1>)
 		} else {
 			let selections = [];
 			for (let guid in this.state.guilds) {
