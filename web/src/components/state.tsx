@@ -22,5 +22,6 @@ export interface GuildListObject {
 }
 
 export interface DocState {
-	markdown: string
+	markdown: string,
+	link: string
 }

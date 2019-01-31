@@ -137,8 +137,6 @@ html, body, .container {
 		}
 		
 		
-		
-		
 	}
 	
 	.gearContainer {
@@ -177,6 +175,16 @@ html, body, .container {
 		position: relative;
 		top: 160px;
 		z-index: 6;
+		
+		list-style: none;
+		
+		li {
+			
+		
+			
+			
+		}
+		
 	}
 	
 	
@@ -202,15 +210,19 @@ html, body, .container {
 			width: 100%;
 			text-align: center;
 		}
+		
 		tr:nth-child(3n) td, th {
 			border-bottom: 1px solid black;
 		}
+		
 		tr:nth-child(3n+1) td {
 			padding-top: 0.2em;
 		}
+		
 		tr:nth-child(3n) td {
 			padding-bottom: 0.2em;
 		}
+		
 		td:nth-child(3n), th:nth-child(3n) {
 			text-align: left;
 		}
@@ -286,16 +298,7 @@ html, body, .container {
 					border: 0;
 				}
 				
-				/*
-				:before {
-					content: url("../assets/gearYellow.png");
-					&:hover,
-					&:active {
-						content: url("../assets/gearGreen.png");
-					}
-					padding: 1em;
-				}
-				*/
+				
 			}
 		}
 	}
