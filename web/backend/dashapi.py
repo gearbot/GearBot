@@ -15,7 +15,7 @@ from routes.temp.setauth import AuthSetTestingEndpoint
 
 web_settings = {
     "cookie_secret": "4gjw63g34th3", #token_urlsafe(32),
-    "login_url": "/discord/discordlogin",
+    "login_url": "/discord/login",
     "xsrf_cookies": False # Turn on when not testing
 }
 
@@ -33,7 +33,7 @@ messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
 loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
 dashboardAPI = web.Application([
     (r"/", Root),
-    (r"/discord/discordlogin", DiscordOAuthRedir), #ihateredirectcaches
+    (r"/discord/login", DiscordOAuthRedir), #ihateredirectcaches
     (r"/discord/callback", DiscordOAuthCallback),
     (r"/setauth", AuthSetTestingEndpoint),
     (r"/checkauth", AuthGetTestingEndpoint),
