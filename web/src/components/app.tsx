@@ -41,8 +41,7 @@ export default class App extends Component<{}, DashboardState> {
 	render() {
 		return (
 			<div id="app">
-				<Header
-					image="https://cdn.discordapp.com/avatars/106354106196570112/097e0f5e83f747e5ae684f9180eb6dba.png?size=128"/>
+				<Header />
 				<Router onChange={this.handleRoute}>
 					<Home path="/"/>
 					<Dashboard path="/dashboard"/>
