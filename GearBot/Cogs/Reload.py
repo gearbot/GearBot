@@ -84,7 +84,7 @@ class Reload:
 
     @commands.command()
     async def update_site(self, ctx):
-        await DocUtils.update_docs(ctx.bot)
+        await DocUtils.update_docs(ctx)
         cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
         if 'ZONE' in cloudflare_info:
             headers = {
