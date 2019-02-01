@@ -1,5 +1,5 @@
 export interface HeaderProps {
-	image: string;
+	image?: string;
 }
 
 export interface GearProps {
