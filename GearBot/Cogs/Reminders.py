@@ -6,7 +6,7 @@ from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
 
 from Bot.GearBot import GearBot
-from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils
+from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, Permissioncheckers
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
@@ -28,6 +28,9 @@ class Reminders:
 
     def __unload(self):
         self.running = False
+
+    async def __local_check(self, ctx):
+        return Permissioncheckers.check_permission(ctx)
 
     @commands.group(aliases=["r", "reminder"])
     async def remind(self, ctx):
