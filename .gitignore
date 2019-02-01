@@ -13,3 +13,6 @@ logs/
 
 !lang/*
 !config/template.json
+*.css
+
+*.map

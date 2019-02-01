@@ -12,7 +12,7 @@ html, body, .container {
 	font-weight: 400;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	overflow: hidden;
+	overflow-x: hidden;
 }
 
 * {
@@ -172,15 +172,37 @@ html, body, .container {
 	}
 	
 	.docsNav {
-		position: relative;
+		position: fixed;
 		top: 160px;
-		z-index: 6;
+		z-index: 12;
+		width: 250px;
 		
-		list-style: none;
+		a {
+			color: #f26c40;
+			text-decoration: none;
+		}
 		
-		li {
+		li .navItem {
+			width: 210px;
+		}
+		
+		.navItem {
+			list-style: none;
+			width: 250px;
+			padding: 1px;
 			
-		
+			:before {
+				content: url("../assets/gearYellow.png");
+			}
+			
+			.active,
+			:hover {
+				color: blue;
+				
+				&:before {
+					content: url("../assets/gearGreen.png");
+				}
+			}
 			
 			
 		}
@@ -191,10 +213,6 @@ html, body, .container {
 	.docsMain {
 		position: absolute;
 		padding: 80px 2em 5em 310px;
-		height: 100vh;
-		width: 100%;
-		overflow-y: scroll;
-		z-index: 5;
 		top: 0;
 		
 		.markup {
@@ -228,11 +246,13 @@ html, body, .container {
 		}
 	}
 	
+	
 	.gearFooter {
-		position: absolute;
+		position: fixed;
 		right: -250px;
 		bottom: -250px;
-		z-index: 1;
+		z-index: 100;
+		opacity: 0.6;
 	}
 	
 	.dash-content {
@@ -250,8 +270,6 @@ html, body, .container {
 			float: left;
 			margin-left: 1em;
 			padding: 4px;
-			//border: 2px solid $navAccentColor;
-			//border-radius: 20%;
 			overflow: hidden;
 			
 			.guildItem {
