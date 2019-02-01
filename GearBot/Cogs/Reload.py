@@ -80,8 +80,11 @@ class Reload:
         await message.edit(content=m)
         await ctx_message.edit(content=m)
         await Translator.upload()
-        await DocUtils.update_docs(ctx.bot)
         self.bot.hot_reloading = False
+
+    @commands.command()
+    async def update_site(self, ctx):
+        await DocUtils.update_docs(ctx.bot)
 
     @commands.command()
     async def pull(self, ctx):

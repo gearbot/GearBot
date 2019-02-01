@@ -101,7 +101,6 @@ async def on_ready(bot):
         if Configuration.get_master_var("CROWDIN_KEY") is not None:
             bot.loop.create_task(translation_task(bot))
 
-        await DocUtils.update_docs(bot)
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
