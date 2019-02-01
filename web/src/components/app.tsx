@@ -1,4 +1,4 @@
-import {Component} from "preact";
+import {Component, h} from "preact";
 import {route, Router} from "preact-router";
 
 import Header from "./header";

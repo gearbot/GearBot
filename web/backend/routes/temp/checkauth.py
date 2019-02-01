@@ -1,6 +1,6 @@
 from tornado.web import removeslash
 
-from Other.PrimaryHandler import PrimaryHandler
+from Other.Handlers import PrimaryHandler
 
 
 class AuthGetTestingEndpoint(PrimaryHandler):

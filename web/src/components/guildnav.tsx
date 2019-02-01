@@ -1,6 +1,8 @@
 import {Component, h} from "preact";
 import {Link} from "preact-router";
 
+import * as io from "socket.io-client";
+
 import {GuildListNavState} from "./state";
 
 import Gear from "./gear";
@@ -8,30 +10,43 @@ import Gear from "./gear";
 import config from "../config";
 
 export default class GuildNav extends Component<{}, GuildListNavState> {
+	guildSocket: SocketIOClient.Socket;
+	generalsocket: SocketIOClient.Socket;
+	apiUrl: string;
 
 	constructor(props, state) {
 		super(props, state);
+
+		this.apiUrl = config.apiUrl;
 
 		this.setState({
 			guilds: [],
 			guildsLoaded: false
 		});
 
-		//TODO: error handling and dynamic links
-		fetch(config.apiUrl+"/api/guilds", {credentials: "include"}).then(r => {
-			if (r.status != 200) {
-				console.log("Failed to retrieve the guild list!")
-				this.setState({
-					guildsLoaded: true, 
-					guilds: []
-				})
-			} else {
-				r.json().then(data => this.setState({
-					guilds: data,
-					guildsLoaded: true
-				}))
-			}
+		this.guildSocket = io(this.apiUrl+"/api/guilds", {
+			path: "/ws"
+        });
+
+		this.generalsocket = io(this.apiUrl+"/api/", {
+			path: "/ws"
 		})
+
+		this.guildSocket.on("connect", () => {
+			this.guildSocket.emit("get", "")
+			console.log("Connected to the API's guild data socket!");
+			
+		})
+
+		this.generalsocket.on("api_response", data => console.log(data));
+		
+		this.guildSocket.on("api_response", data => {
+			console.log(data)
+			this.setState({
+				guilds: data,
+				guildsLoaded: true
+			})
+		});
 	}
 
 	render() {

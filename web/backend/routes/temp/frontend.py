@@ -2,7 +2,7 @@ from tornado import escape
 from tornado.web import authenticated, removeslash
 
 from Other import BackendUtils
-from Other.PrimaryHandler import PrimaryHandler
+from Other.Handlers import PrimaryHandler
 
 
 class FrontendAPIGuildInfo(PrimaryHandler):

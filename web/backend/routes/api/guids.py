@@ -1,13 +1,21 @@
-from tornado.web import removeslash
+from socketio import AsyncNamespace
 
 from Other import BackendUtils
-from Other.PrimaryHandler import PrimaryHandler
 
+class Guilds(AsyncNamespace):
+    async def on_connect(self, sid, environ):
+        pass
 
-class Guilds(PrimaryHandler):
+    async def on_disconnect(self, sid):
+        pass
 
-    @removeslash
-    async def get(self):
+    async def on_get(self, sid, data):
+        # Temporary until guilds work
+        await self.emit("api_response", 
+            data = []
+        )
+        
+        """
         #todo: don't redirect but have the client open a popup
         userID = self.get_current_user()
         if userID is None:
@@ -15,3 +23,4 @@ class Guilds(PrimaryHandler):
         else:
             info = await BackendUtils.get_guilds_info(userID)
             self.finish(info)
+        """

@@ -3,9 +3,9 @@ from tornado import web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line
 
+from Other.Handlers import SocketHandler
 from Other import BackendUtils
 from Other.RedisMessager import Messager
-from routes.api.guids import Guilds
 from routes.discordcallback import DiscordOAuthCallback
 from routes.root import Root
 from routes.temp.checkauth import AuthGetTestingEndpoint
@@ -39,8 +39,9 @@ dashboardAPI = web.Application([
     (r"/checkauth", AuthGetTestingEndpoint),
     (r"/testing", FrontendAPIGuildInfo),
 
-    (r"/api/guilds", Guilds),
+    (r"/ws/", SocketHandler)
 ], **web_settings, debug=True)
+
 dashboard_server = HTTPServer(dashboardAPI) # Create the Tornado server
 dashboard_server.listen(8081)
 loop.start()
