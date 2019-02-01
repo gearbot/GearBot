@@ -85,6 +85,14 @@ class Reload:
     @commands.command()
     async def update_site(self, ctx):
         await DocUtils.update_docs(ctx.bot)
+        cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
+        if 'zone' in cloudflare_info:
+            headers = {
+                "X-Auth-Email": cloudflare_info["EMAIL"],
+                "X-Auth-Key": cloudflare_info["KEY"]
+            }
+            async with self.bot.aiosession.post(f"https://api.cloudflare.com/client/v4/zones/{cloudflare_info['zone']}/purge_cache", data = dict(purge_everything=True), headers=headers) as reply:
+                await ctx.send(await reply.json())
 
     @commands.command()
     async def pull(self, ctx):
