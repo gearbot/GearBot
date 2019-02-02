@@ -13,9 +13,6 @@
         <meta name="theme-color" content="#FECB4D">
 
 		<link rel="manifest" href="<%= htmlWebpackPlugin.files.publicPath %>manifest.json">
-		<% if (htmlWebpackPlugin.options.manifest.theme_color) { %>
-			<meta name="theme-color" content="<%= htmlWebpackPlugin.options.manifest.theme_color %>">
-		<% } %>
 		<% for (var chunk of webpack.chunks) { %>
 		 <% if (chunk.names.length === 1 && chunk.names[0] === 'polyfills') continue; %>
 			<% for (var file of chunk.files) { %>
