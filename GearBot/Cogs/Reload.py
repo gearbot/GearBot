@@ -89,10 +89,14 @@ class Reload:
         if 'ZONE' in cloudflare_info:
             headers = {
                 "X-Auth-Email": cloudflare_info["EMAIL"],
-                "X-Auth-Key": cloudflare_info["KEY"]
+                "X-Auth-Key": cloudflare_info["KEY"],
+                "Content-Type": "application/json"
             }
-            async with self.bot.aiosession.post(f"https://api.cloudflare.com/client/v4/zones/{cloudflare_info['ZONE']}/purge_cache", data = dict(purge_everything=True), headers=headers) as reply:
-                await ctx.send(await reply.json())
+            async with self.bot.aiosession.post(
+                    f"https://api.cloudflare.com/client/v4/zones/{cloudflare_info['ZONE']}/purge_cache",
+                    json=dict(purge_everything=True), headers=headers) as reply:
+                content = await reply.json()
+                await ctx.send(f"```json\n{content}```")
 
     @commands.command()
     async def pull(self, ctx):
