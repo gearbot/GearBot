@@ -1,5 +1,6 @@
 #! /bin/sh
 cd ~/GearBot/web
+rm -rf build
 npm i > /dev/null
 npm run build
 rm -rf /var/www/gearbot.rocks/*

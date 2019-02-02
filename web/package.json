@@ -7,9 +7,9 @@
     "start": "per-env",
     "start:production": "npm run -s serve",
     "start:development": "npm run -s dev",
-    "build": "preact build --no-prerender",
-    "serve": "preact build && preact serve",
-    "dev": "preact watch",
+    "build": "preact build --no-prerender --template src/index.html",
+    "serve": "preact build --template src/index.html && preact serve",
+    "dev": "preact watch --template src/index.html",
     "lint": "tslint src/**/*.ts"
   },
   "devDependencies": {
