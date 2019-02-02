@@ -84,7 +84,9 @@ class Reload:
 
     @commands.command()
     async def update_site(self, ctx):
+        GearbotLogging.info("Site update initiated")
         await DocUtils.update_docs(ctx)
+        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Purging cloudflare cache")
         cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
         if 'ZONE' in cloudflare_info:
             headers = {
@@ -96,7 +98,11 @@ class Reload:
                     f"https://api.cloudflare.com/client/v4/zones/{cloudflare_info['ZONE']}/purge_cache",
                     json=dict(purge_everything=True), headers=headers) as reply:
                 content = await reply.json()
-                await ctx.send(f"```json\n{content}```")
+                GearbotLogging.info(f"Cloudflare purge response: {content}")
+                if content["result"]["success"]:
+                    await message.edit(f"{Emoji.get_chat_emoji('YES')} Cloudflare cache has been purged")
+                else:
+                    await message.edit(f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
 
     @commands.command()
     async def pull(self, ctx):

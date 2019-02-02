@@ -12,11 +12,11 @@ image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
 
 async def update_docs(ctx):
     if Configuration.get_master_var("DOCS"):
-        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
+        await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
         await sync_guides(ctx.bot)
         generate_command_list(ctx.bot)
         await update_site(ctx.bot)
-        await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Website updated, see logs for details")
+        await ctx.send(content=f"{Emoji.get_chat_emoji('YES')} Website updated, see logs for details")
 
 async def sync_guides(bot):
     category = bot.get_channel(Configuration.get_master_var("GUIDES"))
