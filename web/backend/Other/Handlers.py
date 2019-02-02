@@ -41,6 +41,8 @@ class APIMain(AsyncNamespace):
         await self.emit("api_response",
             data = "Hello Dashboard!"
         )
+
+
     
 
 sio.register_namespace(APIMain("/api/"))

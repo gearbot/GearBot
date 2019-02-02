@@ -4,7 +4,7 @@ export default class Home extends Component<{}, {}> {
 	render() {
 		return <div class="home">
 			<h1>Welcome</h1>
-			<p>GearBot is one of the better moderation bots, and still improving. And while that kind of extends to this website, it is still very much WIP. The documentation section works completely, but the dashboard is still being worked on</p>
+			<p>GearBot is one of the best moderation bots, and still improving. And while that kind of extends to this website, it is still very much WIP. The documentation section works completely, but the dashboard is still being worked on</p>
 
 			<h2>How to add and use GearBot</h2>
 			<p>Check out <a href="docs/guides/adding_gearbot">the guide on adding GearBot</a> for adding the bot to your server. There is an entire section in the docs as well on setting up different parts of the bot.</p>
