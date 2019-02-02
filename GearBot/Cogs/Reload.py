@@ -100,9 +100,9 @@ class Reload:
                 content = await reply.json()
                 GearbotLogging.info(f"Cloudflare purge response: {content}")
                 if content["success"]:
-                    await message.edit(f"{Emoji.get_chat_emoji('YES')} Cloudflare cache has been purged")
+                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Cloudflare cache has been purged")
                 else:
-                    await message.edit(f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
+                    await message.edit(content=f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
 
     @commands.command()
     async def pull(self, ctx):
