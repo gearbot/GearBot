@@ -9,6 +9,7 @@ import Docs from "../routes/docs";
 
 import {DashboardState} from "./state";
 import Gear from "./gear";
+import Error404 from "./Error404";
 
 export default class App extends Component<{}, DashboardState> {
 
@@ -47,6 +48,8 @@ export default class App extends Component<{}, DashboardState> {
 					<Dashboard path="/dashboard"/>
 					<Docs path="/docs/" doc="index"/>
 					<Docs path="/docs/:folder?/:doc?"/>
+
+					<Error404 default/>
 				</Router>
 				<div class="gearFooter">
 					<Gear size={500}/>

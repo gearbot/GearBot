@@ -320,4 +320,113 @@ html, body, .container {
 			}
 		}
 	}
+	
+	@keyframes rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(359deg);
+		}
+	}
+	
+	@-webkit-keyframes rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(359deg);
+		}
+	}
+	
+	@-moz-keyframes rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(359deg);
+		}
+	}
+	
+	@-ms-keyframes rotate {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(359deg);
+		}
+	}
+	
+	.error404 {
+		margin-top:150px;
+		text-align: center;
+		
+		font-weight: bold;
+		
+		
+		.gear {
+			width: 20%;
+			height: auto;
+			
+		}
+		
+		.gear400 {
+			animation: rotate 1s 4 alternate-reverse;
+			-webkit-animation: rotate 1s 4 alternate-reverse;
+			-moz-animation: rotate 1s 4 alternate-reverse;
+			-ms-animation: rotate 1s 4 alternate-reverse;
+			animation-iteration-count:infinite;
+		}
+		
+		.gear401 {
+			animation: rotate 0.5s 7 linear;
+			-webkit-animation: rotate 0.5s 7 linear;
+			-moz-animation: rotate 0.5s 7 linear;
+			-ms-animation: rotate 0.5s 7 linear;
+			animation-iteration-count:infinite;
+		}
+		
+		.gear403 {
+			animation: rotate 0.2s 10 linear;
+			-webkit-animation: rotate 0.2s 10 linear;
+			-moz-animation: rotate 0.2s 10 linear;
+			-ms-animation: rotate 0.2s 10 linear;
+			animation-iteration-count:infinite;
+		}
+		
+		.gear404 {
+			animation: rotate 3s 2 alternate-reverse;
+			-webkit-animation: rotate 3s 2 alternate-reverse;
+			-moz-animation: rotate 3s 2 alternate-reverse;
+			-ms-animation: rotate 3s 2 alternate-reverse;
+			animation-iteration-count:infinite;
+		}
+		
+		.gear50x {
+			animation: rotate 2s 3 alternate-reverse;
+			-webkit-animation: rotate 2s 3 alternate-reverse;
+			-moz-animation: rotate 2s 3 alternate-reverse;
+			-ms-animation: rotate 2s 3 alternate-reverse;
+			animation-iteration-count:infinite;
+		}
+		
+		#leftgear {
+			position: relative;
+			left: 50px;
+		}
+		
+		#rightgear {
+			position: relative;
+			right: 50px;
+		}
+		
+		#errorcode {
+			font-size: 50pt;
+		}
+		
+		#warning {
+			font-size: 25pt;
+		}
+	}
+	
 }
