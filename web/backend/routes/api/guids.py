@@ -1,8 +1,9 @@
-from socketio import AsyncNamespace
+from Other.Handlers import SocketNamespace
 
 from Other import BackendUtils
 
-class Guilds(AsyncNamespace):
+
+class Guilds(SocketNamespace):
     async def on_connect(self, sid, environ):
         pass
 
@@ -11,8 +12,9 @@ class Guilds(AsyncNamespace):
 
     async def on_get(self, sid, data):
         # Temporary until guilds work
+        verified = await self.verify_client(data)
         await self.emit("api_response", 
-            data = []
+            data = verified
         )
         
         """

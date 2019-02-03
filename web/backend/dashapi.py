@@ -3,6 +3,8 @@ from tornado import web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line
 
+from secrets import token_urlsafe
+
 from Other.Handlers import SocketHandler
 from Other import BackendUtils
 from Other.RedisMessager import Messager
@@ -13,21 +15,18 @@ from routes.temp.discordlogin import DiscordOAuthRedir
 from routes.temp.frontend import FrontendAPIGuildInfo
 from routes.temp.setauth import AuthSetTestingEndpoint
 
+
+
 web_settings = {
-    "cookie_secret": "4gjw63g34th3", #token_urlsafe(32),
+    "cookie_secret": token_urlsafe(64),
     "login_url": "/discord/login",
     "xsrf_cookies": False # Turn on when not testing
 }
 
-
-
 print("Starting Gearbot App")
-
 
 parse_command_line()
 loop = ioloop.IOLoop.current()
-
-
 messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
 
 loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
