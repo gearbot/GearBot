@@ -1,4 +1,4 @@
-# miscellaneous
+# Miscellaneous
 This page contains some other miscellaneous settings that do not really fit anywhere else.
 
 ## Permissions denied message
