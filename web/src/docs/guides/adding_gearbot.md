@@ -1,6 +1,6 @@
 # Adding the bot
 The first step is to add GearBot to the server and prepare a few things so he can work. If you click on the following link you can add him with the permissions he needs. Below is an explanation of why he needs what permissions if you don't want him to have all these permissions.
-[Click here to add GearBot](https://discordapp.com/oauth2/authorize?client_id=349977940198555660&scope=bot&permissions=1342565590)
+[Click here to add GearBot](https://discordapp.com/oauth2/authorize?client_id=349977940198555660&scope=bot&permissions=1342565590).
 
 # Permissions
 - Manage roles
