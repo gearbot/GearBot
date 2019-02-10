@@ -30,7 +30,7 @@ You can also get a list of all configured cog overrides:
 ```
 
 # Command overrides
-If cog overrides are to big for what you want to adjust, you can also adjust it for individual commands (or sub-commands if you wrap it in quotation marks):
+If cog overrides are to big for what you want to adjust, you can also adjust it for individual commands (or subcommands if you wrap it in quotation marks):
 ```
 !configure command_overrides add <command> <level>
 ```
