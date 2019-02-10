@@ -4,7 +4,7 @@ The first step is to add GearBot to the server and prepare a few things so he ca
 
 # Permissions
 - Manage roles
-    - This allows him to add/remove roles from people, this is used for self-roles, muting and the mod role command to add/remove roles from people 
+    - This allows him to add/remove roles from people, this is used for selfroles, muting and the mod role command to add/remove roles from people 
 - Manage channels
     - Needed to create the channel overrides that makes the mute role work, both on current channels and new channels
 - Kick members
