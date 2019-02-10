@@ -10,8 +10,8 @@ export default {
     "Reconfiguring command requirements": "guides/overrides",
     "Logging": "guides/logging",
     "Censoring": "guides/censoring",
-    "Self assignable roles": "guides/selfroles",
-    "Custom Commands": "guides/custom_commands",
+    "Self-assignable roles": "guides/selfroles",
+    "Custom commands": "guides/custom_commands",
     "Ignoring channels": "guides/ignored_channels",
     "Misc tweaks": "guides/misc"
   },

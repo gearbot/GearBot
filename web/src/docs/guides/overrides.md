@@ -1,7 +1,7 @@
 # Reconfiguring command requirements
 **Note:** While this is possible it is not required to do so on all servers, if the defaults work for you, there is no need to add any overrides.
 
-For determining the permission level required to run a command it looks in the following order and uses the first one it finds:
+To determine the permission level required to run a command it looks in the following order, and uses the first one it finds:
 1) a command override for that specific command
 2) a command override for the parent command (recursive) if this is a subcommand (so if you add an override to the `` role`` command, but not to the ``role add`` subcommand, the top first will apply)
 3) a cog override for the cog this command belongs to
@@ -17,7 +17,7 @@ If you want to add a cog override:
 ```
 !configure cog_overrides add <cog> <level>
 ```
-**Note:** cog names are case sensitive 
+**Note:** Cog names are case sensitive!
 
 To remove it later:
 ```

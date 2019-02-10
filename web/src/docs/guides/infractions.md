@@ -23,7 +23,7 @@ There are several types of infractions:
     
     
 # Finding infractions
-To find infractions there is simple yet powerful command: ``inf search [fields...] [query] [amount]``
+To find infractions there is one simple yet powerful command: ``inf search [fields...] [query] [amount]``
 All parameters are optional, if you don't give any you get the last 25 infractions for the guild.
 ### Fields
 Optional multi param, determines where to look.
@@ -33,7 +33,7 @@ Possible values the [] are part of the param, to avoid confusing them with the q
 - [reason]
 
 Multiple values can be passed. If omitted it defaults to ``[mod] [user] [reason]``.
-Also see the **examples** section below
+Also see the **Examples** section below.
 
 ### Query
 Optional param, can be any userID, mention, full username (only if the user is on the server) or plain text.
@@ -56,7 +56,7 @@ Show the last 3 infractions from the server:
 !inf search 3
 ```
 
-Show the last 25 infractions related to a user (so either as mod, user, or where the id is part of the reason):
+Show the last 25 infractions related to a user (so either as mod, user, or where the ID is part of the reason):
 ```
 !inf search 106354106196570112
 ```
@@ -66,7 +66,7 @@ Show the last 5 infractions handed out by a specific mod:
 !inf search [mod] 106354106196570112 5
 ```
 
-Show the last 50 infractions of a specific user, and any infractions where you used that user's id in the reason:
+Show the last 50 infractions of a specific user, and any infractions where you used that user's ID in the reason:
 ```
 !inf search [user] [reason] 106354106196570112 50
 ```

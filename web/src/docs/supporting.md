@@ -2,9 +2,9 @@
 
 GearBot is free and open source, and will always be like that.
 
-That being said I do host him myself and that has costs, if you want to help with those to make things easier, get some (minor, I don't like paywalls) perks you can check out my patreon: [https://www.patreon.com/AEnterprise](https://www.patreon.com/AEnterprise)
+That being said I do host him myself and that has costs, if you want to help with those to make things easier, get some (minor, I don't like paywalls) perks you can check out my Patreon: [https://www.patreon.com/AEnterprise](https://www.patreon.com/AEnterprise).
 
-You can also make a donation on paypal if you want, you can get the same perks as patreon if you leave me your discord tag.
+You can also make a donation on PayPal if you want, you can get the same perks as Patreon if you leave me your Discord Tag.
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
 <input type="hidden" name="cmd" value="_s-xclick">
 <input type="hidden" name="hosted_button_id" value="XJJTRZ5JJTDNJ">

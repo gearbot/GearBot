@@ -1,7 +1,7 @@
 # Setting a language
-If you prefer you can use GearBot in another language then english. Be warned those that not all translations are 100% complete (some are very far from it) and if a string is not available in the language you chose, it will fall back to english.
-**NOTE:** this only affects the replies you get from GearBot, not the commands themselves
-You can also help with translating GearBot to your language by joining the crowdin project [here](https://crowdin.com/project/gearbot). More languages can also be added if there is interest and people willing to translate to the language
+If you prefer you can use GearBot in another language than English. Be warned those that not all translations are 100% complete (some are very far from it) and if a string is not available in the language you chose, it will fall back to English.
+**NOTE:** This only affects the replies you get from GearBot, not the commands themselves.
+You can also help with translating GearBot to your language by joining the Crowdin project [here](https://i18n.gearbot.rocks). More languages can also be added if there is interest and people willing to translate to the language.
 
 To change the language GearBot replies in:
 ```
