@@ -5,11 +5,11 @@ GearBot currently supports 2 types of censoring:
 - invite censoring
 - text censoring
 
-But none of these apply to people who have permission level 2 or higher (mods, and admins), level 4 does not count as this only applies to specific commands, not globally
+But none of these apply to people who have permission level 2 or higher (mods and admins), level 4 does not count as this only applies to specific commands, not globally.
 ## Initial setup
-First you need to make sure there is a logging channel that has the ``CENSOR_MESSAGES`` key so it censor actions are logged there, this is a requirement to being able to enable censoring of messages.
+First you need to make sure there is a logging channel that has the ``CENSOR_MESSAGES`` key so that censor actions are logged there, this is a requirement to being able to enable censoring of messages.
 
-Next up is making sure the feature is enabled, you can do this by running
+Next up is making sure the feature is enabled, you can do this by running:
 ```
 !configure features enable CENSOR_MESSAGES
 ```
@@ -17,7 +17,7 @@ Next up is making sure the feature is enabled, you can do this by running
 ## Setting up invite censoring
 Invite censoring does not kick in until there are servers on the whitelist. If you do not want any external invites to be posted you can just add your server to the whitelist and no others.
 
-**Note:** These commmands all use server ids and do not validate if these are actual, valid server id's. This is due to that the bot cannot request a server from the api with it's id if the bot is not on that server.
+**Note:** All these commmands uses server IDs and do not validate if these are actual, valid server IDs. This is due to that the bot cannot request a server from the API with its ID if the bot is not on that server.
 
 To add a server to the whitelist:
 ```
