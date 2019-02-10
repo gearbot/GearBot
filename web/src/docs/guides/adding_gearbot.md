@@ -19,4 +19,4 @@ The first step is to add GearBot to the server and prepare a few things so he ca
     - Allows removing messages with the clean commands and cleaning command trigger messages in some cases
   
 # Positioning the role
-Next up is repositioning the GearBot role that got created when the bot entered the server. You want to move this role (or another role if you give it an additional bots role) to be above all the roles. You want him able to add/remove from people (mute role for example) and who's members you want to be able to kick with the bot (if you have cosmetic roles, like a member role, and that is above GearBot's highest role, he won't be able to kick/ban them).
+Next up is repositioning the GearBot role that got created when the bot entered the server. You want to move this role (or another role if you give it an additional bots role) to be above all the roles you want him able to add/remove from people (mute role for example) and who's members you want to be able to kick with the bot (if you have cosmetic roles, like a member role, and that is above GearBot's highest role he won't be able to kick/ban them).
