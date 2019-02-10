@@ -121,7 +121,7 @@ Default permission requirement: public (0)
 
 |   Command | Default lvl | Explanation |
 | ----------------|--------|-------------------------------------------------------|
-| | | Base command to pull mod info from Curseforge, still WIP. |
+| | | Base command to pull mod info from CurseForge, still WIP. |
 |cf|public (0)| |
 | | |Example: ``!cf``|
 | | |  |
