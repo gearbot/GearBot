@@ -226,7 +226,7 @@
   "quote_not_visible_to_user": "Found the message! But it's in a really, really amazing super secret place with lots of security guards who they told me I couldn't take it with me, not even when I told them it was for you, something about you not being allowed in there either.",
   "manual_ban_log": "{user} (``{user_id}``) was manually banned by someone.",
   "manual_unban_log": "{user} (``{user_id}``) was manually unbanned by someone.",
-  "jumbo_timeout": "Whoa there, I'm not sure what kind of emojis those are but something got clogged up and things timed out, please try again or report this on the support server if it keeps happening.",
+  "jumbo_timeout": "Whoa there, I'm not sure what kind of emojis those are, but something got clogged up and things timed out, please try again or report this on the support server if it keeps happening.",
   "jumbo_no_emoji": "There are no emojis in that message I could jumbo",
   "bad_argument": "Failed to parse the ``{type}`` param: ``{error}``",
   "missing_arg": "You are missing a required command argument: `{arg}`",
