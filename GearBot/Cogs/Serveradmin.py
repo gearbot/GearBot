@@ -736,7 +736,7 @@ class Serveradmin:
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_CHANGES')
         if not channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list')
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list', channel=channel.mention)
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_removed', channel=channel.mention)
@@ -769,7 +769,7 @@ class Serveradmin:
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_OTHER')
         if channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list')
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list', channel=channel.mention)
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_edits_added', channel=channel.mention)
