@@ -21,7 +21,7 @@ async def update_docs(ctx):
 async def sync_guides(bot):
     category = bot.get_channel(Configuration.get_master_var("GUIDES"))
     if category is not None:
-        guide_hashes = Utils.fetch_from_disk("guide_hashes")
+        guide_hashes = Configuration.get_persistent_var("guide_hashes", {})
         for channel in category.channels:
             if isinstance(channel, discord.TextChannel):
                 name = channel.name
@@ -48,7 +48,7 @@ async def sync_guides(bot):
                             await send_buffer(channel, buffer)
             else:
                 GearbotLogging.info(f"Found guide channel {name} but file for it!")
-        Utils.saveToDisk("guide_hashes", guide_hashes)
+        Configuration.set_persistent_var("guide_hashes", guide_hashes)
 
 async def send_buffer(channel, buffer):
     pages = Pages.paginate(buffer, max_lines=500)

@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from Bot.GearBot import GearBot
-from Util import GearbotLogging, VersionInfo, Permissioncheckers
+from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji
 
 
 class BCVersionChecker:
@@ -119,7 +119,6 @@ def setup(bot):
 async def versionChecker(checkcog:BCVersionChecker):
     GearbotLogging.info("Started BC version checking background task")
     session:aiohttp.ClientSession = checkcog.bot.aiosession
-    reply:aiohttp.ClientResponse
     lastUpdate = 0
     while checkcog.running:
         try:
@@ -135,14 +134,32 @@ async def versionChecker(checkcog:BCVersionChecker):
                     latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
                     generalID = 309218657798455298
                     channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
-                    if channel is not None and latestBC not in channel.topic:
+                    old_latest = Configuration.get_persistent_var("latest_bc", "0.0.0")
+                    Configuration.set_persistent_var("latest_bc", latestBC) # save already so we don't get stuck and keep trying over and over if something goes wrong
+                    if channel is not None and latestBC != old_latest:
+                        notify_channel = checkcog.bot.get_channel(349517224320565258)
+                        await notify_channel.send(f"{Emoji.get_chat_emoji('WRENCH')} New BuildCraft version detected ({latestBC})")
+                        message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Fetching metadata...")
                         info = await checkcog.getVersionDetails("BuildCraft", latestBC)
-                        newTopic = f"General discussions about BuildCraft.\n" \
-                                   f"Latest version: {latestBC}\n" \
-                                   f"Full changelog and download: {info['blog_entry']}"
-                        await channel.edit(topic=newTopic)
-                    pass
-                pass
+                        await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Metadata acquired")
+                        if 'blog_entry' in info:
+                            message = notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating general topic...")
+                            newTopic = f"General discussions about BuildCraft.\n" \
+                                f"Latest version: {latestBC}\n" \
+                                f"Full changelog and download: {info['blog_entry']}"
+                            await channel.edit(topic=newTopic)
+                            await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Topic updated")
+                        else:
+                            notify_channel.send(f"{Emoji.get_chat_emoji('WARNING')} No blog post data found, notifying <@180057061353193472>")
+
+                        message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
+                        code, output, errors = await Utils.execute(f'cd BuildCraft_uploader && gradle curseforge -Pnew_version="{latestBC}"')
+                        if code is 0:
+                            content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded\n```yaml\n{output.decode('utf-8')} \n\n{errors.decode('utf-8')}```"
+                            await message.edit(content=content)
+                        else:
+                            content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{errors.decode('utf-8')} ```"
+                            await notify_channel.send(content)
         except CancelledError:
             pass  # bot shutdown
         except Exception as ex:
