@@ -6,10 +6,9 @@ from concurrent.futures import CancelledError
 
 import aiohttp
 import discord
-from discord.ext import commands
-
 from Bot.GearBot import GearBot
 from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji
+from discord.ext import commands
 
 
 class BCVersionChecker:
@@ -137,10 +136,13 @@ async def versionChecker(checkcog:BCVersionChecker):
                     old_latest = Configuration.get_persistent_var("latest_bc", "0.0.0")
                     Configuration.set_persistent_var("latest_bc", latestBC) # save already so we don't get stuck and keep trying over and over if something goes wrong
                     if channel is not None and latestBC != old_latest:
+                        GearbotLogging.info(f"New BuildCraft version found: {latestBC}")
                         notify_channel = checkcog.bot.get_channel(349517224320565258)
                         await notify_channel.send(f"{Emoji.get_chat_emoji('WRENCH')} New BuildCraft version detected ({latestBC})")
+                        GearbotLogging.info(f"Fetching metadata for BuildCraft {latestBC}")
                         message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Fetching metadata...")
                         info = await checkcog.getVersionDetails("BuildCraft", latestBC)
+                        GearbotLogging.info(f"Metadata acquired: {info}")
                         await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Metadata acquired")
                         if 'blog_entry' in info:
                             message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating general topic...")
@@ -154,11 +156,12 @@ async def versionChecker(checkcog:BCVersionChecker):
 
                         message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
                         code, output, errors = await Utils.execute(f'cd BuildCraft_uploader && gradle curseforge -Pnew_version="{latestBC}"')
+                        GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output.decode('utf-8')}\n------stderr------\n{errors.decode('utf-8')}")
                         if code is 0:
-                            content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded\n```yaml\n{output.decode('utf-8')} \n\n{errors.decode('utf-8')}```"
+                            content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded"
                             await message.edit(content=content)
                         else:
-                            content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>\nScript output:```yaml\n{output.decode('utf-8')} ``` Script error output:```yaml\n{errors.decode('utf-8')} ```"
+                            content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>"
                             await notify_channel.send(content)
         except CancelledError:
             pass  # bot shutdown
