@@ -143,7 +143,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                         info = await checkcog.getVersionDetails("BuildCraft", latestBC)
                         await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Metadata acquired")
                         if 'blog_entry' in info:
-                            message = notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating general topic...")
+                            message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating general topic...")
                             newTopic = f"General discussions about BuildCraft.\n" \
                                 f"Latest version: {latestBC}\n" \
                                 f"Full changelog and download: {info['blog_entry']}"
