@@ -4,14 +4,13 @@ import datetime
 import time
 
 import discord
-from discord import AuditLogAction, Role, DMChannel
-from discord.embeds import EmptyEmbed
-from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
-
 from Bot.GearBot import GearBot
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
+from discord import AuditLogAction, Role, DMChannel
+from discord.embeds import EmptyEmbed
+from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
 
 class ModLog:
@@ -137,7 +136,7 @@ class ModLog:
         if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
         c = self.bot.get_channel(cid)
-        if isinstance(c, DMChannel) or c.guild is None or not Features.is_logged(c.guild.id, "EDIT_LOGS") or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
+        if isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
             return
         message = await MessageUtils.get_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
