@@ -392,7 +392,7 @@
   "role_add_not_allowed": "You are not authorized to add roles to {user}",
   "role_remove_not_allowed": "You are not authorized to remove roles from {user}",
   "role_add_confirmation": "Added the **{role}** role to {user}",
-  "role_remove_confirmation": "Removed the **{role}** from {user}",
+  "role_remove_confirmation": "Removed the **{role}** role from {user}",
   "role_denied_whitelist": "The **{role}** role is not on the role whitelist",
   "role_denied_blacklist": "The **{role}** role is on the role blacklist",
   "cat_help": "Random cats!",
