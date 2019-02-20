@@ -277,7 +277,7 @@
   "dm_on_warn_msg_enabled": "People will now receive a DM from me when you warn them containing the warning (but not the moderator warning them)",
   "dm_on_warn_msg_disabled": "When a warning is issued it will only be stored and logged, the person will not be informed",
   "dm_on_warn_help": "Configure warning behaviour for DMs (off by default)",
-  "warning_could_not_dm": "I couldn't DM {user} ``{userid}`` his warning. This is most likely due to having DMs closed or they blocked me.",
+  "warning_could_not_dm": "I couldn't DM {user} ``{userid}`` their warning. This is most likely due to having DMs closed or they blocked me.",
   "features": "Features",
   "feature_already_enabled": "These feature(s) were already enabled: ",
   "feature_already_disabled": "These feature(s) were already disabled: ",
