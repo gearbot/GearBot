@@ -730,6 +730,7 @@ class Serveradmin:
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_added', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
 
     @ignored_channels_changes.command("remove")
     async def ignored_channels_changes_remove(self, ctx, channel: TextChannel):
@@ -738,8 +739,9 @@ class Serveradmin:
         if not channel.id in channels:
             await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list', channel=channel.mention)
         else:
-            channels.append(channel.id)
+            channels.remove(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_removed', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
 
     @ignored_channels_changes.command("list")
     async def ignored_channels_changes_list(self, ctx):
@@ -773,16 +775,18 @@ class Serveradmin:
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_edits_added', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
 
     @ignored_channels_edits.command("remove")
     async def ignored_channels_edits_remove(self, ctx, channel: TextChannel):
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, 'IGNORED_CHANNELS_OTHER')
-        if not channel.id in channels:
+        if channel.id not in channels:
             await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_not_on_list')
         else:
-            channels.append(channel.id)
+            channels.remove(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_edits_removed', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
 
     @ignored_channels_edits.command("list")
     async def ignored_channels_edits_list(self, ctx):

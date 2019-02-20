@@ -53,7 +53,7 @@ class Moderation:
     async def roles_update(self, ctx, message, page_num, action, data):
         pages = self.gen_roles_pages(message.guild, mode=data["mode"])
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**{Translator.translate('roles', message.guild.id, server_name=ctx.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
+        return f"**{Translator.translate('roles', message.guild.id, server_name=message.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
 
     @staticmethod
     def gen_roles_pages(guild: discord.Guild, mode):

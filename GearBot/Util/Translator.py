@@ -54,8 +54,8 @@ def translate(key, location, **kwargs):
     return key
 
 
-async def update():
-    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
+async def update(bot):
+    message = await bot.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"]).send(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
     crowdin_data = Configuration.get_master_var("CROWDIN")
     session: aiohttp.ClientSession = BOT.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json",) as reply:

@@ -41,7 +41,7 @@ class Censor:
             if permissions.read_messages and permissions.read_message_history:
                 try:
                     message = await channel.get_message(event.message_id)
-                except discord.NotFound:
+                except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
                     pass
                 else:
                     await self.censor_message(message)

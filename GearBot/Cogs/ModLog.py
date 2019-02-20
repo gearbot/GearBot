@@ -4,13 +4,14 @@ import datetime
 import time
 
 import discord
+from discord import AuditLogAction, Role, DMChannel
+from discord.embeds import EmptyEmbed
+from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
+
 from Bot.GearBot import GearBot
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
-from discord import AuditLogAction, Role, DMChannel
-from discord.embeds import EmptyEmbed
-from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
 
 class ModLog:
@@ -92,7 +93,8 @@ class ModLog:
         if data.message_id in self.bot.data["message_deletes"]:
             self.bot.data["message_deletes"].remove(data.message_id)
             return
-        if not Features.is_logged(data.guild_id, "EDIT_LOGS"):
+        c = self.bot.get_channel(data.channel_id)
+        if isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or data.channel_id in Configuration.get_var(c.guild.id,"IGNORED_CHANNELS_OTHER"):
             return
         message = await MessageUtils.get_message_data(self.bot, data.message_id)
         if message is not None:
@@ -279,7 +281,6 @@ class ModLog:
 
     async def on_member_update(self, before:discord.Member, after):
         guild = before.guild
-        audit_log = guild.me.guild_permissions.view_audit_log
         # nickname changes
         if Features.is_logged(guild.id, "NAME_CHANGES"):
             if (before.nick != after.nick and
@@ -381,6 +382,8 @@ class ModLog:
 
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
+            if event.channel_id in Configuration.get_var(event.guild_id, "IGNORED_CHANNELS_OTHER"):
+                return
             if event.channel_id in self.bot.being_cleaned:
                 for mid in event.message_ids:
                     self.bot.being_cleaned[event.channel_id].add(mid)

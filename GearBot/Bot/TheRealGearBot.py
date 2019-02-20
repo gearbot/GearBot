@@ -15,7 +15,7 @@ from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils, MessageUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils
 from database import DatabaseConnector
 
 
@@ -122,7 +122,7 @@ async def keepDBalive(bot):
 async def translation_task(bot):
     while not bot.is_closed():
         try:
-            await Translator.update()
+            await Translator.update(bot)
         except Exception as ex:
             GearbotLogging.error("Something went wrong during translation updates")
             GearbotLogging.error(traceback.format_exc())
