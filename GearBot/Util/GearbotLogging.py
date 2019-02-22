@@ -8,9 +8,9 @@ from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
 import discord
+import pytz
 import sentry_sdk
 from discord.ext import commands
-from discord.errors import HTTPException
 
 from Bot import TheRealGearBot
 from Util import Configuration, Utils
@@ -123,7 +123,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
     if message is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
     if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS"):
-        stamp = f"[``{datetime.strftime(datetime.now(), '%H:%M:%S')}``]"
+        stamp = f"[``{datetime.strftime(datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'TIMEZONE'))), '%H:%M:%S')}``]"
         if message is not None:
             message = f"{stamp} {Utils.trim_message(message, 1985)}"
     if tag_on is not None:

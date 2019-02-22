@@ -42,14 +42,12 @@ def initial_migration(config):
             info.append("FUTURE_LOGS")
         config["FUTURE_LOGS"] = log_all
 
-    return config
 
 def v2(config):
     config["CENSOR_MESSAGES"] = len(config["INVITE_WHITELIST"]) > 0
     config["WORD_BLACKLIST"] = []
     config["MAX_MENTIONS"] = 0
     config["EMBED_EDIT_LOGS"] = True
-    return config
 
 def v3(config):
     for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
@@ -59,7 +57,6 @@ def v3(config):
         if "CENSOR_LOGS" in info:
             info.remove("CENSOR_LOGS")
             info.append("CENSORED_MESSAGES")
-    return config
 
 def v4(config):
     if "CENSOR_LOGS" in config.keys():
@@ -70,7 +67,6 @@ def v4(config):
             info.append("CHANNEL_CHANGES")
             info.append("VOICE_CHANGES")
             info.append("VOICE_CHANGES_DETAILED")
-    return config
 
 def v5(config):
     config["ROLE_WHITELIST"] = True
@@ -78,15 +74,27 @@ def v5(config):
     if "Basic" in config["PERM_OVERRIDES"] and "role" in config["PERM_OVERRIDES"]:
         config["PERM_OVERRIDES"]["self_role"] = config["PERM_OVERRIDES"]["role"]
         del config["PERM_OVERRIDES"]["role"]
-    return config
 
 def v6(config):
     config["IGNORED_CHANNELS_CHANGES"] = []
     config["IGNORED_CHANNELS_OTHER"] = []
-    return config
+
+def v7(config):
+    config["RAID_DETECTION"] = False
+    config["RAID_TIME_LIMIT"] = 0
+    config["RAID_TRIGGER_AMOUNT"] = 0
+    config["RAID_CHANNEL"] = 0
+    config["RAID_MESSAGE"] = "<:gearDND:528335386238255106> RAID DETECTED, CALLING REINFORCEMENTS! <:gearDND:528335386238255106>"
+    config["TIMEZONE"] = "Europe/Brussels"
+
+
+def add_logging(config, *args):
+    for cid, info in config["LOG_CHANNELS"].items():
+        if "FUTURE_LOGS" in info:
+            info.extend(args)
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION, PERSISTENT
@@ -97,6 +105,7 @@ async def initialize(bot: commands.Bot):
     for guild in bot.guilds:
         GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
         load_config(guild.id)
+        validate_config(guild)
 
 
 def load_master():
@@ -129,6 +138,25 @@ def load_config(guild):
         save(guild)
     Features.check_server(guild)
 
+def validate_config(guild):
+    for key in ["ADMIN_ROLES", "MOD_ROLES", "SELF_ROLES", "TRUSTED_ROLES"]:
+        checklist(guild.id, key, guild.get_channel)
+
+def checklist(guid, key, getter):
+    changed = False
+    tr = list()
+    cl = get_var(guid, key)
+    for c in cl:
+        if getter(c) is None:
+            tr.append(c)
+            changed = True
+    for r in tr:
+        cl.remove(r)
+    if changed:
+        set_var(guid, key, cl)
+
+
+
 def update_config(guild, config):
     v = config["VERSION"]
     while config["VERSION"] < CONFIG_VERSION:
@@ -137,7 +165,7 @@ def update_config(guild, config):
         if not os.path.isdir(d):
             os.makedirs(d)
         Utils.saveToDisk(f"{d}/{guild}", config)
-        config = MIGRATORS[config["VERSION"]](config)
+        MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
         Utils.saveToDisk(f"config/{guild}", config)
 

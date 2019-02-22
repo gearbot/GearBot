@@ -1,5 +1,5 @@
 {
-  "VERSION": 6,
+  "VERSION": 7,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -24,5 +24,10 @@
   "ROLE_WHITELIST": true,
   "ROLE_LIST": [],
   "IGNORED_CHANNELS_CHANGES": [],
-  "IGNORED_CHANNELS_OTHER": []
+  "IGNORED_CHANNELS_OTHER": [],
+  "RAID_DETECTION": false,
+  "RAID_TIME_LIMIT": 0,
+  "RAID_TRIGGER_AMOUNT": 0,
+  "RAID_CHANNEL": 0,
+  "TIMEZONE": "Europe/Brussels"
 }

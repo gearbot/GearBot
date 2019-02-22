@@ -21,7 +21,7 @@ class GearBot(AutoShardedBot):
     redis_pool = None
     aiosession = None
     being_cleaned = dict()
-    # redis_raid_pool = None
+    redis_raid_pool = None
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
