@@ -10,12 +10,14 @@ import asyncio
 import socketio
 from socketio import AsyncNamespace
 
+from Other import BackendUtils
+
 sio = socketio.AsyncServer(async_mode="tornado")
 _Handler = socketio.get_tornado_handler(sio)
 
 config = json.load(open("config/web.json"))
 CORS_ORGINS = config["CORS_ORGINS"]
-SESSION_TIMEOUT = config["session_timeout_length"]
+SESSION_TIMEOUT = BackendUtils.SESSION_TIMEOUT
 
 async def redisSecConnection():
     try: # This Redis Index will be only for storage of security related items, like keys for examples
@@ -59,7 +61,7 @@ we respond with a {ERROR: 403} and let the dashboard process it and inform the u
 
 
 class SocketNamespace(AsyncNamespace):
-    HMAC_KEY = token_bytes(128)
+    HMAC_KEY = bytearray(BackendUtils.HMAC_KEY, encoding="utf8")
 
     async def encode_key(self, key):
         return base64.urlsafe_b64encode(await self.sign_data(key)).decode("utf8")
@@ -89,7 +91,7 @@ class SocketNamespace(AsyncNamespace):
     async def verify_client(self, userAuth): # TODO: Persistant HMAC Key in Redis
         redisKeyDB = await redisSecConnection()
         client_auth_entry = await redisKeyDB.hgetall(userAuth["client_id"])
-        if client_auth_entry != []:
+        if client_auth_entry != {}:
             client_expected_token = await self.encode_key(client_auth_entry["plain_token"])
             token_signature_match = hmac.compare_digest(userAuth["client_token"], client_expected_token)
 

@@ -3,10 +3,12 @@ from tornado import web
 from tornado.httpserver import HTTPServer
 from tornado.options import parse_command_line
 
-from secrets import token_urlsafe
+from Other import BackendUtils
+print("Registering HMAC key...")
+loop = ioloop.IOLoop.current()
+loop.asyncio_loop.run_until_complete(BackendUtils.crypto_initalize())
 
 from Other.Handlers import SocketHandler
-from Other import BackendUtils
 from Other.RedisMessager import Messager
 from routes.discordcallback import DiscordOAuthCallback
 from routes.root import Root
@@ -15,21 +17,18 @@ from routes.temp.discordlogin import DiscordOAuthRedir
 from routes.temp.frontend import FrontendAPIGuildInfo
 from routes.temp.setauth import AuthSetTestingEndpoint
 
+print("Starting Gearbot Backend")
 
+parse_command_line()
+messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
+loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
 
 web_settings = {
-    "cookie_secret": token_urlsafe(64),
+    "cookie_secret": BackendUtils.HMAC_KEY,
     "login_url": "/discord/login",
     "xsrf_cookies": False # Turn on when not testing
 }
 
-print("Starting Gearbot App")
-
-parse_command_line()
-loop = ioloop.IOLoop.current()
-messager = Messager("bot-dash-messages", "dash-bot-messages", loop.asyncio_loop)
-
-loop.asyncio_loop.create_task(BackendUtils.initialize(messager))
 dashboardAPI = web.Application([
     (r"/", Root),
     (r"/discord/login", DiscordOAuthRedir), #ihateredirectcaches
