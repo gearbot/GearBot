@@ -10,12 +10,11 @@ loop.asyncio_loop.run_until_complete(BackendUtils.crypto_initalize())
 
 from Other.Handlers import SocketHandler
 from Other.RedisMessager import Messager
-from routes.discordcallback import DiscordOAuthCallback
-from routes.root import Root
-from routes.temp.checkauth import AuthGetTestingEndpoint
-from routes.temp.discordlogin import DiscordOAuthRedir
-from routes.temp.frontend import FrontendAPIGuildInfo
-from routes.temp.setauth import AuthSetTestingEndpoint
+
+from routes.discordauth.discordcallback import DiscordOAuthCallback
+from routes.discordauth.discordlogin import DiscordOAuthRedir
+from routes.testing.frontend import FrontendAPIGuildInfo
+from routes.testing.setauth import AuthSetTestingEndpoint
 
 print("Starting Gearbot Backend")
 
@@ -30,11 +29,9 @@ web_settings = {
 }
 
 dashboardAPI = web.Application([
-    (r"/", Root),
-    (r"/discord/login", DiscordOAuthRedir), #ihateredirectcaches
+    (r"/discord/login", DiscordOAuthRedir), #ihateredirectcaches, #me too
     (r"/discord/callback", DiscordOAuthCallback),
     (r"/setauth", AuthSetTestingEndpoint),
-    (r"/checkauth", AuthGetTestingEndpoint),
     (r"/testing", FrontendAPIGuildInfo),
 
     (r"/ws/", SocketHandler)
