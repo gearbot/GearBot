@@ -160,7 +160,7 @@ async def get_user(uid, fetch=True):
                         mention = user.mention
                     )
 
-                    pipeline.expire(uid, 300) # 5 minute cache life
+                    pipeline.expire(uid, 3000) # 5 minute cache life
                     
                     BOT.loop.create_task(pipeline.execute())
 

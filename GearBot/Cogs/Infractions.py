@@ -27,7 +27,7 @@ class Infractions:
 
     def __init__(self, bot):
         self.bot: GearBot = bot
-        Pages.register("inf_search", self.inf_init, self.update_infs)
+        Pages.register("inf_search", self.inf_init, self.update_infs, instant_update=True)
 
     def __unload(self):
         Pages.unregister("inf_search")
@@ -87,28 +87,47 @@ class Infractions:
                 else:
                     query = (" ".join(parts[:-1])).strip()
             except ValueError:
-                amount = 25
+                amount = 100
             else:
-                if 1 < amount > 50:
+                if 1 < amount > 500:
                     if query == "":
                         query = amount
                     else:
                         query = f"{query} {amount}"
-                    amount = 25
+                    amount = 100
         else:
-            amount = 25
+            amount = 100
         await Pages.create_new("inf_search", ctx, guild_id=ctx.guild.id, query=query, amount=amount, fields=fields)
 
     async def inf_init(self, ctx:commands.Context, query, guild_id, amount, fields):
-        pages = await InfractionUtils.get_infraction_pages(guild_id, query, amount, fields)
-        name = await Utils.username(query) if isinstance(query, int) else ctx.guild.name
-        return f"{MessageUtils.assemble(ctx, 'SEARCH', 'inf_search_header', name=name, page_num=1, pages=len(pages))}{pages[0]}", None, len(pages) > 1, []
+        return MessageUtils.assemble(ctx, 'SEARCH', 'inf_search_compiling'), None, False, []
 
     async def update_infs(self, ctx, message, page_num, action, data):
-        pages = await InfractionUtils.get_infraction_pages(data["guild_id"], data["query"], data["amount"] if "amount" in data else 25, data["fields"] if "fields" in data else ["user", "mod", "reason"])
-        page, page_num = Pages.basic_pages(pages, page_num, action)
+        parts = [data["guild_id"], data["query"],
+                 data["amount"] if "amount" in data else 100,
+                 data["fields"] if "fields" in data else ["user", "mod", "reason"],
+                 page_num, message]
+        count = await InfractionUtils.get_page_count(*parts)
+        if action == "UPDATE" and count > 0:
+            await message.add_reaction(Emoji.get_emoji('LEFT'))
+            await message.add_reaction(Emoji.get_emoji('RIGHT'))
+        if action == "PREV":
+            page_num -= 1
+        elif action == "NEXT":
+            page_num += 1
+        if page_num < 0:
+            page_num = count - 1
+        if page_num >= count:
+            page_num = 0
+        parts = [data["guild_id"], data["query"],
+                                                           data["amount"] if "amount" in data else 25,
+                                                           data["fields"] if "fields" in data else ["user", "mod","reason"],
+                                                           page_num, message]
+
+
         name = await Utils.username(data['query']) if isinstance(data['query'], int) else self.bot.get_guild(data["guild_id"]).name
-        return f"{Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=len(pages))}{page}", None, page_num
+        page = await InfractionUtils.get_page(*parts)
+        return f"{Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}", None, page_num
 
 
     @inf.command()

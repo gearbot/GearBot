@@ -11,11 +11,12 @@ def initialize(bot):
     load_from_disc()
 
 
-def register(type, init, update, sender_only=False):
+def register(type, init, update, sender_only=False, instant_update=False):
     page_handlers[type] = {
         "init": init,
         "update": update,
-        "sender_only": sender_only
+        "sender_only": sender_only,
+        "instant_update": instant_update
     }
 
 
@@ -27,12 +28,13 @@ def unregister(type_handler):
 async def create_new(type, ctx, **kwargs):
     text, embed, has_pages, emoji = await page_handlers[type]["init"](ctx, **kwargs)
     message: discord.Message = await ctx.channel.send(text, embed=embed)
-    if has_pages or len(emoji) > 0:
+    if has_pages or len(emoji) > 0 or page_handlers[type]["instant_update"]:
         data = {
             "type": type,
             "page": 0,
             "trigger": ctx.message.id,
-            "sender": ctx.author.id
+            "sender": ctx.author.id,
+            "channel": ctx.channel.id
         }
         for k, v in kwargs.items():
             data[k] = v
@@ -49,6 +51,8 @@ async def create_new(type, ctx, **kwargs):
         del known_messages[list(known_messages.keys())[0]]
 
     save_to_disc()
+    if page_handlers[type]["instant_update"]:
+        await update(ctx.bot, message, "UPDATE", ctx.author)
 
 
 async def update(bot, message, action, user):

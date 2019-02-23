@@ -571,5 +571,7 @@
   "current_timezone": "The server timezone is currently set to ``{timezone}``",
   "invalid_timezone": "That is not a valid timezone",
   "same_timezone": "The timezone was already set to ``{timezone}``",
-  "timezone_set": "Future logs will use ``{timezone}`` for timestamps"
+  "timezone_set": "Future logs will use ``{timezone}`` for timestamps",
+  "inf_search_compiling": "Looking up things and stuff, i think",
+  "inf_summary": "Infraction summary:"
 }
