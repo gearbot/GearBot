@@ -532,7 +532,7 @@ class Serveradmin:
             async def yes():
                 await ctx.invoke(self.enable_feature, ", ".join(features))
             translated = Translator.translate('confirmation_enable_features', ctx)
-            await Confirmation.confirm(ctx, f"{Emoji.get_chat_emoji('WHAT')} {translated}\n{', '.join(features)}", on_yes=yes)
+            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx.guild.id, 'WHAT', 'confirmation_enable_features', count=len(features)) + ', '.join(features), on_yes=yes)
 
     @logging.command(name="remove")
     async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
@@ -628,13 +628,13 @@ class Serveradmin:
                     self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
-            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_enabled', ctx)}{', '.join(enabled)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_enabled', count=len(enabled)) + ', '.join(enabled)
 
         if len(ignored) > 0:
-            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_enabled', ctx)}{', '.join(ignored)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_enabled', count=len(ignored)) + ', '.join(ignored)
 
         if len(unknown) > 0:
-            message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'logs_unknown', count=len(unknown)) + ', '.join(unknown)
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 
@@ -683,13 +683,13 @@ class Serveradmin:
                 Configuration.set_var(ctx.guild.id, t, False)
 
         if len(disabled) > 0:
-            message += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('features_disabled', ctx)}{', '.join(disabled)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_disabled', count=len(disabled)) + ', '.join(disabled)
 
         if len(ignored) > 0:
-            message += f"\n{Emoji.get_chat_emoji('WARNING')}{Translator.translate('feature_already_disabled', ctx)}{', '.join(ignored)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_disabled', count=len(ignored)) + ', '.join(ignored)
 
         if len(unknown) > 0:
-            message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('features_unknown', ctx)}{', '.join(unknown)}"
+            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'features_unknown', count=len(unknown)) + ', '.join(unknown)
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 

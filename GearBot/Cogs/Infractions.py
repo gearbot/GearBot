@@ -49,11 +49,11 @@ class Infractions:
                 message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
                 await Confirmation.confirm(ctx, message, on_yes=yes)
             else:
-                InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
+                i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                 name = Utils.clean_user(member)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('warning_added', ctx.guild.id, user=name)}")
+                await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
                 aname = Utils.clean_user(ctx.author)
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_added_modlog', ctx.guild.id, user=name, moderator=aname, reason=reason)}")
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx.guild.id, 'WARNING', 'warning_added_modlog', user=name, moderator=aname, reason=reason, inf=i.id))
                 if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
                     try:
                         dm_channel = await member.create_dm()

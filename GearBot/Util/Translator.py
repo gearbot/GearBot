@@ -7,6 +7,8 @@ import zipfile
 
 import aiohttp
 import requests
+from pyseeyou import format
+from pyseeyou.locales import LOCALE_FUNCTIONS
 
 from Util import Configuration, GearbotLogging, Emoji
 
@@ -45,12 +47,15 @@ def translate(key, location, **kwargs):
     else:
         lang_key = Configuration.get_var(lid, "LANG")
     if key in LANGS[lang_key].keys():
+        short_code = lang_key[:2]
+        if short_code not in LOCALE_FUNCTIONS:
+            short_code = 'en'
         try:
-            return LANGS[lang_key][key].format(**kwargs)
+            return format(LANGS[lang_key][key], kwargs, short_code)
         except (KeyError, ValueError):
             GearbotLogging.error(f"Corrupt translation detected in {lang_key}: {key}\n```\n{LANGS[lang_key][key]}```")
     if key in LANGS["en_US"].keys():
-        return LANGS["en_US"][key].format(**kwargs)
+        return format(LANGS[lang_key][key], kwargs, short_code)
     return key
 
 

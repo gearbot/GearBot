@@ -14,9 +14,10 @@ def initialize(gearbot):
     bot = gearbot
 
 def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
-    Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
+    i = Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
                       start=datetime.now(), end=end, active=active)
     bot.loop.create_task(clear_cache(guild_id))
+    return i
 
 async def clear_cache(guild_id):
     if bot.redis_pool is None:
