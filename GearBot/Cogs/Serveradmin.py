@@ -531,7 +531,6 @@ class Serveradmin:
         if len(features) > 0:
             async def yes():
                 await ctx.invoke(self.enable_feature, ", ".join(features))
-            translated = Translator.translate('confirmation_enable_features', ctx)
             await Confirmation.confirm(ctx, MessageUtils.assemble(ctx.guild.id, 'WHAT', 'confirmation_enable_features', count=len(features)) + ', '.join(features), on_yes=yes)
 
     @logging.command(name="remove")
