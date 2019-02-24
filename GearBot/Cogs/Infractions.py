@@ -133,7 +133,7 @@ class Infractions:
 
 
     @inf.command()
-    async def update(self, ctx:commands.Context, infraction:ServerInfraction, *, reason:str):
+    async def update(self, ctx:commands.Context, infraction:ServerInfraction, *, reason:Reason):
         """inf_update_help"""
         infraction.mod_id = ctx.author.id
         infraction.reason = reason
