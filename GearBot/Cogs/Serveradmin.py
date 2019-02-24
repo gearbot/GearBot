@@ -918,6 +918,7 @@ class Serveradmin:
     @configure.command()
     @commands.guild_only()
     async def timezone(self, ctx, new_zone=None):
+        """timezone_help"""
         current_zone = Configuration.get_var(ctx.guild.id, "TIMEZONE")
         if new_zone is None:
             #no new zone, spit out the current one

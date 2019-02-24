@@ -589,5 +589,6 @@
   "kicks": "{count, plural, one {1 kick} other {# kicks}}",
   "tempbans": "{count, plural, one {1 tempban} other {# tempbans}}",
   "timestamp": "Timestamp",
-  "type": "Type"
+  "type": "Type",
+  "timezone_help": "Configures the timezone used for logging timestamps"
 }
