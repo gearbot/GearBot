@@ -245,11 +245,11 @@ class ModLog:
                 reason = Translator.translate("no_reason", guild.id)
             else:
                 reason = log.reason
-            InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
-            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(log.user), moderator_id=log.user.id, reason=reason))
+            i = InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(log.user), moderator_id=log.user.id, reason=reason, inf=i.id))
         else:
-            InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
-            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id))
+            i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id))
 
     async def on_member_unban(self, guild, user):
         fid = f"{guild.id}-{user.id}"
@@ -268,16 +268,16 @@ class ModLog:
             # this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
             log = await self.find_log(guild, AuditLogAction.unban, lambda e: e.target == user and e.created_at > limit)
         if log is not None:
+            i = InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual ban")
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS",
                                   MessageUtils.assemble(guild.id, 'INNOCENT', 'unban_log', user=Utils.clean_user(user),
                                                         user_id=user.id, moderator=log.user,
-                                                        moderator_id=log.user.id, reason='Manual unban'))
-            InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual ban")
+                                                        moderator_id=log.user.id, reason='Manual unban', inf=i.id))
 
 
         else:
-            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, 'INNOCENT', 'manual_unban_log',  user=Utils.clean_user(user),user_id=user.id))
-            InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
+            i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
+            GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, 'INNOCENT', 'manual_unban_log',  user=Utils.clean_user(user),user_id=user.id, inf=i.id))
 
     async def on_member_update(self, before:discord.Member, after):
         guild = before.guild
