@@ -129,7 +129,7 @@ class Infractions:
 
         name = await Utils.username(data['query']) if isinstance(data['query'], int) else self.bot.get_guild(data["guild_id"]).name
         page = await InfractionUtils.get_page(*parts)
-        return f"{Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}", None, page_num
+        return f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}", None, page_num
 
 
     @inf.command()

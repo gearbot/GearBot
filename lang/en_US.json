@@ -579,5 +579,15 @@
   "forced ban": "Forced ban",
   "mute": "Mute",
   "unmute": "Unmute",
-  "unban": "Unban"
+  "unban": "Unban",
+  "warns": "{count, plural, one {1 warning} other {# warnings}}",
+  "bans": "{count, plural, one {1 ban} other {# bans}}",
+  "forced bans": "{count, plural, one {1 forced ban} other {# forced bans}}",
+  "mutes": "{count, plural, one {1 mute} other {# mutes}}",
+  "unmutes": "{count, plural, one {1 unmute} other {# unmutes}}",
+  "unbans": "{count, plural, one {1 unban} other {# unbans}}",
+  "kicks": "{count, plural, one {1 kick} other {# kicks}}",
+  "tempbans": "{count, plural, one {1 tempban} other {# tempbans}}",
+  "timestamp": "Timestamp",
+  "type": "Type"
 }
