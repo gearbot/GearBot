@@ -38,7 +38,7 @@
   "help_help": "Lists all commands, the commands from a cog or info about a command.",
   "warn_help": "Adds a new warning, the user is not informed of this.",
   "warning_added": "Warning for {user} added (#{inf})",
-  "warning_added_modlog": "{user} (``user_id``) has been warned by {moderator} (``moderator_id``) for ``{reason}`` (#{inf})",
+  "warning_added_modlog": "{user} (``{user_id}``) has been warned by {moderator} (``{moderator_id}``) for ``{reason}`` (#{inf})",
   "warning_not_allowed": "You are not allowed to warn {user}.",
   "inf_search_help": "Shows all infractions given by or to a given user.",
   "inf_search_header": "**Infractions for {name}** ({page_num}/{pages})",
