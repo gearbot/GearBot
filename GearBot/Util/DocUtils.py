@@ -70,7 +70,7 @@ async def update_site(bot):
 
 def generate_command_list(bot):
     excluded = [
-        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink", "AntiRaid"
+        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink", "AntiRaid", "Cachet"
     ]
     page = ""
     handled = set()
