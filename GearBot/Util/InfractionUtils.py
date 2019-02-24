@@ -42,7 +42,7 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else 2
     for inf in infs:
-        longest_type = max(longest_type, len(Translator.translate(inf.type, guild_id)))
+        longest_type = max(longest_type, len(Translator.translate(inf.type.lower(), guild_id)))
     out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{inf.user_id}> | <@{inf.mod_id}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {inf.reason}" for inf in infs)
     pages = Pages.paginate(out, max_chars=1500)
     placeholder = Translator.translate("inf_search_compiling", guild_id)

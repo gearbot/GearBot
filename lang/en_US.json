@@ -448,8 +448,8 @@
   "m_nobody": "You want me to {action} nobody? Sure, done! \n\nWait, why did you invoke this command then?",
   "m_nobody_2": "Oh, you wanted to make a point and look threatening? Got it!",
   "intimidation": "<insert intimidating look here>",
-  "softban": "softban",
-  "tempban": "tempban",
+  "softban": "Softban",
+  "tempban": "Tempban",
   "invite_censor_fail": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems another bot already removed it\n```{message}```",
   "warn_to_feedback": "Oh, I'm sorry if I did something wrong, but warning me doesn't help much. Would you like me to forward the warning to my creator as feedback?",
   "feedback_submitted": "Your feedback has been relayed!",
@@ -573,5 +573,11 @@
   "same_timezone": "The timezone was already set to ``{timezone}``",
   "timezone_set": "Future logs will use ``{timezone}`` for timestamps",
   "inf_search_compiling": "Looking up things and stuff, i think",
-  "inf_summary": "Infraction summary:"
+  "inf_summary": "Infraction summary:",
+  "warn": "Warning",
+  "ban": "Ban",
+  "forced ban": "Forced ban",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "unban": "Unban"
 }
