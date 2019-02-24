@@ -79,7 +79,7 @@ class Emoji:
             animated = set()
             static = set()
             for e in guild.emojis:
-                (animated if e.animated else static).add(e)
+                (animated if e.animated else static).add(str(e))
             max_emoji = 200 if "MORE_EMOJI" in guild.features else 50
             embed.add_field(name=Translator.translate('static_emoji', guild), value=f"{len(static)} / {max_emoji}")
             embed.add_field(name=Translator.translate('animated_emoji', guild), value=f"{len(animated)} / {max_emoji}")
