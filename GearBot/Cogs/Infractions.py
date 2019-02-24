@@ -110,7 +110,7 @@ class Infractions:
                  data["fields"] if "fields" in data else ["user", "mod", "reason"],
                  page_num, message]
         count = await InfractionUtils.get_page_count(*parts)
-        if action == "UPDATE" and count > 1:
+        if action == "UPDATE" and count > 1 and message.channel.permissions_for(message.channel.guild.me).add_reactions:
             await message.add_reaction(Emoji.get_emoji('LEFT'))
             await message.add_reaction(Emoji.get_emoji('RIGHT'))
         if action == "PREV":
