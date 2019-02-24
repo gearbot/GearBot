@@ -94,7 +94,7 @@ class ModLog:
             self.bot.data["message_deletes"].remove(data.message_id)
             return
         c = self.bot.get_channel(data.channel_id)
-        if isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or data.channel_id in Configuration.get_var(c.guild.id,"IGNORED_CHANNELS_OTHER"):
+        if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or data.channel_id in Configuration.get_var(c.guild.id,"IGNORED_CHANNELS_OTHER"):
             return
         message = await MessageUtils.get_message_data(self.bot, data.message_id)
         if message is not None:
@@ -138,7 +138,7 @@ class ModLog:
         if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
             return
         c = self.bot.get_channel(cid)
-        if isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
+        if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
             return
         message = await MessageUtils.get_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
