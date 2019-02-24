@@ -74,7 +74,7 @@
   "forced_ban": "Forced ban",
   "forceban_to_ban": "{user} is on this server, executing regular ban command instead.",
   "purge_help": "Purges up to 1000 messages in this channel.",
-  "purge_confirmation": "Deleted {count, plural, one {1 message} other {# messages}!",
+  "purge_confirmation": "Deleted {count, plural, one {1 message} other {# messages}}!",
   "unban_help": "Unbans a user from the server.",
   "unban_confirmation": "{user} (``{user_id}``) has been unbanned. Reason: ``{reason}`` Infraction #{inf}",
   "unban_log": "{user} (``{user_id}``) was unbanned by {moderator} (``{moderator_id}``). Reason: ``{reason}``",
