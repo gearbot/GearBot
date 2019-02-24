@@ -321,9 +321,9 @@ class Moderation:
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                             delete_message_days=days)
-        i = Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (
+        Infraction.update(active=False).where((Infraction.user_id == user.id) & (Infraction.type == "Unban") & (
                     Infraction.guild_id == ctx.guild.id)).execute()
-        InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
+        i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx, 'BAN', 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id))
         if confirm:
             await MessageUtils.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
