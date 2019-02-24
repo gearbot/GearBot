@@ -303,7 +303,7 @@ class Moderation:
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
                 until = time.time() + duration_seconds
-                InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
+                i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
                 translated = Translator.translate('tempban_log', ctx.guild.id, user=Utils.clean_user(user),
                                                   user_id=user.id,
                                                   moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
