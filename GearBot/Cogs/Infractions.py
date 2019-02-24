@@ -55,7 +55,7 @@ class Infractions:
                 name = Utils.clean_user(member)
                 await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
                 aname = Utils.clean_user(ctx.author)
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx.guild.id, 'WARNING', 'warning_added_modlog', user=name, moderator=aname, reason=reason, inf=i.id))
+                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx.guild.id, 'WARNING', 'warning_added_modlog', user=name, moderator=aname, reason=reason, user_id=member.id, moderator_id=ctx.author.id, inf=i.id))
                 if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
                     try:
                         dm_channel = await member.create_dm()
