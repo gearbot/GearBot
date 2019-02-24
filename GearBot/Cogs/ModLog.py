@@ -565,7 +565,11 @@ class ModLog:
         for attr in attributes:
             if hasattr(before, attr):
                 ba = getattr(before, attr)
+                if isinstance(ba, str) and ba.strip() == "":
+                    ba = None
                 aa = getattr(after, attr)
+                if isinstance(aa, str) and aa.strip() == "":
+                    aa = None
                 key = base_key
                 if ba != aa:
                     entry = await self.find_log(before.guild, action,
