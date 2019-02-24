@@ -18,6 +18,8 @@ class Infractions:
         "commands": {
             "inf" : {
                 "required" : 2,
+                "min": 2,
+                "max": 6,
                 "commands" : {
                     "delete": {"required": 5, "min": 4, "max": 6}
                 }
