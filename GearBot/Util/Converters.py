@@ -287,7 +287,7 @@ class InfSearchModifiers(CommandModifier):
 class ServerInfraction(Converter):
 
     async def convert(self, ctx, argument):
-        argument.strip('#')
+        argument = argument.strip('#')
         try:
             argument = int(argument)
         except ValueError:
