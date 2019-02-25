@@ -37,7 +37,7 @@ class Emoji(BaseCog):
     def __unload(self):
         Pages.unregister("emoji")
 
-    async def __local_check(self, ctx):
+    async def cog_check (self, ctx):
         return Permissioncheckers.check_permission(ctx) or ctx.channel.permissions_for(ctx.author).manage_emojis
 
     @commands.group(aliases=["emote"])

@@ -94,11 +94,6 @@ class Serveradmin(BaseCog):
         bot.to_cache = []
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
-    def __unload(self):
-        pass
-
-    async def __local_check(self, ctx:commands.Context):
-        return Permissioncheckers.check_permission(ctx)
 
 
     @commands.guild_only()

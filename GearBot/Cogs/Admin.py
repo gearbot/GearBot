@@ -20,7 +20,7 @@ class Admin(BaseCog):
     def __unload(self):
         Pages.unregister("eval")
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author)
 
 

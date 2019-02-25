@@ -9,5 +9,5 @@ class BaseCog(commands.Cog):
         self.bot:GearBot = bot
         self.permissions=permissions
 
-    async def __local_check(self, ctx):
+    async def cog_check (self, ctx):
         return Permissioncheckers.check_permission(ctx)
