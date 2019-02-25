@@ -106,7 +106,6 @@ class ModLog:
             hasUser = user is not None
             if not hasUser or user.id in Configuration.get_var(guild.id, "IGNORED_USERS") or user.id == guild.me.id:
                 return
-            attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == data.message_id)
             channel = self.bot.get_channel(message.channel)
             name = Utils.clean_user(user) if hasUser else str(message.author)
             GearbotLogging.log_to(guild.id, "EDIT_LOGS",
@@ -119,17 +118,17 @@ class ModLog:
                                  icon_url=user.avatar_url if hasUser else EmptyEmbed)
 
                 embed.set_footer(text=f"Sent in #{channel.name}")
-                if len(attachments) > 0:
+                if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
-                                    value="\n".join(attachment.url for attachment in attachments))
+                                    value="\n".join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
             else:
                 cleaned_content = await Utils.clean(message.content, channel.guild)
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
                 count = 1
-                for attachment in attachments:
+                for attachment in message.attachments:
                     GearbotLogging.log_to(guild.id, "EDIT_LOGS",
-                                          f"**Attachment{f' {count}' if len(attachments) > 1 else ''}:** <{attachment.url}>",
+                                          f"**Attachment{f' {count}' if len(message.attachments) > 1 else ''}:** <{attachment.url if hasattr(attachment, 'url') else attachment}>",
                                           can_stamp=False)
                     count += 1
 

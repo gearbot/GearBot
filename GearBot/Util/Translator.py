@@ -10,7 +10,6 @@ import aiohttp
 import requests
 from parsimonious import ParseError, VisitationError
 from pyseeyou import format
-from pyseeyou.locales import LOCALE_FUNCTIONS
 
 from Util import Configuration, GearbotLogging, Emoji
 
@@ -46,8 +45,6 @@ def translate(key, location, **kwargs):
         lang_key = Configuration.get_var(lid, "LANG")
     if key in LANGS[lang_key].keys():
         short_code = lang_key[:2]
-        if short_code not in LOCALE_FUNCTIONS:
-            short_code = 'en'
         try:
             return format(LANGS[lang_key][key], kwargs, short_code)
         except (KeyError, ValueError, ParseError, VisitationError) as ex:
@@ -55,7 +52,7 @@ def translate(key, location, **kwargs):
             GearbotLogging.error(ex)
     if key in LANGS["en_US"].keys():
         try:
-            return format(LANGS['en_US'][key], kwargs, short_code)
+            return format(LANGS['en_US'][key], kwargs, 'en')
         except (KeyError, ValueError, ParseError, VisitationError) as ex:
             BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
             GearbotLogging.error(ex)

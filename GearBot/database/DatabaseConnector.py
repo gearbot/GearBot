@@ -39,7 +39,7 @@ class LoggedAttachment(Model):
     id = BigIntegerField(primary_key=True)
     url = CharField()
     isImage = BooleanField()
-    messageid = BigIntegerField()
+    messageid = ForeignKeyField(LoggedMessage, backref='attachments', column_name='messageid')
 
     class Meta:
         database = connection
