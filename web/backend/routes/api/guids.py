@@ -1,8 +1,9 @@
-from socketio import AsyncNamespace
+from Other.Handlers import SocketNamespace
 
 from Other import BackendUtils
 
-class Guilds(AsyncNamespace):
+
+class Guilds(SocketNamespace):
     async def on_connect(self, sid, environ):
         pass
 
@@ -11,8 +12,23 @@ class Guilds(AsyncNamespace):
 
     async def on_get(self, sid, data):
         # Temporary until guilds work
+        verified_status = await self.verify_client(data)
         await self.emit("api_response", 
-            data = []
+            data = {
+                "365498559174410241": {
+                    "name": "The Gearbox",
+                    "icon": "https://cdn.discordapp.com/icons/365498559174410241/735df5f0db5581592b7744f8fc10701f.webp",
+                    "authorized": verified_status
+                },
+                # Current question: 1. Send a object for a guild that the user has no permissions in
+                # 2. Send just "authorized": "false",
+                # 3. Send nothing at all and handle client side not rendering it
+                "029349238409030492232": { 
+                    "name": "Gearbot Brain Server",
+                    "icon": "https://cdn.discordapp.com/icons/365498559174410241/735df5f0db5581592b7744f8fc10701f.webp",
+                    "authorized": False
+                }
+            }
         )
         
         """

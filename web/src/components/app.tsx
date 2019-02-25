@@ -1,19 +1,44 @@
 import {Component, h} from "preact";
 import {route, Router} from "preact-router";
 
+import * as io from "socket.io-client";
+
+import config from "../config";
+
 import Header from "./header";
-// Code-splitting is automated for routes
 import Home from "../routes/home";
 import Dashboard from "../routes/dashboard";
 import Docs from "../routes/docs";
 
-import {DashboardState} from "./state";
+import {DashboardState, InitalAuthObject} from "./state";
 import Gear from "./gear";
 import Error404 from "./Error404";
 
 export default class App extends Component<{}, DashboardState> {
+	mainAuthObject: InitalAuthObject
 
 	componentDidMount(): void {
+		const registrationSocket = io(config.apiUrl+"/api/", {
+			path: config.socketPath
+		});
+
+		registrationSocket.emit("register_client", window.localStorage.getItem("auth_timestamp"));
+
+		registrationSocket.once("api_response/registrationID", (RecAuthObject: InitalAuthObject) => {
+
+			registrationSocket.close()
+			console.log("Closed the inital auth socket!")
+
+			if (RecAuthObject.status == "AUTH_SET") {
+				this.mainAuthObject = RecAuthObject;
+				window.localStorage.setItem("client_id", RecAuthObject.client_id)
+				window.localStorage.setItem("client_token", RecAuthObject.client_token)
+				window.localStorage.setItem("auth_timestamp", RecAuthObject.timestamp)
+			} else {
+				this.mainAuthObject = RecAuthObject;
+			}
+		});
+
 		addEventListener("click", this.cheat);
 		addEventListener("touch", this.cheat);
 	}
@@ -45,7 +70,7 @@ export default class App extends Component<{}, DashboardState> {
 				<Header />
 				<Router onChange={this.handleRoute}>
 					<Home path="/"/>
-					<Dashboard path="/dashboard"/>
+					<Dashboard SocketAuthObject={this.mainAuthObject} path="/dashboard"/>
 					<Docs path="/docs/" doc="index"/>
 					<Docs path="/docs/:folder?/:doc?"/>
 

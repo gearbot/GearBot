@@ -4,6 +4,9 @@
     "redirect_uri": "",
     "userIDForTestingCookie": "",
 
+    "client_url": "",
+    "session_timeout_length": 7200,
+
     "CORS_ORGINS": [
         ""
     ]

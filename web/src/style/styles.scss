@@ -203,10 +203,7 @@ html, body, .container {
 					content: url("../assets/gearGreen.png");
 				}
 			}
-			
-			
 		}
-		
 	}
 	
 	
@@ -259,6 +256,22 @@ html, body, .container {
 		position: absolute;
 		left: 150px;
 		top: 80px;
+	}
+
+	.discordSignIn {
+		position: absolute;
+		right: 233px;
+		top: 80px;
+
+		z-index: 10;
+
+		border-style: solid;
+		border-color: black;
+		
+		padding: 15px;
+
+		color: inherit; 
+		text-decoration: none;
 	}
 	
 	.guild-nav {

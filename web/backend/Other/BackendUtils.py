@@ -1,5 +1,7 @@
 import json
 import urllib
+from time import time
+from secrets import token_urlsafe
 
 import aioredis
 from tornado import escape
@@ -9,21 +11,51 @@ API_LOCATION = "https://discordapp.com/api/"
 CLIENT_ID = None
 REDIRECT_URI = None
 
+CLIENT_URL = None
 TESTING_USERID = None
 CLIENT_SECRET = None
 REDIS_CONNECTION = None
 MESSAGER = None
 REQUESTER = AsyncHTTPClient()
 
+HMAC_KEY = None
+SESSION_TIMEOUT = None
+
+async def crypto_initalize():
+    global HMAC_KEY, SESSION_TIMEOUT
+
+    with open("config/web.json") as file:
+        config = json.load(file)
+    SESSION_TIMEOUT = config["session_timeout_length"]
+
+    try:
+        redisDB = await aioredis.create_redis_pool(("localhost", 6379), encoding="utf-8", db=10)
+    except OSError as ex:
+        print("Failed to connect to the Redis database, exiting!")
+        raise ex
+
+    stored_hmac_key = await redisDB.get("hmackey")
+
+    if stored_hmac_key == None:
+        HMAC_KEY = token_urlsafe(64)
+        await redisDB.set("hmackey", f"{time()}tstp{HMAC_KEY}")
+    else:
+        timestamp, stored_hmac_key = stored_hmac_key.split("tstp")
+        if (time() - float(timestamp)) < SESSION_TIMEOUT: # Make sure the HMAC key stays "fresh". Probably good practice
+            HMAC_KEY = stored_hmac_key
+        else:
+            HMAC_KEY = token_urlsafe(64)
+            await redisDB.set("hmackey", f"{time()}tstp{HMAC_KEY}")
 
 async def initialize(messager):
-    global config, CLIENT_ID, TESTING_USERID, CLIENT_SECRET, REDIS_CONNECTION, MESSAGER, REDIRECT_URI
+    global config, CLIENT_ID, TESTING_USERID, CLIENT_SECRET, REDIS_CONNECTION, MESSAGER, REDIRECT_URI, CLIENT_URL
     with open("config/web.json") as file:
         config = json.load(file)
     TESTING_USERID = config["userIDForTestingCookie"]
     CLIENT_ID = config["clientID"]
     CLIENT_SECRET = config["clientSecret"]
     REDIRECT_URI = config["redirect_uri"]
+    CLIENT_URL = config["client_url"]
     MESSAGER = messager
 
     try:
@@ -35,7 +67,7 @@ async def initialize(messager):
 
 
 async def get_bearer_token(*, auth_code=None, user_id=None, refresh):
-    # TODO: handle an attempted refresh where the auth code in storage expired
+    # TODO: Handle an attempted refresh where the auth code in storage expired
     if refresh:
         key = f"discord_refresh_token:{user_id}"
         code = await REDIS_CONNECTION.get(key)

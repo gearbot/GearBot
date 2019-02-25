@@ -16,7 +16,8 @@ class DiscordOAuthCallback(PrimaryHandler):
 
         self.set_secure_cookie(
             name="userauthtoken",
-            value=str(userID)
+            value=str(userID),
+            path="/api/"
         )
 
-        self.redirect("/dashboard")
+        self.redirect(BackendUtils.CLIENT_URL)
