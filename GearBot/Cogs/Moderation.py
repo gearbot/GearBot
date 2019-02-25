@@ -421,7 +421,7 @@ class Moderation:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason, inf=i.id)}")
             GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason)}")
+                                  f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)}")
 
 
             tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &

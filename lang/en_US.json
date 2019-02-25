@@ -69,7 +69,7 @@
   "ban_log": "{user} (``{user_id}``) was banned by {moderator} (``{moderator_id}``) for ``{reason}`` (``#{inf}``)",
   "ban_not_allowed": "You are not allowed to ban {user}.",
   "forceban_help": "Bans a user even if they are not in the server.",
-  "forceban_confirmation": "{user} (``{user_id}``) was force banned for ``{reason}``",
+  "forceban_confirmation": "{user} (``{user_id}``) was force banned for ``{reason}`` (``#{inf}``)",
   "forceban_log": "{user} (``{user_id}``) was force banned by {moderator} (``{moderator_id}``) for ``{reason}`` (``#{inf}``)",
   "forced_ban": "Forced ban",
   "forceban_to_ban": "{user} is on this server, executing regular ban command instead.",
