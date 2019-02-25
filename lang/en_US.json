@@ -438,7 +438,7 @@
   "more_roles": "More roles",
   "no_roles": "No roles",
   "infractions": "Infractions",
-  "total_infractions": "{total, plural, one {1 infraction} other {# infractions}} on {servers, plural, one {1 server} other {servers}}",
+  "total_infractions": "{total, plural, one {1 infraction} other {# infractions}} on {servers, plural, one {1 server} other {# servers}}",
   "profile": "Profile",
   "status": "Status",
   "online": "Online",
