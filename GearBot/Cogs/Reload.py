@@ -79,7 +79,7 @@ class Reload:
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
         await message.edit(content=m)
         await ctx_message.edit(content=m)
-        await Translator.upload(self.bot)
+        await Translator.upload()
         self.bot.hot_reloading = False
 
     @commands.command()

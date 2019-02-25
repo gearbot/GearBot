@@ -122,9 +122,9 @@ async def keepDBalive(bot):
 async def translation_task(bot):
     while not bot.is_closed():
         try:
-            await Translator.update(bot)
+            await Translator.update()
         except Exception as ex:
-            handle_exception("Translation task", bot, ex)
+            await handle_exception("Translation task", bot, ex)
 
         try:
             await asyncio.sleep(6*60*60)

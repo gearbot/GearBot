@@ -49,15 +49,20 @@ def translate(key, location, **kwargs):
             short_code = 'en'
         try:
             return format(LANGS[lang_key][key], kwargs, short_code)
-        except (KeyError, ValueError, ParseError, VisitationError):
-            GearbotLogging.error(f"Corrupt translation detected in {lang_key}: {key}\n```\n{LANGS[lang_key][key]}```")
+        except (KeyError, ValueError, ParseError, VisitationError) as ex:
+            BOT.loop.create_task(tranlator_log('NO', f'Corrupt translation detected!\n**Lang code:** {lang_key}\n**Translation key:** {key}\n```\n{LANGS[lang_key][key]}```'))
+            GearbotLogging.error(ex)
     if key in LANGS["en_US"].keys():
-        return format(LANGS[lang_key][key], kwargs, short_code)
+        try:
+            return format(LANGS[lang_key][key], kwargs, short_code)
+        except (KeyError, ValueError, ParseError, VisitationError) as ex:
+            BOT.loop.create_task(tranlator_log('NO', f'Corrupt english source string detected!\n**Translation key:** {key}\n```\n{LANGS[lang_key][key]}```'))
+            GearbotLogging.error(ex)
     return key
 
 
-async def update(bot):
-    message = await bot.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"]).send(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
+async def update():
+    message = await tranlator_log('REFRESH', 'Updating translations')
     crowdin_data = Configuration.get_master_var("CROWDIN")
     session: aiohttp.ClientSession = BOT.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json",) as reply:
@@ -91,18 +96,21 @@ async def update(bot):
             else:
                 await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
-async def upload(bot):
+async def upload():
     if Configuration.get_master_var("CROWDIN", None) is None:
         return
-    message = await bot.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"]).send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
+    message = await tranlator_log('REFRESH', 'Uploading translation file')
     t = threading.Thread(target=upload_file)
     t.start()
     while t.is_alive():
         await asyncio.sleep(1)
     await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Translations file has been uploaded")
-    await update(bot)
+    await update()
 
 def upload_file():
     data = {'files[master/lang/en_US.json]': open('lang/en_US.json', 'r')}
     crowdin_data = Configuration.get_master_var("CROWDIN")
     requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
+
+async def tranlator_log(emoji, message):
+    return await BOT.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"]).send(f'{Emoji.get_chat_emoji(emoji)} {message}')
