@@ -5,34 +5,33 @@ from discord import HTTPException, InvalidArgument, Embed, Role, Emoji
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
 
 
-class Emoji:
-    permissions = {
-        "min": 2,
-        "max": 6,
-        "required": 3,
-        "commands": {
-            "emoji": {
-                "min": 2,
-                "max": 6,
-                "required": 3,
-                "commands": {
-                    "list": {
-                        "min": 0,
-                        "max": 6,
-                        "required": 3
+class Emoji(BaseCog):
+
+    def __init__(self, bot):
+        super().__init__(bot, {
+            "min": 2,
+            "max": 6,
+            "required": 3,
+            "commands": {
+                "emoji": {
+                    "min": 2,
+                    "max": 6,
+                    "required": 3,
+                    "commands": {
+                        "list": {
+                            "min": 0,
+                            "max": 6,
+                            "required": 3
+                        }
                     }
                 }
             }
-        }
-    }
-
-    def __init__(self, bot):
-        self.bot: GearBot = bot
+        })
         Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
 
     def __unload(self):

@@ -8,29 +8,28 @@ from discord import Object, Emoji
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
-import GearBot
 from Bot import TheRealGearBot
-from Util import Permissioncheckers, Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
+from Cogs.BaseCog import BaseCog
+from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils, Questions
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
-class Moderation:
-    permissions = {
-        "min": 2,
-        "max": 6,
-        "required": 2,
-        "commands": {
-            "userinfo": {"required": 2, "min": 0, "max": 6},
-            "serverinfo": {"required": 2, "min": 0, "max": 6},
-            "roles": {"required": 2, "min": 0, "max": 6},
-        }
-    }
+class Moderation(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 2,
+            "max": 6,
+            "required": 2,
+            "commands": {
+                "userinfo": {"required": 2, "min": 0, "max": 6},
+                "serverinfo": {"required": 2, "min": 0, "max": 6},
+                "roles": {"required": 2, "min": 0, "max": 6},
+            }
+        })
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.timed_actions())
@@ -40,9 +39,6 @@ class Moderation:
     def __unload(self):
         self.running = False
         Pages.unregister("roles")
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     async def roles_init(self, ctx, mode):
         pages = self.gen_roles_pages(ctx.guild, mode=mode)
@@ -780,6 +776,7 @@ class Moderation:
         del self.bot.being_cleaned[channel_id]
         await MessageUtils.archive_purge(self.bot, l, guild_id)
 
+    @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
         roleid = Configuration.get_var(guild.id, "MUTE_ROLE")
@@ -800,6 +797,7 @@ class Moderation:
                     except discord.Forbidden:
                         pass
 
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         now = datetime.datetime.fromtimestamp(time.time())
         i = Infraction.get_or_none(Infraction.type == "Mute", Infraction.active == True,

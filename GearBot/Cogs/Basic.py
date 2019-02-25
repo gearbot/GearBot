@@ -7,8 +7,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
-from Bot.GearBot import GearBot
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging, \
+from Cogs.BaseCog import BaseCog
+from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
     MessageUtils
 from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
@@ -16,17 +16,15 @@ from Util.Matchers import NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
 
 
-class Basic:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-        }
-    }
+class Basic(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {}
+        })
         Pages.register("help", self.init_help, self.update_help)
         Pages.register("role", self.init_role, self.update_role)
         self.running = True
@@ -37,9 +35,6 @@ class Basic:
         Pages.unregister("help")
         Pages.unregister("role")
         self.running = False
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     @commands.command()
     async def about(self, ctx):
@@ -318,7 +313,7 @@ class Basic:
             async with self.bot.aiosession.get(link, headers=headers) as reply:
                 return await reply.json()
 
-
+    @commands.Cog.listener()
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
         if role.id in roles:
@@ -333,6 +328,7 @@ class Basic:
             await asyncio.sleep(5)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         guild = self.bot.get_guild(payload.guild_id)
         if guild is None:

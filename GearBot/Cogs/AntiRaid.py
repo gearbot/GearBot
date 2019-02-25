@@ -1,12 +1,12 @@
 import discord
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Features, Configuration
 
 
-class AntiRaid:
+class AntiRaid(BaseCog):
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot)
         self.checking = set()
         self.under_raid = dict()
 

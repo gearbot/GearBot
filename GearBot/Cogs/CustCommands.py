@@ -1,38 +1,34 @@
 import discord
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
-from Util import Permissioncheckers, Configuration, Confirmation, Emoji, Translator, MessageUtils
+from Cogs.BaseCog import BaseCog
+from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils
 from database.DatabaseConnector import CustomCommand
 
 
-class CustCommands:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-            "command|commands": {
-                "required": 0,
-                "min": 0,
-                "max": 6,
-                "commands": {
-                    "create|add|new": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                    "remove": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                    "update": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                }
-            }
-        }
-    }
+class CustCommands(BaseCog):
 
     def __init__(self, bot):
-        self.bot:GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {
+                "command": {
+                    "required": 0,
+                    "min": 0,
+                    "max": 6,
+                    "commands": {
+                        "create": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                        "remove": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                        "update": {"required": 2, "min": 2, "max": 6, "commands": {}},
+                    }
+                }
+            }
+        })
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
 
     async def reloadCommands(self):
@@ -42,9 +38,11 @@ class CustCommands:
                 self.commands[guild.id][command.trigger] = command.response
         self.loaded = True
 
+    @commands.Cog.listener()
     async def on_guild_join(self, guild):
         self.commands[guild.id] = dict()
 
+    @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         del self.commands[guild.id]
         for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):

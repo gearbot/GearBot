@@ -69,17 +69,14 @@ async def update_site(bot):
         await log_message.edit(content=message)
 
 def generate_command_list(bot):
-    excluded = [
-        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink", "AntiRaid", "Cachet"
-    ]
     page = ""
     handled = set()
     for cog in sorted(bot.cogs):
-        if cog not in excluded:
-            cogo = bot.get_cog(cog)
+        cogo = bot.get_cog(cog)
+        if cogo.permissions is not None:
             perm_lvl = cogo.permissions["required"]
             page += f"# {cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
-            for command in sorted(bot.get_cog_commands(cog), key= lambda c:c.qualified_name):
+            for command in sorted(cogo.get_commands(), key= lambda c:c.qualified_name):
                 if command.qualified_name not in handled:
                     page += gen_command_listing(command)
                     handled.add(command.qualified_name)

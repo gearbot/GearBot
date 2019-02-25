@@ -28,8 +28,7 @@ async def command_list(bot, ctx:Context):
 
 
 async def cog_commands(bot, ctx, cog):
-    longest = 0
-    commands = bot.get_cog_commands(cog)
+    commands = bot.get_cog(cog).get_commands()
     if len(commands) == 0:
         return None, None
     return await gen_commands_list(bot, ctx, commands)

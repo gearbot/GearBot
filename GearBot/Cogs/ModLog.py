@@ -6,18 +6,19 @@ import time
 import discord
 from discord import AuditLogAction, Role, DMChannel
 from discord.embeds import EmptyEmbed
+from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
 
-class ModLog:
+class ModLog(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot)
         self.running = True
         self.cache_message = None
         self.to_cache = []
@@ -83,12 +84,14 @@ class ModLog:
         GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
         GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.get_var(message.guild.id, "EDIT_LOGS"):
             await MessageUtils.insert_message(self.bot, message)
 
+    @commands.Cog.listener()
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
         if data.message_id in self.bot.data["message_deletes"]:
             self.bot.data["message_deletes"].remove(data.message_id)
@@ -133,6 +136,7 @@ class ModLog:
                                           can_stamp=False)
                     count += 1
 
+    @commands.Cog.listener()
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
         cid = int(event.data["channel_id"])
         if cid == Configuration.get_master_var("BOT_LOG_CHANNEL"):
@@ -178,6 +182,7 @@ class ModLog:
                     GearbotLogging.log_to(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}", can_stamp=False)
             await MessageUtils.update_message(self.bot, event.message_id, after)
 
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
             dif = (datetime.datetime.utcnow() - member.created_at)
@@ -191,6 +196,7 @@ class ModLog:
             GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                   f"{Emoji.get_chat_emoji('JOIN')} {Translator.translate('join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)}")
 
+    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         if member.id == self.bot.user.id: return
         exits = self.bot.data["forced_exits"]
@@ -224,6 +230,7 @@ class ModLog:
             GearbotLogging.log_to(member.guild.id, "JOIN_LOGS",
                                   f"{Emoji.get_chat_emoji ('LEAVE')} {Translator.translate('leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)}")
 
+    @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
         if user.id == self.bot.user.id or not Features.is_logged(guild.id, "MOD_ACTIONS"): return
         fid = f"{guild.id}-{user.id}"
@@ -251,6 +258,7 @@ class ModLog:
             i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, "BAN", 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id))
 
+    @commands.Cog.listener()
     async def on_member_unban(self, guild, user):
         fid = f"{guild.id}-{user.id}"
         if fid in self.bot.data["unbans"]:
@@ -279,6 +287,7 @@ class ModLog:
             i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", MessageUtils.assemble(guild.id, 'INNOCENT', 'manual_unban_log',  user=Utils.clean_user(user),user_id=user.id, inf=i.id))
 
+    @commands.Cog.listener()
     async def on_member_update(self, before:discord.Member, after):
         guild = before.guild
         # nickname changes
@@ -353,7 +362,7 @@ class ModLog:
                     GearbotLogging.log_to(guild.id, "NAME_CHANGES",
                                           f"{Emoji.get_chat_emoji('NAMETAG')} {Translator.translate('username_changed', guild, after_clean=after_clean_name, before=before, user_id=after.id, after=after)}")
 
-
+    @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if Features.is_logged(member.guild.id, "VOICE_CHANGES_DETAILED"):
             simple = ["deaf", "mute", "self_mute", "self_deaf", "afk"]
@@ -380,6 +389,7 @@ class ModLog:
                 logging = MessageUtils.assemble(member.guild.id, "VOICE", key, **parts)
                 GearbotLogging.log_to(member.guild.id, "VOICE_CHANGES", logging)
 
+    @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "EDIT_LOGS"):
             if event.channel_id in Configuration.get_var(event.guild_id, "IGNORED_CHANNELS_OTHER"):
@@ -397,6 +407,7 @@ class ModLog:
                 await Archive.archive_purge(self.bot, event.guild_id,
                                             collections.OrderedDict(sorted(message_list.items())))
 
+    @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "COMMAND_EXECUTED"):
             logging = f"{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_used', ctx, user=ctx.author, user_id=ctx.author.id, channel=ctx.message.channel.mention)} "
@@ -404,6 +415,7 @@ class ModLog:
             GearbotLogging.log_to(ctx.guild.id, "COMMAND_EXECUTED", logging,
                                   tag_on=f"``{Utils.trim_message(clean_content, 1994)}``")
 
+    @commands.Cog.listener()
     async def on_guild_channel_create(self, channel):
         if not Features.is_logged(channel.guild.id, "CHANNEL_CHANGES"): return
         e = await self.find_log(channel.guild, AuditLogAction.channel_create, lambda e: e.target.id == channel.id)
@@ -413,6 +425,7 @@ class ModLog:
             logging = MessageUtils.assemble(channel.guild.id, "CREATE", "channel_created", channel=channel.name, channel_id=channel.id)
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
+    @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
         if not Features.is_logged(channel.guild.id, "CHANNEL_CHANGES"): return
         e = await self.find_log(channel.guild, AuditLogAction.channel_delete, lambda e: e.target.id == channel.id)
@@ -422,6 +435,7 @@ class ModLog:
             logging = MessageUtils.assemble(channel.guild.id, "DELETE", "channel_delete", channel=channel.name, channel_id=channel.id)
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
+    @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
         if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES") or before.id in Configuration.get_var(before.guild.id, "IGNORED_CHANNELS_CHANGES"): return
         await self.handle_simple_changes(before, after, "channel_update_simple", "CHANNEL_CHANGES",
@@ -521,6 +535,7 @@ class ModLog:
             logging = MessageUtils.assemble(after.guild.id, "ALTER", key, **parts)
             GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
 
+    @commands.Cog.listener()
     async def on_guild_role_create(self, role):
         if not Features.is_logged(role.guild.id, "ROLE_CHANGES"): return
         entry = await self.find_log(role.guild, AuditLogAction.role_create, lambda e: e.target.id == role.id)
@@ -540,7 +555,7 @@ class ModLog:
                                           person=Utils.clean_user(entry.user), person_id=entry.user.id)
         GearbotLogging.log_to(role.guild.id, "ROLE_CHANGES", logging)
 
-
+    @commands.Cog.listener()
     async def on_guild_role_update(self, before:discord.Role, after):
         if not Features.is_logged(before.guild.id, "ROLE_CHANGES"): return
         await self.handle_simple_changes(before, after, "role_update_simple", "ROLE_CHANGES", AuditLogAction.role_update,  ["name", "color", "hoist", "mentionable"])

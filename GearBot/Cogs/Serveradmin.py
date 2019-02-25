@@ -4,7 +4,7 @@ from discord import TextChannel
 from discord.ext import commands
 from pytz import UnknownTimeZoneError
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
     MessageUtils
 from Util.Converters import LoggingChannel, ListMode
@@ -68,22 +68,7 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
     return output
 
 
-class Serveradmin:
-    permissions = {
-        "min": 3,
-        "max": 5,
-        "required": 3,
-        "commands": {
-            "configure": {
-                "min": 3,
-                "max": 5,
-                "required": 3,
-                "commands": {
-                    "lvl4": {"required": 5, "min": 4, "max": 6}
-                }
-            }
-        }
-    }
+class Serveradmin(BaseCog):
 
     LOGGING_TYPES = [
         "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSORED_MESSAGES", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED",
@@ -91,8 +76,22 @@ class Serveradmin:
     ]
 
     def __init__(self, bot):
+        super().__init__(bot, {
+            "min": 3,
+            "max": 5,
+            "required": 3,
+            "commands": {
+                "configure": {
+                    "min": 3,
+                    "max": 5,
+                    "required": 3,
+                    "commands": {
+                        "lvl4": {"required": 5, "min": 4, "max": 6}
+                    }
+                }
+            }
+        })
         bot.to_cache = []
-        self.bot:GearBot = bot
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
     def __unload(self):
@@ -934,8 +933,7 @@ class Serveradmin:
                     Configuration.set_var(ctx.guild.id, "TIMEZONE", zone)
                     await MessageUtils.send_to(ctx, "YES", "timezone_set", timezone=zone)
 
-
-
+    @commands.Cog.listener()
     async def on_guild_role_delete(self, role):
         lists = ["ROLE_LIST", "TRUSTED_ROLES", "MOD_ROLES", "ADMIN_ROLES"]
         changed = False
@@ -947,7 +945,7 @@ class Serveradmin:
         if changed:
             Configuration.save(role.guild.id)
 
-
+    @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
         changed = False
         for name in ["IGNORED_CHANNELS_CHANGES", "IGNORED_CHANNELS_OTHER"]:

@@ -2,12 +2,13 @@ import asyncio
 
 import aiohttp
 
+from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Configuration
 
 
-class Cachet:
+class Cachet(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.session = aiohttp.ClientSession(loop=bot.loop)
         self.heartbeat_task = self.bot.loop.create_task(self.hearbeating())
         self.restping_task = self.bot.loop.create_task(self.restping_latency())
