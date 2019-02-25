@@ -7,7 +7,7 @@ import zipfile
 
 import aiohttp
 import requests
-from parsimonious import ParseError
+from parsimonious import ParseError, VisitationError
 from pyseeyou import format
 from pyseeyou.locales import LOCALE_FUNCTIONS
 
@@ -49,7 +49,7 @@ def translate(key, location, **kwargs):
             short_code = 'en'
         try:
             return format(LANGS[lang_key][key], kwargs, short_code)
-        except (KeyError, ValueError, ParseError):
+        except (KeyError, ValueError, ParseError, VisitationError):
             GearbotLogging.error(f"Corrupt translation detected in {lang_key}: {key}\n```\n{LANGS[lang_key][key]}```")
     if key in LANGS["en_US"].keys():
         return format(LANGS[lang_key][key], kwargs, short_code)
