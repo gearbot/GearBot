@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py@rewrite
+git+https://github.com/Rapptz/discord.py@3f06f247c039a23948e7bb0014ea31db533b4ba2
 peewee==3.7.1
 Pillow==5.3.0
 PyMySQL==0.9.2
