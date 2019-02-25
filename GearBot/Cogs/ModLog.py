@@ -209,10 +209,9 @@ class ModLog:
                             reason = Translator.translate("no_reason", member.guild.id)
                         else:
                             reason = entry.reason
-                        InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
+                        i = InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
                                                        active=False)
-                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
-                                              f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_log', member.guild.id, user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason)}")
+                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS", MessageUtils.assemble(member.guild.id, 'BOOT', 'kick_log', user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason, inf=i.id))
                         return
             except discord.Forbidden:
                 permissions = member.guild.me.guild_permissions
