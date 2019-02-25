@@ -280,7 +280,7 @@
   "warning_could_not_dm": "I couldn't DM {user} ``{userid}`` their warning. This is most likely due to having DMs closed or they blocked me.",
   "features": "Features",
   "feature_already_enabled": "These {count, plural, one {feature was} other {features were}} already enabled: ",
-  "feature_already_disabled": "These {count, plural, one {feature was} other {features were}} were already disabled: ",
+  "feature_already_disabled": "These {count, plural, one {feature was} other {features were}} already disabled: ",
   "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging.",
   "role_not_on_page": "You requested role number {requested} but this page only has {max, plural, one {1 role} other {# roles}} ",
   "logs_unable": "Unable to remove the following logging as then there would be nowhere for these to be logged. If you want to disable these you need to disable the feature they belong to first:",

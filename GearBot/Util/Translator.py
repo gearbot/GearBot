@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import os
 import shutil
@@ -99,6 +100,14 @@ async def update():
 async def upload():
     if Configuration.get_master_var("CROWDIN", None) is None:
         return
+
+    new = hashlib.md5(open(f"lang/en_US.json", 'rb').read()).hexdigest()
+    old = Configuration.get_persistent_var('lang_hash', '')
+    if old == new:
+        return
+
+    Configuration.set_persistent_var('lang_hash', new)
+
     message = await tranlator_log('REFRESH', 'Uploading translation file')
     t = threading.Thread(target=upload_file)
     t.start()
@@ -113,4 +122,9 @@ def upload_file():
     requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
 
 async def tranlator_log(emoji, message):
-    return await BOT.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"]).send(f'{Emoji.get_chat_emoji(emoji)} {message}')
+    channel = BOT.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"])
+    m = f'{Emoji.get_chat_emoji(emoji)} {message}'
+    if channel is not None:
+        return await channel.send(m)
+    else:
+        return GearbotLogging.bot_log(m)
