@@ -32,7 +32,7 @@ async def clear_cache(guild_id):
         await bot.redis_pool.unlink(*keys)
 
 async def get_infraction_pages(key, guild_id, query, amount, fields, requested, message):
-    start = time.perf_counter_ns()
+    start = time.perf_counter()
     if query == "":
         infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
     else:
@@ -41,13 +41,13 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
                 ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
                 ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
             Infraction.id.desc()).limit(amount)
-    duration = time.perf_counter_ns() - start
+    duration = time.perf_counter() - start
     GearbotLogging.info(f"Fetched {len(infs)} infractions for key {key} in {duration}ns, processing")
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', message.guild.id))
     longest_timestamp = max(len(Translator.translate('timestamp', guild_id)), 19)
     types = dict()
-    start = time.perf_counter_ns()
+    start = time.perf_counter()
     for inf in infs:
         t = inf.type.lower()
         longest_type = max(longest_type, len(Translator.translate(t, guild_id)))
