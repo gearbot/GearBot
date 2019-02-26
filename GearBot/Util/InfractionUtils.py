@@ -57,7 +57,7 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
             types[t] += 1
     header = ", ".join(Translator.translate(f"{k}s", guild_id, count=v) for k, v in types.items())
     out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{inf.user_id}> | <@{inf.mod_id}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {inf.reason}" for inf in infs)
-    pages = Pages.paginate(out, max_chars=1700 - len(header))
+    pages = Pages.paginate(out, max_chars=1400 - len(header))
     GearbotLogging.info(f"Processed {len(infs)} infractions for {key} in {duration}")
     placeholder = Translator.translate("inf_search_compiling", guild_id)
     if bot.redis_pool is not None:
@@ -73,7 +73,7 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
 async def get_page(guild_id, query, amount, fields, requested, message):
     key = f"infractions:{guild_id}_{query}"
     if query is not None:
-        key += f"_{'_'.join(fields)}"
+        key += f"{'_'.join(fields)}"
     key += f"_{amount}"
     GearbotLogging.info(f'Infraction page {requested} requested for key {key}')
     # check if we got it cached
@@ -135,7 +135,7 @@ def get_header(longest_id, longest_user, longest_type, longest_timestamp, guild_
 async def get_page_count(guild_id, query, amount, fields, requested, message):
     key = f"infractions:{guild_id}_{query}"
     if query is not None:
-        key += f"_{'_'.join(fields)}"
+        key += f"{'_'.join(fields)}"
     key += f"_{amount}"
     # check if we got it cached
     cache = bot.redis_pool is not None
