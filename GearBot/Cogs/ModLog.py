@@ -118,7 +118,7 @@ class ModLog:
                                  icon_url=user.avatar_url if hasUser else EmptyEmbed)
 
                 embed.set_footer(text=f"Sent in #{channel.name}")
-                if len(message.attachments > 0):
+                if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
