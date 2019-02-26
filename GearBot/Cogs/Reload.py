@@ -58,7 +58,9 @@ class Reload:
         GearbotLogging.info("Initiating hot reload")
 
         GearbotLogging.LOG_PUMP.running = False
+        untranslatable = Translator.untranlatable
         importlib.reload(Reloader)
+        Translator.untranlatable = untranslatable
         for c in Reloader.components:
             importlib.reload(c)
         GearbotLogging.info("Reloading all cogs...")
