@@ -60,18 +60,14 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
     pages = Pages.paginate(out, max_chars=1700 - len(header))
     GearbotLogging.info(f"Processed {len(infs)} infractions for {key} in {duration}")
     placeholder = Translator.translate("inf_search_compiling", guild_id)
-    bot.loop.create_task(cache_and_start(placeholder, key, pages, requested, message, longest_id, longest_type, longest_timestamp, header))
-    return [placeholder for page in pages]
-
-async def cache_and_start(placeholder, key, pages, requested, message, longest_id, longest_type, longest_timestamp, header):
     if bot.redis_pool is not None:
-        GearbotLogging.info(f"Pusing placeholders for {key}")
+        GearbotLogging.info(f"Pushing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
         for page in pages:
             await pipe.lpush(key, placeholder)
         await pipe.execute()
-
-    await update_pages(key, pages, requested, message, longest_id, longest_type, longest_timestamp, header)
+    bot.loop.create_task(update_pages(key, pages, requested, message, longest_id, longest_type, longest_timestamp, header))
+    return [placeholder for page in pages]
 
 
 async def get_page(guild_id, query, amount, fields, requested, message):
