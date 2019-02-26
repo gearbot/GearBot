@@ -59,7 +59,7 @@ def translate(key, location, **kwargs):
             BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
             GearbotLogging.error(ex)
     GearbotLogging.info(f"Finished translating {key} to {lang_key}")
-    return traslated
+    return translated
 
 
 async def update():
