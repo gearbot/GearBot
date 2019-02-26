@@ -64,7 +64,7 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
         GearbotLogging.info(f"Pushing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
         for page in pages:
-            await pipe.lpush(key, placeholder)
+            pipe.lpush(key, placeholder)
         await pipe.execute()
     bot.loop.create_task(update_pages(key, pages, requested, message, longest_id, longest_type, longest_timestamp, header))
     return [placeholder for page in pages]
