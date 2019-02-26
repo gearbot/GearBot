@@ -65,7 +65,7 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
 
 async def cache_and_start(placeholder, key, pages, requested, message, longest_id, longest_type, longest_timestamp, header):
     if bot.redis_pool is not None:
-        GearbotLogging.info(f"Pusing placeholders for {key} and expiring keys")
+        GearbotLogging.info(f"Pusing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
         for page in pages:
             await pipe.lpush(key, placeholder)
@@ -96,6 +96,7 @@ async def update_pages(key, pages, start, message, longest_id, longest_type, lon
     order = [start]
     lower = start - 1
     upper = start + 1
+    GearbotLogging.info(f"determining page order for {key}")
     while len(order) < len(pages):
         if upper == len(pages):
             upper = 0
