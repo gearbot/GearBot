@@ -44,14 +44,14 @@ def translate(key, location, **kwargs):
         lang_key = "en_US"
     else:
         lang_key = Configuration.get_var(lid, "LANG")
-    GearbotLogging.info(f"Translating {key} to {lang_key}")
     short_code = lang_key[:2]
     translated = key
     if key not in LANGS[lang_key]:
-        if lang_key not in untranlatable:
+        if key not in untranlatable:
             BOT.loop.create_task(tranlator_log('WARNING', f'Untranslatable string detected: {key}\n'))
-            untranlatable.add(lang_key)
+            untranlatable.add(key)
         return key
+    GearbotLogging.info(f"Translating {key} to {lang_key}")
     try:
         translated = format(LANGS[lang_key][key], kwargs, short_code)
     except (KeyError, ValueError, ParseError, VisitationError) as ex:
