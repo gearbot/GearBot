@@ -71,9 +71,10 @@ async def get_infraction_pages(key, guild_id, query, amount, fields, requested, 
 
 
 async def get_page(guild_id, query, amount, fields, requested, message):
-    key = f"{guild_id}_{query}_{amount}"
+    key = f"infractions:{guild_id}_{query}"
     if query is not None:
         key += f"_{'_'.join(fields)}"
+    key += f"_{amount}"
     GearbotLogging.info(f'Infraction page {requested} requested for key {key}')
     # check if we got it cached
     cache = bot.redis_pool is not None
@@ -92,7 +93,7 @@ async def update_pages(key, pages, start, message, longest_id, longest_type, lon
     order = [start]
     lower = start - 1
     upper = start + 1
-    GearbotLogging.info(f"determining page order for {key}")
+    GearbotLogging.info(f"Determining page order for {key}")
     while len(order) < len(pages):
         if upper == len(pages):
             upper = 0
@@ -132,9 +133,10 @@ def get_header(longest_id, longest_user, longest_type, longest_timestamp, guild_
     return text + ("-" * len(text))
 
 async def get_page_count(guild_id, query, amount, fields, requested, message):
-    key = f"{guild_id}_{query}"
+    key = f"infractions:{guild_id}_{query}"
     if query is not None:
         key += f"_{'_'.join(fields)}"
+    key += f"_{amount}"
     # check if we got it cached
     cache = bot.redis_pool is not None
     length = await bot.redis_pool.llen(key) if cache else 0
