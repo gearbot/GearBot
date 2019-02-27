@@ -111,7 +111,7 @@ class Serveradmin:
 
     @configure.command()
     async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
-        """Sets or show the server prefix"""
+        """configure_prefix_help"""
         if new_prefix is None:
             await ctx.send(f"{Translator.translate('current_server_prefix', ctx, prefix=Configuration.get_var(ctx.guild.id, 'PREFIX'))}")
         elif len(new_prefix) > 25:
@@ -122,7 +122,7 @@ class Serveradmin:
 
     @configure.group(aliases=["adminroles"])
     async def admin_roles(self, ctx: commands.Context):
-        """Show or configure server admin roles"""
+        """configure_admin_roles_help"""
         if ctx.invoked_subcommand is self.admin_roles:
             await list_list(ctx, 'admin')
 
@@ -136,7 +136,7 @@ class Serveradmin:
 
     @configure.group(aliases=["modroles"])
     async def mod_roles(self, ctx: commands.Context):
-        """Show or configure server mod roles"""
+        """configure_mod_roles_help"""
         if ctx.invoked_subcommand is self.mod_roles:
             await list_list(ctx, 'mod')
 
@@ -150,7 +150,7 @@ class Serveradmin:
 
     @configure.group(aliases=["trustedroles"])
     async def trusted_roles(self, ctx: commands.Context):
-        """Show or configure server trusted roles"""
+        """configure_trusted_roles_help"""
         if ctx.invoked_subcommand is self.trusted_roles:
             await list_list(ctx, 'trusted')
 
@@ -203,7 +203,7 @@ class Serveradmin:
 
     @configure.group(aliases=["selfrole", "self_role"])
     async def self_roles(self, ctx:commands.Context):
-        """Allows adding/removing roles from the self assignable list"""
+        """configure_self_roles_help"""
         if ctx.invoked_subcommand is self.self_roles:
             await list_list(ctx, 'self')
 
@@ -217,7 +217,7 @@ class Serveradmin:
 
     @configure.group()
     async def invite_whitelist(self, ctx: commands.Context):
-        """Allows adding/removing servers from the invite whitelist, only enforced when there are servers on the list"""
+        """configure_invite_whitelist_help"""
         if ctx.invoked_subcommand is self.invite_whitelist:
             await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}")
 
@@ -231,7 +231,7 @@ class Serveradmin:
 
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
-        """Configures users to ignore for edit/delete logs (like bots spamming the logs with edits"""
+        """configure_ignored_users_helpe"""
         if ctx.invoked_subcommand is self.ignored_users:
             await list_list(ctx, "ignored", "users", "<@{item}>")
 
@@ -800,12 +800,12 @@ class Serveradmin:
     @commands.group()
     @commands.guild_only()
     async def disable(self, ctx:commands.Context):
-        """Base command for disabling features"""
+        """disable_help"""
         pass
 
     @disable.command()
     async def mute(self, ctx:commands.Context):
-        """Disable the mute feature"""
+        """disable_mute_help"""
         role = ctx.guild.get_role(Configuration.get_var(ctx.guild.id, "MUTE_ROLE"))
         if role is not None:
             for member in role.members:

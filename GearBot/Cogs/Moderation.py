@@ -567,7 +567,7 @@ class Moderation:
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
     async def userinfo(self, ctx: commands.Context, *, user: DiscordUser = None):
-        """Shows information about the chosen user"""
+        """userinfo_help"""
         if user is None:
             user = member = ctx.author
         else:
@@ -617,7 +617,7 @@ class Moderation:
 
     @commands.command(aliases=["server"])
     async def serverinfo(self, ctx, guild: Guild = None):
-        """Shows information about the current server."""
+        """serverinfo_help"""
         if guild is None:
             guild = ctx.guild
         embed = Utils.server_info(guild, ctx.guild)

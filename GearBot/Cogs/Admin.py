@@ -2,7 +2,6 @@ import contextlib
 import io
 import textwrap
 import traceback
-from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -47,27 +46,6 @@ class Admin:
         file.write("upgrade requested")
         file.close()
         await self.bot.logout()
-        await self.bot.close()
-
-    @commands.command()
-    async def stats(self, ctx):
-        """Operational stats"""
-        uptime = datetime.utcnow() - self.bot.start_time
-        hours, remainder = divmod(int(uptime.total_seconds()), 3600)
-        days, hours = divmod(hours, 24)
-        minutes, seconds = divmod(remainder, 60)
-        tacos = "{:,}".format(round(self.bot.eaten))
-        user_messages = "{:,}".format(self.bot.user_messages)
-        bot_messages = "{:,}".format(self.bot.bot_messages)
-        self_messages = "{:,}".format(self.bot.self_messages)
-        await ctx.send(
-            f"<:gearDiamond:433284297345073153> Gears have been spinning for {days} {'day' if days is 1 else 'days'}, {hours} {'hour' if hours is 1 else 'hours'}, {minutes} {'minute' if minutes is 1 else 'minutes'} and {seconds} {'second' if seconds is 1 else 'seconds'}\n"
-            f"<:gearGold:433284297554788352> I received {user_messages} user messages and {bot_messages} bot messages ({self_messages} were my own) so far\n"
-            f"<:gearIron:433284297563045901> Number of times ks has grinded my gears (causing errors): {self.bot.errors}\n"
-            f"<:gearStone:433284297340878849> {self.bot.commandCount} commands have been executed, as well as {self.bot.custom_command_count} custom commands\n"
-            f"<:gearWood:433284297336815616> Working in {len(self.bot.guilds)} guilds\n"
-            f":taco: About {tacos} tacos could have been produced and eaten in this time\n"
-            f"<:todo:433693576036352024> Add more stats")
 
     @commands.command()
     async def reconnectdb(self, ctx):
