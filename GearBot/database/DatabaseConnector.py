@@ -84,6 +84,16 @@ class Reminder(Model):
         database = connection
 
 
+class JoinEvent(Model):
+    id = PrimaryKeyField()
+    user_id = BigIntegerField()
+    guild_id = BigIntegerField()
+    time = TimestampField()
+
+    class Meta:
+        database = connection
+
+
 def init():
     global connection
     connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
@@ -92,5 +102,5 @@ def init():
                                host=Configuration.get_master_var("DATABASE_HOST"),
                                port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, JoinEvent])
     connection.close()
