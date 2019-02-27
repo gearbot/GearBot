@@ -231,7 +231,7 @@ class Serveradmin:
 
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
-        """configure_ignored_users_helpe"""
+        """configure_ignored_users_help"""
         if ctx.invoked_subcommand is self.ignored_users:
             await list_list(ctx, "ignored", "users", "<@{item}>")
 

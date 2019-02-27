@@ -72,7 +72,7 @@ class CustCommands:
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
     async def create(self, ctx: commands.Context, trigger: str, *, reply: str = None):
-        """command_create_new"""
+        """command_create_help"""
         if len(trigger) == 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
