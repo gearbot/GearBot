@@ -143,7 +143,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
             if remaining is None:
                 LOG_PUMP.receive(cid, (message, embed, file))
             else:
-                LOG_PUMP.receive(cid, (message, None, None, None))
+                LOG_PUMP.receive(cid, (message, None, None))
                 LOG_PUMP.receive(cid, (tag_on, embed, file))
 
 
