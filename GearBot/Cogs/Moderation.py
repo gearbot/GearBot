@@ -118,10 +118,10 @@ class Moderation:
             if len(roles) is 1:
                 drole = roles[0]
             elif len(roles) > 1:
-                await MessageUtils.send_to(ctx, "NO", "role_too_many_matches", name=role)
+                await MessageUtils.send_to(ctx, "NO", "role_too_many_matches", name=role.replace("@", "@\u200b"))
                 return
             else:
-                await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role)
+                await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role.replace("@", "@\u200b"))
                 return
 
         if self._can_act(f"role_{action}", ctx, user, check_bot=False):
