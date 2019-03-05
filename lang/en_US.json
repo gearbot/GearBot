@@ -591,5 +591,10 @@
   "timestamp": "Timestamp",
   "type": "Type",
   "timezone_help": "Configures the timezone used for logging timestamps",
-  "softbans": "{count, plural, one {1 softban} other {# softbans}}"
+  "softbans": "{count, plural, one {1 softban} other {# softbans}}",
+  "raid_message_failed": "Failed to DM {user} (tried as per raid actor **{actor_name}**)",
+	"raid_notification_failed": "Raid notification message failed to send: There is no user with id **``user_id``** on this server",
+	"raid_notification_forbidden": "Raid notification message failed to send: {user_name} (``{user_id}``) does not have DMs open or blocked me",
+	"raid_actor_triggered": "Raid handler triggered: **{name}**",
+	"raid_actor_terminated": "Raid handler terminated: **{name}**"
 }

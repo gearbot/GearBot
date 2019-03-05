@@ -814,7 +814,7 @@ class Moderation:
                     if member.guild.me.guild_permissions.manage_roles:
                         await member.add_roles(role,
                                                reason=Translator.translate('mute_reapply_reason', member.guild.id))
-                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS", MessageUtils.assemble(member.guild.id, 'MUTE_RESTORE', 'mute_reapply_log', user=Utils.clean_user(member), user_id=member.id, inf=i.id))
+                        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'mute_reapply_log', user=Utils.clean_user(member), user_id=member.id, inf=i.id))
                     else:
                         GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
                                               Translator.translate('mute_reapply_failed_log', member.guild.id, inf=i.id))

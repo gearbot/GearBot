@@ -89,12 +89,14 @@ def v7(config):
 
 def v8(config):
     for k in ["RAID_DETECTION", "RAID_TIME_LIMIT", "RAID_TRIGGER_AMOUNT", "RAID_CHANNEL"]:
-        del config[k]
+        if k in config:
+            del config[k]
     config["RAID_HANDLING"] = {
         "ENABLED": False,
         "HANDLERS": [],
         "INVITE": ""
     }
+    add_logging(config, "RAID_LOGS")
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():

@@ -84,16 +84,6 @@ class Reminder(Model):
         database = connection
 
 
-class JoinEvent(Model):
-    id = PrimaryKeyField()
-    user_id = BigIntegerField()
-    guild_id = BigIntegerField()
-    time = TimestampField()
-
-    class Meta:
-        database = connection
-
-
 class Raid(Model):
     id = PrimaryKeyField()
     guild_id = BigIntegerField()
@@ -118,7 +108,7 @@ class RaidAction(Model):
     id = PrimaryKeyField()
     Raider = ForeignKeyField(Raider, backref="actions_taken", column_name="raider_id")
     action = CharField(max_length=20)
-    infraction = ForeignKeyField(Infraction, backref="RaidAction", column_name="infraction_id", null=True)
+    infraction = ForeignKeyField(Infraction, backref="RaiderAction", column_name="infraction_id", null=True)
 
     class Meta:
         database = connection
@@ -132,5 +122,5 @@ def init():
                                host=Configuration.get_master_var("DATABASE_HOST"),
                                port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, JoinEvent, Raid])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, Raid])
     connection.close()
