@@ -1,5 +1,5 @@
 {
-  "VERSION": 7,
+  "VERSION": 8,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -25,9 +25,10 @@
   "ROLE_LIST": [],
   "IGNORED_CHANNELS_CHANGES": [],
   "IGNORED_CHANNELS_OTHER": [],
-  "RAID_DETECTION": false,
-  "RAID_TIME_LIMIT": 0,
-  "RAID_TRIGGER_AMOUNT": 0,
-  "RAID_CHANNEL": 0,
-  "TIMEZONE": "Europe/Brussels"
+  "TIMEZONE": "Europe/Brussels",
+  "RAID_HANDLING": {
+    "ENABLED": false,
+    "HANDLERS": [],
+    "INVITE": ""
+  }
 }

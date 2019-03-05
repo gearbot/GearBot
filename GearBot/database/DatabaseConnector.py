@@ -94,6 +94,36 @@ class JoinEvent(Model):
         database = connection
 
 
+class Raid(Model):
+    id = PrimaryKeyField()
+    guild_id = BigIntegerField()
+    start = TimestampField()
+    end = TimestampField(null=True)
+
+    class Meta:
+        database = connection
+
+
+class Raider(Model):
+    id = PrimaryKeyField()
+    raid = ForeignKeyField(Raid, backref="raiders", column_name="raid_id")
+    user_id = BigIntegerField()
+    joined_at = TimestampField()
+
+    class Meta:
+        database = connection
+
+
+class RaidAction(Model):
+    id = PrimaryKeyField()
+    Raider = ForeignKeyField(Raider, backref="actions_taken", column_name="raider_id")
+    action = CharField(max_length=20)
+    infraction = ForeignKeyField(Infraction, backref="RaidAction", column_name="infraction_id", null=True)
+
+    class Meta:
+        database = connection
+
+
 def init():
     global connection
     connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
@@ -102,5 +132,5 @@ def init():
                                host=Configuration.get_master_var("DATABASE_HOST"),
                                port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, JoinEvent])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, JoinEvent, Raid])
     connection.close()

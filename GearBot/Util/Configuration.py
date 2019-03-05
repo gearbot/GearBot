@@ -87,6 +87,14 @@ def v7(config):
     config["RAID_MESSAGE"] = "<:gearDND:528335386238255106> RAID DETECTED, CALLING REINFORCEMENTS! <:gearDND:528335386238255106>"
     config["TIMEZONE"] = "Europe/Brussels"
 
+def v8(config):
+    for k in ["RAID_DETECTION", "RAID_TIME_LIMIT", "RAID_TRIGGER_AMOUNT", "RAID_CHANNEL"]:
+        del config[k]
+    config["RAID_HANDLING"] = {
+        "ENABLED": False,
+        "HANDLERS": [],
+        "INVITE": ""
+    }
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
@@ -94,7 +102,7 @@ def add_logging(config, *args):
             info.extend(args)
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION, PERSISTENT
