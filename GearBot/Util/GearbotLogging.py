@@ -133,7 +133,7 @@ def log_to(guild_id, type, message=None, embed=None, file=None, can_stamp=True, 
             message = tag_on.replace('@', '@\u200b')
         else:
             if len(message) + len(tag_on) <= 1999:
-                message = f"{message} {tag_on.replace('@')}"
+                message = f"{message} {tag_on}"
             else:
                 remaining = tag_on
     if message is not None:
