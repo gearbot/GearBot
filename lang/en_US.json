@@ -281,7 +281,7 @@
   "features": "Features",
   "feature_already_enabled": "These {count, plural, one {feature was} other {features were}} already enabled: ",
   "feature_already_disabled": "These {count, plural, one {feature was} other {features were}} already disabled: ",
-  "feature_missing_logging": "This feature cannot be enabled as there is no logging chanel setup to receive {type} logging.",
+  "feature_missing_logging": "This feature cannot be enabled as there is no logging channel setup to receive {type} logging.",
   "role_not_on_page": "You requested role number {requested} but this page only has {max, plural, one {1 role} other {# roles}} ",
   "logs_unable": "Unable to remove the following logging as then there would be nowhere for these to be logged. If you want to disable these you need to disable the feature they belong to first:",
   "confirmation_enable_features": "You enabled logging for the following {count, plural, one {feature but it is} other {features but they are}} not enabled yet, do you want to enable {count, plural, one {it} other {them}}?",
