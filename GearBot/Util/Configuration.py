@@ -93,8 +93,9 @@ def v8(config):
             del config[k]
     config["RAID_HANDLING"] = {
         "ENABLED": False,
-        "HANDLERS": [],
-        "INVITE": ""
+        "SHIELDS": [],
+        "INVITE": "",
+        "NEXT_ID": 0
     }
     add_logging(config, "RAID_LOGS")
 

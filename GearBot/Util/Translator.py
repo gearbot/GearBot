@@ -127,7 +127,8 @@ def upload_file():
     requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
 
 async def tranlator_log(emoji, message):
-    channel = BOT.get_channel(Configuration.get_master_var("CROWDIN")["CHANNEL"])
+    crowdin = Configuration.get_master_var("CROWDIN")
+    channel = BOT.get_channel(crowdin["CHANNEL"]) if crowdin is not None else None
     m = f'{Emoji.get_chat_emoji(emoji)} {message}'
     if channel is not None:
         return await channel.send(m)

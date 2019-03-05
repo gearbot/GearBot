@@ -106,7 +106,7 @@ class Raider(Model):
 
 class RaidAction(Model):
     id = PrimaryKeyField()
-    Raider = ForeignKeyField(Raider, backref="actions_taken", column_name="raider_id")
+    raider = ForeignKeyField(Raider, backref="actions_taken", column_name="raider_id")
     action = CharField(max_length=20)
     infraction = ForeignKeyField(Infraction, backref="RaiderAction", column_name="infraction_id", null=True)
 
@@ -122,5 +122,5 @@ def init():
                                host=Configuration.get_master_var("DATABASE_HOST"),
                                port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
-    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, Raid])
+    connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, Raid, RaidAction, Raider])
     connection.close()

@@ -1,21 +1,23 @@
+import time
 from abc import ABC, abstractmethod
 
 from discord import Forbidden
 
-from Util import GearbotLogging, MessageUtils, Utils
+from Util import GearbotLogging, MessageUtils, Utils, Configuration, InfractionUtils
+from database import DatabaseConnector
 
 
-async def log(key, gid, actor, **kwargs):
+async def log(key, gid, shield, **kwargs):
     await GearbotLogging.log_to(gid, MessageUtils.assemble(gid, 'BAD_USER', key,
-                                                           actor_name=Utils.escape_markdown(actor["name"]), **kwargs))
+                                                           shield_name=Utils.escape_markdown(shield["name"]), **kwargs))
 
 class RaidAction(ABC):
 
     @abstractmethod
-    async def execute(self, o, data, raid_id, raider_ids, actor):
+    async def execute(self, bot, o, data, raid_id, raider_ids, shield):
         pass
 
-    async def reverse(self, guild, user, data, raid_id, raider_ids):
+    async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
 
     @property
@@ -26,11 +28,11 @@ class RaidAction(ABC):
 
 class SendMessage(RaidAction):
 
-    async def execute(self, member, data, raid_id, raider_ids, actor):
+    async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
         try:
-            await member.send(data["message"].format(server_name=member.guild.name))
+            await guild.get_channel(data["channel"]).send(data["message"].format(server_name=guild.name))
         except Forbidden:
-            await self.log(member.guild.id, 'raid_message_failed', actor, )
+            await log(guild.id, 'raid_message_failed', shield)
 
     @property
     def is_reversable(self):
@@ -39,10 +41,20 @@ class SendMessage(RaidAction):
 
 class Mute(RaidAction):
 
-    async def execute(self, member, data, raid_id, raider_ids, actor):
-        pass
+    async def execute(self, bot, member, data, raid_id, raider_ids, shield):
+        roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
+        role = member.guild.get_role(roleid)
+        if role is None:
+            GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_mute_failed_no_role'))
+        else:
+            duration = data["duration"]
+            reason = f"Raider muted by raid shield {shield['name']} in raid {raid_id}"
+            await member.add_roles(role, reason=reason)
+            until = time.time() + duration
+            i = InfractionUtils.add_infraction(member.guild.id, member.id, member.guild.me.id, "Mute", reason, end=until)
+            DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
-    async def reverse(self, guild, user, data, raid_id, raider_ids):
+    async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
 
     @property
@@ -52,10 +64,19 @@ class Mute(RaidAction):
 
 class Kick(RaidAction):
 
-    async def execute(self, member, data, raid_id, raider_ids, actor):
-        pass
+    async def execute(self, bot, member, data, raid_id, raider_ids, shield):
+        bot.data["forced_exits"].add(f"{member.guild.id}-{member.id}")
+        reason=f"Raider kicked by raid shield {shield['name']} in raid {raid_id}"
+        await member.kick(reason=reason)
+        i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
+        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
+                              MessageUtils.assemble(member.guild.id, 'BOOT', 'kick_log', member.guild.id,
+                                                    user=Utils.clean_user(member), user_id=member.id,
+                                                    moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
+                                                    reason=reason, inf=i.id))
+        DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
-    async def reverse(self, guild, user, data, raid_id, raider_ids):
+    async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
 
     @property
@@ -65,10 +86,18 @@ class Kick(RaidAction):
 
 class Ban(RaidAction):
 
-    async def execute(self, member, data, raid_id, raider_ids, actor):
-        pass
+    async def execute(self, bot, member, data, raid_id, raider_ids, shield):
+        bot.data["forced_exits"].add(f"{member.guild.id}-{member.id}")
+        reason = f"Raider banned by raid shield {shield['name']} in raid {raid_id}"
+        await member.ban(reason=reason,
+                            delete_message_days=1 if data["clean_messages"] else 0)
+        i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, "Ban", reason)
+        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
+                              MessageUtils.assemble(member.guild.id, 'BAN', 'ban_log', user=Utils.clean_user(member), user_id=member.id,
+                                                    moderator=Utils.clean_user(bot.user), moderator_id=bot.user.id,
+                                                    reason=reason, inf=i.id))
 
-    async def reverse(self, guild, user, data, raid_id, raider_ids):
+    async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
 
     @property
@@ -78,15 +107,15 @@ class Ban(RaidAction):
 
 class DmSomeone(RaidAction):
 
-    async def execute(self, guild, data, raid_id, raider_ids, actor):
+    async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
         member = guild.get_member(data["user_id"])
         if member is None:
-            await log(member.guild.id, 'raid_notification_failed', actor, user_id=data["user_id"])
+            await log(member.guild.id, 'raid_notification_failed', shield, user_id=data["user_id"])
             return
         try:
             await member.send(data["message"].format(server_name=member.guild.name))
         except Forbidden:
-            await log(member.guild.id, 'raid_notification_forbidden', actor, user_name=Utils.username_from_user(member), user_id=member.id)
+            await log(member.guild.id, 'raid_notification_forbidden', shield, user_name=Utils.username_from_user(member), user_id=member.id)
 
     @property
     def is_reversable(self):
