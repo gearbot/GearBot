@@ -50,7 +50,7 @@ class AntiRaid:
             dif = abs((now - m.joined_at).total_seconds())
             # clean up users who have been here for long enough
             if dif >= longest:
-                pipeline.srem(user)
+                pipeline.srem(key, user)
             else:
                 # put them in the buckets
                 for h in raid_settings["SHIELDS"]:
