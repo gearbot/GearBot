@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 
 import discord
+from discord.ext import commands
 
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, MessageUtils
@@ -47,7 +48,7 @@ class AntiRaid:
             if m is None:
                 pipeline.srem(key, user)
                 continue
-            dif = (m.joined_at - now).total_seconds()
+            dif = (now - m.joined_at).total_seconds()
             # clean up users who have been here for long enough
             if dif >= longest:
                 pipeline.srem(user)
