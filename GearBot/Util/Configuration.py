@@ -7,7 +7,6 @@ from Util import GearbotLogging, Utils, Features
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
-PERSISTENT = dict()
 MASTER_LOADED = False
 CONFIG_VERSION = 0
 
@@ -108,9 +107,8 @@ def add_logging(config, *args):
 MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8]
 
 async def initialize(bot: commands.Bot):
-    global CONFIG_VERSION, PERSISTENT
+    global CONFIG_VERSION
     CONFIG_VERSION = Utils.fetch_from_disk("config/template")["VERSION"]
-    PERSISTENT = Utils.fetch_from_disk("persistent")
     GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")
     GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
     for guild in bot.guilds:
@@ -221,8 +219,10 @@ def save_master():
         jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
 
 def get_persistent_var(key, default):
+    PERSISTENT = Utils.fetch_from_disk("persistent")
     return PERSISTENT[key] if key in PERSISTENT else default
 
 def set_persistent_var(key,  value):
+    PERSISTENT = Utils.fetch_from_disk("persistent")
     PERSISTENT[key] = value
     Utils.saveToDisk("persistent", PERSISTENT)
