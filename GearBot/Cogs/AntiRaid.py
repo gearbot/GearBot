@@ -48,7 +48,7 @@ class AntiRaid:
             if m is None:
                 pipeline.srem(key, user)
                 continue
-            dif = (now - m.joined_at).total_seconds()
+            dif = abs((now - m.joined_at).total_seconds())
             # clean up users who have been here for long enough
             if dif >= longest:
                 pipeline.srem(user)
@@ -133,6 +133,18 @@ class AntiRaid:
             GearbotLogging.log_to(guild_id, "RAID_LOGS", MessageUtils.assemble(guild_id, "INNOCENT", 'raid_terminated',
                                                                   raid_id=self.raid_trackers[guild_id]['raid_id']))
             del self.raid_trackers[guild_id]
+
+
+
+    @commands.group()
+    async def raid(self, ctx):
+        pass
+
+    @raid.command("end")
+    async def raid_end(self, ctx):
+        message = await MessageUtils.send_to(ctx, 'REFRESH')
+        if ctx.guild.id in self.raid_trackers:
+            for
 
 
 
