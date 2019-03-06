@@ -42,8 +42,7 @@ class SendMessage(RaidAction):
 class Mute(RaidAction):
 
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
-        roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
-        role = member.guild.get_role(roleid)
+        role = member.guild.get_role(Configuration.get_var(member.guild.id, "MUTE_ROLE"))
         if role is None:
             GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_mute_failed_no_role'))
         else:
