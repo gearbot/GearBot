@@ -3,7 +3,6 @@ import time
 from datetime import datetime
 
 import discord
-from discord.ext import commands
 
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, MessageUtils
@@ -136,15 +135,6 @@ class AntiRaid:
 
 
 
-    @commands.group()
-    async def raid(self, ctx):
-        pass
-
-    @raid.command("end")
-    async def raid_end(self, ctx):
-        message = await MessageUtils.send_to(ctx, 'REFRESH')
-        if ctx.guild.id in self.raid_trackers:
-            for
 
 
 
