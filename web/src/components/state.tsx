@@ -27,6 +27,11 @@ export interface DocState {
 	link: string;
 }
 
+export interface AntiraidState {
+	blockCount: number;
+	blockStates: AntiraidBlock[]
+}
+
 export interface AuthObject {
 	client_id: string;
 	timestamp: string;
@@ -37,4 +42,12 @@ export interface AuthObject {
 
 export interface InitalAuthObject extends AuthObject {
 	status: string;
+}
+
+export interface AntiraidBlock {
+	name: string;
+	displayText: string;
+	description: string;
+	isBeingDragged: boolean;
+	position: {x: number, y: number};
 }

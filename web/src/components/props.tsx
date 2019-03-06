@@ -14,6 +14,10 @@ export interface Docprops {
 	folder?: string
 }
 
+export interface AntiraidProps {
+
+}
+
 interface Socketed {
 	SocketAuthObject: AuthObject;
 }
