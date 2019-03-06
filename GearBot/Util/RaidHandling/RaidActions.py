@@ -1,7 +1,7 @@
 import time
 from abc import ABC, abstractmethod
 
-from discord import Forbidden
+from discord import Forbidden, NotFound
 
 from Util import GearbotLogging, MessageUtils, Utils, Configuration, InfractionUtils
 from database import DatabaseConnector
@@ -38,6 +38,16 @@ class SendMessage(RaidAction):
     def is_reversable(self):
         return False
 
+class DMRaider(RaidAction):
+    async def execute(self, bot, member, data, raid_id, raider_ids, shield):
+        try:
+            await member.send(data["message"].format(server_name=member.guild.name))
+        except (Forbidden, NotFound):
+            pass
+
+    @property
+    def is_reversable(self):
+        return False
 
 class Mute(RaidAction):
 
@@ -139,5 +149,6 @@ handlers = {
     "mute_raider": Mute(),
     "kick_raider": Kick(),
     "ban_raider": Ban(),
-    "lower_shield": LowerShield()
+    "lower_shield": LowerShield(),
+    "dm_raider": DMRaider()
 }
