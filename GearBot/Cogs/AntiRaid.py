@@ -69,7 +69,7 @@ class AntiRaid:
 
             # check if active, if it is, let that take care of it
             if member.guild.id in self.raid_trackers and shield["id"] in self.raid_trackers[member.guild.id]["SHIELDS"]:
-                for h in self.raid_trackers[member.guild.id]["SHIELDS"]:
+                for _, h in self.raid_trackers[member.guild.id]["SHIELDS"]:
                     Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
                     self.raid_trackers[member.guild.id]["raider_ids"][member.id] = Raider.id
                     await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["id"], self.raid_trackers[member.guild.id]["raider_ids"])
@@ -79,10 +79,11 @@ class AntiRaid:
             trigger_info = shield["trigger"]
 
 
-            if len(buckets[shield["id"]]) >= trigger_info["count"]:
+            if len(buckets[shield["id"]]) >= trigger_info["count"] and (member.guild.id not in self.raid_trackers and shield["id"] or shield["id"] not in self.raid_trackers[member.guild.id]["triggered"]):
                 #TRIGGERED
                 # assign raid id, track raiders
                 raid = Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
+                GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_new', raid_id=raid.id))
 
                 # create trackers if needed
                 if member.guild.id not in self.raid_trackers:
@@ -91,11 +92,12 @@ class AntiRaid:
                         Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
                         raider_ids[member.id] = Raider.id
 
-                    self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids)
+                    self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids, triggered=set())
 
                 #assign the handler and call execute initial actions
                 h = RaidShield(shield)
                 self.raid_trackers[member.guild.id]["SHIELDS"][shield["id"]] = h
+                self.raid_trackers[member.guild.id]["triggered"].add(shield["id"])
                 await h.raid_detected(self.bot, member.guild, raid.id, self.raid_trackers[member.guild.id]["raider_ids"], shield)
 
                 # create background terminator
@@ -110,7 +112,7 @@ class AntiRaid:
 
     async def fixed_time(self, guild_id, handler, shield, data):
         await asyncio.sleep(data["time"])
-        await self.terminate_handler(guild_id, handler, shield)
+        await self.terminate_shield(guild_id, handler, shield)
 
 
     async def resetting(self, guild_id, handler, shield, data):
@@ -119,18 +121,16 @@ class AntiRaid:
                 self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["duration"])
             except asyncio.TimeoutError:
                 # no more joins! turn off the handler
-                await self.terminate_handler(guild_id, handler, shield)
+                await self.terminate_shield(guild_id, handler, shield)
                 pass # timer reset!
 
 
-    async def terminate_handler(self, guild_id, handler, shield):
+    async def terminate_shield(self, guild_id, handler, shield):
         del self.raid_trackers[guild_id]["SHIELDS"][shield["id"]]
-        await handler.raid_terminated(self.bot, self.bot.get_guild(guild_id), self.raid_trackers[guild_id]["id"],  self.raid_trackers[guild_id]["raider_ids"], shield)
-        GearbotLogging.log_to(guild_id,
-                              MessageUtils.assemble(guild_id, "INNOCENT", 'raid_actor_terminated', name=shield["name"]))
+        await handler.shield_terminated(self.bot, self.bot.get_guild(guild_id), self.raid_trackers[guild_id]["raid_id"], self.raid_trackers[guild_id]["raider_ids"], shield)
         if len(self.raid_trackers[guild_id]["SHIELDS"]) == 0:
-            GearbotLogging.log_to(guild_id, MessageUtils.assemble(guild_id, "INNOCENT", 'raid_terminated',
-                                                                  raid_id=self.raid_trackers[guild_id]['id']))
+            GearbotLogging.log_to(guild_id, "RAID_LOGS", MessageUtils.assemble(guild_id, "INNOCENT", 'raid_terminated',
+                                                                  raid_id=self.raid_trackers[guild_id]['raid_id']))
             del self.raid_trackers[guild_id]
 
 

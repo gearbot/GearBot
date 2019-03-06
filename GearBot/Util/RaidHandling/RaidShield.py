@@ -17,9 +17,9 @@ class RaidShield:
     async def handle_raider(self, bot, raider, raid_id, raider_ids, shield):
         await self.handle_actions(self.raider_actions, bot, raider, raid_id, raider_ids, shield)
 
-    async def raid_terminated(self, bot, guild, raid_id, raider_ids, shield):
-        GearbotLogging.log_to(guild.id,
-                              MessageUtils.assemble(guild.id, "BAD_USER", "raid_shield_lowered", raid_id=raid_id,
+    async def shield_terminated(self, bot, guild, raid_id, raider_ids, shield):
+        GearbotLogging.log_to(guild.id, "RAID_LOGS",
+                              MessageUtils.assemble(guild.id, "INNOCENT", "raid_shield_terminated", raid_id=raid_id,
                                                     name=self.shield_name))
         await self.handle_actions(self.termination_actions, bot, guild, raid_id, raider_ids, shield)
 

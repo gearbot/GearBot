@@ -592,7 +592,7 @@
   "type": "Type",
   "timezone_help": "Configures the timezone used for logging timestamps",
   "softbans": "{count, plural, one {1 softban} other {# softbans}}",
-  "raid_new": "A shield has been raised, this server is now under raid, tracking under raid id ``#{raid_id}``",
+  "raid_new": "A shield has been raised, this server is now under raid, tracking... (raid id ``#{raid_id}``)",
   "raid_terminated": "All shields have been lowered, for now",
   "raid_message_failed": "Failed to DM {user} (tried as per raid shield **{shield_name}**)",
   "raid_notification_failed": "Raid notification message failed to send: There is no user with id **``user_id``** on this server (tried as per raid shield **{shield_name}**)",

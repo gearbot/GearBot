@@ -133,4 +133,4 @@ async def tranlator_log(emoji, message):
     if channel is not None:
         return await channel.send(m)
     else:
-        return GearbotLogging.bot_log(m)
+        return await GearbotLogging.bot_log(m)

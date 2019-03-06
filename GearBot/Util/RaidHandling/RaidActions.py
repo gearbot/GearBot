@@ -121,11 +121,24 @@ class DmSomeone(RaidAction):
     def is_reversable(self):
         return False
 
+class LowerShield(RaidAction):
+
+    async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
+        cog = bot.get_cog("AntiRaid")
+        cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]].shield_terminated()
+        del cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]]
+
+
+    @property
+    def is_reversable(self):
+        return False
+
 
 handlers = {
     "send_message": SendMessage(),
     "dm_someone": DmSomeone(),
     "mute_raider": Mute(),
     "kick_raider": Kick(),
-    "ban_raider": Ban()
+    "ban_raider": Ban(),
+    "lower_shield": LowerShield()
 }
