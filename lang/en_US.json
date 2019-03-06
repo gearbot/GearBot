@@ -606,7 +606,7 @@
   "configure_ignored_users_help": "Configures users to ignore for edit/delete logs (like bots spamming the logs with edits)",
   "command_create_help": "Create a new command",
   "command_remove_help": "Removes a custom command",
-  "command_update_help": "Sets a new reply for the specified command"
+  "command_update_help": "Sets a new reply for the specified command",
   "softbans": "{count, plural, one {1 softban} other {# softbans}}",
   "raid_new": "A shield has been raised, this server is now under raid, tracking... (raid id ``#{raid_id}``)",
   "raid_terminated": "All shields have been lowered, for now",
