@@ -72,7 +72,7 @@ class CustCommands:
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
     async def create(self, ctx: commands.Context, trigger: str, *, reply: str = None):
-        """Create a new command"""
+        """command_create_help"""
         if len(trigger) == 0:
             await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
@@ -97,7 +97,7 @@ class CustCommands:
     @command.command()
     @commands.guild_only()
     async def remove(self, ctx:commands.Context, trigger:str):
-        """Removes a custom command"""
+        """command_remove_help"""
         trigger = trigger.lower()
         if len(trigger) > 20:
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
@@ -111,7 +111,7 @@ class CustCommands:
     @command.command()
     @commands.guild_only()
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
-        """Sets a new reply for the specified command"""
+        """command_update_help"""
         trigger = trigger.lower()
         if reply is None:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_empty_reply', ctx)}")

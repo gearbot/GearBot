@@ -118,10 +118,10 @@ class Moderation:
             if len(roles) is 1:
                 drole = roles[0]
             elif len(roles) > 1:
-                await MessageUtils.send_to(ctx, "NO", "role_too_many_matches", name=role)
+                await MessageUtils.send_to(ctx, "NO", "role_too_many_matches", name=role.replace("@", "@\u200b"))
                 return
             else:
-                await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role)
+                await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role.replace("@", "@\u200b"))
                 return
 
         if self._can_act(f"role_{action}", ctx, user, check_bot=False):
@@ -567,7 +567,7 @@ class Moderation:
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
     async def userinfo(self, ctx: commands.Context, *, user: DiscordUser = None):
-        """Shows information about the chosen user"""
+        """userinfo_help"""
         if user is None:
             user = member = ctx.author
         else:
@@ -617,7 +617,7 @@ class Moderation:
 
     @commands.command(aliases=["server"])
     async def serverinfo(self, ctx, guild: Guild = None):
-        """Shows information about the current server."""
+        """serverinfo_help"""
         if guild is None:
             guild = ctx.guild
         embed = Utils.server_info(guild, ctx.guild)

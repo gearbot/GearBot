@@ -151,7 +151,7 @@ def load_config(guild):
 
 def validate_config(guild):
     for key in ["ADMIN_ROLES", "MOD_ROLES", "SELF_ROLES", "TRUSTED_ROLES"]:
-        checklist(guild.id, key, guild.get_channel)
+        checklist(guild.id, key, guild.get_role)
 
 def checklist(guid, key, getter):
     changed = False
