@@ -1,14 +1,17 @@
 import asyncio
 import datetime
+import hashlib
 import time
 import traceback
 from concurrent.futures import CancelledError
 
 import aiohttp
 import discord
-from Bot.GearBot import GearBot
-from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji
+from discord import Embed, File
 from discord.ext import commands
+
+from Bot.GearBot import GearBot
+from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji, Pages
 
 
 class BCVersionChecker:
@@ -29,7 +32,7 @@ class BCVersionChecker:
             "BuildCraft": {},
             "BuildCraftCompat": {}
         }
-        self.bot.loop.create_task(versionChecker(self))
+        self.bot.loop.create_task(updater(self))
 
     def __unload(self):
         #cleanup
@@ -115,33 +118,34 @@ class BCVersionChecker:
 def setup(bot):
     bot.add_cog(BCVersionChecker(bot))
 
-async def versionChecker(checkcog:BCVersionChecker):
+async def updater(cog:BCVersionChecker):
     GearbotLogging.info("Started BC version checking background task")
-    session:aiohttp.ClientSession = checkcog.bot.aiosession
+    session:aiohttp.ClientSession = cog.bot.aiosession
     lastUpdate = 0
-    while checkcog.running:
+    while cog.running:
         try:
+            # check for a newer bc version
             async with session.get('https://www.mod-buildcraft.com/build_info_full/last_change.txt') as reply:
                 stamp = await reply.text()
                 stamp = int(stamp[:-1])
                 if stamp > lastUpdate:
                     GearbotLogging.info("New BC version somewhere!")
                     lastUpdate = stamp
-                    checkcog.BC_VERSION_LIST = await getList(session, "BuildCraft")
-                    checkcog.BCC_VERSION_LIST = await getList(session, "BuildCraftCompat")
-                    highestMC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST.keys())
-                    latestBC = VersionInfo.getLatest(checkcog.BC_VERSION_LIST[highestMC])
+                    cog.BC_VERSION_LIST = await getList(session, "BuildCraft")
+                    cog.BCC_VERSION_LIST = await getList(session, "BuildCraftCompat")
+                    highestMC = VersionInfo.getLatest(cog.BC_VERSION_LIST.keys())
+                    latestBC = VersionInfo.getLatest(cog.BC_VERSION_LIST[highestMC])
                     generalID = 309218657798455298
-                    channel:discord.TextChannel = checkcog.bot.get_channel(generalID)
+                    channel:discord.TextChannel = cog.bot.get_channel(generalID)
                     old_latest = Configuration.get_persistent_var("latest_bc", "0.0.0")
                     Configuration.set_persistent_var("latest_bc", latestBC) # save already so we don't get stuck and keep trying over and over if something goes wrong
                     if channel is not None and latestBC != old_latest:
                         GearbotLogging.info(f"New BuildCraft version found: {latestBC}")
-                        notify_channel = checkcog.bot.get_channel(349517224320565258)
+                        notify_channel = cog.bot.get_channel(349517224320565258)
                         await notify_channel.send(f"{Emoji.get_chat_emoji('WRENCH')} New BuildCraft version detected ({latestBC})")
                         GearbotLogging.info(f"Fetching metadata for BuildCraft {latestBC}")
                         message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Fetching metadata...")
-                        info = await checkcog.getVersionDetails("BuildCraft", latestBC)
+                        info = await cog.getVersionDetails("BuildCraft", latestBC)
                         GearbotLogging.info(f"Metadata acquired: {info}")
                         await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Metadata acquired")
                         if 'blog_entry' in info:
@@ -155,7 +159,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                             notify_channel.send(f"{Emoji.get_chat_emoji('WARNING')} No blog post data found, notifying <@180057061353193472>")
 
                         message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
-                        code, output, errors = await Utils.execute(f'cd BuildCraft_uploader && gradle curseforge -Pnew_version="{latestBC}"')
+                        code, output, errors = await Utils.execute(f'cd BuildCraft/uploader && gradle curseforge -Pnew_version="{latestBC}"')
                         GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output.decode('utf-8')}\n------stderr------\n{errors.decode('utf-8')}")
                         if code is 0:
                             content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded"
@@ -163,10 +167,39 @@ async def versionChecker(checkcog:BCVersionChecker):
                         else:
                             content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>"
                             await notify_channel.send(content)
+
+            # update FAQs if needed
+            async with session.get('https://mod-buildcraft.com/website_src/faq.md') as reply:
+                data = await reply.text()
+                h = hashlib.md5(data.encode('utf-8')).hexdigest()
+                old = Configuration.get_persistent_var("BCFAQ", "")
+                channel = cog.bot.get_channel(361557801492938762)  # FAQs
+                if channel is not None and h != old:
+                    Configuration.set_persistent_var("BCFAQ", h)
+                    #clean the old stuff
+                    await channel.purge()
+
+                    #send banner
+                    with open("BuildCraft/FAQs.png", "rb") as file:
+                        await channel.send(file=File(file, filename="FAQs.png"))
+                    #send content
+                    out = ""
+                    parts = [d.strip("#").strip() for d in data.split("##")[1:]]
+                    for part in parts:
+                        lines = part.splitlines()
+                        content = '\n'.join(lines[1:])
+                        out += f"**```{lines[0].strip()}```**{content}\n"
+                    for page in Pages.paginate(out, max_chars=2048 ,max_lines=50):
+                        embed = Embed(description=page)
+                        await channel.send(embed=embed)
+
+
+
+                pass
         except CancelledError:
             pass  # bot shutdown
         except Exception as ex:
-            checkcog.bot.errors = checkcog.bot.errors + 1
+            cog.bot.errors = cog.bot.errors + 1
             GearbotLogging.error("Something went wrong in the BC version checker task")
             GearbotLogging.error(traceback.format_exc())
             embed = discord.Embed(colour=discord.Colour(0xff0000),
@@ -183,7 +216,7 @@ async def versionChecker(checkcog:BCVersionChecker):
                 embed.add_field(name="Stacktrace", value=v)
             await GearbotLogging.bot_log(embed=embed)
         for i in range(1,60):
-            if checkcog.force or not checkcog.running:
+            if cog.force or not cog.running:
                 break
             await asyncio.sleep(10)
 
