@@ -615,5 +615,9 @@
   "raid_notification_forbidden": "Raid notification message failed to send: {user_name} (``{user_id}``) does not have DMs open or blocked me",
   "raid_shield_triggered": "A raid shield has been raised: **{name}**",
   "raid_shield_terminated": "A raid shield has lowered: **{name}**",
-  "raid_mute_failed_no_role": "Failed to mute a raider, the server mute role is missing!"
+  "raid_mute_failed_no_role": "Failed to mute a raider, the server mute role is missing!",
+  "system_message_new_member": "server join message",
+  "system_message_new_pin": "pinned a message in the channel",
+  "system_message_other": "other",
+  "system_message": "**System message**: {type}"
 }

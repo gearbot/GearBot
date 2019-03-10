@@ -116,10 +116,21 @@ class ModLog:
             name = Utils.clean_user(user) if hasUser else str(message.author)
             GearbotLogging.log_to(guild.id, "EDIT_LOGS",
                                   f"{Emoji.get_chat_emoji('TRASH')} {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}")
+            type_string = None
+            if message.type != None:
+                if message.type == MessageType.new_member.value:
+                    type_string = Translator.translate('system_message_new_member', guild)
+                elif message.type == MessageType.pins_add.value:
+                    type_string = Translator.translate('system_message_new_pin', guild)
+                else:
+                    type_string = Translator.translate('system_message_other', guild)
+
+                type_string = Translator.translate('system_message', guild, type = type_string)
             if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
+                embed_content = type_string or message.content
 
                 embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
-                                      description=message.content)
+                                      description=embed_content)
                 embed.set_author(name=user.name if hasUser else message.author,
                                  icon_url=user.avatar_url if hasUser else EmptyEmbed)
 
@@ -129,8 +140,12 @@ class ModLog:
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
             else:
-                cleaned_content = await Utils.clean(message.content, channel.guild)
-                GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
+                if type_string == None:
+                    cleaned_content = await Utils.clean(message.content, channel.guild)
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
+                else:
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", type_string, can_stamp=False)
+
                 count = 1
                 for attachment in message.attachments:
                     GearbotLogging.log_to(guild.id, "EDIT_LOGS",
