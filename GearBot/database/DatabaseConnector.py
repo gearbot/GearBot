@@ -30,6 +30,7 @@ class LoggedMessage(Model):
     author = BigIntegerField()
     channel = BigIntegerField()
     server = BigIntegerField()
+    type = BitField(null=True)
 
     class Meta:
         database = connection
