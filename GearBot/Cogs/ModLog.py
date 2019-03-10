@@ -134,7 +134,7 @@ class ModLog:
                 embed.set_author(name=user.name if hasUser else message.author,
                                  icon_url=user.avatar_url if hasUser else EmptyEmbed)
 
-                embed.set_footer(text=f"Sent in #{channel.name}")
+                embed.set_footer(text=Translator.translate('sent_in', guild, channel=channel.name))
                 if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
