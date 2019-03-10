@@ -123,7 +123,7 @@ class ModLog:
                 elif message.type == MessageType.pins_add.value:
                     type_string = Translator.translate('system_message_new_pin', guild)
                 else:
-                    type_string = Translator.translate('system_message_other', guild)
+                    type_string = Translator.translate('system_message_unknown', guild)
 
                 type_string = Translator.translate('system_message', guild, type = type_string)
             if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
