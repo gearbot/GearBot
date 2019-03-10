@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 from datetime import datetime
 
-from discord import Object, HTTPException
+from discord import Object, HTTPException, MessageType
 
 from Util import Translator, Emoji, Archive
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
@@ -30,8 +30,13 @@ async def insert_message(bot, message):
                          channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)))
         pipe.expire(message.id, 5*60+2)
         await pipe.execute()
+    message_type = message.type
+    if message_type == MessageType.default:
+        message_type = None
+    else:
+        message_type = message_type.value
     LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id)
+                         channel=message.channel.id, server=message.guild.id, type=message_type)
     for a in message.attachments:
         LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
                                 messageid=message.id)
