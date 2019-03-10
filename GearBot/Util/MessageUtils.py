@@ -8,7 +8,7 @@ from discord import Object, HTTPException, MessageType
 from Util import Translator, Emoji, Archive
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
-Message = namedtuple("Message", "messageid author content channel server attachments")
+Message = namedtuple("Message", "messageid author content channel server attachments type")
 
 def is_cache_enabled(bot):
     return bot.redis_pool is not None
@@ -18,23 +18,23 @@ async def get_message_data(bot, message_id):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         parts = await bot.redis_pool.hgetall(message_id)
         if len(parts) is 5:
-            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [])
+            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]))
     if message is None:
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
     return message
 
 async def insert_message(bot, message):
-    if is_cache_enabled(bot):
-        pipe = bot.redis_pool.pipeline()
-        pipe.hmset_dict(message.id, author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)))
-        pipe.expire(message.id, 5*60+2)
-        await pipe.execute()
     message_type = message.type
     if message_type == MessageType.default:
         message_type = None
     else:
         message_type = message_type.value
+    if is_cache_enabled(bot):
+        pipe = bot.redis_pool.pipeline()
+        pipe.hmset_dict(message.id, author=message.author.id, content=message.content,
+                         channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)), type=message_type)
+        pipe.expire(message.id, 5*60+2)
+        await pipe.execute()
     LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
                          channel=message.channel.id, server=message.guild.id, type=message_type)
     for a in message.attachments:
