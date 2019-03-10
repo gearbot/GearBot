@@ -18,7 +18,7 @@ async def get_message_data(bot, message_id):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         parts = await bot.redis_pool.hgetall(message_id)
         if len(parts) is 5:
-            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]))
+            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None)
     if message is None:
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
     return message
