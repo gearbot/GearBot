@@ -3,6 +3,8 @@ from peewee import *
 from Util import Configuration
 from Util.Enums import ReminderStatus
 
+from DBFields import TinyIntField
+
 connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
                            user=Configuration.get_master_var("DATABASE_USER"),
                            password=Configuration.get_master_var("DATABASE_PASS"),
@@ -23,14 +25,13 @@ class EnumField(IntegerField):
     def python_value(self, value):
         return self.choices(value)
 
-
 class LoggedMessage(Model):
     messageid = BigIntegerField(primary_key=True)
     content = CharField(max_length=2000, collation="utf8mb4_general_ci", null=True)
     author = BigIntegerField()
     channel = BigIntegerField()
     server = BigIntegerField()
-    type = BitField(null=True)
+    type = TinyIntField(null=True)
 
     class Meta:
         database = connection
