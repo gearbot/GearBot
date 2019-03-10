@@ -147,10 +147,15 @@ class ModLog:
                     GearbotLogging.log_to(guild.id, "EDIT_LOGS", type_string, can_stamp=False)
 
                 count = 1
+                multiple_attachments = len(message.attachments) > 1
                 for attachment in message.attachments:
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS",
-                                          f"**Attachment{f' {count}' if len(message.attachments) > 1 else ''}:** <{attachment.url if hasattr(attachment, 'url') else attachment}>",
-                                          can_stamp=False)
+                    attachment_url = attachment.url if hasattr(attachment, 'url') else attachment
+                    if multiple_attachments:
+                        attachment_str = Translator.translate('attachment_item', guild, num=count, attachment=attachment_url)
+                    else:
+                        attachment_str = Translator.translate('attachment_single', guild, attachment=attachment_url)
+
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", attachment_str, can_stamp=False)
                     count += 1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):

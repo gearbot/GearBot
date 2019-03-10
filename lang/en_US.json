@@ -620,5 +620,7 @@
   "system_message_new_member": "server join message",
   "system_message_new_pin": "pinned a message in the channel",
   "system_message_other": "other",
-  "system_message": "**System message**: {type}"
+  "system_message": "**System message**: {type}",
+  "attachment_item": "**Attachment #{num}**: {attachment}",
+  "attachment_single": "**Attachment**: {attachment}"
 }
