@@ -142,7 +142,7 @@ class ModLog:
             else:
                 if type_string == None:
                     cleaned_content = await Utils.clean(message.content, channel.guild)
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", Translator.translate('content', guild, content=cleaned_content), can_stamp=False)
                 else:
                     GearbotLogging.log_to(guild.id, "EDIT_LOGS", type_string, can_stamp=False)
 

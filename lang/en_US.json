@@ -119,6 +119,7 @@
   "message_removed": "Message by {name} (``{user_id}``) in {channel} has been removed.",
   "no_content": "no content",
   "sent_in": "Sent in {channel}",
+  "content": "**Content**: {content}",
   "before": "Before",
   "after": "After",
   "edit_logging": "Message by {user} (``{user_id}``) in {channel} has been edited.",
