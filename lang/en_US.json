@@ -118,6 +118,7 @@
   "mute_negative_denied": "How do you expect me to mute for {duration}? I'm not a time traveler!",
   "message_removed": "Message by {name} (``{user_id}``) in {channel} has been removed.",
   "no_content": "no content",
+  "no_content_embed": "*Empty message*.",
   "sent_in": "Sent in {channel}",
   "content": "**Content**: {content}",
   "before": "Before",

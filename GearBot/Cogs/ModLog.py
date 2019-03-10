@@ -129,6 +129,9 @@ class ModLog:
             if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
                 embed_content = type_string or message.content
 
+                if len(embed_content) == 0:
+                    embed_content = Translator.translate('no_content_embed', guild)
+
                 embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                       description=embed_content)
                 embed.set_author(name=user.name if hasUser else message.author,
@@ -141,8 +144,9 @@ class ModLog:
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
             else:
                 if type_string == None:
-                    cleaned_content = await Utils.clean(message.content, channel.guild)
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", Translator.translate('content', guild, content=cleaned_content), can_stamp=False)
+                    if len(message.content) != 0:
+                        cleaned_content = await Utils.clean(message.content, channel.guild)
+                        GearbotLogging.log_to(guild.id, "EDIT_LOGS", Translator.translate('content', guild, content=cleaned_content), can_stamp=False)
                 else:
                     GearbotLogging.log_to(guild.id, "EDIT_LOGS", type_string, can_stamp=False)
 
