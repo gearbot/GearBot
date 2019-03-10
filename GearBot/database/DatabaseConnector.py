@@ -3,7 +3,7 @@ from peewee import *
 from Util import Configuration
 from Util.Enums import ReminderStatus
 
-from DBFields import TinyIntField
+from database.DBFields import TinyIntField
 
 connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
                            user=Configuration.get_master_var("DATABASE_USER"),
