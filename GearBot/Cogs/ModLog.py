@@ -4,7 +4,7 @@ import datetime
 import time
 
 import discord
-from discord import AuditLogAction, Role, DMChannel
+from discord import AuditLogAction, Role, DMChannel, MessageType
 from discord.embeds import EmptyEmbed
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
@@ -52,9 +52,15 @@ class ModLog:
                     logged = LoggedMessage.get_or_none(messageid=message.id)
                     fetch_times.append(time.perf_counter() - fetch)
                     if logged is None:
+                        message_type = message.type
+                        if message_type == MessageType.default:
+                            message_type = None
+                        else:
+                            message_type = message_type.value
                         LoggedMessage.create(messageid=message.id, author=message.author.id,
                                              content=message.content,
-                                             channel=channel.id, server=channel.guild.id)
+                                             channel=channel.id, server=channel.guild.id,
+                                             type=message_type)
                         for a in message.attachments:
                             LoggedAttachment.create(id=a.id, url=a.url,
                                                     isImage=(a.width is not None or a.width is 0),
@@ -110,26 +116,50 @@ class ModLog:
             name = Utils.clean_user(user) if hasUser else str(message.author)
             GearbotLogging.log_to(guild.id, "EDIT_LOGS",
                                   f"{Emoji.get_chat_emoji('TRASH')} {Translator.translate('message_removed', guild.id, name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention)}")
+            type_string = None
+            if message.type != None:
+                if message.type == MessageType.new_member.value:
+                    type_string = Translator.translate('system_message_new_member', guild)
+                elif message.type == MessageType.pins_add.value:
+                    type_string = Translator.translate('system_message_new_pin', guild)
+                else:
+                    type_string = Translator.translate('system_message_unknown', guild)
+
+                type_string = Translator.translate('system_message', guild, type = type_string)
             if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
+                embed_content = type_string or message.content
+
+                if len(embed_content) == 0:
+                    embed_content = Translator.translate('no_content_embed', guild)
 
                 embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()),
-                                      description=message.content)
+                                      description=embed_content)
                 embed.set_author(name=user.name if hasUser else message.author,
                                  icon_url=user.avatar_url if hasUser else EmptyEmbed)
 
-                embed.set_footer(text=f"Sent in #{channel.name}")
+                embed.set_footer(text=Translator.translate('sent_in', guild, channel=channel.name))
                 if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
                 GearbotLogging.log_to(guild.id, "EDIT_LOGS", embed=embed)
             else:
-                cleaned_content = await Utils.clean(message.content, channel.guild)
-                GearbotLogging.log_to(guild.id, "EDIT_LOGS", f"**Content:** {cleaned_content}", can_stamp=False)
+                if type_string == None:
+                    if len(message.content) != 0:
+                        cleaned_content = await Utils.clean(message.content, channel.guild)
+                        GearbotLogging.log_to(guild.id, "EDIT_LOGS", Translator.translate('content', guild, content=cleaned_content), can_stamp=False)
+                else:
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", type_string, can_stamp=False)
+
                 count = 1
+                multiple_attachments = len(message.attachments) > 1
                 for attachment in message.attachments:
-                    GearbotLogging.log_to(guild.id, "EDIT_LOGS",
-                                          f"**Attachment{f' {count}' if len(message.attachments) > 1 else ''}:** <{attachment.url if hasattr(attachment, 'url') else attachment}>",
-                                          can_stamp=False)
+                    attachment_url = attachment.url if hasattr(attachment, 'url') else attachment
+                    if multiple_attachments:
+                        attachment_str = Translator.translate('attachment_item', guild, num=count, attachment=attachment_url)
+                    else:
+                        attachment_str = Translator.translate('attachment_single', guild, attachment=attachment_url)
+
+                    GearbotLogging.log_to(guild.id, "EDIT_LOGS", attachment_str, can_stamp=False)
                     count += 1
 
     async def on_raw_message_edit(self, event: RawMessageUpdateEvent):
