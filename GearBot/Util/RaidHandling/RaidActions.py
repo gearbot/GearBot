@@ -134,8 +134,12 @@ class LowerShield(RaidAction):
 
     async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
         cog = bot.get_cog("AntiRaid")
-        cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]].shield_terminated()
-        del cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]]
+        if data["shield_id"] in cog.raid_trackers[guild.id]["SHIELDS"]:
+            cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]].shield_terminated()
+            del cog.raid_trackers[guild.id]["SHIELDS"][data["shield_id"]]
+        else:
+            # not triggered yet, prevent activation
+            cog.raid_trackers[guild.id]["triggered"].add(data["shield_id"])
 
 
     @property
