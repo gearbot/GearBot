@@ -130,7 +130,7 @@ async def get_user(uid, fetch=True):
             return None
 
         if BOT.redis_pool is not None:
-            userCacheInfo = await BOT.redis_pool.hgetall(uid)
+            userCacheInfo = await BOT.redis_pool.hgetall(f"users:{uid}")
 
             if len(userCacheInfo) == 8: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
@@ -149,7 +149,7 @@ async def get_user(uid, fetch=True):
                 try:
                     user = await BOT.get_user_info(uid)
                     pipeline = BOT.redis_pool.pipeline()
-                    pipeline.hmset_dict(uid,
+                    pipeline.hmset_dict(f"users:{uid}",
                         name = user.name,
                         id = user.id,
                         discriminator = user.discriminator,
@@ -160,7 +160,7 @@ async def get_user(uid, fetch=True):
                         mention = user.mention
                     )
 
-                    pipeline.expire(uid, 3000) # 5 minute cache life
+                    pipeline.expire(f"users:{uid}", 3000) # 5 minute cache life
                     
                     BOT.loop.create_task(pipeline.execute())
 
