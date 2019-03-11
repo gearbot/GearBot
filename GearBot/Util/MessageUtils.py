@@ -33,9 +33,9 @@ async def insert_message(bot, message):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
                          channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)))
-        if message_type != None:
-            pipe.hmset_dict(message.id, type=message_type)
-        pipe.expire(message.id, 5*60+2)
+        if message_type is not None:
+            pipe.hmset_dict(f"messages:{message.id}", type=message_type)
+        pipe.expire(f"messages:{message.id}", 5*60+2)
         await pipe.execute()
     LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
                          channel=message.channel.id, server=message.guild.id, type=message_type)
