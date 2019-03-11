@@ -16,7 +16,7 @@ def is_cache_enabled(bot):
 async def get_message_data(bot, message_id):
     message = None
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
-        parts = await bot.redis_pool.hgetall(message_id)
+        parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
         if len(parts) is 5:
             message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None)
     if message is None:
@@ -31,7 +31,7 @@ async def insert_message(bot, message):
         message_type = message_type.value
     if is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
-        pipe.hmset_dict(message.id, author=message.author.id, content=message.content,
+        pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
                          channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)))
         if message_type != None:
             pipe.hmset_dict(message.id, type=message_type)
@@ -45,7 +45,7 @@ async def insert_message(bot, message):
 
 async def update_message(bot, message_id, content):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
-        await bot.redis_pool.hmset_dict(message_id, content=content)
+        await bot.redis_pool.hmset_dict(f"messages:{message_id}", content=content)
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id).execute()
 
 def assemble(destination, emoji, message, translate=True, **kwargs):
