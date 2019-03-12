@@ -56,12 +56,12 @@ def translate(key, location, **kwargs):
     except (KeyError, ValueError, ParseError, VisitationError) as ex:
         BOT.loop.create_task(tranlator_log('NO', f'Corrupt translation detected!\n**Lang code:** {lang_key}\n**Translation key:** {key}\n```\n{LANGS[lang_key][key]}```'))
         GearbotLogging.error(ex)
-    if key in LANGS["en_US"].keys():
-        try:
-            translated = format(LANGS['en_US'][key], kwargs, 'en_US')
-        except (KeyError, ValueError, ParseError, VisitationError) as ex:
-            BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
-            GearbotLogging.error(ex)
+        if key in LANGS["en_US"].keys():
+            try:
+                translated = format(LANGS['en_US'][key], kwargs, 'en_US')
+            except (KeyError, ValueError, ParseError, VisitationError) as ex:
+                BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
+                GearbotLogging.error(ex)
     GearbotLogging.info(f"Finished translating {key} to {lang_key}")
     return translated
 
