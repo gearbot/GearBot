@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 
 import discord
+from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, MessageUtils
@@ -19,6 +20,7 @@ class AntiRaid(BaseCog):
             "resetting": self.resetting
         }
 
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         raid_settings = Configuration.get_var(member.guild.id, "RAID_HANDLING")
         if not raid_settings["ENABLED"]:
