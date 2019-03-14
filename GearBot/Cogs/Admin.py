@@ -6,21 +6,21 @@ import traceback
 import discord
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
 from Util.Converters import UserID
 
 
-class Admin:
+class Admin(BaseCog):
 
     def __init__(self, bot):
-        self.bot:GearBot = bot
+        super().__init__(bot)
         Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
 
     def __unload(self):
         Pages.unregister("eval")
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author)
 
 
@@ -46,13 +46,6 @@ class Admin:
         file.write("upgrade requested")
         file.close()
         await self.bot.logout()
-
-    @commands.command()
-    async def reconnectdb(self, ctx):
-        """Disconnect and reconnect the database, for case it does run away again"""
-        self.bot.database_connection.close()
-        self.bot.database_connection.connect()
-        await ctx.send("Database connection re-established")
 
 
 

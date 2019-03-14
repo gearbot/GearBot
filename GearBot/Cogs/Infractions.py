@@ -4,38 +4,34 @@ import typing
 import discord
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
-from Util import Permissioncheckers, InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
+from Cogs.BaseCog import BaseCog
+from Util import InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
 
 
-class Infractions:
-    permissions = {
-        "min": 2,
-        "max": 6,
-        "required": 2,
-        "commands": {
-            "inf" : {
-                "required" : 2,
-                "min": 2,
-                "max": 6,
-                "commands" : {
-                    "delete": {"required": 5, "min": 4, "max": 6}
-                }
-            }
-        }
-    }
+class Infractions(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 2,
+            "max": 6,
+            "required": 2,
+            "commands": {
+                "inf": {
+                    "required": 2,
+                    "min": 2,
+                    "max": 6,
+                    "commands": {
+                        "delete": {"required": 5, "min": 4, "max": 6}
+                    }
+                }
+            }
+        })
         Pages.register("inf_search", self.inf_init, self.update_infs, instant_update=True)
 
     def __unload(self):
         Pages.unregister("inf_search")
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     @commands.guild_only()
     @commands.command()

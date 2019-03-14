@@ -1,14 +1,13 @@
 import discord
+from discord.ext import commands
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Pages, Emoji
 
 
-class PageHandler:
+class PageHandler(BaseCog):
 
-    def __init__(self, bot):
-        self.bot:GearBot = bot
-
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         if str(payload.message_id) not in Pages.known_messages.keys():
             return

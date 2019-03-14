@@ -10,20 +10,19 @@ import discord
 from discord import Embed, File
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji, Pages
 
 
-class BCVersionChecker:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {}
-    }
+class BCVersionChecker(BaseCog):
 
     def __init__(self, bot):
-        self.bot:GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {}
+        })
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
         self.running = True
@@ -38,8 +37,6 @@ class BCVersionChecker:
         #cleanup
         self.running = False
 
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     @commands.command()
     @Permissioncheckers.bc_only()

@@ -1,8 +1,9 @@
 import discord
 from discord import DMChannel
+from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, Emoji
 from Util.Matchers import INVITE_MATCHER
 
@@ -23,14 +24,16 @@ async def censor_invite(ctx, code, server_name):
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
 
 
-class Censor:
+class Censor(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot)
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         await self.censor_message(message)
 
+    @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         if isinstance(channel, DMChannel):

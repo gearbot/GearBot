@@ -4,15 +4,15 @@ from datetime import datetime
 
 import discord
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, MessageUtils
 from Util.RaidHandling.RaidShield import RaidShield
 from database.DatabaseConnector import Raid, Raider
 
 
-class AntiRaid:
+class AntiRaid(BaseCog):
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot)
         self.raid_trackers = dict()
         self.timers = {
             "fixed": self.fixed_time,

@@ -5,32 +5,28 @@ from datetime import datetime
 from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
-from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, Permissioncheckers
+from Cogs.BaseCog import BaseCog
+from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
 
-class Reminders:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-        }
-    }
+class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {
+            }
+        })
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
 
     def __unload(self):
         self.running = False
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     @commands.group(aliases=["r", "reminder"])
     async def remind(self, ctx):

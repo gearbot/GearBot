@@ -4,14 +4,14 @@ import aioredis
 from aioredis.pubsub import Receiver
 
 from Bot import TheRealGearBot
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging
 
 
-class DashLink:
+class DashLink(BaseCog):
 
-    def __init__(self, bot) -> None:
-        self.bot:GearBot = bot
+    def __init__(self, bot):
+        super().__init__(bot)
         bot.loop.create_task(self.init())
         self.redis_link = None
         self.receiver = Receiver(loop=bot.loop)

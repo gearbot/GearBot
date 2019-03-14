@@ -7,20 +7,19 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
-from Util import GearbotLogging, Pages, VersionInfo, Permissioncheckers, Translator
+from Cogs.BaseCog import BaseCog
+from Util import GearbotLogging, Pages, VersionInfo, Translator
 
 
-class Minecraft:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {}
-    }
+class Minecraft(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {}
+        })
         self.cf_cache = dict()
         self.fetching = []
         self.running = True
@@ -29,9 +28,6 @@ class Minecraft:
 
     def __unload(self):
         self.running = False
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     async def get_info(self, ctx, project_name, log):
         while project_name in self.fetching:

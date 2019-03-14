@@ -4,17 +4,17 @@ import os
 from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages, Configuration
 
 
-class Reload:
+class Reload(BaseCog):
 
     def __init__(self, bot):
-        self.bot:GearBot = bot
+        super().__init__(bot)
         Pages.register("pull", self.init_pull, self.update_pull, sender_only=True)
 
-    async def __local_check(self, ctx):
+    async def cog_check (self, ctx):
         return await ctx.bot.is_owner(ctx.author)
 
     @commands.command(hidden=True)
