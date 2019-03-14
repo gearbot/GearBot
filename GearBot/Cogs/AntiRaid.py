@@ -47,6 +47,10 @@ class AntiRaid(BaseCog):
             if m is None:
                 pipeline.srem(key, user)
                 continue
+            if m.joined_at is None:
+                GearbotLogging.warn(f"User {m.id} in {m.guild.id} has no joined timestamp, disregarding")
+                pipeline.srem(key, user)
+                continue
             dif = abs((now - m.joined_at).total_seconds())
             # clean up users who have been here for long enough
             if dif >= longest:
