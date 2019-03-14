@@ -124,6 +124,7 @@ class CustCommands(BaseCog):
                 self.commands[ctx.guild.id][trigger] = reply
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
