@@ -82,8 +82,8 @@ class AntiRaid(BaseCog):
             if member.guild.id in self.raid_trackers and shield["id"] in self.raid_trackers[member.guild.id]["SHIELDS"]:
                 for _, h in self.raid_trackers[member.guild.id]["SHIELDS"].items():
                     if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
-                        Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
-                    self.raid_trackers[member.guild.id]["raider_ids"][member.id] = Raider.id
+                        r = Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
+                    self.raid_trackers[member.guild.id]["raider_ids"][member.id] = r.id
                     await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
                 continue
 
@@ -102,8 +102,8 @@ class AntiRaid(BaseCog):
                     raider_ids = dict()
                     for raider in buckets[shield["id"]]:
                         if member.guild.id not in self.raid_trackers or member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
-                            Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
-                        raider_ids[member.id] = Raider.id
+                            r = Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
+                            raider_ids[member.id] = r.id
 
                     self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids, triggered=set())
 
@@ -147,7 +147,13 @@ class AntiRaid(BaseCog):
             del self.raid_trackers[guild_id]
 
 
+    @commands.command()
+    async def raid(self, ctx):
+        pass
 
+    @commands.command("end")
+    async def raid_end(self, ctx):
+        pass
 
 
 
