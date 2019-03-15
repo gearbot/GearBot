@@ -13,7 +13,12 @@ from database.DatabaseConnector import Raid, Raider
 
 class AntiRaid(BaseCog):
     def __init__(self, bot):
-        super().__init__(bot)
+        super().__init__(bot, {
+            "min": 2,
+            "max": 6,
+            "required": 0,
+            "commands": {}
+        })
         self.raid_trackers = dict()
         self.timers = {
             "fixed": self.fixed_time,
@@ -142,13 +147,7 @@ class AntiRaid(BaseCog):
             del self.raid_trackers[guild_id]
 
 
-    @commands.command()
-    async def raid(self, ctx):
-        pass
 
-    @commands.command("end")
-    async def raid_end(self, ctx):
-        pass
 
 
 
