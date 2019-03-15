@@ -96,7 +96,7 @@ class AntiRaid(BaseCog):
                 if member.guild.id not in self.raid_trackers:
                     raider_ids = dict()
                     for raider in buckets[shield["id"]]:
-                        if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
+                        if member.guild.id not in self.raid_trackers or member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
                             Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
                         raider_ids[member.id] = Raider.id
 
