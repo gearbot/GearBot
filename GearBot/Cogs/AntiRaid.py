@@ -78,7 +78,7 @@ class AntiRaid(BaseCog):
                 for _, h in self.raid_trackers[member.guild.id]["SHIELDS"].items():
                     if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
                         Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
-                    self.raid_trackers[member.guild.id]["raider_ids"][member.id] = Raider
+                    self.raid_trackers[member.guild.id]["raider_ids"][member.id] = Raider.id
                     await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
                 continue
 
@@ -96,8 +96,9 @@ class AntiRaid(BaseCog):
                 if member.guild.id not in self.raid_trackers:
                     raider_ids = dict()
                     for raider in buckets[shield["id"]]:
-                        Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
-                        raider_ids[member.id] = Raider
+                        if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
+                            Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
+                        raider_ids[member.id] = Raider.id
 
                     self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids, triggered=set())
 
