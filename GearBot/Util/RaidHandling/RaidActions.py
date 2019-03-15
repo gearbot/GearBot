@@ -30,7 +30,9 @@ class SendMessage(RaidAction):
 
     async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
         try:
-            await guild.get_channel(data["channel"]).send(data["message"].format(server_name=guild.name))
+            channel =  guild.get_channel(data["channel"])
+            if channel is not None:
+                await channel.send(data["message"].format(server_name=guild.name))
         except Forbidden:
             await log(guild.id, 'raid_message_failed', shield)
 

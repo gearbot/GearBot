@@ -609,7 +609,6 @@
   "command_create_help": "Create a new command",
   "command_remove_help": "Removes a custom command",
   "command_update_help": "Sets a new reply for the specified command",
-  "softbans": "{count, plural, one {1 softban} other {# softbans}}",
   "raid_new": "A shield has been raised, this server is now under raid, tracking... (raid id ``#{raid_id}``)",
   "raid_terminated": "All shields have been lowered, for now",
   "raid_message_failed": "Failed to DM {user} (tried as per raid shield **{shield_name}**)",
@@ -623,5 +622,7 @@
   "system_message_unknown": "unknown",
   "system_message": "**System message**: {type}",
   "attachment_item": "**Attachment #{num}**: {attachment}",
-  "attachment_single": "**Attachment**: {attachment}"
+  "attachment_single": "**Attachment**: {attachment}",
+	"raid_terminate_no_raid": "Wait there was a raid going on? Nobody informed me of that!",
+	"raid_terminate_terminated": ""
 }

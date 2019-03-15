@@ -126,7 +126,7 @@ class AntiRaid(BaseCog):
     async def resetting(self, guild_id, handler, shield, data):
         while True:
             try:
-                self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["duration"])
+                self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
             except asyncio.TimeoutError:
                 # no more joins! turn off the handler
                 await self.terminate_shield(guild_id, handler, shield)
@@ -142,7 +142,13 @@ class AntiRaid(BaseCog):
             del self.raid_trackers[guild_id]
 
 
+    @commands.command()
+    async def raid(self, ctx):
+        pass
 
+    @commands.command("end")
+    async def raid_end(self, ctx):
+        pass
 
 
 

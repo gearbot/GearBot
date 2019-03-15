@@ -317,7 +317,7 @@ class Serveradmin(BaseCog):
         command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
-            cog = command_object.instance
+            cog = command_object.cog
             cog_name = command_object.cog_name
             if not hasattr(cog, "permissions"):
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
@@ -362,7 +362,7 @@ class Serveradmin(BaseCog):
         command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
-            cog = command_object.instance
+            cog = command_object.cog
             cog_name = command_object.cog_name
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             found = False
