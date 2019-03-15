@@ -30,7 +30,7 @@ class Basic(BaseCog):
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
 
-    def __unload(self):
+    def cog_unload(self):
         # cleanup
         Pages.unregister("help")
         Pages.unregister("role")

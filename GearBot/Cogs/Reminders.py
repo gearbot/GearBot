@@ -25,7 +25,7 @@ class Reminders(BaseCog):
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
 
     @commands.group(aliases=["r", "reminder"])

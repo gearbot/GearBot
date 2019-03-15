@@ -26,7 +26,7 @@ class ModLog(BaseCog):
         self.bot.loop.create_task(cache_task(self))
         self.clean_collector = dict()
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
 
     async def buildCache(self, guild: discord.Guild, limit=None, startup=False):

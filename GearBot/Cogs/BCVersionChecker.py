@@ -33,7 +33,7 @@ class BCVersionChecker(BaseCog):
         }
         self.bot.loop.create_task(updater(self))
 
-    def __unload(self):
+    def cog_unload(self):
         #cleanup
         self.running = False
 

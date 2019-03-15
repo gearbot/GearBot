@@ -17,7 +17,7 @@ class Admin(BaseCog):
         super().__init__(bot)
         Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
 
-    def __unload(self):
+    def cog_unload(self):
         Pages.unregister("eval")
 
     async def cog_check(self, ctx):

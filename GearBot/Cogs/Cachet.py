@@ -13,7 +13,7 @@ class Cachet(BaseCog):
         self.heartbeat_task = self.bot.loop.create_task(self.hearbeating())
         self.restping_task = self.bot.loop.create_task(self.restping_latency())
 
-    def __unload(self):
+    def cog_unload(self):
         self.heartbeat_task.cancel()
         self.restping_task.cancel()
         GearbotLogging.info("Cachet tasks terminated!")

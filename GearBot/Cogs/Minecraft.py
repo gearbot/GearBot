@@ -26,7 +26,7 @@ class Minecraft(BaseCog):
         self.bot.loop.create_task(expire_cache(self))
         Pages.register("cf", self.init_cf, self.update_cf)
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
 
     async def get_info(self, ctx, project_name, log):

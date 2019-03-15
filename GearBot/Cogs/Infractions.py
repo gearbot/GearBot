@@ -30,7 +30,7 @@ class Infractions(BaseCog):
         })
         Pages.register("inf_search", self.inf_init, self.update_infs, instant_update=True)
 
-    def __unload(self):
+    def cog_unload(self):
         Pages.unregister("inf_search")
 
     @commands.guild_only()

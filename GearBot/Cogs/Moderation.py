@@ -36,7 +36,7 @@ class Moderation(BaseCog):
         Pages.register("roles", self.roles_init, self.roles_update)
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
         Pages.unregister("roles")
 
