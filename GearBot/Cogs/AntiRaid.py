@@ -75,7 +75,7 @@ class AntiRaid(BaseCog):
 
             # check if active, if it is, let that take care of it
             if member.guild.id in self.raid_trackers and shield["id"] in self.raid_trackers[member.guild.id]["SHIELDS"]:
-                for _, h in self.raid_trackers[member.guild.id]["SHIELDS"]:
+                for _, h in self.raid_trackers[member.guild.id]["SHIELDS"].items():
                     Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
                     self.raid_trackers[member.guild.id]["raider_ids"][member.id] = Raider.id
                     await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["id"], self.raid_trackers[member.guild.id]["raider_ids"])
