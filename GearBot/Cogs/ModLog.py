@@ -268,7 +268,6 @@ class ModLog(BaseCog):
         Infraction.update(active=False).where((Infraction.user_id == user.id) &
                                               (Infraction.type == "Unban") &
                                               (Infraction.guild_id == guild.id)).execute()
-        await asyncio.sleep(1) # sometimes we get the event before things are in the log for some reason
         limit = datetime.datetime.utcfromtimestamp(time.time() - 60)
         log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
         if log is None:
@@ -460,7 +459,7 @@ class ModLog(BaseCog):
         if e is not None:
             logging = MessageUtils.assemble(channel.guild.id, "DELETE", "channel_deleted_by", channel=channel.name, channel_id=channel.id, person=Utils.clean_user(e.user), person_id=e.user.id)
         else:
-            logging = MessageUtils.assemble(channel.guild.id, "DELETE", "channel_delete", channel=channel.name, channel_id=channel.id)
+            logging = MessageUtils.assemble(channel.guild.id, "DELETE", "channel_deleted", channel=channel.name, channel_id=channel.id)
         GearbotLogging.log_to(channel.guild.id, "CHANNEL_CHANGES", logging)
 
     @commands.Cog.listener()
@@ -643,7 +642,7 @@ class ModLog(BaseCog):
             return "granted"
 
     @staticmethod
-    async def find_log(guild, action, matcher, check_limit=10):
+    async def find_log(guild, action, matcher, check_limit=10, retry=True):
         entry = None
         if guild.me.guild_permissions.view_audit_log:
             try:
@@ -653,6 +652,9 @@ class ModLog(BaseCog):
                             entry = e
             except discord.Forbidden:
                 pass
+        if entry is None and retry:
+            await asyncio.sleep(2)
+            return ModLog.find_log(guild, action, matcher, check_limit, False)
         return entry
 
 
