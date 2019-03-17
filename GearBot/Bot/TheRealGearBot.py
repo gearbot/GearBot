@@ -40,7 +40,6 @@ async def initialize(bot):
 
         GearbotLogging.initialize_pump(bot)
         Emoji.initialize(bot)
-        Pages.initialize(bot)
         Utils.initialize(bot)
         Translator.initialize(bot)
         InfractionUtils.initialize(bot)
@@ -53,13 +52,17 @@ async def initialize(bot):
 
         if bot.redis_pool is None or not hasattr(bot, 'redis_raid_pool'):
             try:
-                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
+                socket = Configuration.get_master_var("REDIS_SOCKET", "")
+                if socket == "":
+                    bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
+                else:
+                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching connections unavailable")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
             else:
                 GearbotLogging.info("Redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, caching connections established")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, let's go full speed!")
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()

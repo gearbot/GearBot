@@ -80,25 +80,24 @@ class AntiRaid(BaseCog):
 
             # check if active, if it is, let that take care of it
             if member.guild.id in self.raid_trackers and shield["id"] in self.raid_trackers[member.guild.id]["SHIELDS"]:
-                for _, h in self.raid_trackers[member.guild.id]["SHIELDS"].items():
-                    if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
-                        r = Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
+                h = self.raid_trackers[member.guild.id]["SHIELDS"][shield["id"]]
+                if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
+                    r = Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
                     self.raid_trackers[member.guild.id]["raider_ids"][member.id] = r.id
-                    await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
+                await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
                 continue
 
             #not active, check if we should trigger
             trigger_info = shield["trigger"]
 
 
-            if len(buckets[shield["id"]]) >= trigger_info["count"] and (member.guild.id not in self.raid_trackers and shield["id"] or shield["id"] not in self.raid_trackers[member.guild.id]["triggered"]):
+            if len(buckets[shield["id"]]) >= trigger_info["count"] and (member.guild.id not in self.raid_trackers or shield["id"] not in self.raid_trackers[member.guild.id]["triggered"]):
                 #TRIGGERED
-                # assign raid id, track raiders
-                raid = Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
-                GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_new', raid_id=raid.id))
-
-                # create trackers if needed
                 if member.guild.id not in self.raid_trackers:
+                    # assign raid id, track raiders
+                    raid = Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
+                    GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_new', raid_id=raid.id))
+                    # create trackers if needed
                     raider_ids = dict()
                     for raider in buckets[shield["id"]]:
                         if member.guild.id not in self.raid_trackers or member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
@@ -111,7 +110,7 @@ class AntiRaid(BaseCog):
                 h = RaidShield(shield)
                 self.raid_trackers[member.guild.id]["SHIELDS"][shield["id"]] = h
                 self.raid_trackers[member.guild.id]["triggered"].add(shield["id"])
-                await h.raid_detected(self.bot, member.guild, raid.id, self.raid_trackers[member.guild.id]["raider_ids"], shield)
+                await h.raid_detected(self.bot, member.guild, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
 
                 # create background terminator
                 self.bot.loop.create_task(
@@ -119,7 +118,7 @@ class AntiRaid(BaseCog):
 
                 # deal with them
                 for raider in buckets[shield["id"]]:
-                    await h.handle_raider(self.bot, raider, raid.id, self.raid_trackers[member.guild.id]["raider_ids"], shield)
+                    await h.handle_raider(self.bot, raider, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
 
 
 
@@ -147,13 +146,21 @@ class AntiRaid(BaseCog):
             del self.raid_trackers[guild_id]
 
 
-    @commands.command()
+    @commands.group()
     async def raid(self, ctx):
         pass
 
-    @commands.command("end")
+    @raid.command("end")
     async def raid_end(self, ctx):
-        pass
+        if ctx.guild.id not in self.raid_trackers:
+            await MessageUtils.send_to(ctx, 'WHAT', "raid_terminate_no_raid")
+        else:
+            raid_id
+            raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
+            for shield in raid_settings["SHIELDS"]:
+                if shield["id"] in self.raid_trackers[ctx.guild.id]["SHIELDS"]:
+                    h = self.raid_trackers[ctx.guild.id]["SHIELDS"][shield["id"]]
+                    await self.terminate_shield(ctx.guild.id, h, shield)
 
 
 

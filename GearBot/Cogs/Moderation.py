@@ -374,10 +374,10 @@ class Moderation(BaseCog):
         await message.edit(content=Translator.translate('intimidation', ctx))
         await message2.delete()
 
-    @commands.command()
+    @commands.command(aliases=["softban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def softban(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
+    async def cleankick(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
         """softban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)

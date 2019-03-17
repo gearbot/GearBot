@@ -149,6 +149,18 @@ class LowerShield(RaidAction):
         return False
 
 
+class SendDash(RaidAction):
+
+    async def execute(self, bot, guild, data, raid_id, raider_ids, shield):
+        cog = bot.get_cog("AntiRaid")
+        pass
+
+
+    @property
+    def is_reversable(self):
+        return False
+
+
 handlers = {
     "send_message": SendMessage(),
     "dm_someone": DmSomeone(),
@@ -156,5 +168,6 @@ handlers = {
     "kick_raider": Kick(),
     "ban_raider": Ban(),
     "lower_shield": LowerShield(),
-    "dm_raider": DMRaider()
+    "dm_raider": DMRaider(),
+    "send_dash": SendDash()
 }

@@ -26,14 +26,12 @@ class Basic(BaseCog):
             "commands": {}
         })
         Pages.register("help", self.init_help, self.update_help)
-        Pages.register("role", self.init_role, self.update_role)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
 
     def cog_unload(self):
         # cleanup
         Pages.unregister("help")
-        Pages.unregister("role")
         self.running = False
 
     @commands.command()
@@ -216,24 +214,29 @@ class Basic(BaseCog):
     @commands.command()
     async def help(self, ctx, *, query: str = None):
         """help_help"""
-        await Pages.create_new("help", ctx, query=query)
+        data = {
+            "trigger": ctx.message.id
+        }
+        if query is not None:
+            data["query"] = query
+        await Pages.create_new(self.bot, "help", ctx, **data)
 
-    async def init_help(self, ctx, query):
+    async def init_help(self, ctx, query=None, **kwargs):
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
             query_clean = await clean_content().convert(ctx, query)
             return await clean_content().convert(ctx, Translator.translate(
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
-                query=query_clean)), None, False, []
+                query=query_clean)), None, False
         eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
-            pages) > 1, []
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
-        pages = await self.get_help_pages(ctx, data["query"])
+        pages = await self.get_help_pages(ctx, data.get("query", None))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, page_num
+        data["page"] = page_num
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, data
 
     async def get_help_pages(self, ctx, query):
         if query is None:
@@ -328,7 +331,6 @@ class Basic(BaseCog):
             await asyncio.sleep(5)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
-    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         guild = self.bot.get_guild(payload.guild_id)
         if guild is None:

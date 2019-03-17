@@ -15,7 +15,7 @@ from Util import Configuration, GearbotLogging, Emoji
 
 LANGS = dict()
 BOT = None
-untranlatable = set()
+untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart"}
 
 def initialize(bot_in):
     global BOT
@@ -50,7 +50,6 @@ def translate(key, location, **kwargs):
             BOT.loop.create_task(tranlator_log('WARNING', f'Untranslatable string detected: {key}\n'))
             untranlatable.add(key)
         return key
-    GearbotLogging.info(f"Translating {key} to {lang_key}")
     try:
         translated = format(LANGS[lang_key][key], kwargs, lang_key)
     except (KeyError, ValueError, ParseError, VisitationError) as ex:
@@ -62,7 +61,7 @@ def translate(key, location, **kwargs):
             except (KeyError, ValueError, ParseError, VisitationError) as ex:
                 BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
                 GearbotLogging.error(ex)
-    GearbotLogging.info(f"Finished translating {key} to {lang_key}")
+    GearbotLogging.info(f"Translated {key} to {lang_key}")
     return translated
 
 

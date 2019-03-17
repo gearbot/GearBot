@@ -12,7 +12,7 @@ class Reload(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        Pages.register("pull", self.init_pull, self.update_pull, sender_only=True)
+        Pages.register("pull", self.init_pull, self.update_pull)
 
     async def cog_check (self, ctx):
         return await ctx.bot.is_owner(ctx.author)

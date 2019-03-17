@@ -15,7 +15,7 @@ class Admin(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        Pages.register("eval", self.init_eval, self.update_eval, sender_only=True)
+        Pages.register("eval", self.init_eval, self.update_eval)
 
     def cog_unload(self):
         Pages.unregister("eval")

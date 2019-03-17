@@ -5,8 +5,8 @@ import discord
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import InfractionUtils, Emoji, Utils, Pages, GearbotLogging, Translator, Configuration, \
-    Confirmation, MessageUtils
+from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
+    Confirmation, MessageUtils, ReactionManager
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
 
 
@@ -28,10 +28,6 @@ class Infractions(BaseCog):
                 }
             }
         })
-        Pages.register("inf_search", self.inf_init, self.update_infs, instant_update=True)
-
-    def cog_unload(self):
-        Pages.unregister("inf_search")
 
     @commands.guild_only()
     @commands.command()
@@ -95,37 +91,13 @@ class Infractions(BaseCog):
                     amount = 100
         else:
             amount = 100
-        await Pages.create_new("inf_search", ctx, guild_id=ctx.guild.id, query=query, amount=amount, fields=fields)
+        # inform user we are working on it
+        message = await MessageUtils.send_to(ctx, 'SEARCH', 'inf_search_compiling')
+        parts = await InfractionUtils.inf_update(message, query, fields, amount, 0)
+        await ReactionManager.register(self.bot, message.id, message.channel.id, "inf_search", **parts)
+        await self.bot.redis_pool.sadd(f"inf_track:{ctx.guild.id}", message.id)
+        self.bot.loop.create_task(InfractionUtils.inf_cleaner(ctx.guild.id))
 
-    async def inf_init(self, ctx:commands.Context, query, guild_id, amount, fields):
-        return MessageUtils.assemble(ctx, 'SEARCH', 'inf_search_compiling'), None, False, []
-
-    async def update_infs(self, ctx, message, page_num, action, data):
-        parts = [data["guild_id"], data["query"],
-                 data["amount"] if "amount" in data else 100,
-                 data["fields"] if "fields" in data else ["user", "mod", "reason"],
-                 page_num, message]
-        count = await InfractionUtils.get_page_count(*parts)
-        if action == "UPDATE" and count > 1 and message.channel.permissions_for(message.channel.guild.me).add_reactions:
-            await message.add_reaction(Emoji.get_emoji('LEFT'))
-            await message.add_reaction(Emoji.get_emoji('RIGHT'))
-        if action == "PREV":
-            page_num -= 1
-        elif action == "NEXT":
-            page_num += 1
-        if page_num < 0:
-            page_num = count - 1
-        if page_num >= count:
-            page_num = 0
-        parts = [data["guild_id"], data["query"],
-                                                           data["amount"] if "amount" in data else 25,
-                                                           data["fields"] if "fields" in data else ["user", "mod","reason"],
-                                                           page_num, message]
-
-
-        name = await Utils.username(data['query']) if isinstance(data['query'], int) else self.bot.get_guild(data["guild_id"]).name
-        page = await InfractionUtils.get_page(*parts)
-        return f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}", None, page_num
 
 
     @inf.command()
