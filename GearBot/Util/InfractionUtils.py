@@ -22,8 +22,8 @@ def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=Tru
 async def clear_cache(guild_id):
     if bot.redis_pool is not None:
         todo = await inf_cleaner(guild_id, reset_cache=True)
-        for view in todo:
-            bot.loop.create_task(ReactionManager.on_reaction(bot, view[0], view[1], 0, None))
+        for view in sorted(todo, key=lambda l: l[0], reverse=True):
+            await ReactionManager.on_reaction(bot, view[0], view[1], 0, None)
 
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
