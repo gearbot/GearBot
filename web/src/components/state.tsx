@@ -32,6 +32,21 @@ export interface AntiraidState {
 	blockStates: AntiraidBlock[]
 }
 
+export interface BotStats {
+	uptimeCount: string;
+	commandCount: number;
+	messageCount: number;
+	guildCount: number;
+	errorCount: number;
+	userCount: number;
+	uniqueUserCount: number;
+	tacoTime: number;
+}
+
+export interface BotInfoPageState extends BotStats {
+	initalLoadDone: boolean;
+}
+
 export interface AuthObject {
 	client_id: string;
 	timestamp: string;

@@ -259,7 +259,41 @@ html, body, .container {
 		top: 80px;
 	}
 
-	.discordSignIn {
+	#statsLoading {
+		position: absolute;
+		left: 45%;
+		top: 80px;
+
+		text-align: center;
+		color: $gearbotYellow;
+	}
+
+	.botInfoPage {
+		position: absolute;
+		text-align: center;
+		color: $gearbotYellow;
+		
+		top: 80px;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		
+		.statsTable {
+			//color: black;
+			margin: 0 auto;
+			font-size: 16pt;
+
+			border-collapse:separate; 
+			border-spacing: 30px;
+			border-style: solid;
+
+			#tacoTime {
+				text-align: center;
+			}
+		}
+	}
+
+	#discordSignIn {
 		position: absolute;
 		right: 233px;
 		top: 80px;
