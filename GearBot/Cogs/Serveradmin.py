@@ -6,7 +6,7 @@ from pytz import UnknownTimeZoneError
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
-    MessageUtils
+    MessageUtils, Selfroles
 from Util.Converters import LoggingChannel, ListMode
 
 
@@ -204,10 +204,14 @@ class Serveradmin(BaseCog):
     @self_roles.command()
     async def add(self, ctx:commands.Context, *, role:discord.Role):
         await add_item(ctx, role, 'self')
+        Selfroles.validate_self_roles(self.bot, ctx.guild)
+        self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @self_roles.command()
     async def remove(self, ctx:commands.Context, *, role:discord.Role):
         await remove_item(ctx, role, 'self')
+        Selfroles.validate_self_roles(self.bot, ctx.guild)
+        self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @configure.group()
     async def invite_whitelist(self, ctx: commands.Context):
@@ -362,7 +366,6 @@ class Serveradmin(BaseCog):
         command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
-            cog = command_object.cog
             cog_name = command_object.cog_name
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             found = False

@@ -1,6 +1,6 @@
-from discord import Forbidden, NotFound
+from discord import Forbidden, NotFound, Embed, Colour
 
-from Util import Emoji, Pages, InfractionUtils
+from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator
 
 
 async def paged(bot, message, user_id, reaction, **kwargs):
@@ -20,8 +20,36 @@ async def paged(bot, message, user_id, reaction, **kwargs):
     return await Pages.update(bot, message, action, user_id, **kwargs)
 
 
-async def self_roles():
-    pass
+async def self_roles(bot, message, user_id, reaction, **kwargs):
+    user = message.channel.guild.get_member(user_id)
+    if user is not None:
+        bot.loop.create_task(remove_reaction(message, reaction, user))
+    left = Emoji.get_chat_emoji('LEFT')
+    right = Emoji.get_chat_emoji('RIGHT')
+    refresh = Emoji.get_chat_emoji('REFRESH')
+    r2 = "🔁"
+    if str(reaction) not in [left, right, refresh, r2]:
+        return
+    page_num = int(kwargs.get("page_num", 0))
+    if str(reaction) == left:
+        page_num -= 1
+    elif str(reaction) == right:
+        page_num += 1
+    if user is not None:
+        bot.loop.create_task(remove_reaction(message, reaction, user))
+    pages = Selfroles.gen_role_pages(message.channel.guild)
+
+    if page_num >= len(pages):
+        page_num = 0
+    elif page_num < 0:
+        page_num = len(pages) - 1
+    kwargs["page_num"] = page_num
+    embed = Embed(title=Translator.translate("assignable_roles", message.channel, server_name=message.channel.guild.name, page_num=page_num,
+                                             page_count=len(pages)), colour=Colour(0xbffdd), description=pages[page_num])
+    await message.edit(embed=embed)
+    await Selfroles.update_reactions(message, pages[page_num], len(pages) > 1)
+    bot.loop.create_task(bot.redis_pool.expire(f"self_role:{message.channel.guild.id}", int(kwargs.get("duration", 60 * 60 * 24 * 7))))
+    return kwargs
 
 async def inf_search(bot, message, user_id, reaction, **kwargs):
     user = message.channel.guild.get_member(user_id)
@@ -36,11 +64,13 @@ async def inf_search(bot, message, user_id, reaction, **kwargs):
         page_num -= 1
     elif str(reaction) == right:
         page_num += 1
-    bot.loop.create_task(remove_reaction(message, reaction, user))
+    if user is not None:
+        bot.loop.create_task(remove_reaction(message, reaction, user))
     return await InfractionUtils.inf_update(message, kwargs.get("query", None), kwargs.get("fields", "").split("-"), kwargs.get("amount", 100), page_num)
 
-async def register(bot, message_id, channel_id, type, **kwargs):
-    pipe = bot.redis_pool.pipeline()
+async def register(bot, message_id, channel_id, type, pipe=None, **kwargs):
+    if pipe is None:
+        pipe = bot.redis_pool.pipeline()
     key = f"reactor:{message_id}"
     pipe.hmset_dict(key, message_id=message_id, channel_id=channel_id, type=type, **kwargs)
     pipe.expire(key, kwargs.get("duration", 60*60*24))
@@ -49,7 +79,7 @@ async def register(bot, message_id, channel_id, type, **kwargs):
 
 handlers = {
     "paged": paged,
-    "self_roles":  self_roles,
+    "self_role":  self_roles,
     "inf_search": inf_search
 }
 
@@ -78,7 +108,7 @@ async def on_reaction(bot, message_id, channel_id, user_id, reaction):
             if new_info is not None:
                 pipeline = bot.redis_pool.pipeline()
                 pipeline.hmset_dict(key, **new_info)
-                pipeline.expire(key, info.get("duration", 60*60*24))
+                pipeline.expire(key, int(info.get("duration", 60*60*24)))
                 pipeline.expire(f"inf_track:{channel.guild.id}", 60*60*24)
                 await pipeline.execute()
 
