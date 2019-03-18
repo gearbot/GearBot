@@ -304,11 +304,11 @@ class Moderation(BaseCog):
                                                   user_id=user.id,
                                                   moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                                   reason=reason,
-                                                  until=datetime.datetime.utcfromtimestamp(until))
+                                                  until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
                 GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('BAN')} {translated}")
                 await MessageUtils.send_to(ctx, "YES", "tempban_confirmation", user=Utils.clean_user(user),
                                              user_id=user.id, reason=reason,
-                                             until=datetime.datetime.utcfromtimestamp(until))
+                                             until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
