@@ -119,7 +119,7 @@ def get_key(guild_id, query, fields, amount):
     return key
 
 async def inf_update(message, query, fields, amount, page_num):
-    if query.isnumeric():
+    if str(query).isnumeric():
         query = int(query)
     guild_id = message.channel.guild.id
     key = get_key(guild_id, query, fields, amount)
