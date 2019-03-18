@@ -40,16 +40,16 @@ class Moderation(BaseCog):
         self.running = False
         Pages.unregister("roles")
 
-    async def roles_init(self, ctx, mode):
-        pages = self.gen_roles_pages(ctx.guild, mode=mode)
+    async def roles_init(self, ctx, **kwargs):
+        pages = self.gen_roles_pages(ctx.guild, mode=kwargs.get("mode", "hierarchy"))
         page = pages[0]
-        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(
-            pages) > 1, []
+        return f"**{Translator.translate('roles', ctx.guild.id, server_name=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{page}```", None, len(pages) > 1
 
     async def roles_update(self, ctx, message, page_num, action, data):
-        pages = self.gen_roles_pages(message.guild, mode=data["mode"])
+        pages = self.gen_roles_pages(message.guild, mode=data.get("mode", "hierarchy"))
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**{Translator.translate('roles', message.guild.id, server_name=message.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, page_num
+        data["page"] = page_num
+        return f"**{Translator.translate('roles', message.guild.id, server_name=message.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
     @staticmethod
     def gen_roles_pages(guild: discord.Guild, mode):
@@ -71,7 +71,8 @@ class Moderation(BaseCog):
     @commands.guild_only()
     async def roles(self, ctx: commands.Context, mode: RoleMode = "hierarchy"):
         """roles_help"""
-        await Pages.create_new("roles", ctx, mode=mode)
+        data = {"mode": mode} if mode != "hierarchy" else {}
+        await Pages.create_new(self.bot, "roles", ctx, **data)
 
     @staticmethod
     def _can_act(action, ctx, user, check_bot=True):
