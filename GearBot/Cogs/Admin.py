@@ -104,19 +104,23 @@ class Admin(BaseCog):
                 else:
                     output = f'{value}{ret}'
         if output is not None:
-            await Pages.create_new("eval", ctx, pages=Pages.paginate(output))
+            await Pages.create_new(self.bot, "eval", ctx, pages="----NEW PAGE----".join(Pages.paginate(output)), code=code, trigger=ctx.message.id, sender=ctx.author.id)
         else:
             await ctx.message.add_reaction(Emoji.get_emoji("YES"))
 
-    async def init_eval(self, ctx, pages):
+    async def init_eval(self, ctx, pages, **kwargs):
+        pages = pages.split("----NEW PAGE----")
         page = pages[0]
         num = len(pages)
-        return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1, []
+        return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1,
 
     async def update_eval(self, ctx, message, page_num, action, data):
-        pages = data["pages"]
+        if action == "REFRESH" and ctx is not None:
+            await ctx.invoke(self.eval, code=data.get("code"))
+        pages = data["pages"].split("----NEW PAGE----")
         page, page_num = Pages.basic_pages(pages, page_num, action)
-        return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, page_num
+        data["page"] = page_num
+        return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, data
 
 
     @commands.command(hidden=True)

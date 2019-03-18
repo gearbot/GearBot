@@ -34,7 +34,7 @@ async def create_new(bot, type, ctx, **kwargs):
 async def update(bot, message, action, user, **kwargs):
     subtype = kwargs.get("subtype", "")
     if subtype in page_handlers.keys():
-        if "sender" not in kwargs or user == kwargs["sender"]:
+        if "sender" not in kwargs or int(user) == int(kwargs["sender"]):
             page_num = kwargs.get("page", 0)
             ctx = None
             if "trigger" in kwargs:
@@ -46,7 +46,7 @@ async def update(bot, message, action, user, **kwargs):
             text, embed, info = await page_handlers[subtype]["update"](ctx, message, int(page_num), action, kwargs)
             await message.edit(content=text, embed=embed)
             return info
-        return False # unknown type, shouldn't happen
+        return
 
 
 def basic_pages(pages, page_num, action):
