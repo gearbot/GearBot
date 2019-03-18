@@ -136,7 +136,7 @@ async def inf_update(message, query, fields, amount, page_num):
         elif page_num < 0:
             page_num = count-1
         page = await bot.redis_pool.lindex(key, page_num)
-    name = await Utils.username(query) if isinstance(query, int) else Utils.clean(bot.get_guild(guild_id).name)
+    name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
     await message.edit(content=f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}")
     if count > 1:
         left = Emoji.get_emoji('LEFT')

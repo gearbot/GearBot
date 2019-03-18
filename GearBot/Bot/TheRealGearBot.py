@@ -156,7 +156,8 @@ async def on_message(bot, message:Message):
 async def on_guild_join(guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.load_config(guild.id)
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {Utils.clean(guild.name)} ({guild.id}).", embed=Utils.server_info(guild))
+    name = await Utils.clean(guild.name)
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=Utils.server_info(guild))
 
 async def on_guild_remove(guild):
     GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")

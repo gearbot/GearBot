@@ -654,7 +654,7 @@ class ModLog(BaseCog):
                 pass
         if entry is None and retry:
             await asyncio.sleep(2)
-            return ModLog.find_log(guild, action, matcher, check_limit, False)
+            return await ModLog.find_log(guild, action, matcher, check_limit, False)
         return entry
 
 

@@ -1,6 +1,6 @@
 from discord import Forbidden, NotFound, Embed, Colour
 
-from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator
+from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator, Configuration, MessageUtils, Utils
 
 
 async def paged(bot, message, user_id, reaction, **kwargs):
@@ -28,14 +28,32 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     right = Emoji.get_chat_emoji('RIGHT')
     refresh = Emoji.get_chat_emoji('REFRESH')
     r2 = "🔁"
-    if str(reaction) not in [left, right, refresh, r2]:
-        return
     page_num = int(kwargs.get("page_num", 0))
+    add = True
     if str(reaction) == left:
         page_num -= 1
+        add = False
     elif str(reaction) == right:
         page_num += 1
+        add = False
     if user is not None:
+        if add:
+            for i in range(10):
+                if str(reaction) == str(Emoji.get_emoji(str(i+1))):
+                    roles = Configuration.get_var(message.guild.id, "SELF_ROLES")
+                    role = message.channel.guild.get_role(roles[page_num*10 + i])
+                    if role is None:
+                        await Selfroles.validate_self_roles(bot, message.channel.guild)
+                        return
+                    add_role = role not in user.roles
+                    try:
+                        await (user.add_roles if add_role else user.remove_roles)(role)
+                    except Forbidden:
+                        if message.channel.permissions_for(message.channel.guild.me).send_messages:
+                            await MessageUtils.send_to(message.channel, "NO", "mute_role_to_high")
+                    else:
+                        if message.channel.permissions_for(message.channel.guild.me).send_messages:
+                            await MessageUtils.send_to(message.channel, "YES", "role_joined" if add_role else "role_left", role_name=await Utils.clean(role.name), delete_after=10)
         bot.loop.create_task(remove_reaction(message, reaction, user))
     pages = Selfroles.gen_role_pages(message.channel.guild)
 
