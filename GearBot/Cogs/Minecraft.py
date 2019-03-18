@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 import aiohttp
 import discord
-from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Pages, VersionInfo, Translator
@@ -24,7 +23,6 @@ class Minecraft(BaseCog):
         self.fetching = []
         self.running = True
         self.bot.loop.create_task(expire_cache(self))
-        Pages.register("cf", self.init_cf, self.update_cf)
 
     def cog_unload(self):
         self.running = False
@@ -129,12 +127,10 @@ class Minecraft(BaseCog):
             }
             return Pages.paginate_fields([fields])
 
-    @commands.group()
     async def cf(self, ctx):
         """cf_help"""
         pass
 
-    @cf.command()
     async def info(self, ctx, project_name: str):
         await Pages.create_new("cf", ctx, project_name=project_name)
 
