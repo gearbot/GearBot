@@ -34,7 +34,7 @@ class Emoji(BaseCog):
         })
         Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
 
-    def __unload(self):
+    def cog_unload(self):
         Pages.unregister("emoji")
 
     async def cog_check (self, ctx):
@@ -49,10 +49,10 @@ class Emoji(BaseCog):
 
     @emoji.command("list")
     async def emoji_list(self, ctx):
-        await Pages.create_new("emoji", ctx)
+        await Pages.create_new(self.bot, "emoji", ctx)
 
     async def emoji_list_init(self, ctx):
-        return None, self.gen_emoji_page(ctx.guild, 0), len(ctx.guild.emojis) > 0, []
+        return None, self.gen_emoji_page(ctx.guild, 0), len(ctx.guild.emojis) > 0
 
     async def emoji_list_update(self, ctx, message, page_num, action, data):
         page_count = len(message.guild.emojis) + 1
@@ -64,7 +64,8 @@ class Emoji(BaseCog):
             page_num = page_count - 1
         if page_num >= page_count:
             page_num = 0
-        return None, self.gen_emoji_page(message.guild, page_num), page_num
+        data["page"] = page_num
+        return None, self.gen_emoji_page(message.guild, page_num), data
 
     def gen_emoji_page(self, guild, page):
         se = sorted(guild.emojis, key=lambda e: e.name)
