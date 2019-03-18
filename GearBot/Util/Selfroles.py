@@ -47,7 +47,7 @@ async def update_reactions(message, page, has_multiple):
     if added and has_right:
         await message.remove_reaction(right, message.channel.guild.me)
         has_right = False
-    if not has_right and has_right:
+    if not has_right and has_multiple:
         await message.add_reaction(right)
 
 
