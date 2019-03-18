@@ -205,8 +205,8 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=valid)
             if len(failures) > 0:
-                await Pages.create_new("mass_failures", ctx, action="kick",
-                                       failures=Pages.paginate("\n".join(failures)))
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="kick",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
 
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
@@ -215,14 +215,15 @@ class Moderation(BaseCog):
 
     @staticmethod
     async def _mass_failures_init(ctx, action, failures):
-        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(
-            failures) > 1, []
+        failures = failures.split("----NEW PAGE----")
+        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(failures) > 1
 
     @staticmethod
     async def _mass_failures_update(ctx, message, page_num, action, data):
-        page, page_num = Pages.basic_pages(data["failures"], page_num, action)
+        page, page_num = Pages.basic_pages(data["failures"].split("----NEW PAGE----"), page_num, action)
         action_type = data["action"]
-        return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, page_num
+        data["page"] = page_num
+        return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, data
 
     @commands.guild_only()
     @commands.bot_has_permissions(add_reactions=True)
@@ -359,8 +360,8 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=valid)
             if len(failures) > 0:
-                await Pages.create_new("mass_failures", ctx, action="ban",
-                                       failures=Pages.paginate("\n".join(failures)))
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
         else:
