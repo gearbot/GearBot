@@ -48,7 +48,7 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
             types[t] += 1
     header = ", ".join(Translator.translate(f"{k}s", guild_id, count=v) for k, v in types.items())
     out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{inf.user_id}> | <@{inf.mod_id}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1550)}" for inf in infs)
-    pages = Pages.paginate(out, max_chars=(1600 - len(header)))
+    pages = Pages.paginate(out, max_chars=(1400 - len(header)))
     placeholder = Translator.translate("inf_search_compiling", guild_id)
     if bot.redis_pool is not None:
         GearbotLogging.info(f"Pushing placeholders for {key}")
@@ -119,6 +119,8 @@ def get_key(guild_id, query, fields, amount):
     return key
 
 async def inf_update(message, query, fields, amount, page_num):
+    if query.isnumeric():
+        query = int(query)
     guild_id = message.channel.guild.id
     key = get_key(guild_id, query, fields, amount)
     # do we have pages?
