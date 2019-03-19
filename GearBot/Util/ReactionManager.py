@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import Forbidden, NotFound, Embed, Colour
 
 from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator, Configuration, MessageUtils, Utils
@@ -59,12 +61,13 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
 
     if str(reaction) in [refresh, r2]:
         await message.clear_reactions()
+        await asyncio.sleep(0.2)
     if page_num >= len(pages):
         page_num = 0
     elif page_num < 0:
         page_num = len(pages) - 1
     kwargs["page_num"] = page_num
-    embed = Embed(title=Translator.translate("assignable_roles", message.channel, server_name=message.channel.guild.name, page_num=page_num,
+    embed = Embed(title=Translator.translate("assignable_roles", message.channel, server_name=message.channel.guild.name, page_num=page_num+1,
                                              page_count=len(pages)), colour=Colour(0xbffdd), description=pages[page_num])
     await message.edit(embed=embed)
     await Selfroles.update_reactions(message, pages[page_num], len(pages) > 1)
