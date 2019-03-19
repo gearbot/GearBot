@@ -29,12 +29,12 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     refresh = Emoji.get_chat_emoji('REFRESH')
     r2 = "🔁"
     page_num = int(kwargs.get("page_num", 0))
-    add = True
+    add = reaction in [left, right, refresh, r2]
     if str(reaction) == left:
         page_num -= 1
-        add = False
     elif str(reaction) == right:
         page_num += 1
+    elif str(reaction) in [refresh, r2]:
         add = False
     if user is not None:
         if add:
@@ -57,6 +57,8 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
         bot.loop.create_task(remove_reaction(message, reaction, user))
     pages = Selfroles.gen_role_pages(message.channel.guild)
 
+    if str(reaction) in [refresh, r2]:
+        await message.clear_reactions()
     if page_num >= len(pages):
         page_num = 0
     elif page_num < 0:
