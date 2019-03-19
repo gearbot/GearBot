@@ -32,6 +32,8 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     r2 = "🔁"
     page_num = int(kwargs.get("page_num", 0))
     add = reaction not in [left, right, refresh, r2]
+    if not add:
+        bot.loop.create_task(remove_reaction(message, reaction, user))
     if str(reaction) == left:
         page_num -= 1
         add = False
@@ -58,7 +60,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
                     else:
                         if message.channel.permissions_for(message.channel.guild.me).send_messages:
                             await MessageUtils.send_to(message.channel, "YES", "role_joined" if add_role else "role_left", role_name=await Utils.clean(role.name), delete_after=10)
-        bot.loop.create_task(remove_reaction(message, reaction, user))
+
 
     if add:
         return kwargs
