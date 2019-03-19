@@ -31,7 +31,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     refresh = Emoji.get_chat_emoji('REFRESH')
     r2 = "🔁"
     page_num = int(kwargs.get("page_num", 0))
-    add = reaction in [left, right, refresh, r2]
+    add = reaction not in [left, right, refresh, r2]
     if str(reaction) == left:
         page_num -= 1
     elif str(reaction) == right:
