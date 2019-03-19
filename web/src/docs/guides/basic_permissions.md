@@ -1,5 +1,5 @@
-#Introduction to permissions
-At it's core GearBot uses a very basic permissions system that determines who is able to run what commands.
+# Introduction to permissions
+At it's core, GearBot uses a very basic permissions system that determines who is able to run what commands.
 
 ```
 ╔════╦═════════════════╦═══════════════════════════════════════════════════╗

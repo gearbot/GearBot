@@ -1,11 +1,11 @@
 import discord
 from discord import DMChannel
+from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Bot.GearBot import GearBot
-from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, InfractionUtils, Emoji
+from Cogs.BaseCog import BaseCog
+from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, Emoji
 from Util.Matchers import INVITE_MATCHER
-from database.DatabaseConnector import Infraction
 
 
 async def censor_invite(ctx, code, server_name):
@@ -24,14 +24,16 @@ async def censor_invite(ctx, code, server_name):
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
 
 
-class Censor:
+class Censor(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot)
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         await self.censor_message(message)
 
+    @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         if isinstance(channel, DMChannel):
@@ -41,7 +43,7 @@ class Censor:
             if permissions.read_messages and permissions.read_message_history:
                 try:
                     message = await channel.get_message(event.message_id)
-                except discord.NotFound:
+                except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
                     pass
                 else:
                     await self.censor_message(message)
@@ -101,12 +103,7 @@ class Censor:
 
             if message.guild.me.guild_permissions.ban_members:
                 await message.guild.ban(message.author, reason=reason)
-                Infraction.update(active=False).where(
-                    (Infraction.user_id == message.author.id) & (Infraction.type == "Unban") &
-                    (Infraction.guild_id == ctx.guild.id)).execute()
-                InfractionUtils.add_infraction(message.guild.id, message.author.id, self.bot.user.id, "AUTOBAN", reason)
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                      f":door: {Translator.translate('ban_log', ctx.guild.id, user=message.author, user_id=message.author.id, moderator=self.bot.user, moderator_id=self.bot.user.id, reason=reason)}")
+
             else:
                 self.bot.data["forced_exits"].remove(message.author.id)
                 translated = Translator.translate('automod_ban_failed', message.guild.id, user=message.author,

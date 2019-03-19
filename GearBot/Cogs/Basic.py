@@ -7,39 +7,33 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
-from Bot.GearBot import GearBot
-from Util import Configuration, Pages, HelpGenerator, Permissioncheckers, Emoji, Translator, Utils, GearbotLogging, \
-    MessageUtils
+from Cogs.BaseCog import BaseCog
+from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
+    MessageUtils, Selfroles, ReactionManager
 from Util.Converters import Message, DiscordUser
 from Util.JumboGenerator import JumboGenerator
 from Util.Matchers import NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
 
 
-class Basic:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-        }
-    }
+class Basic(BaseCog):
 
     def __init__(self, bot):
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {}
+        })
         Pages.register("help", self.init_help, self.update_help)
-        Pages.register("role", self.init_role, self.update_role)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
+        self.bot.loop.create_task(self.selfrole_updater())
 
-    def __unload(self):
+    def cog_unload(self):
         # cleanup
         Pages.unregister("help")
-        Pages.unregister("role")
         self.running = False
-
-    async def __local_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx)
 
     @commands.command()
     async def about(self, ctx):
@@ -154,35 +148,8 @@ class Basic:
         else:
             await ctx.send(Translator.translate("coinflip_no", ctx, thing=thing))
 
-    async def init_role(self, ctx):
-        pages = self.gen_role_pages(ctx.guild)
-        page = pages[0]
-        emoji = []
-        for i in range(10 if len(pages) > 1 else round(len(page.splitlines()) / 2)):
-            emoji.append(Emoji.get_emoji(str(i + 1)))
-        embed = discord.Embed(
-            title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
-                                       page_count=len(pages)), colour=discord.Colour(0xbffdd), description=page)
-        return None, embed, len(pages) > 1, emoji
 
-    async def update_role(self, ctx, message, page_num, action, data):
-        pages = self.gen_role_pages(message.guild)
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        embed = discord.Embed(
-            title=Translator.translate("assignable_roles", ctx, server_name=message.channel.guild.name, page_num=page_num + 1,
-                                       page_count=len(pages)), color=0x54d5ff, description=page)
-        return None, embed, page_num
 
-    def gen_role_pages(self, guild: discord.Guild):
-        roles = Configuration.get_var(guild.id, "SELF_ROLES")
-        current_roles = ""
-        count = 1
-        for role in roles:
-            current_roles += f"{count}) <@&{role}>\n\n"
-            count += 1
-            if count > 10:
-                count = 1
-        return Pages.paginate(current_roles, max_lines=20)
 
     @commands.command(aliases=["selfrole", "self_roles", "selfroles"])
     @commands.bot_has_permissions(embed_links=True)
@@ -190,7 +157,7 @@ class Basic:
     async def self_role(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
         if role is None:
-            await Pages.create_new("role", ctx)
+            await Selfroles.create_self_roles(self.bot, ctx)
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
@@ -212,33 +179,33 @@ class Basic:
                 else:
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
-    # @commands.command()
-    # async def test(self, ctx):
-    #    async def send(message):
-    #         await ctx.send(message)
-    #    await Confirmation.confirm(ctx, "You sure?", on_yes=lambda : send("Doing the thing!"), on_no=lambda: send("Not doing the thing!"))
 
     @commands.command()
     async def help(self, ctx, *, query: str = None):
         """help_help"""
-        await Pages.create_new("help", ctx, query=query)
+        data = {
+            "trigger": ctx.message.id
+        }
+        if query is not None:
+            data["query"] = query
+        await Pages.create_new(self.bot, "help", ctx, **data)
 
-    async def init_help(self, ctx, query):
+    async def init_help(self, ctx, query=None, **kwargs):
         pages = await self.get_help_pages(ctx, query)
         if pages is None:
             query_clean = await clean_content().convert(ctx, query)
             return await clean_content().convert(ctx, Translator.translate(
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
-                query=query_clean)), None, False, []
+                query=query_clean)), None, False
         eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
-            pages) > 1, []
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
-        pages = await self.get_help_pages(ctx, data["query"])
+        pages = await self.get_help_pages(ctx, data.get("query", None))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, page_num
+        data["page"] = page_num
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, data
 
     async def get_help_pages(self, ctx, query):
         if query is None:
@@ -264,7 +231,7 @@ class Basic:
     @commands.command()
     @commands.bot_has_permissions(attach_files=True)
     async def jumbo(self, ctx, *, emojis: str):
-        """Jumbo emoji"""
+        """jumbo_help"""
         await JumboGenerator(ctx, emojis).generate()
 
     @commands.command()
@@ -318,7 +285,7 @@ class Basic:
             async with self.bot.aiosession.get(link, headers=headers) as reply:
                 return await reply.json()
 
-
+    @commands.Cog.listener()
     async def on_guild_role_delete(self, role: discord.Role):
         roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
         if role.id in roles:
@@ -333,61 +300,16 @@ class Basic:
             await asyncio.sleep(5)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
-        guild = self.bot.get_guild(payload.guild_id)
-        if guild is None:
-            return
-        if guild.me.id == payload.user_id:
-            return
-        if str(payload.message_id) not in Pages.known_messages:
-            return
-        info = Pages.known_messages[str(payload.message_id)]
-        if info["type"] != "role":
-            return
-        try:
-            message = await self.bot.get_channel(payload.channel_id).get_message(payload.message_id)
-        except (discord.NotFound, discord.Forbidden):
-            pass
-        else:
-            for i in range(10):
-                e = str(Emoji.get_emoji(str(i + 1)))
-                if str(payload.emoji) == e:
-                    roles = Configuration.get_var(guild.id, "SELF_ROLES")
-                    channel = self.bot.get_channel(payload.channel_id)
-                    number = info['page'] * 10 + i
-                    if number >= len(roles):
-                        await MessageUtils.send_to(channel, "NO", "role_not_on_page", requested=number+1, max=len(roles) % 10, delete_after=10)
-                        return
-                    role = guild.get_role(roles[number])
-                    if role is None:
-                        return
-                    member = guild.get_member(payload.user_id)
-                    try:
-                        if role in member.roles:
-                            await member.remove_roles(role)
-                            added = False
-                        else:
-                            await member.add_roles(role)
-                            added = True
-                    except discord.Forbidden:
-                        emessage = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', payload.guild_id, role=role.name)}"
-                        try:
-                            await channel.send(emessage)
-                        except discord.Forbidden:
-                            try:
-                                member.send(emessage)
-                            except discord.Forbidden:
-                                pass
-                    else:
-                        try:
-                            action_type = 'role_joined' if added else 'role_left'
-                            await channel.send(f"{member.mention} {Translator.translate(action_type, payload.guild_id, role_name=role.name)}", delete_after=10)
-                        except discord.Forbidden:
-                            pass
-
-                    if channel.permissions_for(guild.me).manage_messages:
-                        await message.remove_reaction(payload.emoji, member)
-                    break
+    async def selfrole_updater(self):
+        GearbotLogging.info("Selfrole view updater enabled")
+        while self.running:
+            guild_id = await self.bot.wait_for("self_roles_update")
+            #make sure we shouldn't have terminated yet
+            if not self.running:
+                return
+            todo = await Selfroles.self_cleaner(self.bot, guild_id)
+            for t in sorted(todo, key=lambda l: l[0], reverse=True):
+                await ReactionManager.on_reaction(self.bot, t[0], t[1], 0, "🔁")
 
 
 def setup(bot):

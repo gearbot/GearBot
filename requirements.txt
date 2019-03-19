@@ -7,3 +7,5 @@ aioredis==1.2.0
 sentry-sdk==0.6.4
 tornado==5.1.1
 python-socketio==3.1.2
+pytz==2018.9
+pyseeyou==1.0.0

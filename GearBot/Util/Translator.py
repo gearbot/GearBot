@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import os
 import shutil
@@ -7,11 +8,14 @@ import zipfile
 
 import aiohttp
 import requests
+from parsimonious import ParseError, VisitationError
+from pyseeyou import format
 
 from Util import Configuration, GearbotLogging, Emoji
 
 LANGS = dict()
 BOT = None
+untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart"}
 
 def initialize(bot_in):
     global BOT
@@ -25,10 +29,6 @@ def load_translations():
         if filename.endswith(".json"):
             with open(f"lang/{filename}", encoding="UTF-8") as lang:
                 LANGS[filename[:-5]] = json.load(lang)
-
-
-def assemble(emoji, key, location, **kwargs):
-    return f"{Emoji.get_chat_emoji(emoji)} {translate(key, location, **kwargs)}"
 
 def translate(key, location, **kwargs):
     lid = None
@@ -44,18 +44,29 @@ def translate(key, location, **kwargs):
         lang_key = "en_US"
     else:
         lang_key = Configuration.get_var(lid, "LANG")
-    if key in LANGS[lang_key].keys():
-        try:
-            return LANGS[lang_key][key].format(**kwargs)
-        except (KeyError, ValueError):
-            GearbotLogging.error(f"Corrupt translation detected in {lang_key}: {key}\n```\n{LANGS[lang_key][key]}```")
-    if key in LANGS["en_US"].keys():
-        return LANGS["en_US"][key].format(**kwargs)
-    return key
+    translated = key
+    if key not in LANGS[lang_key]:
+        if key not in untranlatable:
+            BOT.loop.create_task(tranlator_log('WARNING', f'Untranslatable string detected: {key}\n'))
+            untranlatable.add(key)
+        return key
+    try:
+        translated = format(LANGS[lang_key][key], kwargs, lang_key)
+    except (KeyError, ValueError, ParseError, VisitationError) as ex:
+        BOT.loop.create_task(tranlator_log('NO', f'Corrupt translation detected!\n**Lang code:** {lang_key}\n**Translation key:** {key}\n```\n{LANGS[lang_key][key]}```'))
+        GearbotLogging.error(ex)
+        if key in LANGS["en_US"].keys():
+            try:
+                translated = format(LANGS['en_US'][key], kwargs, 'en_US')
+            except (KeyError, ValueError, ParseError, VisitationError) as ex:
+                BOT.loop.create_task(tranlator_log('NO', f'Corrupt English source string detected!\n**Translation key:** {key}\n```\n{LANGS["en_US"][key]}```'))
+                GearbotLogging.error(ex)
+    GearbotLogging.info(f"Translated {key} to {lang_key}")
+    return translated
 
 
 async def update():
-    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Updating translations")
+    message = await tranlator_log('REFRESH', 'Updating translations')
     crowdin_data = Configuration.get_master_var("CROWDIN")
     session: aiohttp.ClientSession = BOT.aiosession
     async with session.get(f"https://api.crowdin.com/api/project/Gearbot/export?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json",) as reply:
@@ -92,14 +103,32 @@ async def update():
 async def upload():
     if Configuration.get_master_var("CROWDIN", None) is None:
         return
-    message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Uploading translation file")
+
+    new = hashlib.md5(open(f"lang/en_US.json", 'rb').read()).hexdigest()
+    old = Configuration.get_persistent_var('lang_hash', '')
+    if old == new:
+        return
+
+    Configuration.set_persistent_var('lang_hash', new)
+
+    message = await tranlator_log('REFRESH', 'Uploading translation file')
     t = threading.Thread(target=upload_file)
     t.start()
     while t.is_alive():
         await asyncio.sleep(1)
     await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Translations file has been uploaded")
+    await update()
 
 def upload_file():
     data = {'files[master/lang/en_US.json]': open('lang/en_US.json', 'r')}
     crowdin_data = Configuration.get_master_var("CROWDIN")
     requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
+
+async def tranlator_log(emoji, message):
+    crowdin = Configuration.get_master_var("CROWDIN")
+    channel = BOT.get_channel(crowdin["CHANNEL"]) if crowdin is not None else None
+    m = f'{Emoji.get_chat_emoji(emoji)} {message}'
+    if channel is not None:
+        return await channel.send(m)
+    else:
+        return await GearbotLogging.bot_log(m)

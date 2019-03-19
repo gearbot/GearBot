@@ -4,7 +4,6 @@ import platform
 import re
 
 import discord
-from discord.ext.commands import GroupMixin
 
 from Util import Configuration, Utils, Pages, GearbotLogging, Emoji, Permissioncheckers, Translator
 
@@ -21,7 +20,7 @@ async def update_docs(ctx):
 async def sync_guides(bot):
     category = bot.get_channel(Configuration.get_master_var("GUIDES"))
     if category is not None:
-        guide_hashes = Utils.fetch_from_disk("guide_hashes")
+        guide_hashes = Configuration.get_persistent_var("guide_hashes", {})
         for channel in category.channels:
             if isinstance(channel, discord.TextChannel):
                 name = channel.name
@@ -48,7 +47,7 @@ async def sync_guides(bot):
                             await send_buffer(channel, buffer)
             else:
                 GearbotLogging.info(f"Found guide channel {name} but file for it!")
-        Utils.saveToDisk("guide_hashes", guide_hashes)
+        Configuration.set_persistent_var("guide_hashes", guide_hashes)
 
 async def send_buffer(channel, buffer):
     pages = Pages.paginate(buffer, max_lines=500)
@@ -69,27 +68,24 @@ async def update_site(bot):
         await log_message.edit(content=message)
 
 def generate_command_list(bot):
-    excluded = [
-        "Admin", "BCVersionChecker", "Censor", "ModLog", "PageHandler", "Reload", "DMMessages", "DashLink", "AntiRaid"
-    ]
     page = ""
     handled = set()
     for cog in sorted(bot.cogs):
-        if cog not in excluded:
-            cogo = bot.get_cog(cog)
+        cogo = bot.get_cog(cog)
+        if cogo.permissions is not None:
             perm_lvl = cogo.permissions["required"]
             page += f"# {cog}\nDefault permission requirement: {Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})\n\n|   Command | Default lvl | Explanation |\n| ----------------|--------|-------------------------------------------------------|\n"
-            for command in sorted(bot.get_cog_commands(cog), key= lambda c:c.qualified_name):
+            for command in sorted([c for c in cogo.walk_commands()], key= lambda c:c.qualified_name):
                 if command.qualified_name not in handled:
-                    page += gen_command_listing(command)
+                    page += gen_command_listing(cogo, command)
                     handled.add(command.qualified_name)
             page += "\n\n"
     with open("web/src/docs/commands.md", "w", encoding="utf-8") as file:
         file.write(page)
 
-def gen_command_listing(command):
+def gen_command_listing(cog, command):
     try:
-        perm_lvl = Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), command.instance.permissions)['required']
+        perm_lvl = Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), cog.permissions)['required']
         listing = f"| | | {Translator.translate(command.short_doc, None)} |\n"
         listing += f"|{command.qualified_name}|{Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})| |\n"
         signature = str(command.signature).replace("|", "ǀ")
@@ -97,11 +93,4 @@ def gen_command_listing(command):
     except Exception as ex:
         GearbotLogging.error(command.qualified_name)
         raise ex
-    else:
-        if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
-            handled = set()
-            for c in command.all_commands.values():
-                if c.qualified_name not in handled:
-                    listing += gen_command_listing(c)
-                    handled.add(c.qualified_name)
-        return listing
+    return listing

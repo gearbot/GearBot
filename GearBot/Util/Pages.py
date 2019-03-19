@@ -1,21 +1,15 @@
 import discord
+from discord import NotFound, Forbidden
 
-from Util import Utils, Emoji, Translator
+from Util import Emoji, ReactionManager, MessageUtils
 
 page_handlers = dict()
 
-known_messages = dict()
 
-
-def initialize(bot):
-    load_from_disc()
-
-
-def register(type, init, update, sender_only=False):
+def register(type, init, update):
     page_handlers[type] = {
         "init": init,
         "update": update,
-        "sender_only": sender_only
     }
 
 
@@ -24,49 +18,36 @@ def unregister(type_handler):
         del page_handlers[type_handler]
 
 
-async def create_new(type, ctx, **kwargs):
-    text, embed, has_pages, emoji = await page_handlers[type]["init"](ctx, **kwargs)
+async def create_new(bot, type, ctx, **kwargs):
+    text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
     message: discord.Message = await ctx.channel.send(text, embed=embed)
-    if has_pages or len(emoji) > 0:
-        data = {
-            "type": type,
-            "page": 0,
-            "trigger": ctx.message.id,
-            "sender": ctx.author.id
-        }
-        for k, v in kwargs.items():
-            data[k] = v
-        known_messages[str(message.id)] = data
+    if has_pages:
+        await ReactionManager.register(bot, message.id, message.channel.id, "paged", subtype=type, **kwargs)
         try:
             if has_pages: await message.add_reaction(Emoji.get_emoji('LEFT'))
-            for e in emoji: await message.add_reaction(e)
             if has_pages: await message.add_reaction(Emoji.get_emoji('RIGHT'))
         except discord.Forbidden:
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('paginator_missing_perms', ctx, prev=Emoji.get_chat_emoji('LEFT'), next=Emoji.get_chat_emoji('RIGHT'))} {Emoji.get_chat_emoji('WARNING')}")
-
-    if len(known_messages.keys()) > 500:
-        del known_messages[list(known_messages.keys())[0]]
-
-    save_to_disc()
+            await MessageUtils.send_to(ctx, 'WARNING', 'paginator_missing_perms', prev=Emoji.get_chat_emoji('LEFT'),
+                                       next=Emoji.get_chat_emoji('RIGHT'))
 
 
-async def update(bot, message, action, user):
-    message_id = str(message.id)
-    type = known_messages[message_id]["type"]
-    if type in page_handlers.keys():
-        data = known_messages[message_id]
-        if data["sender"] == user or page_handlers[type]["sender_only"] is False:
-            page_num = data["page"]
-            try:
-                trigger_message = await message.channel.get_message(data["trigger"])
-            except discord.NotFound:
-                trigger_message = None
-            ctx = await bot.get_context(trigger_message) if trigger_message is not None else None
-            text, embed, page = await page_handlers[type]["update"](ctx, message, page_num, action, data)
+async def update(bot, message, action, user, **kwargs):
+    subtype = kwargs.get("subtype", "")
+    if subtype in page_handlers.keys():
+        if "sender" not in kwargs or int(user) == int(kwargs["sender"]):
+            page_num = kwargs.get("page", 0)
+            ctx = None
+            if "trigger" in kwargs:
+                try:
+                    trigger_message = await message.channel.get_message(kwargs["trigger"])
+                    ctx = await bot.get_context(trigger_message)
+                except (NotFound, Forbidden):
+                    pass
+            text, embed, info = await page_handlers[subtype]["update"](ctx, message, int(page_num), action, kwargs)
             await message.edit(content=text, embed=embed)
-            known_messages[message_id]["page"] = page
-            save_to_disc()
+            return info
+        return
+
 
 def basic_pages(pages, page_num, action):
     if action == "PREV":
@@ -132,7 +113,7 @@ def paginate_fields(input):
             else:
                 for i in range(len(parts)):
                     part = parts[i]
-                    name = f"{base_name} ({i+1}/{len(parts)})"
+                    name = f"{base_name} ({i + 1}/{len(parts)})"
                     if page_count + len(name) + len(part) > 3000:
                         real_pages.append(page_fields)
                         page_fields = dict()
@@ -141,12 +122,3 @@ def paginate_fields(input):
                     page_count += len(name) + len(part)
         real_pages.append(page_fields)
     return real_pages
-
-
-def save_to_disc():
-    Utils.saveToDisk("known_messages", known_messages)
-
-
-def load_from_disc():
-    global known_messages
-    known_messages = Utils.fetch_from_disk("known_messages")

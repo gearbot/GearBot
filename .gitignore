@@ -6,8 +6,6 @@ venv/
 site/
 .idea/
 .gradle/
-
-docs/commands.md
 logs/
 *.json
 
