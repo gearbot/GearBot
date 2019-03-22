@@ -57,6 +57,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
                     except Forbidden:
                         if message.channel.permissions_for(message.channel.guild.me).send_messages:
                             await MessageUtils.send_to(message.channel, "NO", "mute_role_to_high")
+                            return kwargs
                     else:
                         if message.channel.permissions_for(message.channel.guild.me).send_messages:
                             await MessageUtils.send_to(message.channel, "YES", "role_joined" if add_role else "role_left", role_name=await Utils.clean(role.name), delete_after=10)

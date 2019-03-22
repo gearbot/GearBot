@@ -1,10 +1,10 @@
+import re
 from datetime import datetime
 
 from peewee import fn
 
 from Bot import GearBot
 from Util import Pages, Utils, Translator, GearbotLogging, Emoji, ReactionManager
-from Util.Matchers import ID_MATCHER
 from database.DatabaseConnector import Infraction
 
 bot:GearBot = None
@@ -47,18 +47,22 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
         else:
             types[t] += 1
     header = ", ".join(Translator.translate(f"{k}s", guild_id, count=v) for k, v in types.items())
-    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{inf.user_id}> | <@{inf.mod_id}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1550)}" for inf in infs)
-    pages = Pages.paginate(out, max_chars=(1400 - len(header)))
-    placeholder = Translator.translate("inf_search_compiling", guild_id)
+    name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
+    title = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', guild_id, name=name, page_num=100, pages=100)}\n```md\n\n```"
+    page_header = get_header(longest_id, 37, longest_type, longest_timestamp, guild_id)
+    mcount = 2000 - len(header) - len(page_header) - len(title)
+    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
+    pages = Pages.paginate(out, max_chars=mcount)
     if bot.redis_pool is not None:
         GearbotLogging.info(f"Pushing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
         for page in pages:
-            pipe.lpush(key, placeholder)
+            pipe.lpush(key, "---NO PAGE YET---")
         await pipe.execute()
     bot.loop.create_task(update_pages(guild_id, query, fields, amount, pages, requested, longest_id, longest_type, longest_timestamp, header))
     return len(pages)
 
+ID_MATCHER = re.compile("<@!?([0-9]+\s*)>")
 
 async def update_pages(guild_id, query, fields, amount, pages, start, longest_id, longest_type, longest_timestamp, header):
     key = get_key(guild_id, query, fields, amount)
@@ -83,10 +87,10 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
         page = pages[number]
         found = set(ID_MATCHER.findall(page))
         for uid in found:
-            name = await Utils.username(int(uid), clean=False)
+            name = await Utils.username(int(uid.strip()), clean=False)
             longest_name = max(longest_name, len(name))
         for uid in found:
-            name = Utils.pad(await Utils.username(int(uid), clean=False), longest_name)
+            name = Utils.pad(await Utils.username(int(uid.strip()), clean=False), longest_name)
             page = page.replace(f"<@{uid}>", name).replace(f"<@!{uid}>", name)
         page = f"{header}```md\n{get_header(longest_id, longest_name, longest_type, longest_timestamp, guild_id)}\n{page}```"
         GearbotLogging.info(f"Finished assembling page {number} for key {key}")
