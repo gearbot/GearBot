@@ -63,14 +63,14 @@ export default class Docs extends Component<Docprops, DocState> {
 			let value = menu[prop];
 			if (typeof value == "string") {
 				navmenu.push(<li class="navItem"><Link activeClassName={"active"}
-				                                       href={"/docs/" + value.replace(" ", "_")}>{prop}</Link>
+				    href={"/docs/" + value.replace(" ", "_")}>{prop}</Link>
 				</li>)
 			} else {
 				let items = [];
 				for (let prop2 in value) {
 					let value2 = value[prop2];
 					items.push(<li class="navItem"><Link activeClassName={"active"}
-					                                     href={"/docs/" + value2}>{prop2}</Link></li>)
+					    href={"/docs/" + value2}>{prop2}</Link></li>)
 				}
 
 				navmenu.push(<li class="navItem"><div>{prop}</div></li>);

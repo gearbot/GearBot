@@ -5,6 +5,8 @@ node_modules
 /*.log
 *.lock
 
+.vscode/
+
 !*.json
 package-lock.json
 
