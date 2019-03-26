@@ -47,6 +47,10 @@ export interface BotInfoPageState extends BotStats {
 	initalLoadDone: boolean;
 }
 
+export interface DashboardState {
+	currentComponent: JSX.Element;
+}
+
 export interface AuthObject {
 	client_id: string;
 	timestamp: string;

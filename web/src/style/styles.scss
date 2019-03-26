@@ -243,7 +243,10 @@ html, body, .container {
 			text-align: left;
 		}
 	}
-	
+
+	.dashboardSideNav {
+		@extend .docsNav
+	}
 	
 	.gearFooter {
 		position: fixed;
@@ -253,12 +256,6 @@ html, body, .container {
 		opacity: 0.6;
 	}
 	
-	.dash-content {
-		position: absolute;
-		left: 150px;
-		top: 80px;
-	}
-
 	#statsLoading {
 		position: absolute;
 		left: 45%;
