@@ -7,6 +7,8 @@ import {GuildNavProps} from "./props";
 import {GuildListNavState, AuthObject} from "./state";
 import {GuildListObject} from "./state";
 
+import GuildPage from "./guildpage";
+
 import Gear from "./gear";
 
 import config from "../config";
@@ -49,7 +51,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 			// TODO: Some stuff here
 		});
 
-		this.guildSocket.on("connect", () => {
+		this.guildSocket.once("connect", () => {
 			console.log(this.LocalAuthObject)
 			this.guildSocket.emit("get", {
 				"client_id": this.LocalAuthObject.client_id,
@@ -85,7 +87,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 				console.log(info.name + " Auth Status: " + info.authorized)
 				selections.push(
 					<div class="guildSelection" style={info.authorized == true ? "": "opacity: 0.5"}>
-						<Link href={"/dashboard/" + guild} activeClassName={"active"}>
+						<Link href={"/dashboard/guild/" + guild} activeClassName={"active"}>
 							<Gear size={250} image={info.icon}/>
 							<p>{info.name}</p>
 						</Link>

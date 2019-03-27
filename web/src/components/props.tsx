@@ -26,4 +26,6 @@ export interface DashboardProps extends Socketed {}
 
 export interface GuildNavProps extends Socketed {}
 
+export interface GuildPageProps extends Socketed {}
+
 export interface BotInfoPageProps extends Socketed {}

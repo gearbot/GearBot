@@ -3,8 +3,8 @@ import {Component, h} from "preact";
 import * as io from "socket.io-client";
 
 import config from "../config";
-import {BotInfoPageProps} from "../components/props";
-import {BotInfoPageState, AuthObject, BotStats} from "../components/state";
+import {BotInfoPageProps} from "./props";
+import {BotInfoPageState, AuthObject, BotStats} from "./state";
 
 export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageState> {
     statsSocket: SocketIOClient.Socket;
@@ -22,7 +22,7 @@ export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageSta
 			timestamp: window.localStorage.getItem("auth_timestamp")
         }
         
-        this.statsSocket.on("connect", () => {
+        this.statsSocket.once("connect", () => {
 			console.log(this.localAuthObject)
 			this.statsSocket.emit("get", {
 				"client_id": this.localAuthObject.client_id,
@@ -30,7 +30,9 @@ export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageSta
 				"auth_timestamp": this.localAuthObject.timestamp
 			})
 			console.log("Connected to the bot statistics socket!");
-			
+			this.setState({
+                socketConnected: true
+            });
         });
         
         this.statsSocket.on("api_response", (stats) => {
@@ -46,11 +48,20 @@ export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageSta
                 initalLoadDone: true
             });  
         });
+
+        this.statsSocket.on("disconnect", () => {
+            console.log("Lost connection to the WebSocket!")
+            this.setState({
+                socketConnected: false
+            });
+        });
     };
 
     render() {
         if (!this.state.initalLoadDone) {
-			return (<h1 id="statsLoading">Loading bot stats...</h1>)
+            return (<h1 id="statsLoading">Loading bot stats...</h1>)
+        } else if (!this.state.socketConnected) {
+            return (<h1 id="statsLoading">Failed to connect to the WebSocket!</h1>)
 		} else { return (
             <div class="botInfoPage">
                 <h2>Gearbot Information</h2>

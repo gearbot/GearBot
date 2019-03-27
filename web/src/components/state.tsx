@@ -45,6 +45,7 @@ export interface BotStats {
 
 export interface BotInfoPageState extends BotStats {
 	initalLoadDone: boolean;
+	socketConnected: boolean; // Look into adding this to all socket using pages
 }
 
 export interface DashboardState {
