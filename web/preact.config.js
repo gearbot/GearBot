@@ -1,4 +1,5 @@
 import {resolve} from "path";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
 export default function (config, env, helpers) {
     const entry = resolve(
@@ -14,16 +15,24 @@ export default function (config, env, helpers) {
         config.entry["ssr-bundle"] = entry;
     }
 
-    // typescript plugin
+    // TypeScript plugin
     config.module.rules.unshift({
         enforce: 'pre',
         test: /\.tsx?$/,
-        loader: 'awesome-typescript-loader',
+        loader: 'ts-loader',
         options: {
-            useBabel: false,
-            useCache: true
+            transpileOnly: true
         }
     });
+
+    config.plugins.push(
+        new ForkTsCheckerWebpackPlugin({
+            tslint: false, 
+            useTypescriptIncrementalApi: true,
+            tsconfig: "../tsconfig.json"
+        })
+    )
+
     if (config.devServer)
         config.devServer.headers = {
             "Access-Control-Allow-Origin": "*",
