@@ -10,7 +10,6 @@ export interface DashboardState {
 export interface HeaderState {}
 
 export interface GuildPageState {
-	initalLoadDone: boolean
 	guildPageStats: GuildPageStats
 }
 

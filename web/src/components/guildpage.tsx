@@ -1,8 +1,8 @@
-import {h, Component} from "preact";
+import {Component, h} from "preact";
 import * as io from "socket.io-client";
 
 import {GuildPageProps} from "./props";
-import {GuildPageState, GuildPageStats, AuthObject} from "./state";
+import {AuthObject, GuildPageState, GuildPageStats} from "./state";
 import config from "../config";
 
 export default class GuildPage extends Component<GuildPageProps, GuildPageState> {
@@ -32,7 +32,7 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
         });
         
         this.guildInfoSocket.on("api_response", (recvStats: GuildPageStats) => {
-            console.log(recvStats)
+            console.log(recvStats);
             this.setState({
                 guildPageStats: recvStats
             });
@@ -40,16 +40,14 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
             // This is currently broken. For some reason the state part is undefined, causing the page to never load.
             // The data comes through the socket though as recvStats just fine :/
         });
-
-        this.setState({
-            initalLoadDone: true
-        });
     }
 
     render() {
-        if (!this.state.initalLoadDone) {
+        if (!this.state.guildPageStats) {
             return (<h1 id="statsLoading">Loading guild information...</h1>)
-		} else { return (
+		} else {
+            console.log("test: " + this.state.guildPageStats);
+            return (
             <div class="guildPage">
                 <h2>{this.state.guildPageStats.name} + Information</h2>
                 <h3>Guild ID: {this.state.guildPageStats.id}</h3>
