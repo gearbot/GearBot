@@ -7,8 +7,11 @@ export interface DashboardState {
 	currentUrl: string;
 }
 
-export interface HeaderState {
+export interface HeaderState {}
 
+export interface GuildPageState {
+	initalLoadDone: boolean
+	guildPageStats: GuildPageStats
 }
 
 export interface GuildListNavState {
@@ -20,6 +23,27 @@ export interface GuildListObject {
 	name: string;
 	icon: string;
 	authorized: boolean;
+}
+
+export interface GuildPageStats {
+	name: string;
+	owner: string;
+	id: number;
+	memberCount: number;
+	textChannels: number;
+	voiceChannels: number;
+	totalChannels: number;
+	creationDate: string; // This will be a server-side formatted string
+	vipFeatures: boolean; // Add actual parts later, for now just a does have or doesn't check
+	serverIcon: string;
+	roles: []
+	serverEmoteCount: number;
+	memberStatuses: {
+		online: number
+		idle: number;
+		dnd: number;
+		offline: number;
+	} 
 }
 
 export interface DocState {

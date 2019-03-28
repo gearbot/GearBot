@@ -57,6 +57,11 @@ export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageSta
         });
     };
 
+    componentWillUnmount() {
+        this.statsSocket.close()
+        console.log("Closed bot info socket!")
+    }
+
     render() {
         if (!this.state.initalLoadDone) {
             return (<h1 id="statsLoading">Loading bot stats...</h1>)

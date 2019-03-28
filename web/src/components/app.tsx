@@ -9,6 +9,7 @@ import Header from "./header";
 import Home from "../routes/home";
 import Dashboard from "../routes/dashboard";
 import Docs from "../routes/docs";
+import GuildPage from "../components/guildpage";
 
 import {DashboardState, InitalAuthObject} from "./state";
 import Gear from "./gear";
@@ -73,6 +74,8 @@ export default class App extends Component<{}, DashboardState> {
 					<Dashboard SocketAuthObject={this.mainAuthObject} path="/dashboard"/>
 					<Docs path="/docs/" doc="index"/>
 					<Docs path="/docs/:folder?/:doc?"/>
+					
+					<GuildPage SocketAuthObject={this.mainAuthObject} path="/dashboard/guild/:id?"/>
 
 					<Error404 default/>
 				</Router>

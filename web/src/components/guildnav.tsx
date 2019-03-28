@@ -7,8 +7,6 @@ import {GuildNavProps} from "./props";
 import {GuildListNavState, AuthObject} from "./state";
 import {GuildListObject} from "./state";
 
-import GuildPage from "./guildpage";
-
 import Gear from "./gear";
 
 import config from "../config";
@@ -18,7 +16,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 	guildSocket: SocketIOClient.Socket;
 	generalSocket: SocketIOClient.Socket;
 
-	LocalAuthObject: AuthObject;
+	localAuthObject: AuthObject;
 
 	componentDidMount() {
 		this.setState({
@@ -39,7 +37,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 		technically it doesnt render again? Not sure but this fixes it.
 		*/
 		window.localStorage.setItem("user_auth_token", getCookie("userauthtoken")) // Can't be set on the homepage
-		this.LocalAuthObject = {
+		this.localAuthObject = {
 			client_id: window.localStorage.getItem("client_id"),
 			client_token: window.localStorage.getItem("client_token"),
 			timestamp: window.localStorage.getItem("auth_timestamp"),
@@ -52,12 +50,12 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 		});
 
 		this.guildSocket.once("connect", () => {
-			console.log(this.LocalAuthObject)
+			console.log(this.localAuthObject)
 			this.guildSocket.emit("get", {
-				"client_id": this.LocalAuthObject.client_id,
-				"client_token": this.LocalAuthObject.client_token,
-				"auth_timestamp": this.LocalAuthObject.timestamp,
-				"user_auth_token": this.LocalAuthObject.user_auth_token
+				"client_id": this.localAuthObject.client_id,
+				"client_token": this.localAuthObject.client_token,
+				"auth_timestamp": this.localAuthObject.timestamp,
+				"user_auth_token": this.localAuthObject.user_auth_token
 			})
 			console.log("Connected to the API's guild data socket!");
 			
@@ -72,7 +70,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 	}
 
 	componentWillUnmount() {
-		console.log("Closing dashboard sockets!") // Keeping tidy with our sockets
+		console.log("Closing guild dashboard sockets!") // Keeping tidy with our sockets
 		this.guildSocket.close()
 		this.generalSocket.close()
 	}

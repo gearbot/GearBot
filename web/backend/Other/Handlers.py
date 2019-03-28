@@ -152,8 +152,10 @@ class APIMain(SocketNamespace):
 
 # WebSocket Namespaces
 from routes.api.guilds import Guilds
+from routes.api.guildpage import GuildPage
 from routes.api.botstats import BotStats
 
 sio.register_namespace(APIMain("/api/"))
 sio.register_namespace(Guilds("/api/guilds"))
+sio.register_namespace(GuildPage("/api/guildpage"))
 sio.register_namespace(BotStats("/api/botstats"))

@@ -335,6 +335,10 @@ html, body, .container {
 			height: 50px;
 		}
 	}
+
+	.guildPage {
+		@extend .botInfoPage
+	}
 	
 	.guild-nav {
 		position: relative;
