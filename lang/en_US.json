@@ -624,5 +624,6 @@
   "attachment_item": "**Attachment #{num}**: {attachment}",
   "attachment_single": "**Attachment**: {attachment}",
 	"raid_terminate_no_raid": "Wait there was a raid going on? Nobody informed me of that!",
-  "invite_censor_forbidden": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems I am missing permission to remove the message\n```{message}```"
+  "invite_censor_forbidden": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems I am missing permission to remove the message\n```{message}```",
+  "inf_unmute": "{mod} unmuted {user}"
 }
