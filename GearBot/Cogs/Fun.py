@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging
+from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, GearbotLogging, Converters, MessageUtils
 
 class GameStats(BaseCog):
 
@@ -20,34 +20,24 @@ class GameStats(BaseCog):
             "required": 0,
             "commands": {}
         })
-        self.session = aiohttp.ClientSession(loop=bot.loop)
+        if Configuration.get_master_var("APEX_KEY", "0") is "0":
+            bot.unload_extension("Cogs." + "Fun")
 
     @commands.command()
-    async def apexstats(self, ctx, platform, *, username):
+    async def apexstats(self, ctx, platform: Converters.ApexPlatform, *, username):
         """about_apexstats"""
-        if platform is None:
-            apexplatform = "5"
-        elif platform == "pc":
-            apexplatform = "5"
-        elif platform == "psn":
-            apexplatform = "2"
-        elif platform == "xbox":
-            apexplatform = "1"
-        else:
-            await ctx.send(Translator.translate('apexstats_invalid_platform', ctx))
-            return
-        url = "https://public-api.tracker.gg/apex/v1/standard/profile/" + apexplatform + "/" + (username)
+        url = "https://public-api.tracker.gg/apex/v1/standard/profile/" + platform + "/" + (username)
         if not Configuration.get_master_var("APEX_KEY", "0") is "0":
             headers = {"TRN-Api-Key": Configuration.get_master_var("APEX_KEY")}
         else:
             await ctx.send("There is no API key provided by the Administrator of this GearBot stats.")
             return
-        async with self.session.get(url, headers=headers) as resp:
+        async with self.bot.aiosession.get(url, headers=headers) as resp:
             if resp.status == 404:
-                await ctx.send(Translator.translate('apexstats_user_not_found', ctx))
+                await MessageUtils.send_to(ctx, "NO", "apexstats_user_not_found")
                 return
             elif not resp.status == 200:
-                await ctx.send(Translator.translate('apexstats_api_error', ctx))
+                await MessageUtils.send_to(ctx, "NO", "apexstats_api_error")
                 return
             else:
                 responsejson = await resp.json()

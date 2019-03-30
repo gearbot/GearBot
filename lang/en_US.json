@@ -626,7 +626,7 @@
 	"raid_terminate_no_raid": "Wait there was a raid going on? Nobody informed me of that!",
 	"raid_terminate_terminated": "",
   "about_apexstats": "Get stats from a player in Apex Legends.",
-  "apexstats_invalid_platform": "Its not possible for me to retrive stats from that platfom yet. I'm however able to get a players stats on the following platforms: ``pc``, ``psn`` and ``xbox``.",
+  "apexstats_invalid_platform": "Its not possible for me to retrive stats from that platfom yet. I'm however able to get a players stats on the following platforms: pc, psn and xbox.",
   "apexstats_user_not_found": "A user with that name could not be found on the specified platform.",
   "apexstats_api_error": "I was unable to retrive stats from that player. It's possible that the API provider might be having issues. If you keep getting this error please join the Support Server and let us know.",
   "apexstats_key_Level": "Level",
