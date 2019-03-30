@@ -337,7 +337,30 @@ html, body, .container {
 	}
 
 	.guildPage {
-		@extend .botInfoPage
+		position: absolute;
+		text-align: center;
+		color: $gearbotYellow;
+		
+		top: 80px;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		
+		.statsTable {
+			color: black;
+			margin: 0 auto;
+			font-size: 16pt;
+
+			tr, td { 
+				outline: thin solid green;
+			}
+			 			
+
+			border-collapse:separate; 
+			border-spacing: 30px;
+			border-style: solid;
+			border-color: red;
+		}
 	}
 	
 	.guild-nav {

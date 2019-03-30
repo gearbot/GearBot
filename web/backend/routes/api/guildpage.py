@@ -11,12 +11,19 @@ class GuildPage(SocketNamespace):
     
     async def on_get(self, sid, data):
         verified_status = await self.verify_client(data)
+        if verified_status != 403:
+            if verified_status == False:
+                await self.emit("api_response", data = {"status": 400} )
+                return
+        else:
+            await self.emit("api_response", data = {"status": 403} )
+            return
 
         guildPageData = {
             "name": "The Gearbox",
             "owner": "AEnterprise#4693",
             "id": 365498559174410241,
-            "members": 127,
+            "memberCount": 127,
             "textChannels": 22,
             "voiceChannels": 1,
             "totalChannels": 23,
@@ -28,7 +35,7 @@ class GuildPage(SocketNamespace):
                 "Gear Creators",
                 "Amazing Gears"
             ],
-            "serverEmojiCount": 51,
+            "serverEmoteCount": 51,
             "memberStatuses": {
                 "online": 11,
                 "idle": 10,
@@ -36,9 +43,7 @@ class GuildPage(SocketNamespace):
                 "offline": 96
             }
         }
-
+        await self.get_client_info(data)
         await self.emit("api_response",
-            # Format is [uptime(s), commandCount, messageCount, guildCount, 
-            # errorCount, totalUserCount, uniqueUserCount, tacoTime]
             data = guildPageData
         )

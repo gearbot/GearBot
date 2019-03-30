@@ -71,16 +71,16 @@ export default class InfoPage extends Component<BotInfoPageProps, BotInfoPageSta
             <div class="botInfoPage">
                 <h2>Gearbot Information</h2>
                 <table class="statsTable">
-                    <td>
-                        <tr>Uptime: {this.state.uptimeCount}</tr>
-                        <tr>Messages Received: {this.state.messageCount}</tr>
-                        <tr>Errors Encountered: {this.state.errorCount}</tr>
-                    </td>
-                    <td>
-                        <tr>Commands Executed: {this.state.commandCount}</tr>
-                        <tr>Guild Count: {this.state.guildCount}</tr>
-                        <tr>User Count: {this.state.userCount} ({this.state.uniqueUserCount} were unique!)</tr>
-                    </td>
+                    <tr>
+                        <td>Uptime: {this.state.uptimeCount}</td>
+                        <td>Messages Received: {this.state.messageCount}</td>
+                        <td>Errors Encountered: {this.state.errorCount}</td>
+                    </tr>
+                    <tr>
+                        <td>Commands Executed: {this.state.commandCount}</td>
+                        <td>Guild Count: {this.state.guildCount}</td>
+                        <td>User Count: {this.state.userCount} ({this.state.uniqueUserCount} were unique!)</td>
+                    </tr>
                     <tr id="tacoTime">Taco Time! : {this.state.tacoTime} could of been eaten by the users in this time!</tr>
                 </table>
             </div>

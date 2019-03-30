@@ -36,9 +36,6 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
             this.setState({
                 guildPageStats: recvStats
             });
-            console.log("Why: " + this.state.guildPageStats);
-            // This is currently broken. For some reason the state part is undefined, causing the page to never load.
-            // The data comes through the socket though as recvStats just fine :/
         });
     }
 
@@ -46,29 +43,39 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
         if (!this.state.guildPageStats) {
             return (<h1 id="statsLoading">Loading guild information...</h1>)
 		} else {
-            console.log("test: " + this.state.guildPageStats);
-            return (
+            const statuses = this.state.guildPageStats.memberStatuses
+            const vipFeatures = this.state.guildPageStats.vipFeatures
+            return ( // This loads and then crashes with a error in the browser console.
             <div class="guildPage">
-                <h2>{this.state.guildPageStats.name} + Information</h2>
+                <h2>{this.state.guildPageStats.name} Information</h2>
                 <h3>Guild ID: {this.state.guildPageStats.id}</h3>
                 <table class="statsTable">
-                    <td>
-                        <tr>Owner: {this.state.guildPageStats.owner}</tr>
-                        <tr>Members: {this.state.guildPageStats.memberCount}</tr>
-                        <tr>Member Statuses: {this.state.guildPageStats.memberStatuses}</tr>
-                    </td>
-                    <td>
-                        <tr>Text Channels: {this.state.guildPageStats.textChannels}</tr>
-                        <tr>Voice Channels: {this.state.guildPageStats.voiceChannels}</tr>
-                        <tr>Total Channels: {this.state.guildPageStats.totalChannels}</tr>
-                    </td>
-                    <td>
-                        <tr>VIP Features: {this.state.guildPageStats.vipFeatures}</tr>
-                        <tr>Creation Date: {this.state.guildPageStats.creationDate}</tr>
-                        <tr>Server Icon URL: {this.state.guildPageStats.serverIcon}</tr>
-                        <tr>Server Emote Count: {this.state.guildPageStats.serverEmoteCount}</tr>
+                    <tr>
+                        <td>Owner: {this.state.guildPageStats.owner}</td>
+                        {console.log(this.state.guildPageStats.vipFeatures)}
+                        <td>Members: {this.state.guildPageStats.memberCount}</td>
+                    </tr>
+                    <tr>
+                        Member Statuses:
+                        <tr id="statusTable">
+                            <td>Online: {statuses.online}</td>
+                            <td>Idle: {statuses.idle}</td>
+                            <td>DnD: {statuses.dnd}</td>
+                            <td>Offline: {statuses.dnd}</td>
+                        </tr>
+                    </tr>
+                    <tr>
+                        <td>Text Channels: {this.state.guildPageStats.textChannels}</td>
+                        <td>Voice Channels: {this.state.guildPageStats.voiceChannels}</td>
+                        <td>Total Channels: {this.state.guildPageStats.totalChannels}</td>
+                    </tr>
+                    <tr>
+                        <td>VIP Features: {vipFeatures ? "True" : "False"}</td>
+                        <td>Creation Date: {this.state.guildPageStats.creationDate}</td>
+                        <td>Server Icon URL: {this.state.guildPageStats.serverIcon}</td>
+                        <td>Server Emote Count: {this.state.guildPageStats.serverEmoteCount}</td>
                         
-                    </td>
+                    </tr>
                     <tr>Roles: {this.state.guildPageStats.roles}</tr>
                 </table>
             </div>

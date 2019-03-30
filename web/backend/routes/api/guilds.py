@@ -13,6 +13,14 @@ class Guilds(SocketNamespace):
     async def on_get(self, sid, data):
         # Temporary until guilds work
         verified_status = await self.verify_client(data)
+        if verified_status != 403:
+            if verified_status == False:
+                await self.emit("api_response", data = {"status": 400} )
+                return
+        else:
+            await self.emit("api_response", data = {"status": 403} )
+            return
+
         await self.emit("api_response", 
             data = {
                 "365498559174410241": {

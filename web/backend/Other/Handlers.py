@@ -88,7 +88,7 @@ class SocketNamespace(AsyncNamespace):
         signed_data = hmac.digest(self.HMAC_KEY, data, blake2b)
         return signed_data
 
-    async def verify_client(self, userAuth): # TODO: Persistant HMAC Key in Redis
+    async def verify_client(self, userAuth): # Note: This confirms a users *identity*, **NOT** their permissions
         redisKeyDB = await redisSecConnection()
         client_auth_entry = await redisKeyDB.hgetall(userAuth["client_id"])
         if client_auth_entry != {}:
@@ -97,14 +97,19 @@ class SocketNamespace(AsyncNamespace):
 
             client_expected_id =  await self.encode_key(client_auth_entry["plain_id"])
             id_signature_match = hmac.compare_digest(userAuth["client_id"], client_expected_id)
- 
+
+            redisKeyDB.close()
             if id_signature_match == True and token_signature_match == True:
                 return True
             else:
                 return False
         else:
-            return {"status": 403}
-        
+            return 403
+
+    async def get_client_info(self, userAuth):
+        redisClientTeller = await redisSecConnection()
+        clientEntry = await redisClientTeller.hgetall(userAuth["client_id"])
+        print(clientEntry)
 
 class PrimaryHandler(RequestHandler):
     def get_current_user(self):
