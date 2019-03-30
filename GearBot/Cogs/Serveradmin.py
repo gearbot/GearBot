@@ -835,10 +835,10 @@ class Serveradmin(BaseCog):
 
     @staticmethod
     async def _blacklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "WORD_BLACKLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
-        return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
     @blacklist.command("add")
     async def blacklist_add(self, ctx, *, word: str):
