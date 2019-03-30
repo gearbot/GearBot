@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, Emoji
+from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, Emoji, MessageUtils
 from Util.Matchers import INVITE_MATCHER
 
 
@@ -17,11 +17,15 @@ async def censor_invite(ctx, code, server_name):
         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)}")
     except discord.NotFound:
-        if ctx.message.id in ctx.bot.data["message_deletes"]:
-            ctx.bot.data["message_deletes"].remove(ctx.message.id)
         # we failed? guess we lost the race, log anyways
         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
+    except discord.Forbidden:
+        await GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES", MessageUtils.assemble(ctx, 'WARNING', 'invite_censor_forbidden', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention))
+    finally:
+        if ctx.message.id in ctx.bot.data["message_deletes"]:
+            ctx.bot.data["message_deletes"].remove(ctx.message.id)
+
 
 
 class Censor(BaseCog):
