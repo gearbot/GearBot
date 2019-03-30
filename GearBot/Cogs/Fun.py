@@ -11,7 +11,7 @@ from discord.ext.commands import clean_content, BadArgument
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, GearbotLogging, Converters, MessageUtils
 
-class GameStats(BaseCog):
+class Fun(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot, {
@@ -50,4 +50,4 @@ class GameStats(BaseCog):
                 await ctx.send(embed=embed)
 
 def setup(bot):
-    bot.add_cog(GameStats(bot))
+    bot.add_cog(Fun(bot))
