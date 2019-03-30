@@ -173,7 +173,7 @@ class ModLog(BaseCog):
         c = self.bot.get_channel(cid)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
             return
-        message = await MessageUtils.fetch_message_data(self.bot, event.message_id)
+        message = await MessageUtils.get_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
