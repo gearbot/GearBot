@@ -49,11 +49,11 @@ class DiscordUser(Converter):
 
 class ApexPlatform(Converter):
     async def convert(self, ctx, argument):
-        if argument == "pc":
+        if argument.lower() == "pc":
             platformid = "5"
-        elif argument == "psn":
-            platformid = "2"
-        elif argument == "xbox":
+        elif argument.lower() == "psn":
+            platformid.lower() = "2"
+        elif argument.lower() == "xbox":
             platformid = "1"
         else:
             raise TranslatedBadArgument("apexstats_invalid_platform", ctx)
