@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, GearbotLogging, Converters, MessageUtils
+from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, GearbotLogging, Converters, MessageUtils, Utils
 
 class Fun(BaseCog):
 
@@ -26,6 +26,7 @@ class Fun(BaseCog):
     @commands.command()
     async def apexstats(self, ctx, platform: Converters.ApexPlatform, *, username):
         """about_apexstats"""
+        headers = {"TRN-Api-Key": Configuration.get_master_var("APEX_KEY")}
         url = "https://public-api.tracker.gg/apex/v1/standard/profile/" + platform + "/" + (username)
         async with self.bot.aiosession.get(url, headers=headers) as resp:
             if resp.status == 404:
