@@ -42,7 +42,7 @@ class Censor(BaseCog):
             permissions = channel.permissions_for(channel.guild.me)
             if permissions.read_messages and permissions.read_message_history:
                 try:
-                    message = await channel.get_message(event.message_id)
+                    message = await channel.fetch_message(event.message_id)
                 except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
                     pass
                 else:
@@ -66,7 +66,7 @@ class Censor(BaseCog):
             codes = INVITE_MATCHER.findall(content)
             for code in codes:
                 try:
-                    invite: discord.Invite = await self.bot.get_invite(code)
+                    invite: discord.Invite = await self.bot.fetch_invite(code)
                 except discord.NotFound:
                     await censor_invite(ctx, code, "INVALID INVITE")
                 except KeyError:

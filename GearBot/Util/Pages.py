@@ -39,7 +39,7 @@ async def update(bot, message, action, user, **kwargs):
             ctx = None
             if "trigger" in kwargs:
                 try:
-                    trigger_message = await message.channel.get_message(kwargs["trigger"])
+                    trigger_message = await message.channel.fetch_message(kwargs["trigger"])
                     ctx = await bot.get_context(trigger_message)
                 except (NotFound, Forbidden):
                     pass

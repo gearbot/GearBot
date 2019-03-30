@@ -1,8 +1,8 @@
 import asyncio
 import collections
-import datetime
 import time
 
+import datetime
 import discord
 from discord import AuditLogAction, Role, DMChannel, MessageType
 from discord.embeds import EmptyEmbed
@@ -105,7 +105,7 @@ class ModLog(BaseCog):
         c = self.bot.get_channel(data.channel_id)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or data.channel_id in Configuration.get_var(c.guild.id,"IGNORED_CHANNELS_OTHER"):
             return
-        message = await MessageUtils.get_message_data(self.bot, data.message_id)
+        message = await MessageUtils.fetch_message_data(self.bot, data.message_id)
         if message is not None:
             if message.channel in self.bot.being_cleaned:
                 self.bot.being_cleaned[message.channel].add(data.message_id)
@@ -173,7 +173,7 @@ class ModLog(BaseCog):
         c = self.bot.get_channel(cid)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "EDIT_LOGS")) or cid in Configuration.get_var(c.guild.id, "IGNORED_CHANNELS_OTHER"):
             return
-        message = await MessageUtils.get_message_data(self.bot, event.message_id)
+        message = await MessageUtils.fetch_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
             channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
@@ -427,7 +427,7 @@ class ModLog(BaseCog):
                 return
             message_list = dict()
             for mid in event.message_ids:
-                message = await MessageUtils.get_message_data(self.bot, mid)
+                message = await MessageUtils.fetch_message_data(self.bot, mid)
                 if message is not None:
                     message_list[mid] = message
             if len(message_list) > 0:

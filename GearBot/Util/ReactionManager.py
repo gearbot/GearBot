@@ -132,7 +132,7 @@ async def on_reaction(bot, message_id, channel_id, user_id, reaction):
             await bot.redis_pool.unlink(key)
             return
         try:
-            message = await channel.get_message(message_id)
+            message = await channel.fetch_message(message_id)
         except (NotFound, Forbidden):
             # yay for more races and weird permission setups
             await bot.redis_pool.unlink(key)

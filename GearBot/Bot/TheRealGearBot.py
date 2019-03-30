@@ -1,15 +1,15 @@
 import asyncio
 import json
 import os
-import signal
 import sys
 import time
 import traceback
-from datetime import datetime
 
 import aiohttp
 import aioredis
 import sentry_sdk
+import signal
+from datetime import datetime
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
 from discord.abc import PrivateChannel
 from discord.ext import commands
@@ -50,7 +50,7 @@ async def initialize(bot):
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
 
-        if bot.redis_pool is None or not hasattr(bot, 'redis_raid_pool'):
+        if bot.redis_pool is None:
             try:
                 socket = Configuration.get_master_var("REDIS_SOCKET", "")
                 if socket == "":
