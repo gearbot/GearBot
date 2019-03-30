@@ -38,7 +38,7 @@ class Fun(BaseCog):
             else:
                 responsejson = await resp.json()
                 embed = discord.Embed(colour=discord.Colour(0x00cea2), timestamp=datetime.utcfromtimestamp(time.time()))
-                embed.add_field(name=Translator.translate('apexstats_username', ctx), value=responsejson["data"]["metadata"]["platformUserHandle"])
+                embed.add_field(name=Translator.translate('apexstats_username', ctx), value=await Utils.clean(responsejson["data"]["metadata"]["platformUserHandle"]))
                 for stat_type in responsejson["data"]["stats"]:
                     type_key_name = stat_type["metadata"]["key"]
                     type_key_value = stat_type["displayValue"]
