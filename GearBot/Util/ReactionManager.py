@@ -15,7 +15,7 @@ async def paged(bot, message, user_id, reaction, **kwargs):
     refresh = Emoji.get_chat_emoji('REFRESH')
     r2 = "🔁"
     if str(reaction) not in [left, right, refresh, r2]:
-        return
+        return kwargs
     action = "REFRESH"
     if str(reaction) == left:
         action = "PREV"
@@ -29,7 +29,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     user = message.channel.guild.get_member(user_id)
     if user is None:
         await remove_reaction(message, reaction, await bot.fetch_user(user_id))
-        return
+        return kwargs
     bot.loop.create_task(remove_reaction(message, reaction, user))
     left = Emoji.get_chat_emoji('LEFT')
     right = Emoji.get_chat_emoji('RIGHT')
@@ -46,7 +46,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     elif str(reaction) in [refresh, r2]:
         add = False
     if not add:
-        return
+        return kwargs
     for i in range(10):
         if str(reaction) == str(Emoji.get_emoji(str(i+1))):
             roles = Configuration.get_var(message.guild.id, "SELF_ROLES")
@@ -73,6 +73,8 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     pages = Selfroles.gen_role_pages(message.channel.guild)
 
     if str(reaction) in [refresh, r2]:
+        if not message.channel.guild.me.guild_permissions.manage_messages:
+            return kwargs
         await message.clear_reactions()
         await asyncio.sleep(0.2)
     if page_num >= len(pages):
@@ -94,7 +96,7 @@ async def inf_search(bot, message, user_id, reaction, **kwargs):
     refresh = Emoji.get_chat_emoji('REFRESH')
     r2 = "🔁"
     if str(reaction) not in [left, right, refresh, r2]:
-        return
+        return kwargs
     page_num = int(kwargs.get("page_num", 0))
     if str(reaction) == left:
         page_num -= 1
