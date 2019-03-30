@@ -27,11 +27,6 @@ class Fun(BaseCog):
     async def apexstats(self, ctx, platform: Converters.ApexPlatform, *, username):
         """about_apexstats"""
         url = "https://public-api.tracker.gg/apex/v1/standard/profile/" + platform + "/" + (username)
-        if not Configuration.get_master_var("APEX_KEY", "0") is "0":
-            headers = {"TRN-Api-Key": Configuration.get_master_var("APEX_KEY")}
-        else:
-            await ctx.send("There is no API key provided by the Administrator of this GearBot stats.")
-            return
         async with self.bot.aiosession.get(url, headers=headers) as resp:
             if resp.status == 404:
                 await MessageUtils.send_to(ctx, "NO", "apexstats_user_not_found")
