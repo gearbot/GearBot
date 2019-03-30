@@ -262,7 +262,7 @@ class Serveradmin(BaseCog):
         cog = cog
         if cog in ctx.bot.cogs.keys():
             cogo = ctx.bot.cogs[cog]
-            if not hasattr(cogo, "permissions"):
+            if cogo.permissions is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
             elif perm_lvl in range(7):
                 min_lvl = cogo.permissions["min"]
