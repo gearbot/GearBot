@@ -262,7 +262,7 @@ class Serveradmin(BaseCog):
         cog = cog
         if cog in ctx.bot.cogs.keys():
             cogo = ctx.bot.cogs[cog]
-            if not hasattr(cogo, "permissions"):
+            if cogo.permissions is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
             elif perm_lvl in range(7):
                 min_lvl = cogo.permissions["min"]
@@ -328,7 +328,7 @@ class Serveradmin(BaseCog):
             elif perm_lvl in range(7):
                 perm_dict = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), cog.permissions)
                 if perm_lvl < perm_dict["min"]:
-                    lvl = cog.permissions['min']
+                    lvl = perm_dict["min"]
                     await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
                 elif perm_lvl > perm_dict["max"]:
                     lvl = cog.permissions['max']
@@ -835,10 +835,10 @@ class Serveradmin(BaseCog):
 
     @staticmethod
     async def _blacklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "WORD_BLACKLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
-        return f"**{Translator.translate(f'blacklist_list', ctx, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
     @blacklist.command("add")
     async def blacklist_add(self, ctx, *, word: str):

@@ -1,9 +1,9 @@
 import contextlib
-import io
 import textwrap
 import traceback
 
 import discord
+import io
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
@@ -144,6 +144,11 @@ class Admin(BaseCog):
                 mutuals.append(guild)
         for page in Pages.paginate("\n".join(f"{guild.id} - {guild.name}" for guild in mutuals), prefix="```py\n", suffix="```"):
             await ctx.send(page)
+
+    @commands.command()
+    async def update(self, ctx):
+        await ctx.invoke(self.bot.get_command("pull"))
+        await ctx.invoke(self.bot.get_command("hotreload"))
 
 
 

@@ -16,7 +16,7 @@ class TranslatedBadArgument(BadArgument):
 class BannedMember(Converter):
     async def convert(self, ctx, argument):
         try:
-            entity = await ctx.guild.get_ban(await DiscordUser().convert(ctx, argument))
+            entity = await ctx.guild.fetch_ban(await DiscordUser().convert(ctx, argument))
         except NotFound:
             raise TranslatedBadArgument("not_banned", ctx)
         return entity
@@ -134,7 +134,7 @@ class Message(Converter):
     async def convert(self, ctx, argument):
         async with ctx.typing():
             message_id, channel_id = self.extract_ids(ctx, argument)
-            logged, message, = await self.get_messages(ctx, message_id, channel_id)
+            logged, message, = await self.fetch_messages(ctx, message_id, channel_id)
             if message is None:
                 raise TranslatedBadArgument('unknown_message', ctx)
             if logged is None and message is not None and self.insert:
@@ -181,7 +181,7 @@ class Message(Converter):
         return message_id, channel_id
 
     @staticmethod
-    async def get_messages(ctx, message_id, channel_id):
+    async def fetch_messages(ctx, message_id, channel_id):
         message = None
         logged_message = LoggedMessage.get_or_none(messageid=message_id)
         async with ctx.typing():
@@ -191,7 +191,7 @@ class Message(Converter):
                         try:
                             permissions = channel.permissions_for(channel.guild.me)
                             if permissions.read_messages and permissions.read_message_history:
-                                message = await channel.get_message(message_id)
+                                message = await channel.fetch_message(message_id)
                                 channel_id = channel.id
                                 break
                         except (NotFound, Forbidden):
@@ -207,7 +207,7 @@ class Message(Converter):
                 try:
                     permissions = channel.permissions_for(channel.guild.me)
                     if permissions.read_messages and permissions.read_message_history:
-                        message = await channel.get_message(message_id)
+                        message = await channel.fetch_message(message_id)
                 except (NotFound, Forbidden):
                     raise TranslatedBadArgument('unknown_message', ctx)
 

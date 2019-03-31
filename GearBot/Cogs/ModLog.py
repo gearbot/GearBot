@@ -643,6 +643,8 @@ class ModLog(BaseCog):
 
     @staticmethod
     async def find_log(guild, action, matcher, check_limit=10, retry=True):
+        if guild.me is None:
+            return None
         entry = None
         if guild.me.guild_permissions.view_audit_log:
             try:

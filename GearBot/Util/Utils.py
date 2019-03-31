@@ -1,14 +1,14 @@
 import asyncio
 import json
 import os
-import subprocess
 import time
 from collections import namedtuple, OrderedDict
-from datetime import datetime
-from subprocess import Popen
 
 import discord
+import subprocess
+from datetime import datetime
 from discord import NotFound
+from subprocess import Popen
 
 from Util import GearbotLogging, Translator, Emoji
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
@@ -147,7 +147,7 @@ async def get_user(uid, fetch=True):
                 return userFormed
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     pipeline = BOT.redis_pool.pipeline()
                     pipeline.hmset_dict(f"users:{uid}",
                         name = user.name,
@@ -172,7 +172,7 @@ async def get_user(uid, fetch=True):
                 return user_cache[uid]
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     if len(user_cache) >= 10: # Limit the cache size to the most recent 10
                         user_cache.popitem()
                     user_cache[uid] = user
