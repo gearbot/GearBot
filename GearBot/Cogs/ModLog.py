@@ -1,8 +1,8 @@
 import asyncio
 import collections
+import datetime
 import time
 
-import datetime
 import discord
 from discord import AuditLogAction, Role, DMChannel, MessageType
 from discord.embeds import EmptyEmbed
@@ -427,7 +427,7 @@ class ModLog(BaseCog):
                 return
             message_list = dict()
             for mid in event.message_ids:
-                message = await MessageUtils.fetch_message_data(self.bot, mid)
+                message = await MessageUtils.get_message_data(self.bot, mid)
                 if message is not None:
                     message_list[mid] = message
             if len(message_list) > 0:
