@@ -351,6 +351,18 @@ html, body, .container {
 			margin: 0 auto;
 			font-size: 16pt;
 
+			text-align: center;
+
+			width: 80%;
+
+			td {
+				height: 50px; 
+				width: 50px;
+
+				text-align: center; 
+    			vertical-align: middle;
+			}
+
 			tr, td { 
 				outline: thin solid green;
 			}

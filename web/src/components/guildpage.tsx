@@ -43,9 +43,10 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
         if (!this.state.guildPageStats) {
             return (<h1 id="statsLoading">Loading guild information...</h1>)
 		} else {
-            const statuses = this.state.guildPageStats.memberStatuses
-            const vipFeatures = this.state.guildPageStats.vipFeatures
-            return ( // This loads and then crashes with a error in the browser console.
+            const statuses = this.state.guildPageStats.memberStatuses;
+            const vipFeatures = this.state.guildPageStats.vipFeatures;
+
+            return (
             <div class="guildPage">
                 <h2>{this.state.guildPageStats.name} Information</h2>
                 <h3>Guild ID: {this.state.guildPageStats.id}</h3>
@@ -76,7 +77,7 @@ export default class GuildPage extends Component<GuildPageProps, GuildPageState>
                         <td>Server Emote Count: {this.state.guildPageStats.serverEmoteCount}</td>
                         
                     </tr>
-                    <tr>Roles: {this.state.guildPageStats.roles}</tr>
+                    <tr>Roles: {this.state.guildPageStats.roles.join(", ")}</tr>
                 </table>
             </div>
         )}
