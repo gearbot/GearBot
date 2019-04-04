@@ -17,16 +17,20 @@ class Guilds(SocketNamespace):
         verified_status = await self.verify_client(data)
         if verified_status != 403:
             if verified_status == False:
-                await self.emit("api_response", data = {"status": 400} )
+                await self.emit(room=sid,
+                    event = "api_response", 
+                    data = {"status": 400} )
                 return
         else:
-            await self.emit("api_response", data = {"status": 403} )
+            await self.emit(room=sid, 
+                event ="api_response",
+                data = {"status": 403} )
             return
 
         await self.add_known_socket(client_id, sid)
         # Security logic goes here
 
-        await self.emit("api_response", 
+        await self.emit(room=sid, event = "api_response", 
             data = {
                 "365498559174410241": {
                     "name": "The Gearbox",

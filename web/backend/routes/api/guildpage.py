@@ -1,3 +1,5 @@
+from random import randint
+
 from Other.Handlers import SocketNamespace
 
 from Other import BackendUtils
@@ -15,10 +17,14 @@ class GuildPage(SocketNamespace):
         verified_status = await self.verify_client(data)
         if verified_status != 403:
             if verified_status == False:
-                await self.emit("api_response", data = {"status": 400} )
+                await self.emit(room=sid,
+                    event = "api_response", 
+                    data = {"status": 400} )
                 return
         else:
-            await self.emit("api_response", data = {"status": 403} )
+            await self.emit(room=sid, 
+                event ="api_response",
+                data = {"status": 403} )
             return
 
         await self.add_known_socket(client_id, sid)
@@ -27,7 +33,7 @@ class GuildPage(SocketNamespace):
             "name": "The Gearbox",
             "owner": "AEnterprise#4693",
             "id": 365498559174410241,
-            "memberCount": 127,
+            "memberCount": randint(1, 10000),
             "textChannels": 22,
             "voiceChannels": 1,
             "totalChannels": 23,
@@ -49,6 +55,6 @@ class GuildPage(SocketNamespace):
         }
         await self.get_client_info(data)
         # Security logic here. Can use above function for comparisons
-        await self.emit("api_response",
+        await self.emit(room=sid, event = "api_response",
             data = guildPageData
         )
