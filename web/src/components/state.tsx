@@ -5,6 +5,7 @@ export interface GearState {
 
 export interface DashboardState {
 	currentUrl: string;
+	validSession: boolean;
 }
 
 export interface HeaderState {}
@@ -84,7 +85,7 @@ export interface AuthObject {
 }
 
 export interface InitalAuthObject extends AuthObject {
-	status: string;
+	status: number;
 }
 
 export interface AntiraidBlock {

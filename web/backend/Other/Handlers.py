@@ -82,12 +82,12 @@ class SocketNamespace(AsyncNamespace):
         client_token = await self.encode_key(client_redis_token)
 
         auth_pipeline = redisKeyDB.pipeline()
-        auth_pipeline.hmset_dict(client_id, {"plain_token": client_redis_token, "plain_id": client_redis_id})
-        auth_pipeline.expire(client_id, SESSION_TIMEOUT) # This will keep Redis clean :)
+        auth_pipeline.hmset_dict("wcid:"+client_id, {"plain_token": client_redis_token, "plain_id": client_redis_id})
+        auth_pipeline.expire("wcid:"+client_id, SESSION_TIMEOUT) # This will keep Redis clean :)
         await auth_pipeline.execute()
         redisKeyDB.close() # No leaking here
 
-        return {"client_id":client_id, "client_token":client_token, "timestamp":time(), "status": "AUTH_SET"}
+        return {"client_id":client_id, "client_token":client_token, "timestamp":time(), "status": 200}
 
     async def sign_data(self, data):
         data = bytearray(data, encoding="utf8")
@@ -96,7 +96,7 @@ class SocketNamespace(AsyncNamespace):
 
     async def verify_client(self, userAuth): # Note: This confirms a users *identity*, **NOT** their permissions
         redisKeyDB = await redisSecConnection()
-        client_auth_entry = await redisKeyDB.hgetall(userAuth["client_id"])
+        client_auth_entry = await redisKeyDB.hgetall("wcid:"+userAuth["client_id"])
         if client_auth_entry != {}:
             client_expected_token = await self.encode_key(client_auth_entry["plain_token"])
             token_signature_match = hmac.compare_digest(userAuth["client_token"], client_expected_token)
@@ -116,21 +116,21 @@ class SocketNamespace(AsyncNamespace):
     async def add_known_socket(self, client_id, socket_id):
         redisClient = await redisSecConnection()
         print("Adding socketID of " + socket_id + "to " + client_id)
-        await redisClient.sadd("kwn_sids_"+client_id, socket_id)
+        await redisClient.sadd("kwnsids:"+client_id, socket_id)
         redisClient.close()
 
     async def rem_known_socket(self, known_client_id, socket_id, didExpire, new_client_id):
         redisClient = await redisSecConnection()
         if didExpire == False:
-            await redisClient.srem("kwn_sids_"+known_client_id, socket_id)
+            await redisClient.srem("kwnsids:"+known_client_id, socket_id)
             redisClient.close()
         else: # Move all of their past known sockets into relation with their new client_id
-            await redisClient.sunionstore("kwn_sids_"+new_client_id, "kwn_sids_"+known_client_id, "kwn_sids_"+new_client_id)
-            await redisClient.expire("kwn_sids_"+known_client_id, SESSION_TIMEOUT) # Make sure it fades eventually to stay tidy
+            await redisClient.sunionstore("kwnsids:"+new_client_id, "kwnsids:"+known_client_id, "kwnsids:"+new_client_id)
+            await redisClient.expire("kwnsids:"+known_client_id, SESSION_TIMEOUT) # Make sure it fades eventually to stay tidy
 
     async def get_client_info(self, userAuth):
         redisClientTeller = await redisSecConnection()
-        clientEntry = await redisClientTeller.hgetall(userAuth["client_id"])
+        clientEntry = await redisClientTeller.hgetall("wcid:"+userAuth["client_id"])
         print(clientEntry)
         redisClientTeller.close()
 
@@ -193,7 +193,7 @@ class APIMain(SocketNamespace):
                 print("Client renewed!")
             else:
                 await self.emit("api_response/registrationID", 
-                    data = {"status": "OK"}
+                    data = {"status": 204}
                 )
 
 

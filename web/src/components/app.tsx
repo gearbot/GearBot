@@ -18,7 +18,10 @@ import Error404 from "./Error404";
 export default class App extends Component<{}, DashboardState> {
 	mainAuthObject: InitalAuthObject
 
-	componentDidMount(): void {
+	componentDidMount() {
+		this.setState({
+			validSession: true // Assume this to be a new session
+		})
 		const registrationSocket = io(config.apiUrl+"/api/", {
 			path: config.socketPath,
 			query: {
@@ -36,11 +39,17 @@ export default class App extends Component<{}, DashboardState> {
 			registrationSocket.close()
 			console.log("Closed the inital auth socket!")
 
-			if (RecAuthObject.status == "AUTH_SET") {
+			if (RecAuthObject.status != 403) {
 				this.mainAuthObject = RecAuthObject;
 				window.localStorage.setItem("client_id", RecAuthObject.client_id)
 				window.localStorage.setItem("client_token", RecAuthObject.client_token)
 				window.localStorage.setItem("auth_timestamp", RecAuthObject.timestamp)
+
+			} else if (RecAuthObject.status == 403) {
+				this.setState({
+					validSession: false
+				});
+
 			} else {
 				this.mainAuthObject = RecAuthObject;
 			}
@@ -75,6 +84,7 @@ export default class App extends Component<{}, DashboardState> {
 		return (
 			<div id="app">
 				<Header />
+				{this.state.validSession ? null : <div id="badSessionAlert">Invalid session, please refresh your page!</div>}
 				<Router onChange={this.handleRoute}>
 					<Home path="/"/>
 					<Dashboard SocketAuthObject={this.mainAuthObject} path="/dashboard"/>
