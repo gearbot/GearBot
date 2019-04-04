@@ -1,21 +1,21 @@
 import asyncio
 import json
 import os
-import signal
 import sys
 import time
 import traceback
-from datetime import datetime
 
 import aiohttp
 import aioredis
 import sentry_sdk
+import signal
+from datetime import datetime
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
 from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils, MessageUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils
 from database import DatabaseConnector
 
 
@@ -40,7 +40,6 @@ async def initialize(bot):
 
         GearbotLogging.initialize_pump(bot)
         Emoji.initialize(bot)
-        Pages.initialize(bot)
         Utils.initialize(bot)
         Translator.initialize(bot)
         InfractionUtils.initialize(bot)
@@ -53,14 +52,17 @@ async def initialize(bot):
 
         if bot.redis_pool is None:
             try:
-                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
-                # bot.redis_raid_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=1)
+                socket = Configuration.get_master_var("REDIS_SOCKET", "")
+                if socket == "":
+                    bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
+                else:
+                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching and anti-raid connections unavailable")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
             else:
                 GearbotLogging.info("Redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, caching and anti-raid connections established")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, let's go full speed!")
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()
@@ -98,10 +100,9 @@ async def on_ready(bot):
         for c in to_unload:
             bot.remove_command(c)
 
-        if Configuration.get_master_var("CROWDIN_KEY") is not None:
+        if Configuration.get_master_var("CROWDIN") is not None:
             bot.loop.create_task(translation_task(bot))
 
-        await DocUtils.update_docs(bot)
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
@@ -125,21 +126,7 @@ async def translation_task(bot):
         try:
             await Translator.update()
         except Exception as ex:
-            GearbotLogging.error("Something went wrong during translation updates")
-            GearbotLogging.error(traceback.format_exc())
-            embed = Embed(colour=Colour(0xff0000),
-                                  timestamp=datetime.utcfromtimestamp(time.time()))
-            embed.set_author(name="Something went wrong during translation updates")
-            embed.add_field(name="Exception", value=str(ex))
-            v = ""
-            for line in traceback.format_exc().splitlines():
-                if len(v) + len(line) >= 1024:
-                    embed.add_field(name="Stacktrace", value=v)
-                    v = ""
-                v = f"{v}\n{line}"
-            if len(v) > 0:
-                embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.bot_log(embed=embed)
+            await handle_exception("Translation task", bot, ex)
 
         try:
             await asyncio.sleep(6*60*60)
@@ -169,7 +156,8 @@ async def on_message(bot, message:Message):
 async def on_guild_join(guild):
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.load_config(guild.id)
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
+    name = await Utils.clean(guild.name)
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=Utils.server_info(guild))
 
 async def on_guild_remove(guild):
     GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")

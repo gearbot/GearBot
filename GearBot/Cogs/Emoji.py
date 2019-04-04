@@ -5,40 +5,39 @@ from discord import HTTPException, InvalidArgument, Embed, Role, Emoji
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
 
 
-class Emoji:
-    permissions = {
-        "min": 2,
-        "max": 6,
-        "required": 3,
-        "commands": {
-            "emoji": {
-                "min": 2,
-                "max": 6,
-                "required": 3,
-                "commands": {
-                    "list": {
-                        "min": 0,
-                        "max": 6,
-                        "required": 3
+class Emoji(BaseCog):
+
+    def __init__(self, bot):
+        super().__init__(bot, {
+            "min": 2,
+            "max": 6,
+            "required": 3,
+            "commands": {
+                "emoji": {
+                    "min": 2,
+                    "max": 6,
+                    "required": 3,
+                    "commands": {
+                        "list": {
+                            "min": 0,
+                            "max": 6,
+                            "required": 3
+                        }
                     }
                 }
             }
-        }
-    }
-
-    def __init__(self, bot):
-        self.bot: GearBot = bot
+        })
         Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
 
-    def __unload(self):
+    def cog_unload(self):
         Pages.unregister("emoji")
 
-    async def __local_check(self, ctx):
+    async def cog_check (self, ctx):
         return Permissioncheckers.check_permission(ctx) or ctx.channel.permissions_for(ctx.author).manage_emojis
 
     @commands.group(aliases=["emote"])
@@ -50,10 +49,10 @@ class Emoji:
 
     @emoji.command("list")
     async def emoji_list(self, ctx):
-        await Pages.create_new("emoji", ctx)
+        await Pages.create_new(self.bot, "emoji", ctx)
 
     async def emoji_list_init(self, ctx):
-        return None, self.gen_emoji_page(ctx.guild, 0), len(ctx.guild.emojis) > 0, []
+        return None, self.gen_emoji_page(ctx.guild, 0), len(ctx.guild.emojis) > 0
 
     async def emoji_list_update(self, ctx, message, page_num, action, data):
         page_count = len(message.guild.emojis) + 1
@@ -65,7 +64,8 @@ class Emoji:
             page_num = page_count - 1
         if page_num >= page_count:
             page_num = 0
-        return None, self.gen_emoji_page(message.guild, page_num), page_num
+        data["page"] = page_num
+        return None, self.gen_emoji_page(message.guild, page_num), data
 
     def gen_emoji_page(self, guild, page):
         se = sorted(guild.emojis, key=lambda e: e.name)
@@ -79,7 +79,7 @@ class Emoji:
             animated = set()
             static = set()
             for e in guild.emojis:
-                (animated if e.animated else static).add(e)
+                (animated if e.animated else static).add(str(e))
             max_emoji = 200 if "MORE_EMOJI" in guild.features else 50
             embed.add_field(name=Translator.translate('static_emoji', guild), value=f"{len(static)} / {max_emoji}")
             embed.add_field(name=Translator.translate('animated_emoji', guild), value=f"{len(animated)} / {max_emoji}")
@@ -177,7 +177,7 @@ class Emoji:
     @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
         if roles is None:
-            roles = []
+            return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()
         refused = set()
         for role in roles:
@@ -201,7 +201,7 @@ class Emoji:
     @commands.bot_has_permissions(manage_emojis=True)
     async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
         if roles is None:
-            roles = []
+            return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()
         refused = set()
         for role in roles:

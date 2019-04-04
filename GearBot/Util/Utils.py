@@ -1,14 +1,14 @@
 import asyncio
 import json
 import os
-import subprocess
 import time
 from collections import namedtuple, OrderedDict
-from datetime import datetime
-from subprocess import Popen
 
 import discord
+import subprocess
+from datetime import datetime
 from discord import NotFound
+from subprocess import Popen
 
 from Util import GearbotLogging, Translator, Emoji
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
@@ -130,7 +130,7 @@ async def get_user(uid, fetch=True):
             return None
 
         if BOT.redis_pool is not None:
-            userCacheInfo = await BOT.redis_pool.hgetall(uid)
+            userCacheInfo = await BOT.redis_pool.hgetall(f"users:{uid}")
 
             if len(userCacheInfo) == 8: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
@@ -147,9 +147,9 @@ async def get_user(uid, fetch=True):
                 return userFormed
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     pipeline = BOT.redis_pool.pipeline()
-                    pipeline.hmset_dict(uid,
+                    pipeline.hmset_dict(f"users:{uid}",
                         name = user.name,
                         id = user.id,
                         discriminator = user.discriminator,
@@ -160,7 +160,7 @@ async def get_user(uid, fetch=True):
                         mention = user.mention
                     )
 
-                    pipeline.expire(uid, 300) # 5 minute cache life
+                    pipeline.expire(f"users:{uid}", 3000) # 5 minute cache life
                     
                     BOT.loop.create_task(pipeline.execute())
 
@@ -172,7 +172,7 @@ async def get_user(uid, fetch=True):
                 return user_cache[uid]
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     if len(user_cache) >= 10: # Limit the cache size to the most recent 10
                         user_cache.popitem()
                     user_cache[uid] = user
@@ -213,9 +213,9 @@ def server_info(guild, request_guild=None):
     if guild_features == "":
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=0x7289DA, timestamp=datetime.fromtimestamp(time.time()))
+    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.fromtimestamp(time.time()))
     embed.set_thumbnail(url=guild.icon_url)
-    embed.add_field(name=Translator.translate('name', request_guild), value=guild.name, inline=True)
+    embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
     embed.add_field(name=Translator.translate('owner', request_guild), value=guild.owner, inline=True)
     embed.add_field(name=Translator.translate('members', request_guild), value=guild.member_count, inline=True)
@@ -244,8 +244,8 @@ def server_info(guild, request_guild=None):
     for m in guild.members:
         statuses[str(m.status)] += 1
     embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
-    if guild.icon_url != "":
-        embed.set_image(url=guild.icon_url)
+    if guild.splash_url != "":
+        embed.set_image(url=guild.splash_url)
     return embed
 
 

@@ -20,7 +20,7 @@
     "CustCommands",
     "BCVersionChecker",
     "Reload",
-    "PageHandler",
+    "ReactionHandler",
     "Censor",
     "Infractions",
     "Minecraft",

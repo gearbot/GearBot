@@ -5,28 +5,27 @@ from datetime import datetime
 from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
+from Cogs.BaseCog import BaseCog
 from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
 
-class Reminders:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-        }
-    }
+class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {
+            }
+        })
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
 
     @commands.group(aliases=["r", "reminder"])
@@ -127,7 +126,7 @@ class Reminders:
             "reminder": package.to_remind,
             "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
         }
-        parcel = Translator.translate(f"reminder_delivery_{mode}", location, **parts)
+        parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
         try:
             await location.send(parcel)
         except (Forbidden, NotFound):
