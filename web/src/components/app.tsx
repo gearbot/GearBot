@@ -20,10 +20,16 @@ export default class App extends Component<{}, DashboardState> {
 
 	componentDidMount(): void {
 		const registrationSocket = io(config.apiUrl+"/api/", {
-			path: config.socketPath
+			path: config.socketPath,
+			query: {
+				isFirst: "yes"
+			}
 		});
 
-		registrationSocket.emit("register_client", window.localStorage.getItem("auth_timestamp"));
+		registrationSocket.emit("register_client", [
+			window.localStorage.getItem("auth_timestamp"),
+			window.localStorage.getItem("client_id")
+		]);
 
 		registrationSocket.once("api_response/registrationID", (RecAuthObject: InitalAuthObject) => {
 

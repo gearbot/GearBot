@@ -57,6 +57,12 @@ key to be tampered and force them to refresh their session to continue. To verif
 from the Redis Hash Set and then HMAC these and compare the signatures to see if they match. If they do, we check what data that user wants
 and if they can have it on the backend and then respond with it. If the signatures do not match, which means they were tampered with
 we respond with a {ERROR: 403} and let the dashboard process it and inform the user their auth failed.
+----------------------------------------------------------
+Session Tracking and per-user scoping:
+When the inital auth socket is first opened and their client_id is generated, we create a Redis Set with the client_id as the key
+and then add the current socket ID (sid) to the set. #TODO: Guilds will open sockets using "rooms" and each user who is authenticated for
+a guild will be added to that room upon opening its "guild page socket". For tracking individual users, rooms will be opened using the clients id
+again. This should still hold up to security related scrutiny as they are randomly generated. #TODO: Needs implemented
 '''
 
 
@@ -76,7 +82,7 @@ class SocketNamespace(AsyncNamespace):
         client_token = await self.encode_key(client_redis_token)
 
         auth_pipeline = redisKeyDB.pipeline()
-        auth_pipeline.hmset_dict(client_id, {"plain_token": client_redis_token, "plain_id": client_redis_id}) # There is probably a more efficent way to do this
+        auth_pipeline.hmset_dict(client_id, {"plain_token": client_redis_token, "plain_id": client_redis_id})
         auth_pipeline.expire(client_id, SESSION_TIMEOUT) # This will keep Redis clean :)
         await auth_pipeline.execute()
         redisKeyDB.close() # No leaking here
@@ -105,11 +111,28 @@ class SocketNamespace(AsyncNamespace):
                 return False
         else:
             return 403
+    
+    # Pass the hashed version of the socket ID in
+    async def add_known_socket(self, client_id, socket_id):
+        redisClient = await redisSecConnection()
+        print("Adding socketID of " + socket_id + "to " + client_id)
+        await redisClient.sadd("kwn_sids_"+client_id, socket_id)
+        redisClient.close()
+
+    async def rem_known_socket(self, known_client_id, socket_id, didExpire, new_client_id):
+        redisClient = await redisSecConnection()
+        if didExpire == False:
+            await redisClient.srem("kwn_sids_"+known_client_id, socket_id)
+            redisClient.close()
+        else: # Move all of their past known sockets into relation with their new client_id
+            await redisClient.sunionstore("kwn_sids_"+new_client_id, "kwn_sids_"+known_client_id, "kwn_sids_"+new_client_id)
+            await redisClient.expire("kwn_sids_"+known_client_id, SESSION_TIMEOUT) # Make sure it fades eventually to stay tidy
 
     async def get_client_info(self, userAuth):
         redisClientTeller = await redisSecConnection()
         clientEntry = await redisClientTeller.hgetall(userAuth["client_id"])
         print(clientEntry)
+        redisClientTeller.close()
 
 class PrimaryHandler(RequestHandler):
     def get_current_user(self):
@@ -129,25 +152,44 @@ class PrimaryHandler(RequestHandler):
 
 class APIMain(SocketNamespace):
     async def on_connect(self, sid, environ):
+        print("---------------------------------------------")
         print("A socket connected!")
-        test = "hello: " + token_urlsafe(10)
-        await self.emit("api_response",
-            data = test
-        )
+        print(sid)
+        query_strings = environ["QUERY_STRING"].split("&")
+        if "yes" in query_strings[0]:
+            print("This is the inital auth")
+            await self.save_session(sid, {"BOUND": False})
+        print("---------------------------------------------")
+
     async def on_disconnect(self, sid):
         print("A socket disconnected!")
+        #TODO: Maybe "pop" sessions? For now, just remove the client's set when it expires
 
     async def on_register_client(self, sid, data):
-        if data == None or data == "undefined":
+        timestamp = data[0]
+        known_client_id = data[1]
+
+        if timestamp == None or timestamp == "undefined":
             print("Registering a client...")
             signed_client_key = await self.add_client()
+
+            if await self.get_session(sid) != None: # Protect against tampered SIDs
+                # Keep track of this client's known connected socket IDs
+                await self.add_known_socket(signed_client_key["client_id"], sid)
+                await self.save_session(sid, {"BOUND": True})
+
             await self.emit("api_response/registrationID", signed_client_key)
             print("Client registered!")
         else:
-            if (time() - float(data)) > SESSION_TIMEOUT:
+            if (time() - float(timestamp)) > SESSION_TIMEOUT:
                 print("Expired client session, renewing...")
-                signed_client_key = await self.add_client()
-                await self.emit("api_response/registrationID", signed_client_key)
+
+                new_signed_client_key = await self.add_client()
+                await self.add_known_socket(new_signed_client_key["client_id"], sid)
+
+                await self.rem_known_socket(known_client_id, sid, True, new_signed_client_key["client_id"])
+
+                await self.emit("api_response/registrationID", new_signed_client_key)
                 print("Client renewed!")
             else:
                 await self.emit("api_response/registrationID", 

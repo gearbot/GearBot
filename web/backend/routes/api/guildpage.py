@@ -10,6 +10,8 @@ class GuildPage(SocketNamespace):
         pass
     
     async def on_get(self, sid, data):
+        client_id = data["client_id"]
+
         verified_status = await self.verify_client(data)
         if verified_status != 403:
             if verified_status == False:
@@ -18,6 +20,8 @@ class GuildPage(SocketNamespace):
         else:
             await self.emit("api_response", data = {"status": 403} )
             return
+
+        await self.add_known_socket(client_id, sid)
 
         guildPageData = {
             "name": "The Gearbox",
@@ -44,6 +48,7 @@ class GuildPage(SocketNamespace):
             }
         }
         await self.get_client_info(data)
+        # Security logic here. Can use above function for comparisons
         await self.emit("api_response",
             data = guildPageData
         )

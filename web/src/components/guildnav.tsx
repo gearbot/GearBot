@@ -42,12 +42,7 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 			client_token: window.localStorage.getItem("client_token"),
 			timestamp: window.localStorage.getItem("auth_timestamp"),
 			user_auth_token: window.localStorage.getItem("user_auth_token")
-		}
-
-		this.generalSocket.on("api_response", data => {
-			console.log(data)
-			// TODO: Some stuff here
-		});
+		}		
 
 		this.guildSocket.once("connect", () => {
 			console.log(this.localAuthObject)
@@ -66,6 +61,11 @@ export default class GuildNav extends Component<GuildNavProps, GuildListNavState
 				guilds: data,
 				guildsLoaded: true
 			})
+		});
+
+		this.generalSocket.on("api_response", data => {
+			console.log(data)
+			// TODO: Some stuff here
 		});
 	}
 
