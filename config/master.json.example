@@ -7,6 +7,7 @@
   "DATABASE_PASS": "database password",
   "DATABASE_PORT": 3306,
   "DATABASE_USER": "gearbot",
+  "APEX_KEY": "",
   "EMOJI": {
   },
   "GUIDES": 0,
