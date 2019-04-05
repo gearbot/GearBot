@@ -66,6 +66,11 @@ ID_MATCHER = re.compile("<@!?([0-9]+\s*)>")
 
 async def update_pages(guild_id, query, fields, amount, pages, start, longest_id, longest_type, longest_timestamp, header):
     key = get_key(guild_id, query, fields, amount)
+    count = len(pages)
+    if start >= count:
+        start = 0
+    elif start < 0:
+        start = count - 1
     order = [start]
     lower = start - 1
     upper = start + 1
