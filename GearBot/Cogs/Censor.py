@@ -35,32 +35,32 @@ class Censor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSOR_MESSAGES"):
+            return
         await self.censor_message(message)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
-        if isinstance(channel, DMChannel):
+        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSOR_MESSAGES"):
             return
-        if channel is not None:
-            permissions = channel.permissions_for(channel.guild.me)
-            if permissions.read_messages and permissions.read_message_history:
-                try:
-                    message = await channel.fetch_message(event.message_id)
-                except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
-                    pass
-                else:
-                    await self.censor_message(message)
+        permissions = channel.permissions_for(channel.guild.me)
+        if permissions.read_messages and permissions.read_message_history:
+            try:
+                message = await channel.fetch_message(event.message_id)
+            except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
+                pass
+            else:
+                await self.censor_message(message)
 
     async def censor_message(self, message: discord.Message):
-        ctx = await self.bot.get_context(message)
         if message.guild is None or \
                 message.webhook_id is not None or \
-                message.author == message.guild.me or \
-                not Configuration.get_var(message.guild.id, "CENSOR_MESSAGES") or \
-                Permissioncheckers.get_user_lvl(ctx) >= 2:
+                message.author == message.guild.me:
             return
-
+        ctx = await self.bot.get_context(message)
+        if Permissioncheckers.get_user_lvl(ctx) >= 2:
+            return
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
         max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
