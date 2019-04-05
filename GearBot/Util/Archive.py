@@ -1,11 +1,10 @@
 import asyncio
-import datetime
 import os
 
+import datetime
 import discord
 
 from Util import Utils, GearbotLogging, Translator, Emoji
-from database.DatabaseConnector import LoggedAttachment
 
 archive_counter = 0
 
@@ -28,7 +27,7 @@ async def pack_messages(messages):
     out = ""
     for message in messages:
         name = await Utils.username(message.author, clean=False)
-        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\r\n"
+        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))}\r\n"
     return out
 
 async def ship_messages(ctx, messages, filename="Message archive"):

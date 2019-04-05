@@ -1,12 +1,12 @@
 import asyncio
-import datetime
 import time
-from typing import Optional
 
+import datetime
 import discord
 from discord import Object, Emoji
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
+from typing import Optional
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -911,7 +911,7 @@ class Moderation(BaseCog):
             return self.end_infraction(infraction)
 
         try:
-            await guild.get_ban(user)
+            await guild.fetch_ban(user)
         except discord.NotFound:
             translated = Translator.translate("tempban_already_lifted", guild.id, **info)
             GearbotLogging.log_to(guild.id, "MOD_ACTIONS", f"{Emoji.get_chat_emoji('WARNING')} {translated}")

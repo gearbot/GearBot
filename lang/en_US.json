@@ -5,7 +5,7 @@
   "ping_help": "See if the bot is still online.",
   "quote_help": "Quotes the requested message.",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
-  "quote_nsfw_refused": "You requested a message from an NSFW channel, but this channel is not marked as NSFW, quote denied.",
+  "quote_nsfw_refused": "You requested a message from a NSFW channel, but this channel is not marked as NSFW, quote denied.",
   "censored_invite": "Censored message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed.\n```{message}```",
   "custom_command_list": "Custom command list for {server_name}.",
   "custom_command_no_commands": "No custom commands have been created yet.",
@@ -423,7 +423,7 @@
   "user_role_too_low_add": "You need to have a role above the **{role}** role to add this role to others.",
   "user_role_too_low_remove": "You need to have a role above the **{role}** role to remove it from others.",
   "message_wrong_channel": "The specified message was from another channel instead of this one.",
-  "reminder_too_long": "Whoa there, my memory might be better then yours, but i can still only handle reminders of up to 1800 chars!",
+  "reminder_too_long": "Whoa there, my memory might be better than yours, but i can still only handle reminders of up to 1800 chars!",
   "remind_question": "Where do you want me to remind you?",
   "remind_option_here": "Right here",
   "remind_option_dm": "With a DM",
@@ -533,7 +533,7 @@
   "emoji_upload_invalid_file": "The attached file is either corrupt, or is not an image.",
   "emoji_upload_invalid_filesize": "Your image is too big. At {filesize}kb, your file exceeds the maximum filesize of 256kb.",
   "emoji_name_too_short": "Emoji name must be at least 2 characters.",
-  "emoji_name_too_long": "Emoji name cannot be longer then 32 characters.",
+  "emoji_name_too_long": "Emoji name cannot be longer than 32 characters.",
   "emoji_upload_success": "Successfully added emoji {emote}",
   "emoji_update_reason": "Changed by: {user}",
   "emoji_update_success": "Emoji name is now `{new_name}`",
@@ -624,5 +624,6 @@
   "attachment_item": "**Attachment #{num}**: {attachment}",
   "attachment_single": "**Attachment**: {attachment}",
 	"raid_terminate_no_raid": "Wait there was a raid going on? Nobody informed me of that!",
-	"raid_terminate_terminated": ""
+  "invite_censor_forbidden": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems I am missing permission to remove the message\n```{message}```",
+  "inf_unmute": "{mod} unmuted {user}"
 }

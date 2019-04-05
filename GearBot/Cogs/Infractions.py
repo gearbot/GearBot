@@ -3,6 +3,7 @@ import typing
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import BadArgument
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
@@ -77,7 +78,11 @@ class Infractions(BaseCog):
                     try:
                         query = int(parts[0])
                     except ValueError:
-                        query = parts[0]
+                        try:
+                            query = await UserID().convert(ctx, parts[0])
+                        except BadArgument:
+                            query = parts[0]
+
                 else:
                     query = (" ".join(parts[:-1])).strip()
             except ValueError:
