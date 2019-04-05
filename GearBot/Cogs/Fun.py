@@ -19,3 +19,6 @@ class Fun(BaseCog):
         for k, v in to_remove.items():
             if Configuration.get_master_var(k, "0") is "0":
                 bot.remove_command(v)
+
+def setup(bot):
+    bot.add_cog(Fun(bot))
