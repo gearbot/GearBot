@@ -157,9 +157,9 @@ async def inf_update(message, query, fields, amount, page_num):
 
     parts = {
         "page_num": page_num,
-        "cache_key": key
+        "cache_key": key,
     }
-    if len(fields) == 3:
+    if len(fields) != 0:
         parts["fields"] = "-".join(fields)
     if query is not None:
         parts["query"] = query
