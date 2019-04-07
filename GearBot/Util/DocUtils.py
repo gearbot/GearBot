@@ -34,7 +34,7 @@ def generate_command_list(bot):
                         page += gen_command_listing(cogo, command, code)
                         handled.add(command.qualified_name)
                 page += "\n\n"
-        with open(Configuration.get_master_var("DOC_LOCATION", "WEBSITE_ROOT") +  f"/pages/03.docs/01.commands/commands.{code}.md", "w", encoding="utf-8") as file:
+        with open(Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands/commands.{code}.md", "w", encoding="utf-8") as file:
             file.write(page)
 
 def gen_command_listing(cog, command, code):
