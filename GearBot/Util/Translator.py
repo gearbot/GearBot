@@ -135,7 +135,7 @@ async def update():
 
 
                     load_translations()
-                    await DocUtils.generate_command_list(BOT)
+                    DocUtils.generate_command_list(BOT)
                     await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Translations have been updated")
             else:
                 await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
