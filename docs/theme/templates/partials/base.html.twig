@@ -10,7 +10,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% include 'partials/metadata.html.twig' %}
 
-        <link rel="icon" type="image/png" href="{{ url('theme://images/logo.png') }}"/>
+        <link rel="icon" type="image/png" href="{{ url('theme://images/favicon.ico') }}"/>
         <link rel="canonical" href="{{ page.url(true, true) }}"/>
 
         {% do assets.addCss('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css', 99) %}
@@ -23,6 +23,11 @@
         {% block javascripts %}
         {% endblock %}
         {{ assets.js() }}
+
+        <meta property="og:title" content="GearBot">
+        <meta property="og:image" content="/images/gearbot.png">
+        <meta property="og:description" content="Helps you to keep the gears turning smoothly">
+        <meta name="theme-color" content="#FECB4D">
 
     {% endblock head %}
 </head>
@@ -62,10 +67,11 @@
 {% endblock %}
 <script>
     //nuke the old site
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
             registration.unregister()
-        } })
+        }
+    })
 </script>
 </body>
 </html>
