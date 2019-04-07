@@ -114,8 +114,10 @@ async def update():
                             shutil.copyfile(o, f"{root}/pages/{dir}/doc.en_US.md")
 
                             original = hashlib.md5(open(o, 'rb').read()).hexdigest()
-                            for file in os.listdir(f"temp/docs/{dir}"):
-                                p = f"temp/docs/{dir}/{file}"
+                            for file in os.listdir(f"temp/docs/pages/{dir}"):
+                                p = f"temp/docs/pages/{dir}/{file}"
+                                if os.path.isdir(p):
+                                    continue
                                 translated =  hashlib.md5(open(p, 'rb').read()).hexdigest()
                                 if translated == original:
                                     continue
@@ -140,12 +142,10 @@ def get_targets():
     return get_content("docs/pages")
 
 def get_content(base):
-    targets = []
+    targets = [base]
     for f in os.listdir(base):
         if os.path.isdir(f"{base}/{f}"):
             targets.extend(get_content(f"{base}/{f}"))
-        else:
-            targets.append(f"{base}/{f}")
     return targets
 
 
