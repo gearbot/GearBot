@@ -155,7 +155,7 @@ def get_dir_tree(base):
     for f in os.listdir(base):
         if os.path.isdir(f"{base}/{f}"):
             empty = False
-            targets.extend(get_content(f"{base}/{f}"))
+            targets.extend(get_dir_tree(f"{base}/{f}"))
     if empty:
         targets.append(base)
     return targets
