@@ -23,7 +23,7 @@ def generate_command_list(bot):
             cogo = bot.get_cog(cog)
             if cogo.permissions is not None:
                 perm_lvl = cogo.permissions["required"]
-                default = Translator.translate_by_code("help_page_default_perm")
+                default = Translator.translate_by_code("help_page_default_perm", code)
                 plvl = Translator.translate_by_code(f'perm_lvl_{perm_lvl}', code)
                 c = Translator.translate_by_code("command", code)
                 default_lvl = Translator.translate_by_code("help_page_default_lvl", code)
