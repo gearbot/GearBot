@@ -35,9 +35,9 @@ def generate_command_list(bot):
                         page += gen_command_listing(cogo, command, code)
                         handled.add(command.qualified_name)
                 page += "\n\n"
-            folder = Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands"
-            if not os.path.exists(folder):
-                os.makedirs(folder)
+        folder = Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands"
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         with open(f"{folder}/commands.{code}.md", "w", encoding="utf-8") as file:
             file.write(page)
 
