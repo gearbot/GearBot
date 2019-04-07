@@ -229,7 +229,7 @@ def upload_files(target_info, new):
         data[f'files[{online}]'] =  open(local, 'r')
         for k, v in extra.items():
             data2[f'{k}s[{online}]'] = v
-    response = requests.post(f"https://api.crowdin.com/api/project/gearbot/{'add-file' if new else 'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data, data=data2)
+    response = requests.post(f"https://api.crowdin.com/api/project/gearbot/{'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data, data=data2)
     GearbotLogging.info(response.content)
 
 async def tranlator_log(emoji, message):
