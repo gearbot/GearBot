@@ -210,6 +210,7 @@ def upload_files(target_info, new):
     if new:
         for l, o, e in target_info:
             data["name"] = "/".join(o.split("/")[:-1])
+            GearbotLogging.info("/".join(o.split("/")[:-1]))
             data["recursive"] = 1
             requests.post(f"https://api.crowdin.com/api/project/gearbot/add-directory?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
     data = dict()
