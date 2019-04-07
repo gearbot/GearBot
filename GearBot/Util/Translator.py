@@ -139,12 +139,14 @@ def get_targets():
 
 def get_content(base):
     targets = []
-    for root, dirs, files in os.walk(base):
-        for dir in dirs:
-            targets.extend(get_content(f"{base}/{dir}"))
-        for file in files:
-            targets.append(f"{base}/{file}")
+    for f in os.listdir(base):
+        if os.path.isdir(f"{base}/{f}"):
+            targets.extend(get_content(f"{base}/{f}"))
+        else:
+            targets.append(f"{base}/{f}")
     return targets
+
+print(get_targets())
 
 async def upload():
     if Configuration.get_master_var("CROWDIN", None) is None:
