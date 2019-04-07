@@ -166,12 +166,13 @@ async def upload():
     if Configuration.get_master_var("CROWDIN", None) is None:
         return
     hashes = Configuration.get_persistent_var('hashes', {})
-
+    count = 0
     targets = get_targets()
     target = "lang/en_US.json"
     new = hashlib.md5(open(target, 'rb').read()).hexdigest()
     old = hashes.get(target, "")
     if old != new:
+        count += 1
         message = await tranlator_log('REFRESH', 'Uploading bot translation file')
         t = threading.Thread(target=upload_files, args=([("lang/en_US.json", "bot/commands.json", {"title": "GearBot bot strings", "export_pattern": "/bot/%locale_with_underscore%.json"}), False]))
         t.start()
@@ -181,7 +182,7 @@ async def upload():
             content=f"{Emoji.get_chat_emoji('YES')} Bot translation file has been uploaded")
 
 
-    count = 0
+
     to_update = list()
     to_add = list()
     for target in targets:
