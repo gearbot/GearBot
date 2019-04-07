@@ -19,7 +19,7 @@ from Util import Configuration, GearbotLogging, Emoji, DocUtils
 
 LANGS = dict()
 BOT = None
-untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart"}
+untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart", ''}
 
 def initialize(bot_in):
     global BOT
@@ -70,6 +70,8 @@ def translate(key, location, **kwargs):
 
 
 def translate_by_code(key, code, **kwargs):
+    if key == '':
+        return  ''
     return format(LANGS[code][key], kwargs, code)
 
 async def update():
