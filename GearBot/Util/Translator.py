@@ -107,7 +107,7 @@ async def update():
                         codes = list()
                         codes.append("en_US")
                         for dir in dirs:
-                            dir = dir.strip("temp/docs/pages")
+                            dir = dir.replace("temp/docs/pages", "")
                             shutil.rmtree(f"{root}/pages/{dir}", ignore_errors=True)
                             os.makedirs(f"{root}/pages/{dir}")
                             o = os.path.abspath(f"temp/docs/pages/{dir}/doc.md")
