@@ -142,22 +142,21 @@ def get_targets():
     return get_content("docs/pages")
 
 def get_content(base):
-    targets = [base]
+    targets = []
     for f in os.listdir(base):
         if os.path.isdir(f"{base}/{f}"):
             targets.extend(get_content(f"{base}/{f}"))
+        else:
+            targets.append(f"{base}/{f}")
     return targets
 
 
 def get_dir_tree(base):
     targets = []
-    empty = True
     for f in os.listdir(base):
         if os.path.isdir(f"{base}/{f}"):
-            empty = False
+            targets.append(f"{base}/{f}")
             targets.extend(get_dir_tree(f"{base}/{f}"))
-    if empty:
-        targets.append(base)
     return targets
 
 print(get_targets())
