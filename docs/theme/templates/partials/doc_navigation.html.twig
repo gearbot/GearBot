@@ -1,0 +1,42 @@
+{% macro loop(page) %}
+    {% for p in page.children.visible %}
+        {% set current_page = (p.active or p.activeChild) ? 'active' : '' %}
+        {% if p.children.visible.count > 0 %}
+            <li class="has-children {{ current_page }}">
+                <a href="{{ p.url }}">
+                    {% if p.header.icon %}<i class="fa fa-{{ p.header.icon }}"></i>{% endif %}
+                    {{ p.menu }}
+                </a>
+                <ul>
+                    {{ _self.loop(p) }}
+                </ul>
+            </li>
+        {% else %}
+            <li class="{{ current_page }}">
+                <a href="{{ p.url }}">
+                    {% if p.header.icon %}<i class="fa fa-{{ p.header.icon }}"></i>{% endif %}
+                    {{ p.menu }}
+                </a>
+            </li>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+<nav>
+    <ul>
+
+        {% for page in page.collection({items: {'@page': '/docs'} }) %}
+            {% set current_page = (page.active or page.activeChild) ? 'active' : '' %}
+            <li class="navItem">
+                <a href="{{ page.url }}">
+                    {{ page.menu }}
+                    {% if page.children.count() > 0 %}
+                    <ul>
+                        {{ _self.loop(page) }}
+                    </ul>
+                    {% endif %}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+</nav>

@@ -1,0 +1,20 @@
+{% extends 'partials/base.html.twig' %}
+
+
+{% block stylesheets %}
+    {% do assets.addCss('theme://compiled-css/home.css', 97) %}
+{% endblock %}
+
+{% block content %}
+    <div class="homeContainer">
+        <img src="{{ url('theme://images/logo.gif') }}" class="GearBot"/>
+        <div class="info">
+            <h1>GearBot</h1>
+            {{ page.content }}
+        </div>
+
+
+
+    </div>
+
+{% endblock %}
