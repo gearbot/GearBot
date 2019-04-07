@@ -110,8 +110,9 @@ async def update():
                             dir = dir.replace("temp/docs/pages", "")
                             shutil.rmtree(f"{root}/pages/{dir}", ignore_errors=True)
                             os.makedirs(f"{root}/pages/{dir}")
-                            o = os.path.abspath(f"docs/pages/{dir}/doc.md")
-                            shutil.copyfile(o, f"{root}/pages/{dir}/doc.en_US.md")
+                            name = "home" if "01.home" in dir else "doc"
+                            o = os.path.abspath(f"docs/pages/{dir}/{name}.md")
+                            shutil.copyfile(o, f"{root}/pages/{dir}/{name}.en_US.md")
 
                             original = hashlib.md5(open(o, 'rb').read()).hexdigest()
                             for file in os.listdir(f"temp/docs/pages/{dir}"):
@@ -125,12 +126,12 @@ async def update():
                                 if code not in codes:
                                     codes.append(code)
                                 os.rename(os.path.abspath(p), f"{root}/pages/{dir}/{file}")
-                                config = f"{root}/config/system.yaml"
-                                with open(config) as f:
-                                    c = yaml.load(f)
-                                c["languages"]["supported"] = codes
-                                with open(config, "w") as f:
-                                    yaml.dump(c, f)
+                        config = f"{root}/config/system.yaml"
+                        with open(config) as f:
+                            c = yaml.load(f)
+                        c["languages"]["supported"] = codes
+                        with open(config, "w") as f:
+                            yaml.dump(c, f)
 
 
                     load_translations()
