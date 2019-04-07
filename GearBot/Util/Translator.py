@@ -135,10 +135,15 @@ async def update():
                 await message.edit(content=f"{Emoji.get_chat_emoji('WARNING')} Crowdin build status was `{response['success']['status']}`, no translation update required")
 
 def get_targets():
+    return get_content("docs/pages")
+
+def get_content(base):
     targets = []
-    for root, dirs, files in os.walk("docs/pages/"):
+    for root, dirs, files in os.walk(base):
+        for dir in dirs:
+            targets.extend(get_content(f"{base}/{dir}"))
         for file in files:
-            targets.append(f"docs/pages/{os.path.basename(root)}/{file}")
+            targets.append(f"{base}/{os.path.basename(root)}/{file}")
     return targets
 
 async def upload():
