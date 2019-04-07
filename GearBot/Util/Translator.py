@@ -214,13 +214,13 @@ def upload_files(target_info, new):
             response = requests.post(f"https://api.crowdin.com/api/project/gearbot/add-directory?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", data=data)
             GearbotLogging.info(response.content)
     data = dict()
+    data2 = dict()
     for local, online, extra in target_info:
         data[f'files[{online}]'] =  open(local, 'r')
         for k, v in extra.items():
-            data[f'{k}s[{online}]'] = v
-
-
-    requests.post(f"https://api.crowdin.com/api/project/gearbot/{'add-file' if new else 'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
+            data2[f'{k}s[{online}]'] = v
+    response = requests.post(f"https://api.crowdin.com/api/project/gearbot/{'add-file' if new else 'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data, data=data2)
+    GearbotLogging.info(response.content)
 
 async def tranlator_log(emoji, message):
     crowdin = Configuration.get_master_var("CROWDIN")
