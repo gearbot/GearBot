@@ -44,8 +44,8 @@ def generate_command_list(bot):
 def gen_command_listing(cog, command, code):
     try:
         perm_lvl = Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), cog.permissions)['required']
-        listing = f"| | | {Translator.translate(command.short_doc, None)} |\n"
-        listing += f"|{command.qualified_name}|{Translator.translate(f'perm_lvl_{perm_lvl}', None)} ({perm_lvl})| |\n"
+        listing = f"| | | {Translator.translate_by_code(command.short_doc, code)} |\n"
+        listing += f"|{command.qualified_name}|{Translator.translate_by_code(f'perm_lvl_{perm_lvl}', code)} ({perm_lvl})| |\n"
         signature = str(command.signature).replace("|", "ǀ")
         listing += f"| | |{Translator.translate_by_code('example', code)}: ``!{signature}``|\n"
     except Exception as ex:
