@@ -205,13 +205,20 @@ async def upload():
         Configuration.set_persistent_var('hashes', hashes)
 
 def upload_files(target_info, new):
+    crowdin_data = Configuration.get_master_var("CROWDIN")
+    data = dict()
+    if new:
+        for l, o, e in target_info:
+            data["name"] = "/".join(o.split("/")[:-1])
+            data["recursive"] = 1
+            requests.post(f"https://api.crowdin.com/api/project/gearbot/add-directory?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
     data = dict()
     for local, online, extra in target_info:
         data[f'files[{online}]'] =  open(local, 'r')
         for k, v in extra.items():
             data[f'{k}s[{online}]'] = v
 
-    crowdin_data = Configuration.get_master_var("CROWDIN")
+
     requests.post(f"https://api.crowdin.com/api/project/gearbot/{'add-file' if new else 'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data)
 
 async def tranlator_log(emoji, message):
