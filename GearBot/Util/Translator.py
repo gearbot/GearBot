@@ -110,7 +110,7 @@ async def update():
                             dir = dir.replace("temp/docs/pages", "")
                             shutil.rmtree(f"{root}/pages/{dir}", ignore_errors=True)
                             os.makedirs(f"{root}/pages/{dir}")
-                            name = "home" if "01.home" in dir else "doc"
+                            name = "home" if "home" in dir else "doc"
                             o = os.path.abspath(f"docs/pages/{dir}/{name}.md")
                             shutil.copyfile(o, f"{root}/pages/{dir}/{name}.en_US.md")
 
@@ -119,7 +119,7 @@ async def update():
                                 p = f"temp/docs/pages/{dir}/{file}"
                                 if os.path.isdir(p):
                                     continue
-                                translated =  hashlib.md5(open(p, 'rb').read()).hexdigest()
+                                translated = hashlib.md5(open(p, 'rb').read()).hexdigest()
                                 if translated == original:
                                     continue
                                 code = file[-8:-3]
