@@ -1,3 +1,4 @@
+import os
 import re
 
 from Util import Configuration, Pages, GearbotLogging, Emoji, Permissioncheckers, Translator
@@ -34,7 +35,10 @@ def generate_command_list(bot):
                         page += gen_command_listing(cogo, command, code)
                         handled.add(command.qualified_name)
                 page += "\n\n"
-        with open(Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands/commands.{code}.md", "w", encoding="utf-8") as file:
+            folder = Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands"
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+        with open("{folder}/commands.{code}.md", "w", encoding="utf-8") as file:
             file.write(page)
 
 def gen_command_listing(cog, command, code):
