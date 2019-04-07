@@ -95,13 +95,14 @@ async def update():
                         archive.extractall("temp")
 
                         #bot lang files
-                        for root, dirs, files in os.walk("temp/bot/"):
-                            for file in files:
-                                os.rename(os.path.abspath(f"temp/bot/{os.path.basename(root)}/{file}"), os.path.abspath(f"lang/{file[-10:]}"))
+                        for f in os.listdir("temp/bot/"):
+                            if os.path.isdir(f):
+                                continue
+                            os.rename(os.path.abspath(f"temp/bot/{f}"), os.path.abspath(f"lang/{f[-10:]}"))
 
                         #website translations
                         root = Configuration.get_master_var("WEBSITE_ROOT", "")
-                        dirs = [name for name in os.listdir(os.path.abspath("temp/docs/")) if os.path.isdir(os.path.join("temp/docs/", name))]
+                        dirs = get_dir_tree("temp/docs/pages")
 
                         codes = list()
                         codes.append("en_US")
@@ -144,6 +145,18 @@ def get_content(base):
             targets.extend(get_content(f"{base}/{f}"))
         else:
             targets.append(f"{base}/{f}")
+    return targets
+
+
+def get_dir_tree(base):
+    targets = []
+    empty = True
+    for f in os.listdir(base):
+        if os.path.isdir(f"{base}/{f}"):
+            empty = False
+            targets.extend(get_content(f"{base}/{f}"))
+    if empty:
+        targets.append(base)
     return targets
 
 print(get_targets())
