@@ -122,7 +122,7 @@ async def update():
                                 translated =  hashlib.md5(open(p, 'rb').read()).hexdigest()
                                 if translated == original:
                                     continue
-                                code = file[-10:-5]
+                                code = file[-8:-3]
                                 if code not in codes:
                                     codes.append(code)
                                 os.rename(os.path.abspath(p), f"{root}/pages/{dir}/{file}")
