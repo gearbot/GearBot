@@ -81,8 +81,8 @@ class Reload(BaseCog):
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
         await message.edit(content=m)
         await ctx_message.edit(content=m)
-        await Translator.upload()
         self.bot.hot_reloading = False
+        await Translator.upload()
 
     @commands.command()
     async def update_site(self, ctx):

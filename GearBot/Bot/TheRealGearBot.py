@@ -122,6 +122,7 @@ async def keepDBalive(bot):
 
 
 async def translation_task(bot):
+    await Translator.upload()
     while not bot.is_closed():
         try:
             await Translator.update()

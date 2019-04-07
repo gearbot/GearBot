@@ -147,7 +147,7 @@ async def upload():
     hashes = Configuration.get_persistent_var('hashes', {})
 
     targets = get_targets()
-    target = "lang/commands.json"
+    target = "lang/en_US.json"
     new = hashlib.md5(open(target, 'rb').read()).hexdigest()
     old = hashes.get(target, "")
     if old != new:
