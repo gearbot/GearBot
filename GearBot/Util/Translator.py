@@ -197,7 +197,8 @@ async def upload():
                 if line.startswith("title = "):
                     title = line[8:]
                     break
-        (to_add if old == "" else to_update).append((target, target, {"title": title, "export_pattern": "/%original_path%/doc.%locale_with_underscore%.md"}))
+        name = "home" if "home" in target else "doc"
+        (to_add if old == "" else to_update).append((target, target, {"title": title, "export_pattern": "/%original_path%/{name}.%locale_with_underscore%.md"}))
     message = await tranlator_log('REFRESH', 'Uploading website files')
     if len(to_add) > 0:
         t2 = threading.Thread(target=upload_files, args=(to_add, True))
