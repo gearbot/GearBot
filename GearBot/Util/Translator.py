@@ -70,8 +70,8 @@ def translate(key, location, **kwargs):
 
 
 def translate_by_code(key, code, **kwargs):
-    if key == '':
-        return  ''
+    if key not in LANGS[code]:
+        return key
     return format(LANGS[code][key], kwargs, code)
 
 async def update():
