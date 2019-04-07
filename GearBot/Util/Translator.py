@@ -110,7 +110,7 @@ async def update():
                             dir = dir.strip("temp/docs/pages")
                             shutil.rmtree(f"{root}/pages/{dir}", ignore_errors=True)
                             os.makedirs(f"{root}/pages/{dir}")
-                            o = os.path.abspath(f"docs/pages/{dir}/doc.md")
+                            o = os.path.abspath(f"temp/docs/pages/{dir}/doc.md")
                             shutil.copyfile(o, f"{root}/pages/{dir}/doc.en_US.md")
 
                             original = hashlib.md5(open(o, 'rb').read()).hexdigest()
