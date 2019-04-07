@@ -143,7 +143,7 @@ def get_content(base):
         for dir in dirs:
             targets.extend(get_content(f"{base}/{dir}"))
         for file in files:
-            targets.append(f"{base}/{os.path.basename(root)}/{file}")
+            targets.append(f"{base}/{file}")
     return targets
 
 async def upload():
