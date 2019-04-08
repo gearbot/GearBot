@@ -2,7 +2,6 @@ from peewee import *
 
 from Util import Configuration
 from Util.Enums import ReminderStatus
-
 from database.DBFields import TinyIntField
 
 connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
@@ -118,11 +117,6 @@ class RaidAction(Model):
 
 def init():
     global connection
-    connection = MySQLDatabase(Configuration.get_master_var("DATABASE_NAME"),
-                               user=Configuration.get_master_var("DATABASE_USER"),
-                               password=Configuration.get_master_var("DATABASE_PASS"),
-                               host=Configuration.get_master_var("DATABASE_HOST"),
-                               port=Configuration.get_master_var("DATABASE_PORT"), use_unicode=True, charset="utf8mb4")
     connection.connect()
     connection.create_tables([LoggedMessage, CustomCommand, LoggedAttachment, Infraction, Reminder, Raid, RaidAction, Raider])
     connection.close()

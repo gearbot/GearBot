@@ -1,17 +1,17 @@
 import asyncio
-import time
-
 import datetime
+import time
+from typing import Optional
+
 import discord
 from discord import Object, Emoji
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
-from typing import Optional
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, MessageUtils, Questions
+    Archive, Confirmation, MessageUtils, Questions, server_info
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -618,7 +618,7 @@ class Moderation(BaseCog):
         """serverinfo_help"""
         if guild is None:
             guild = ctx.guild
-        embed = Utils.server_info(guild, ctx.guild)
+        embed = server_info.server_info(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
