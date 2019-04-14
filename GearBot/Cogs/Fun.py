@@ -1,3 +1,4 @@
+import asyncio
 import time
 from datetime import datetime
 
@@ -5,7 +6,9 @@ import discord
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Translator, Converters, MessageUtils, Utils
+from Util import Configuration, MessageUtils, Translator, Utils
+from Util.Converters import ApexPlatform
+from Util.JumboGenerator import JumboGenerator
 
 
 class Fun(BaseCog):
@@ -27,7 +30,7 @@ class Fun(BaseCog):
                 bot.remove_command(v)
 
     @commands.command()
-    async def apexstats(self, ctx, platform: Converters.ApexPlatform, *, username):
+    async def apexstats(self, ctx, platform: ApexPlatform, *, username):
         """about_apexstats"""
         headers = {"TRN-Api-Key": Configuration.get_master_var("APEX_KEY")}
         url = "https://public-api.tracker.gg/apex/v1/standard/profile/" + platform + "/" + (username)
@@ -47,6 +50,45 @@ class Fun(BaseCog):
                     type_key_value = stat_type["displayValue"]
                     embed.add_field(name=Translator.translate(f'apexstats_key_{type_key_name}', ctx), value=type_key_value)
                 await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def dog(self, ctx):
+        """dog_help"""
+        await ctx.trigger_typing()
+        future_fact = self.get_json("https://dog-api.kinduff.com/api/facts?number=1")
+        key = Configuration.get_master_var("DOG_KEY", "")
+        future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
+        fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
+        embed = discord.Embed(description=fact_json["facts"][0])
+        if key != "":
+            embed.set_image(url=dog_json[0]["url"])
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
+    async def cat(self, ctx):
+        """cat_help"""
+        await ctx.trigger_typing()
+        future_fact = self.get_json("https://catfact.ninja/fact")
+        key = Configuration.get_master_var("CAT_KEY", "")
+        future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
+        fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
+        embed = discord.Embed(description=fact_json["fact"])
+        if key != "":
+            embed.set_image(url=cat_json[0]["url"])
+        await ctx.send(embed=embed)
+
+    async def get_json(self, link, headers=None):
+            async with self.bot.aiosession.get(link, headers=headers) as reply:
+                return await reply.json()
+
+
+    @commands.command()
+    @commands.bot_has_permissions(attach_files=True)
+    async def jumbo(self, ctx, *, emojis: str):
+        """jumbo_help"""
+        await JumboGenerator(ctx, emojis).generate()
 
 def setup(bot):
     bot.add_cog(Fun(bot))

@@ -11,7 +11,6 @@ from Cogs.BaseCog import BaseCog
 from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
     MessageUtils, Selfroles, ReactionManager
 from Util.Converters import Message, DiscordUser
-from Util.JumboGenerator import JumboGenerator
 from Util.Matchers import NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
 
@@ -229,44 +228,6 @@ class Basic(BaseCog):
         return None
 
     @commands.command()
-    @commands.bot_has_permissions(attach_files=True)
-    async def jumbo(self, ctx, *, emojis: str):
-        """jumbo_help"""
-        await JumboGenerator(ctx, emojis).generate()
-
-    @commands.command()
-    @commands.bot_has_permissions(embed_links=True)
-    async def dog(self, ctx):
-        """dog_help"""
-        await ctx.trigger_typing()
-        future_fact = self.get_json("https://dog-api.kinduff.com/api/facts?number=1")
-        key = Configuration.get_master_var("DOG_KEY", "")
-        future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key},
-                                   key != "")
-        fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
-        embed = discord.Embed(description=fact_json["facts"][0])
-        if key != "":
-            embed.set_image(url=dog_json[0]["url"])
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    @commands.bot_has_permissions(embed_links=True)
-    async def cat(self, ctx):
-        """cat_help"""
-        await ctx.trigger_typing()
-        future_fact = self.get_json("https://catfact.ninja/fact")
-        key = Configuration.get_master_var("CAT_KEY", "")
-        future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key' : key}, key != "")
-        fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
-        embed = discord.Embed(description=fact_json["fact"])
-        if  key != "":
-            embed.set_image(url=cat_json[0]["url"])
-        await ctx.send(embed=embed)
-
-
-
-
-    @commands.command()
     async def uid(self, ctx, *, text:str):
         """uid_help"""
         parts = set()
@@ -279,11 +240,6 @@ class Basic(BaseCog):
             await ctx.send("\n".join(parts))
         else:
             await MessageUtils.send_to(ctx, "NO", "no_uids_found")
-
-    async def get_json(self, link, headers=None, do_request=True):
-        if do_request:
-            async with self.bot.aiosession.get(link, headers=headers) as reply:
-                return await reply.json()
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: discord.Role):

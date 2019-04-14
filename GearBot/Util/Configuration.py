@@ -98,13 +98,29 @@ def v8(config):
     }
     add_logging(config, "RAID_LOGS")
 
+def v9(config):
+    for k in ["cat", "dog", "jumbo"]:
+        overrides = config["PERM_OVERRIDES"]
+        if "Basic" in overrides:
+            b = overrides["Basic"]["commands"]
+            if k in b:
+                if "Fun" not in overrides:
+                    overrides["Fun"] = {
+                        "commands": {},
+                        "people": [],
+                        "required": -1
+                    }
+                overrides["Fun"]["commands"][k] = dict(b[k])
+                del b[k]
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
             info.extend(args)
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
