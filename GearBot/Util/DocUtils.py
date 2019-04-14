@@ -32,7 +32,7 @@ def generate_command_list(bot):
                 page += f"# {cog}\n{default}: {plvl} ({perm_lvl})\n\n|   {c} | {default_lvl} | {explanation} |\n| ----------------|--------|-------------------------------------------------------|\n"
                 for command in sorted([c for c in cogo.walk_commands()], key= lambda c:c.qualified_name):
                     if command.qualified_name not in handled:
-                        page += gen_command_listing(cogo, command, code)
+                        page += gen_command_listing(bot, cogo, command, code)
                         handled.add(command.qualified_name)
                 page += "\n\n"
         folder = Configuration.get_master_var("WEBSITE_ROOT", "") +  f"/pages/03.docs/01.commands"
@@ -41,12 +41,12 @@ def generate_command_list(bot):
         with open(f"{folder}/doc.{code}.md", "w", encoding="utf-8") as file:
             file.write(page)
 
-def gen_command_listing(cog, command, code):
+def gen_command_listing(bot, cog, command, code):
     try:
         perm_lvl = Permissioncheckers.get_perm_dict(command.qualified_name.split(' '), cog.permissions)['required']
         listing = f"| | | {Translator.translate_by_code(command.short_doc, code)} |\n"
         listing += f"|{command.qualified_name}|{Translator.translate_by_code(f'perm_lvl_{perm_lvl}', code)} ({perm_lvl})| |\n"
-        signature = str(command.signature).replace("|", "ǀ")
+        signature = bot.help_command.get_command_signature(command).replace("|", "ǀ")
         listing += f"| | |{Translator.translate_by_code('example', code)}: ``!{signature}``|\n"
     except Exception as ex:
         GearbotLogging.error(command.qualified_name)
