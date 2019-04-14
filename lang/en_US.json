@@ -345,7 +345,7 @@
   "clean_all_help": "Just clean everything",
   "channel_created": "A new channel was created: {channel} (``{channel_id}``)",
   "channel_created_by": "A new channel was created: {channel} (``{channel_id}``) by {person} (``{person_id}``)",
-  "channel_deleted": "A channel was removed: {channel} (``{channel.id}``)",
+  "channel_deleted": "A channel was removed: {channel} (``{channel_id}``)",
   "channel_deleted_by": "A channel was removed: {channel} (``{channel_id}``) by {person} (``{person_id}``)",
   "channel_update_simple": "{thing} (``{thing_id}``) was updated: ``{attr}`` changed from ``{before}`` to ``{after}``",
   "channel_update_simple_by": "{thing} (``{thing_id}``) was updated by {person} (``{person_id}``): ``{attr}`` changed from ``{before}`` to ``{after}``",
