@@ -26,7 +26,7 @@ class Fun(BaseCog):
             "APEX_KEY": "apexstats"
         }
         for k, v in to_remove.items():
-            if Configuration.get_master_var(k, "0") is "0":
+            if Configuration.get_master_var(k, "0") == "0":
                 bot.remove_command(v)
 
     @commands.command()
