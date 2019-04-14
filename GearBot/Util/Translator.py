@@ -178,7 +178,7 @@ async def upload():
         count += 1
         hashes[target] = new
         message = await tranlator_log('REFRESH', 'Uploading bot translation file')
-        t = threading.Thread(target=upload_files, args=(("lang/en_US.json", "bot/commands.json", {"title": "GearBot bot strings", "export_pattern": "/bot/%locale_with_underscore%.json"}), False))
+        t = threading.Thread(target=upload_files, args=([("lang/en_US.json", "bot/commands.json", {"title": "GearBot bot strings", "export_pattern": "/bot/%locale_with_underscore%.json"})], False))
         t.start()
         while t.is_alive():
             await asyncio.sleep(1)
