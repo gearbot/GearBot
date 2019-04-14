@@ -43,7 +43,7 @@ def gen_command_listing(bot, cog, command, code):
         listing = f"| | | {Translator.translate_by_code(command.short_doc, code)} |\n"
         listing += f"|{command.qualified_name}|{Translator.translate_by_code(f'perm_lvl_{perm_lvl}', code)} ({perm_lvl})| |\n"
         signature = bot.help_command.get_command_signature(command).replace("|", "ǀ")
-        listing += f"| | |{Translator.translate_by_code('example', code)}: ``!{signature}``|\n"
+        listing += f"| | |{Translator.translate_by_code('example', code)}: ``{signature}``|\n"
     except Exception as ex:
         GearbotLogging.error(command.qualified_name)
         raise ex
