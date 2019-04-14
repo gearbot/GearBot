@@ -146,21 +146,21 @@ class AntiRaid(BaseCog):
             del self.raid_trackers[guild_id]
 
 
-    @commands.group()
-    async def raid(self, ctx):
-        pass
-
-    @raid.command("end")
-    async def raid_end(self, ctx):
-        if ctx.guild.id not in self.raid_trackers:
-            await MessageUtils.send_to(ctx, 'WHAT', "raid_terminate_no_raid")
-        else:
-            raid_id
-            raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
-            for shield in raid_settings["SHIELDS"]:
-                if shield["id"] in self.raid_trackers[ctx.guild.id]["SHIELDS"]:
-                    h = self.raid_trackers[ctx.guild.id]["SHIELDS"][shield["id"]]
-                    await self.terminate_shield(ctx.guild.id, h, shield)
+    # @commands.group()
+    # async def raid(self, ctx):
+    #     pass
+    #
+    # @raid.command("end")
+    # async def raid_end(self, ctx):
+    #     if ctx.guild.id not in self.raid_trackers:
+    #         await MessageUtils.send_to(ctx, 'WHAT', "raid_terminate_no_raid")
+    #     else:
+    #         raid_id
+    #         raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
+    #         for shield in raid_settings["SHIELDS"]:
+    #             if shield["id"] in self.raid_trackers[ctx.guild.id]["SHIELDS"]:
+    #                 h = self.raid_trackers[ctx.guild.id]["SHIELDS"][shield["id"]]
+    #                 await self.terminate_shield(ctx.guild.id, h, shield)
 
 
 
