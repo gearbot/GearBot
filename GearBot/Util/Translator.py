@@ -197,7 +197,7 @@ async def upload():
         count += 1
         hashes[target] = new
         title = None
-        with open(target, 'r') as file:
+        with open(target, 'r', encoding="utf-8") as file:
             for line in file.readlines(10):
                 if line.startswith("title = "):
                     title = line[8:]
@@ -233,8 +233,8 @@ def upload_files(target_info, new):
     data = dict()
     data2 = dict()
     for target in target_info:
-        local, online, extra = zip(target)
-        data[f'files[{online}]'] =  open(local, 'r')
+        local, online, extra = target
+        data[f'files[{online}]'] =  open(local, 'r', encoding='utf-8')
         for k, v in extra.items():
             data2[f'{k}s[{online}]'] = v
     response = requests.post(f"https://api.crowdin.com/api/project/gearbot/{'add-file' if new else 'update-file'}?login={crowdin_data['login']}&account-key={crowdin_data['key']}&json", files=data, data=data2)
