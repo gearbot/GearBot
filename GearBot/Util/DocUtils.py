@@ -10,8 +10,8 @@ async def send_buffer(channel, buffer):
     for page in pages:
         await channel.send(page)
 
-def generate_command_list(bot, message):
-    ctx = bot.get_context(message)
+async def generate_command_list(bot, message):
+    ctx = await bot.get_context(message)
     bot.help_command.context = ctx
     for code in Translator.LANGS.keys():
         page = ""
