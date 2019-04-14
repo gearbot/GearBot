@@ -1,22 +1,18 @@
 import os
 import re
 
-from Util import Configuration, Pages, GearbotLogging, Emoji, Permissioncheckers, Translator
+from Util import Configuration, Pages, GearbotLogging, Permissioncheckers, Translator
 
 image_pattern = re.compile("(?:!\[)([A-z ]+)(?:\]\()(?:\.*/*)(.*)(?:\))(.*)")
-
-async def update_docs(ctx):
-    if Configuration.get_master_var("DOCS"):
-        await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating website")
-        generate_command_list(ctx.bot)
-        await ctx.send(content=f"{Emoji.get_chat_emoji('YES')} Website updated, see logs for details")
 
 async def send_buffer(channel, buffer):
     pages = Pages.paginate(buffer, max_lines=500)
     for page in pages:
         await channel.send(page)
 
-def generate_command_list(bot):
+def generate_command_list(bot, message):
+    ctx = bot.get_context(message)
+    bot.help_command.context = ctx
     for code in Translator.LANGS.keys():
         page = ""
         handled = set()

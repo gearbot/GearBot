@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages, Configuration
+from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration
 
 
 class Reload(BaseCog):
@@ -87,7 +87,6 @@ class Reload(BaseCog):
     @commands.command()
     async def update_site(self, ctx):
         GearbotLogging.info("Site update initiated")
-        await DocUtils.update_docs(ctx)
         message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Purging cloudflare cache")
         cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
         if 'ZONE' in cloudflare_info:
