@@ -232,7 +232,8 @@ def upload_files(target_info, new):
             GearbotLogging.info(response.content)
     data = dict()
     data2 = dict()
-    for local, online, extra in target_info:
+    for target in target_info:
+        local, online, extra = zip(target)
         data[f'files[{online}]'] =  open(local, 'r')
         for k, v in extra.items():
             data2[f'{k}s[{online}]'] = v
