@@ -137,7 +137,7 @@ class CustCommands(BaseCog):
         if message.content.startswith(prefix, 0):
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
-                    command_content = await Utils.clean(self.commands[message.guild.id][trigger])
+                    command_content = self.commands[message.guild.id][trigger].replace("@", "@\u200b")
                     await message.channel.send(command_content)
                     self.bot.custom_command_count += 1
 
