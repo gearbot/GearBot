@@ -12,6 +12,7 @@ async def send_buffer(channel, buffer):
 
 async def generate_command_list(bot, message):
     ctx = await bot.get_context(message)
+    ctx.prefix = "!"
     bot.help_command.context = ctx
     for code in Translator.LANGS.keys():
         page = ""
