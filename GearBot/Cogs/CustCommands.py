@@ -14,7 +14,7 @@ class CustCommands(BaseCog):
             "max": 6,
             "required": 0,
             "commands": {
-                "command": {
+                "commands": {
                     "required": 0,
                     "min": 0,
                     "max": 6,
