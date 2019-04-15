@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration
+from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils
 
 
 class Reload(BaseCog):
@@ -87,7 +87,8 @@ class Reload(BaseCog):
     @commands.command()
     async def update_site(self, ctx):
         GearbotLogging.info("Site update initiated")
-        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Purging cloudflare cache")
+        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating site")
+        await DocUtils.generate_command_list(ctx.bot, message)
         cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
         if 'ZONE' in cloudflare_info:
             headers = {
@@ -101,7 +102,7 @@ class Reload(BaseCog):
                 content = await reply.json()
                 GearbotLogging.info(f"Cloudflare purge response: {content}")
                 if content["success"]:
-                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Cloudflare cache has been purged")
+                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Site has been updated and cloudflare cache has been purged")
                 else:
                     await message.edit(content=f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
 
