@@ -5,8 +5,9 @@ from datetime import datetime
 from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
 
+from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils
+from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
@@ -114,25 +115,33 @@ class Reminders(BaseCog):
         r.save()
 
     async def attempt_delivery(self, location, package):
-        if location is None:
-            return False
-        mode = "dm" if isinstance(location, User) else "channel"
-        now = datetime.utcfromtimestamp(time.time())
-        send_time = datetime.utcfromtimestamp(package.send.timestamp())
-        parts = {
-            "date": send_time.strftime('%c'),
-            "timediff": Utils.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
-            "now_date": now.strftime('%c'),
-            "reminder": package.to_remind,
-            "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
-        }
-        parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
         try:
-            await location.send(parcel)
-        except (Forbidden, NotFound):
+            if location is None:
+                return False
+            mode = "dm" if isinstance(location, User) else "channel"
+            now = datetime.utcfromtimestamp(time.time())
+            send_time = datetime.utcfromtimestamp(package.send.timestamp())
+            parts = {
+                "date": send_time.strftime('%c'),
+                "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
+                "now_date": now.strftime('%c'),
+                "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
+            }
+            parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
+            content = f"```\n{package.to_remind}\n```"
+            try:
+                if len(parcel) + len(content) < 2000:
+                    await location.send(parcel + content)
+                else:
+                    await location.send(parcel)
+                    await location.send(content)
+            except (Forbidden, NotFound):
+                return False
+            else:
+                return True
+        except Exception as ex:
+            await TheRealGearBot.handle_exception("Reminder delivery", self.bot, ex, None, None, None, location, package)
             return False
-        else:
-            return True
 
 
 def setup(bot):
