@@ -1,14 +1,14 @@
 import contextlib
+import io
 import textwrap
 import traceback
 
 import discord
-import io
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
-from Util.Converters import UserID
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils
+from Util.Converters import UserID, Guild
 
 
 class Admin(BaseCog):
@@ -149,6 +149,14 @@ class Admin(BaseCog):
     async def update(self, ctx):
         await ctx.invoke(self.bot.get_command("pull"))
         await ctx.invoke(self.bot.get_command("hotreload"))
+
+    @commands.command()
+    async def blacklist(self, ctx, guild: Guild):
+        blocked = Configuration.get_persistent_var("blacklist", [])
+        blocked.append(guild.id)
+        Configuration.set_persistent_var("blacklist", blocked)
+        await guild.leave()
+        await MessageUtils.send_to(ctx, "yes", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist")
 
 
 

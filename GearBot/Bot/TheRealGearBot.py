@@ -156,14 +156,20 @@ async def on_message(bot, message:Message):
 
 
 async def on_guild_join(guild):
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id in blocked:
+        GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
+        await guild.leave()
     GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
     Configuration.load_config(guild.id)
     name = await Utils.clean(guild.name)
     await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
 
 async def on_guild_remove(guild):
-    GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info(guild))
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id not in blocked:
+        GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info(guild))
 
 class PostParseError(commands.BadArgument):
 
