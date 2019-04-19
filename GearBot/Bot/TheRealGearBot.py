@@ -160,10 +160,11 @@ async def on_guild_join(guild):
     if guild.id in blocked:
         GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
         await guild.leave()
-    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.load_config(guild.id)
-    name = await Utils.clean(guild.name)
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
+    else:
+        GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
+        Configuration.load_config(guild.id)
+        name = await Utils.clean(guild.name)
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
 
 async def on_guild_remove(guild):
     blocked = Configuration.get_persistent_var("blacklist", [])
