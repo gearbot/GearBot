@@ -156,7 +156,7 @@ class Admin(BaseCog):
         blocked.append(guild.id)
         Configuration.set_persistent_var("blacklist", blocked)
         await guild.leave()
-        await MessageUtils.send_to(ctx, "yes", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist")
+        await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist")
 
 
 
