@@ -159,6 +159,10 @@ async def on_guild_join(guild):
     blocked = Configuration.get_persistent_var("blacklist", [])
     if guild.id in blocked:
         GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
+        try:
+            await guild.owner.send("Someone tried adding me to {guild.name} (``{guild.id}``) but the server has been blacklisted")
+        except Exception:
+            pass
         await guild.leave()
     else:
         GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
