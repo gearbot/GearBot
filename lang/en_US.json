@@ -647,5 +647,6 @@
   "help_page_default_lvl":  "Default level",
   "command": "Command",
   "explanation": "Explanation",
-  "example": "Example"
+  "example": "Example",
+  "commit_hash": "GearBot version {hash}"
 }

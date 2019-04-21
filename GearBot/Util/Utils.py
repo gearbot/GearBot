@@ -209,3 +209,7 @@ def find_key(data, wanted):
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
+
+async def get_commit():
+    _, out, __ = await execute('git rev-parse HEAD')
+    return out.decode('utf-8')

@@ -29,7 +29,7 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
 
-async def initialize(bot):
+async def initialize(bot, startup=False):
     #lock event handling while we get ready
     bot.locked = True
     try:
@@ -50,6 +50,10 @@ async def initialize(bot):
             "message_deletes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
+        if startup:
+            c = await Utils.get_commit()
+            GearbotLogging.info(f"GearBot spinning up version {c}")
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot spinning up version {c}")
 
         if bot.redis_pool is None:
             try:
@@ -79,7 +83,7 @@ async def initialize(bot):
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
-        await initialize(bot)
+        await initialize(bot, True)
         #shutdown handler for clean exit on linux
         try:
             for signame in ('SIGINT', 'SIGTERM'):
