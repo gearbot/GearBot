@@ -1,3 +1,5 @@
+from urllib import parse
+
 import discord
 from discord import DMChannel
 from discord.ext import commands
@@ -59,14 +61,15 @@ class Censor(BaseCog):
             return
         ctx = await self.bot.get_context(message)
         if Permissioncheckers.get_user_lvl(ctx) >= 2:
-            pass
+            return
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
         max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
         content = message.content.replace('\\', '')
+        decoded_content = parse.unquote(content)
         censored = False
         if len(guilds) is not 0:
-            codes = INVITE_MATCHER.findall(content)
+            codes = INVITE_MATCHER.findall(decoded_content)
             for code in codes:
                 try:
                     invite: discord.Invite = await self.bot.fetch_invite(code)
