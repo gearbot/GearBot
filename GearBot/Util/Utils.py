@@ -211,5 +211,5 @@ def chunks(l, n):
         yield l[i:i+n]
 
 async def get_commit():
-    _, out, __ = await execute('git rev-parse HEAD')
+    _, out, __ = await execute('git rev-parse --short HEAD')
     return out.decode('utf-8')
