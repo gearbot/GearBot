@@ -323,7 +323,7 @@ class Serveradmin(BaseCog):
         if command_object is not None:
             cog = command_object.cog
             cog_name = command_object.cog_name
-            if not hasattr(cog, "permissions"):
+            if cog.permissions is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
             elif perm_lvl in range(7):
                 perm_dict = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), cog.permissions)
