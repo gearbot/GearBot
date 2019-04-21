@@ -24,7 +24,7 @@ class Infractions(BaseCog):
                     "min": 2,
                     "max": 6,
                     "commands": {
-                        "delete": {"required": 5, "min": 4, "max": 6}
+                        "delete": {"required": 5, "min": 3, "max": 6}
                     }
                 }
             }
