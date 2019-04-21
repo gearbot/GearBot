@@ -48,8 +48,8 @@ async def update_message(bot, message_id, content):
         await bot.redis_pool.hmset_dict(f"messages:{message_id}", content=content)
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id).execute()
 
-def assemble(destination, emoji, message, translate=True, **kwargs):
-    translated = Translator.translate(message, destination, **kwargs) if translate else message
+def assemble(destination, emoji, m, translate=True, **kwargs):
+    translated = Translator.translate(m, destination, **kwargs) if translate else m
     return f"{Emoji.get_chat_emoji(emoji)} {translated}"
 
 async def archive_purge(bot, id_list, guild_id):
