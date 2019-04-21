@@ -43,7 +43,7 @@ class ModLog(BaseCog):
             permissions = channel.permissions_for(guild.get_member(self.bot.user.id))
             if permissions.read_messages and permissions.read_message_history:
 
-                async for message in channel.history(limit=limit, reverse=False,
+                async for message in channel.history(limit=limit, oldest_first=False,
                                                      before=self.cache_message if startup else None):
                     processing = time.perf_counter()
                     if not self.running:
@@ -471,18 +471,12 @@ class ModLog(BaseCog):
                                           "user_limit"])
 
         # checking overrides
-        old_overrides = dict()
-        for target, override in before.overwrites:
-            old_overrides[target] = override
 
-        new_overrides = dict()
-        for target, override in after.overwrites:
-            new_overrides[target] = override
 
-        for target, override in old_overrides.items():
-            if target in new_overrides:
+        for target, override in before.overwrites.items():
+            if target in after.overwrites:
                 # still exists, check for modifications
-                a_override = new_overrides[target]
+                a_override = after.overwrites[target]
                 if override._values != a_override._values:
                     # something changed
                     for perm, value in override:
@@ -496,7 +490,7 @@ class ModLog(BaseCog):
                             def finder(e):
                                 if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id:
                                     before_allowed, before_denied = override.pair()
-                                    after_allowed, after_denied = new_overrides[target].pair()
+                                    after_allowed, after_denied = after.overwrites[target].pair()
                                     has_allow = hasattr(e.before, "allow")
                                     has_deny = hasattr(e.before, "deny")
                                     if not ( ((has_allow and (before_allowed.value != after_allowed.value) and before_allowed.value == e.before.allow.value and after_allowed.value == e.after.allow.value) or (has_allow == hasattr(e.after, "allow")))
@@ -537,13 +531,13 @@ class ModLog(BaseCog):
                 logging = MessageUtils.assemble(after.guild.id, "ALTER", key, **parts)
                 GearbotLogging.log_to(after.guild.id, "CHANNEL_CHANGES", logging)
 
-        for target in set(new_overrides.keys()).difference(old_overrides.keys()):
+        for target in set(after.overwrites.keys()).difference(before.overwrites.keys()):
             key = "permission_override_added"
             parts = dict(channel=Utils.escape_markdown(after), channel_id=after.id, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
             def finder(e):
                 if e.target.id == after.id and e.extra.id == target.id:
-                    after_allowed, after_denied = new_overrides[target].pair()
+                    after_allowed, after_denied = after.overwrites[target].pair()
                     has_allow = hasattr(e.after, "allow")
                     has_deny = hasattr(e.after, "deny")
                     if not ((has_allow and after_allowed.value == e.after.allow.value) or (
