@@ -20,11 +20,10 @@ async def censor_invite(ctx, code, server_name):
         # we failed? guess we lost the race, log anyways
         GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
+        ctx.bot.data["message_deletes"].remove(ctx.message.id)
     except discord.Forbidden:
         await GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES", MessageUtils.assemble(ctx, 'WARNING', 'invite_censor_forbidden', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention))
-    finally:
-        if ctx.message.id in ctx.bot.data["message_deletes"]:
-            ctx.bot.data["message_deletes"].remove(ctx.message.id)
+        ctx.bot.data["message_deletes"].remove(ctx.message.id)
 
 
 
@@ -60,7 +59,7 @@ class Censor(BaseCog):
             return
         ctx = await self.bot.get_context(message)
         if Permissioncheckers.get_user_lvl(ctx) >= 2:
-            return
+            pass
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
         max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
