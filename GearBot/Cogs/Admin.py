@@ -21,7 +21,7 @@ class Admin(BaseCog):
         Pages.unregister("eval")
 
     async def cog_check(self, ctx):
-        return await ctx.bot.is_owner(ctx.author)
+        return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
 
 
     @commands.command(hidden=True)
