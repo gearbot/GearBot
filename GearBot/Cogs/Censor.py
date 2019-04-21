@@ -36,7 +36,7 @@ class Censor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSOR_MESSAGES"):
+        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSOR_MESSAGES") or self.bot.user.id == message.author.id:
             return
         await self.censor_message(message)
 
@@ -52,7 +52,8 @@ class Censor(BaseCog):
             except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
                 pass
             else:
-                await self.censor_message(message)
+                if self.bot.user.id != message.author.id:
+                    await self.censor_message(message)
 
     async def censor_message(self, message: discord.Message):
         if message.guild is None or \
