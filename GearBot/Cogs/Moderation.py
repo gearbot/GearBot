@@ -677,6 +677,8 @@ class Moderation(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="clean")
 
     @clean.command("user")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_user_help"""
         if len(users) is 0:
@@ -684,16 +686,22 @@ class Moderation(BaseCog):
         await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
 
     @clean.command("bots")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_bots(self, ctx, amount: RangedInt(1) = 50):
         """clean_bots_help"""
         await self._clean(ctx, amount, lambda m: m.author.bot)
 
     @clean.command("all")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
         await self._clean(ctx, amount, lambda m: True, check_amount=amount)
 
     @clean.command("last")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_last(self, ctx, duration: Duration, excess=""):
         """clean_last_help"""
         if duration.unit is None:
@@ -702,11 +710,15 @@ class Moderation(BaseCog):
         await self._clean(ctx, 5000, lambda m: True, after=until)
 
     @clean.command("until")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_until(self, ctx, message:Message(local_only=True)):
         """clean_until_help"""
         await self._clean(ctx, 5000, lambda m: True, after=Object(message.id-1))
 
     @clean.command("between")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_between(self, ctx, start: Message(local_only=True), end: Message(local_only=True)):
         """clean_between_help"""
         a = min(start.id, end.id)
@@ -714,6 +726,8 @@ class Moderation(BaseCog):
         await self._clean(ctx, 5000, lambda m: True , before=Object(b+1), after=Object(a+1))
 
     @clean.command("everywhere")
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_messages=True)
     async def clean_everywhere(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_everywhere_help"""
         if len(users) is 0:
