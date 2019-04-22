@@ -24,7 +24,7 @@ async def censor_invite(ctx, code, server_name):
                               f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
         ctx.bot.data["message_deletes"].remove(ctx.message.id)
     except discord.Forbidden:
-        await GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES", MessageUtils.assemble(ctx, 'WARNING', 'invite_censor_forbidden', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention))
+        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES", MessageUtils.assemble(ctx, 'WARNING', 'invite_censor_forbidden', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention))
         ctx.bot.data["message_deletes"].remove(ctx.message.id)
 
 
