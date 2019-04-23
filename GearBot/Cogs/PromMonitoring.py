@@ -1,8 +1,12 @@
 import asyncio
 
+from aiohttp import web
+
 import discord
-import prometheus_client as prom
 from discord.ext import commands
+
+import prometheus_client as prom
+from prometheus_client.exposition import generate_latest
 
 from Cogs.BaseCog import BaseCog
 
@@ -13,15 +17,14 @@ class PromMonitoring(BaseCog):
         self.running = True
         self.command_counter = prom.Counter("commands_ran", "How many times commands were ran and who ran them", [
             "command_name",
-            "author_name",
-            "author_id",
             "guild_id"
         ])
 
-        self.message_counter = prom.Counter("messages_sent", "What messages have been sent and by who", [
-            "author_name",
-            "author_id",
-            "guild_id",
+        self.guild_messages = prom.Counter("messages_sent", "What messages have been sent and by who", [
+            "guild_id"
+        ])
+
+        self.messages_to_length = prom.Counter("messages_to_length", "Keeps track of what messages were what length", [
             "length"
         ])
 
@@ -30,18 +33,17 @@ class PromMonitoring(BaseCog):
         
         self.bot.loop.create_task(self.raw_stats_updater())
 
-        self.metric_server = prom.start_http_server(8082)
+        self.metric_server = self.bot.loop.create_task(self.create_site())
 
     def cog_unload(self):
         self.running = False
+        self.metric_server.cancel()
 
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         self.command_counter.labels(
             command_name = ctx.invoked_with,
-            author_name = ctx.author,
-            author_id = ctx.author.id,
             guild_id = ctx.guild.id
         ).inc()
 
@@ -49,13 +51,14 @@ class PromMonitoring(BaseCog):
     async def on_message(self, message: discord.Message):
         if message.guild is None:
             return
-        self.message_counter.labels(
-            author_name = message.author,
-            author_id = message.author.id,
-            guild_id = message.guild.id,
-            length = len(message.content)
+
+        self.guild_messages.labels(
+            guild_id = message.guild.id
         ).inc()
 
+        self.messages_to_length.labels(
+            length = len(message.content)
+        )
 
     async def raw_stats_updater(self):
         while self.running:
@@ -74,6 +77,22 @@ class PromMonitoring(BaseCog):
             if not self.running: return
 
             await asyncio.sleep(10)
+
+
+    async def create_site(self):
+        metrics_app = web.Application()
+        metrics_app.add_routes([web.get("/", serve_metrics)])
+
+        runner = web.AppRunner(metrics_app)
+        await self.bot.loop.create_task(runner.setup())
+        site = web.TCPSite(runner)
+        await site.start()
+
+        return site
+
+async def serve_metrics(request):
+    metrics_to_server = generate_latest().decode("utf-8")
+    return web.Response(text=metrics_to_server, content_type="text/plain")
 
 
 def setup(bot):
