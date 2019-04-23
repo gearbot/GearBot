@@ -1,16 +1,17 @@
-import prometheus_client as prom
 import asyncio
 
 import discord
+import prometheus_client as prom
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
+
 
 class PromMonitor(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.running = True
-        self.command_counter = prom.Counter("commands_ran", "How many times commands were ran and who ran them", [
+        self.command_counter = prom.Counter("²", "How many times commands were ran and who ran them", [
             "command_name",
             "author_name",
             "author_id",
@@ -46,6 +47,8 @@ class PromMonitor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.guild is None:
+            return
         self.message_counter.labels(
             author_name = message.author,
             author_id = message.author.id,
