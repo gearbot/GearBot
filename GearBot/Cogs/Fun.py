@@ -70,7 +70,7 @@ class Fun(BaseCog):
     async def cat(self, ctx):
         """cat_help"""
         await ctx.trigger_typing()
-        future_fact = self.get_json("https://cat.gearbot.rocks/catfact")
+        future_fact = self.get_json("http://cat.gearbot.rocks/catfact")
         key = Configuration.get_master_var("CAT_KEY", "")
         future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
