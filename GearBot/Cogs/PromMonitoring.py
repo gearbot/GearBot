@@ -11,7 +11,7 @@ class PromMonitoring(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.running = True
-        self.command_counter = prom.Counter("²", "How many times commands were ran and who ran them", [
+        self.command_counter = prom.Counter("commands_ran", "How many times commands were ran and who ran them", [
             "command_name",
             "author_name",
             "author_id",
