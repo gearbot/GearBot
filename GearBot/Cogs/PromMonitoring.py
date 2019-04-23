@@ -7,7 +7,7 @@ from discord.ext import commands
 from Cogs.BaseCog import BaseCog
 
 
-class PromMonitor(BaseCog):
+class PromMonitoring(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.running = True
@@ -77,4 +77,4 @@ class PromMonitor(BaseCog):
 
 
 def setup(bot):
-    bot.add_cog(PromMonitor(bot))
+    bot.add_cog(PromMonitoring(bot))
