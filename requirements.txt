@@ -10,3 +10,4 @@ python-socketio==3.1.2
 pytz==2018.9
 pyseeyou==1.0.0
 ruamel.yaml==0.15.88
+prometheus_client==0.6.0
