@@ -1,8 +1,10 @@
 import asyncio
 
 from discord.ext.commands import AutoShardedBot
+from prometheus_client import CollectorRegistry
 
 from Bot import TheRealGearBot
+from Util.PromMonitors import PromMonitors
 
 
 class GearBot(AutoShardedBot):
@@ -21,9 +23,12 @@ class GearBot(AutoShardedBot):
     redis_pool = None
     aiosession = None
     being_cleaned = dict()
+    metrics_reg = CollectorRegistry()
+
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
+        self.metrics = PromMonitors(self)
 
 
     async def _run_event(self, coro, event_name, *args, **kwargs):
