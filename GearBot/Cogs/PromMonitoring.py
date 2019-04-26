@@ -45,6 +45,7 @@ class PromMonitoring(BaseCog):
 
     async def raw_stats_updater(self):
         while self.running:
+            metrics = self.bot.metrics
             old_count = int(self.bot.metrics.bot_message_raw_count.collect()[0].samples[0].value)
             new_count = self.bot.bot_messages
             if new_count != old_count:

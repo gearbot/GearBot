@@ -20,8 +20,20 @@ class PromMonitors:
         self.bot_message_raw_count = prom.Counter("bot_message_raw_count",
                                                   "Raw count of how many messages we have seen from bots")
 
+        self.bot_guilds = prom.Gauge("bot_guilds", "How many guilds the bot is in")
+        self.bot_guilds.set_function(lambda:  len(bot.guilds))
+
+        self.bot_users = prom.Gauge("bot_users", "How many users the bot can see")
+        self.bot_users.set_function(lambda : sum(len(g.members) for g in bot.guilds))
+
+        self.bot_users_unique = prom.Gauge("bot_users_unique", "How many unique users the bot can see")
+        self.bot_users_unique.set_function(lambda : len(bot.users))
+
         bot.metrics_reg.register(self.command_counter)
         bot.metrics_reg.register(self.guild_messages)
         bot.metrics_reg.register(self.messages_to_length)
         bot.metrics_reg.register(self.user_message_raw_count)
         bot.metrics_reg.register(self.bot_message_raw_count)
+        bot.metrics_reg.register(self.bot_guilds)
+        bot.metrics_reg.register(self.bot_users)
+        bot.metrics_reg.register(self.bot_users_unique)
