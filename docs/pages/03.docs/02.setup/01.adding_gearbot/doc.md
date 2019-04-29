@@ -16,7 +16,7 @@ The first step is to add GearBot to the server and prepare a few things so he ca
     - Ban people with the ban command
 - View audit log
     - Allows accessing the audit log to convert manual kicks/bans to infractions, as well as enhancing a lot of logging to show who did the action
-- Read messages/Send messges/Embed links/Attach files/Read message history/Add reactions/Use external emoji
+- Read messages/Send messages/Embed links/Attach files/Read message history/Add reactions/Use external emoji
     - Just basic permissions to interact with chat, not all servers give these permissions to the everyone role
 - Manage messages
     - Allows removing messages with the clean commands and cleaning command trigger messages in some cases

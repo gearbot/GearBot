@@ -274,7 +274,7 @@
   "autoban_too_many_mentions": "[AUTOBAN] Spam message with {count} mentions",
   "automod_ban_failed": "[AUTOBAN FAILURE] AUTOBAN was triggered for {user} (``{user_id}``) but I don't have the BAN_MEMBERS permission required to actually ban them! Ban reason: ```{reason}```",
   "censored_message": "Censored message by {user} (``{user_id}``) in {channel}, blacklisted char sequence ``{sequence}`` is not allowed.\n```{message}```",
-  "censor_message_failedc": "Failed to censor a message by {user} (``{user_id}``), blacklisted char sequence `{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
+  "censor_message_failed": "Failed to censor a message by {user} (``{user_id}``), blacklisted char sequence `{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
   "warning_dm": "You have been warned in **{server}**!",
   "dm_on_warn_msg_enabled": "People will now receive a DM from me when you warn them containing the warning (but not the moderator warning them)",
   "dm_on_warn_msg_disabled": "When a warning is issued it will only be stored and logged, the person will not be informed",
