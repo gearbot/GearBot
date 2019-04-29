@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from discord.ext.commands import AutoShardedBot
 from prometheus_client import CollectorRegistry
@@ -38,13 +39,17 @@ class GearBot(AutoShardedBot):
         while (self.locked or not self.STARTUP_COMPLETE) and event_name != "on_ready":
             await asyncio.sleep(0.2)
         self.running_events.append(coro)
-        try:
-            await super()._run_event(coro, event_name, *args, **kwargs)
-        except Exception as ex:
-            self.running_events.remove(coro)
-            raise ex
-        else:
-            self.running_events.remove(coro)
+        self.metrics.bot_event_counts.labels(event_name=event_name).inc()
+        with self.metrics.bot_event_counts.labels(event_name=event_name).track_inprogress():
+            start = time.perf_counter_ns()
+            try:
+                await super()._run_event(coro, event_name, *args, **kwargs)
+            except Exception as ex:
+                self.running_events.remove(coro)
+                raise ex
+            else:
+                self.running_events.remove(coro)
+            self.metrics.bot_event_timing.labels(event_name=event_name).observe((time.perf_counter_ns() - start) / 1000000)
 
 
     #### event handlers, basically bouncing everything to TheRealGearBot file so we can hotreload our listeners

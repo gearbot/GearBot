@@ -29,6 +29,11 @@ class PromMonitors:
         self.bot_users_unique = prom.Gauge("bot_users_unique", "How many unique users the bot can see")
         self.bot_users_unique.set_function(lambda : len(bot.users))
 
+        self.bot_event_progress = prom.Gauge("bot_event_progress", "How many events are being processed", ["event_name"])
+        self.bot_event_timing = prom.Histogram("bot_event_timing", "How long events took to process", ["event_name"])
+        self.bot_event_counts = prom.Gauge("bot_event_counts", "How much each event occurred", ["event_name"])
+        self.bot_command_timing = prom.Histogram("bot_command_timing", "How long commands took to run", ["command_name"])
+
         bot.metrics_reg.register(self.command_counter)
         bot.metrics_reg.register(self.guild_messages)
         bot.metrics_reg.register(self.messages_to_length)
@@ -37,3 +42,7 @@ class PromMonitors:
         bot.metrics_reg.register(self.bot_guilds)
         bot.metrics_reg.register(self.bot_users)
         bot.metrics_reg.register(self.bot_users_unique)
+        bot.metrics_reg.register(self.bot_event_progress)
+        bot.metrics_reg.register(self.bot_event_timing)
+        bot.metrics_reg.register(self.bot_event_counts)
+        bot.metrics_reg.register(self.bot_command_timing)

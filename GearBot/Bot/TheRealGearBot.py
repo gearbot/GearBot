@@ -156,7 +156,9 @@ async def on_message(bot, message:Message):
             except Forbidden:
                 pass #closed DMs
         else:
+            start = time.perf_counter_ns()
             await bot.invoke(ctx)
+            bot.metrics.bot_command_timing.labels(command_name=ctx.invoked_with).observe((time.perf_counter_ns() - start) / 1000000)
 
 
 async def on_guild_join(guild):

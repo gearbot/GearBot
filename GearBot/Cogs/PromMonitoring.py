@@ -26,7 +26,7 @@ class PromMonitoring(BaseCog):
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         self.bot.metrics.command_counter.labels(
-            command_name = ctx.invoked_with,
+            command_name = str(ctx.invoked_with),
             guild_id = ctx.guild.id
         ).inc()
 
@@ -76,7 +76,6 @@ class PromMonitoring(BaseCog):
 
     async def serve_metrics(self, request):
         metrics_to_server = generate_latest(self.bot.metrics_reg).decode("utf-8")
-        print("Here: " + metrics_to_server)
         return web.Response(text=metrics_to_server, content_type="text/plain")
 
 
