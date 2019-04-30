@@ -45,7 +45,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
         page_num += 1
         add = False
     elif str(reaction) in [refresh, r2]:
-        if not message.channel.guild.me.guild_permissions.manage_messages:
+        if not message.channel.permissions_for(message.channel.guild.me).manage_messages:
             return kwargs
         await message.clear_reactions()
         await asyncio.sleep(0.2)
