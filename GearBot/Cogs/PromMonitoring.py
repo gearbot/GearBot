@@ -14,8 +14,6 @@ class PromMonitoring(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.running = True
-        self.bot.loop.create_task(self.raw_stats_updater())
-
         self.bot.loop.create_task(self.create_site())
 
     def cog_unload(self):
@@ -27,40 +25,20 @@ class PromMonitoring(BaseCog):
     async def on_command_completion(self, ctx):
         self.bot.metrics.command_counter.labels(
             command_name = str(ctx.invoked_with),
-            guild_id = ctx.guild.id
+            guild_id = ctx.guild.id if ctx.guild.id is not None else 0
         ).inc()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.guild is None:
-            return
+        m = self.bot.metrics
 
-        self.bot.metrics.guild_messages.labels(
-            guild_id = message.guild.id
+        m.guild_messages.labels(
+            guild_id = message.guild.id if message.guild.id is not None else 0
         ).inc()
 
-        self.bot.metrics.messages_to_length.labels(
-            length = len(message.content)
-        )
+        m.messages_to_length.observe(len(message.content))
 
-    async def raw_stats_updater(self):
-        while self.running:
-            metrics = self.bot.metrics
-            old_count = int(self.bot.metrics.bot_message_raw_count.collect()[0].samples[0].value)
-            new_count = self.bot.bot_messages
-            if new_count != old_count:
-                inc_value = (new_count - old_count) # Keep the dashboards stats up to date with the internal count
-                self.bot.metrics.bot_message_raw_count.inc(inc_value)
-
-            old_count = int(self.bot.metrics.user_message_raw_count.collect()[0].samples[0].value)
-            new_count = self.bot.user_messages
-            if new_count != old_count:
-                inc_value = (new_count - old_count)
-                self.bot.metrics.user_message_raw_count.inc(inc_value)
-            
-            if not self.running: return
-
-            await asyncio.sleep(10)
+        (m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
 
     async def create_site(self):
         await asyncio.sleep(5)

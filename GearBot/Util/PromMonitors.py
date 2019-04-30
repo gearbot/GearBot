@@ -11,12 +11,9 @@ class PromMonitors:
             "guild_id"
         ])
 
-        self.messages_to_length = prom.Counter("messages_to_length", "Keeps track of what messages were what length", [
-            "length"
-        ])
+        self.messages_to_length = prom.Histogram("messages_to_length", "Keeps track of what messages were what length")
 
-        self.user_message_raw_count = prom.Counter("user_message_raw_count",
-                                                   "Raw count of how many messages we have seen from users")
+        self.user_message_raw_count = prom.Counter("user_message_raw_count", "Raw count of how many messages we have seen from users")
         self.bot_message_raw_count = prom.Counter("bot_message_raw_count",
                                                   "Raw count of how many messages we have seen from bots")
 
