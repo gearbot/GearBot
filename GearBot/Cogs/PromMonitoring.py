@@ -38,7 +38,7 @@ class PromMonitoring(BaseCog):
 
         m.messages_to_length.observe(len(message.content))
 
-        (m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
+        (m.own_message_raw_count if message.author.id == self.bot.user.id else m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
 
     async def create_site(self):
         await asyncio.sleep(5)

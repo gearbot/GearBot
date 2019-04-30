@@ -16,6 +16,7 @@ class PromMonitors:
         self.user_message_raw_count = prom.Counter("user_message_raw_count", "Raw count of how many messages we have seen from users")
         self.bot_message_raw_count = prom.Counter("bot_message_raw_count",
                                                   "Raw count of how many messages we have seen from bots")
+        self.own_message_raw_count = prom.Counter("own_message_raw_count", "Raw count of how many messages GearBot has send")
 
         self.bot_guilds = prom.Gauge("bot_guilds", "How many guilds the bot is in")
         self.bot_guilds.set_function(lambda:  len(bot.guilds))
@@ -43,3 +44,4 @@ class PromMonitors:
         bot.metrics_reg.register(self.bot_event_timing)
         bot.metrics_reg.register(self.bot_event_counts)
         bot.metrics_reg.register(self.bot_command_timing)
+        bot.metrics_reg.register(self.own_message_raw_count)
