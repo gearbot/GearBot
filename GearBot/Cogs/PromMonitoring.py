@@ -24,7 +24,7 @@ class PromMonitoring(BaseCog):
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         self.bot.metrics.command_counter.labels(
-            command_name = ctx.qualified_name,
+            command_name = ctx.command.qualified_name,
             guild_id = ctx.guild.id if ctx.guild.id is not None else 0
         ).inc()
 
