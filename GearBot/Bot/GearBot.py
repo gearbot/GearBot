@@ -41,7 +41,8 @@ class GearBot(AutoShardedBot):
         self.running_events.append(coro)
         self.metrics.bot_event_counts.labels(event_name=event_name).inc()
         with self.metrics.bot_event_counts.labels(event_name=event_name).track_inprogress():
-            start = time.perf_counter_ns()
+            f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
+            start = f()
             try:
                 await super()._run_event(coro, event_name, *args, **kwargs)
             except Exception as ex:
@@ -49,7 +50,7 @@ class GearBot(AutoShardedBot):
                 raise ex
             else:
                 self.running_events.remove(coro)
-            self.metrics.bot_event_timing.labels(event_name=event_name).observe((time.perf_counter_ns() - start) / 1000000)
+            self.metrics.bot_event_timing.labels(event_name=event_name).observe((f() - start) / 1000000)
 
 
     #### event handlers, basically bouncing everything to TheRealGearBot file so we can hotreload our listeners
