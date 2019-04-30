@@ -52,6 +52,7 @@ async def initialize(bot, startup=False):
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
         if startup:
             c = await Utils.get_commit()
+            bot.version = c
             GearbotLogging.info(f"GearBot spinning up version {c}")
             await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot spinning up version {c}")
 

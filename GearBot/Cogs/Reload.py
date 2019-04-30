@@ -80,6 +80,7 @@ class Reload(BaseCog):
         c = await Utils.get_commit()
         GearbotLogging.info(f"Hot reload complete, now running on {c}")
         m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete, now running on {c}"
+        self.bot.version = c
         await message.edit(content=m)
         await ctx_message.edit(content=m)
         self.bot.hot_reloading = False

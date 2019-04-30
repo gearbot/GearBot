@@ -24,7 +24,8 @@ class GearBot(AutoShardedBot):
     redis_pool = None
     aiosession = None
     being_cleaned = dict()
-    metrics_reg = CollectorRegistry()
+    metrics_reg = CollectorRegistry(),
+    version = ""
 
 
     def __init__(self, *args, loop=None, **kwargs):
