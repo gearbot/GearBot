@@ -11,7 +11,7 @@ def server_info(guild, request_guild=None):
     if guild_features == "":
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.fromtimestamp(time.time()))
+    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcnow())
     embed.set_thumbnail(url=guild.icon_url)
     embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
