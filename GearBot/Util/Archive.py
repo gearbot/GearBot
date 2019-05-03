@@ -1,7 +1,7 @@
 import asyncio
+import datetime
 import os
 
-import datetime
 import discord
 
 from Util import Utils, GearbotLogging, Translator, Emoji
@@ -18,7 +18,7 @@ async def archive_purge(bot, guild_id, messages):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(out)
     file = open (filename, "rb")
-    GearbotLogging.log_to(guild_id, "EDIT_LOGS", message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(filename, "Purged messages archive.txt"))
+    GearbotLogging.log_to(guild_id, 'purged_log', count=len(messages), channel=channel.mention, file=discord.File(filename, "Purged messages archive.txt"))
     await asyncio.sleep(60) # things are not logged after 60 seconds, something is seriously messed up
     file.close()
     os.remove(filename)

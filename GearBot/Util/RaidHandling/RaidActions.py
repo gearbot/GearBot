@@ -3,13 +3,12 @@ from abc import ABC, abstractmethod
 
 from discord import Forbidden, NotFound
 
-from Util import GearbotLogging, MessageUtils, Utils, Configuration, InfractionUtils
+from Util import GearbotLogging, Utils, Configuration, InfractionUtils
 from database import DatabaseConnector
 
 
 async def log(key, gid, shield, **kwargs):
-    await GearbotLogging.log_to(gid, "NO", MessageUtils.assemble(gid, 'BAD_USER', key,
-                                                           shield_name=Utils.escape_markdown(shield["name"]), **kwargs))
+    await GearbotLogging.log_to(gid, key, shield_name=Utils.escape_markdown(shield["name"]), **kwargs)
 
 class RaidAction(ABC):
 
@@ -56,7 +55,7 @@ class Mute(RaidAction):
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
         role = member.guild.get_role(Configuration.get_var(member.guild.id, "MUTE_ROLE"))
         if role is None:
-            GearbotLogging.log_to(member.guild.id, "RAID_LOGS", MessageUtils.assemble(member.guild.id, 'BAD_USER', 'raid_mute_failed_no_role'))
+            GearbotLogging.log_to(member.guild.id, 'raid_mute_failed_no_role')
         else:
             duration = data["duration"]
             reason = f"Raider muted by raid shield {shield['name']} in raid {raid_id}"
@@ -80,11 +79,10 @@ class Kick(RaidAction):
         reason=f"Raider kicked by raid shield {shield['name']} in raid {raid_id}"
         await member.kick(reason=reason)
         i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
-        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
-                              MessageUtils.assemble(member.guild.id, 'BOOT', 'kick_log', member.guild.id,
+        GearbotLogging.log_to(member.guild.id, 'kick_log', member.guild.id,
                                                     user=Utils.clean_user(member), user_id=member.id,
                                                     moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
-                                                    reason=reason, inf=i.id))
+                                                    reason=reason, inf=i.id)
         DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
@@ -103,10 +101,9 @@ class Ban(RaidAction):
         await member.ban(reason=reason,
                             delete_message_days=1 if data["clean_messages"] else 0)
         i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, "Ban", reason)
-        GearbotLogging.log_to(member.guild.id, "MOD_ACTIONS",
-                              MessageUtils.assemble(member.guild.id, 'BAN', 'ban_log', user=Utils.clean_user(member), user_id=member.id,
+        GearbotLogging.log_to(member.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
                                                     moderator=Utils.clean_user(bot.user), moderator_id=bot.user.id,
-                                                    reason=reason, inf=i.id))
+                                                    reason=reason, inf=i.id)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass

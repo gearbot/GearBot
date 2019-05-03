@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils, Emoji, MessageUtils
+from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils
 from Util.Matchers import INVITE_MATCHER
 
 
@@ -16,16 +16,14 @@ async def censor_invite(ctx, code, server_name):
     clean_name = Utils.clean_user(ctx.message.author)
     try:
         await ctx.message.delete()
-        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                              f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('censored_invite', ctx.guild.id, user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)}")
+        GearbotLogging.log_to(ctx.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)
     except discord.NotFound:
         # we failed? guess we lost the race, log anyways
-        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                              f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('invite_censor_fail', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)}")
+        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_fail', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
         if ctx.message.id in ctx.bot.data["message_deletes"]:
             ctx.bot.data["message_deletes"].remove(ctx.message.id)
     except discord.Forbidden:
-        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES", MessageUtils.assemble(ctx, 'WARNING', 'invite_censor_forbidden', ctx.guild.id, user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention))
+        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_forbidden', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
         if ctx.message.id in ctx.bot.data["message_deletes"]:
             ctx.bot.data["message_deletes"].remove(ctx.message.id)
 
@@ -98,12 +96,10 @@ class Censor(BaseCog):
                             pass  # lost the race with another bot?
                         else:
                             clean_message = await clean_content().convert(ctx, message.content)
-                            GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                                                  f":no_entry_sign: {Translator.translate('censored_message', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)}")
+                            GearbotLogging.log_to(ctx.guild.id, 'censored_message', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
-                        GearbotLogging.log_to(ctx.guild.id, "CENSORED_MESSAGES",
-                                              f":no_entry_sign: {Translator.translate('censor_message_failed', ctx.guild.id, user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)}")
+                        GearbotLogging.log_to(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
 
         mentions = len(message.mentions) + len(message.role_mentions)
         if mentions > max_mentions > 4:
@@ -115,10 +111,8 @@ class Censor(BaseCog):
 
             else:
                 self.bot.data["forced_exits"].remove(message.author.id)
-                translated = Translator.translate('automod_ban_failed', message.guild.id, user=message.author,
+                GearbotLogging.log_to(message.guild.id, 'automod_ban_failed', message.guild.id, user=message.author,
                                                   user_id=message.author.id, reason=reason)
-                GearbotLogging.log_to(message.guild.id, "MOD_ACTIONS",
-                                      f"{Emoji.get_chat_emoji('WARNING')} {translated}")
 
 
 def setup(bot):
