@@ -652,5 +652,5 @@
   "commit_hash": "GearBot version {hash}",
   "mute_duration_extended_log": "{user} (``{user_id}``) had their mute (``#{inf_id}``) extended by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
   "mute_duration_added_log": "{user} (``{user_id}``) has been re-muted (``#{inf_id}``) by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
-  "mute_duration_overwritten_log": "{user} (``{user_id}``) their mute (``#{inf_id}``) duration was overwritten by {moderator} (``{moderator_id}``) to {duration} and will now end at {end}",
+  "mute_duration_overwritten_log": "{user} (``{user_id}``) their mute (``#{inf_id}``) duration was overwritten by {moderator} (``{moderator_id}``) to {duration} and will now end at {end}"
 }

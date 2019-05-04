@@ -29,8 +29,11 @@ class PromMonitors:
 
         self.bot_event_progress = prom.Gauge("bot_event_progress", "How many events are being processed", ["event_name"])
         self.bot_event_timing = prom.Histogram("bot_event_timing", "How long events took to process", ["event_name"])
-        self.bot_event_counts = prom.Gauge("bot_event_counts", "How much each event occurred", ["event_name"])
+        self.bot_event_counts = prom.Counter("bot_event_counts", "How much each event occurred", ["event_name"])
         self.bot_command_timing = prom.Histogram("bot_command_timing", "How long commands took to run", ["command_name"])
+
+        self.bot_latency = prom.Gauge("bot_latency", "Current bot latency")
+        self.bot_latency.set_function(lambda : bot.latency)
 
         bot.metrics_reg.register(self.command_counter)
         bot.metrics_reg.register(self.guild_messages)
@@ -45,3 +48,4 @@ class PromMonitors:
         bot.metrics_reg.register(self.bot_event_counts)
         bot.metrics_reg.register(self.bot_command_timing)
         bot.metrics_reg.register(self.own_message_raw_count)
+        bot.metrics_reg.register(self.bot_latency)

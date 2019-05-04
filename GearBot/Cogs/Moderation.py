@@ -415,7 +415,7 @@ class Moderation(BaseCog):
             i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
             await ctx.send(
                 f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason, inf=i.id)}")
-            GearbotLogging.log_to(ctx.guild.id, 'forceban_log', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
+            GearbotLogging.log_to(ctx.guild.id, 'forceban_log',  user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
 
 
             tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
@@ -844,7 +844,7 @@ class Moderation(BaseCog):
                                                reason=Translator.translate('mute_reapply_reason', member.guild.id))
                         GearbotLogging.log_to(member.guild.id, 'mute_reapply_log', user=Utils.clean_user(member), user_id=member.id, inf=i.id)
                     else:
-                        GearbotLogging.log_to(member.guild.id, 'mute_reapply_failed_log', member.guild.id, inf=i.id)
+                        GearbotLogging.log_to(member.guild.id, 'mute_reapply_failed_log', inf=i.id)
 
     async def timed_actions(self):
         GearbotLogging.info("Started timed moderation action background task")

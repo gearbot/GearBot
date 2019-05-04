@@ -1,3 +1,32 @@
+#ugly but this prevents import loop errors
+
+MASTER_CONFIG = dict()
+SERVER_CONFIGS = dict()
+MASTER_LOADED = False
+CONFIG_VERSION = 0
+
+def load_master():
+    global MASTER_CONFIG, MASTER_LOADED
+    try:
+        with open('config/master.json', 'r') as jsonfile:
+            MASTER_CONFIG = json.load(jsonfile)
+            MASTER_LOADED = True
+    except FileNotFoundError:
+        GearbotLogging.error("Unable to load config, running with defaults.")
+    except Exception as e:
+        GearbotLogging.error("Failed to parse configuration.")
+        print(e)
+        raise e
+
+def get_master_var(key, default=None):
+    global MASTER_CONFIG, MASTER_LOADED
+    if not MASTER_LOADED:
+        load_master()
+    if not key in MASTER_CONFIG.keys():
+        MASTER_CONFIG[key] = default
+        save_master()
+    return MASTER_CONFIG[key]
+
 import json
 import os
 
@@ -5,10 +34,6 @@ from discord.ext import commands
 
 from Util import GearbotLogging, Utils, Features
 
-MASTER_CONFIG = dict()
-SERVER_CONFIGS = dict()
-MASTER_LOADED = False
-CONFIG_VERSION = 0
 
 def initial_migration(config):
     config["LOG_CHANNELS"] = dict()
@@ -133,19 +158,6 @@ async def initialize(bot: commands.Bot):
         validate_config(guild)
 
 
-def load_master():
-    global MASTER_CONFIG, MASTER_LOADED
-    try:
-        with open('config/master.json', 'r') as jsonfile:
-            MASTER_CONFIG = json.load(jsonfile)
-            MASTER_LOADED = True
-    except FileNotFoundError:
-        GearbotLogging.error("Unable to load config, running with defaults.")
-    except Exception as e:
-        GearbotLogging.error("Failed to parse configuration.")
-        print(e)
-        raise e
-
 
 def load_config(guild):
     global SERVER_CONFIGS
@@ -219,14 +231,7 @@ def save(id):
     Features.check_server(id)
 
 
-def get_master_var(key, default=None):
-    global MASTER_CONFIG, MASTER_LOADED
-    if not MASTER_LOADED:
-        load_master()
-    if not key in MASTER_CONFIG.keys():
-        MASTER_CONFIG[key] = default
-        save_master()
-    return MASTER_CONFIG[key]
+
 
 
 def save_master():

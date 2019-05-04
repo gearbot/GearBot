@@ -220,7 +220,7 @@ class ModLog(BaseCog):
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
-            GearbotLogging.log_to(member.guild.id, 'join_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id, age=age)
+            GearbotLogging.log_to(member.guild.id, 'join_logging', user=Utils.clean_user(member), user_id=member.id, age=age)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -252,7 +252,7 @@ class ModLog(BaseCog):
                     f"{Emoji.get_chat_emoji('WARNING')} Tried to fetch audit log for {member.guild.name} ({member.guild.id}) but got denied even though it said i have access, guild permissions: ```{perm_info}```")
 
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
-            GearbotLogging.log_to(member.guild.id, 'leave_logging', member.guild.id, user=Utils.clean_user(member), user_id=member.id)
+            GearbotLogging.log_to(member.guild.id, 'leave_logging', user=Utils.clean_user(member), user_id=member.id)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
@@ -335,7 +335,7 @@ class ModLog(BaseCog):
                     mod_name = Utils.clean_user(entry.user)
                     mod_id = entry.user.id
                     actor = "mod"
-                GearbotLogging.log_to(guild.id, f'{actor}_nickname_{type}', guild, user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)
+                GearbotLogging.log_to(guild.id, f'{actor}_nickname_{type}', user=name, user_id=before.id, before=before_clean, after=after_clean, moderator=mod_name, moderator_id=mod_id)
 
         # role changes
         if Features.is_logged(guild.id, "ROLE_CHANGES"):

@@ -32,12 +32,6 @@ class Admin(BaseCog):
 
 
     @commands.command(hidden=True)
-    async def nuke_tasks(self, ctx):
-        """nukes pending tasks"""
-        for r in self.bot.running_events:
-            r.cancel()
-
-    @commands.command(hidden=True)
     async def upgrade(self, ctx):
         await ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} I'll be right back with new gears! {Emoji.get_chat_emoji('WOOD')} {Emoji.get_chat_emoji('STONE')} {Emoji.get_chat_emoji('IRON')} {Emoji.get_chat_emoji('GOLD')} {Emoji.get_chat_emoji('DIAMOND')}")
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Upgrade initiated by {ctx.author.name}")

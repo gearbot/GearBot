@@ -25,7 +25,7 @@ BOT: commands.AutoShardedBot = None
 LOG_PUMP = None
 LOG_ERRORS = 0
 
-log_type = namedtuple("Log type", "category emoji")
+log_type = namedtuple("Log_type", "category emoji")
 LOG_TYPES = {
     "raid_new": log_type('RAID_LOGS', 'BAD_USER'),
     "raid_terminated": log_type("RAID_LOGS", 'INNOCENT'),
@@ -252,8 +252,8 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
         message = Utils.trim_message(message, 1999)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
 
-    for cid, info in channels.items():
-        if info.category in info:
+    for cid, logging_keys in channels.items():
+        if info.category in logging_keys:
             if remaining is None:
                 LOG_PUMP.receive(cid, (message, embed, file))
             else:
