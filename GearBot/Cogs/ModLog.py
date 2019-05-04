@@ -192,7 +192,7 @@ class ModLog(BaseCog):
                                                                  "IGNORED_USERS") or user.id == channel.guild.me.id):
                 GearbotLogging.log_to(channel.guild.id, 'edit_logging',  user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)
                 if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
-                    embed = discord.Embed(timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+                    embed = discord.Embed()
                     embed.set_author(name=user.name if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(
