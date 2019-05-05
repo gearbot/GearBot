@@ -514,7 +514,7 @@ class Moderation(BaseCog):
                                                   moderator=Utils.clean_user(ctx.author),
                                                   moderator_id=ctx.author.id,
                                                   duration=f'{duration.length} {duration.unit}',
-                                                  reason=reason, inf_id=i.id, end=infraction.end)
+                                                  reason=reason, inf_id=infraction.id, end=infraction.end)
 
                             async def until():
                                 infraction.end = time.time() + duration_seconds
@@ -526,7 +526,7 @@ class Moderation(BaseCog):
                                                       moderator=Utils.clean_user(ctx.author),
                                                       moderator_id=ctx.author.id,
                                                       duration=f'{duration.length} {duration.unit}',
-                                                      reason=reason, inf_id=i.id, end=infraction.end)
+                                                      reason=reason, inf_id=infraction.id, end=infraction.end)
 
                             async def overwrite():
                                 infraction.end = infraction.start + datetime.timedelta(seconds=duration_seconds)
@@ -538,7 +538,7 @@ class Moderation(BaseCog):
                                                       moderator=Utils.clean_user(ctx.author),
                                                       moderator_id=ctx.author.id,
                                                       duration=f'{duration.length} {duration.unit}',
-                                                      reason=reason, inf_id=i.id, end=infraction.end)
+                                                      reason=reason, inf_id=infraction.id, end=infraction.end)
 
 
                             await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
