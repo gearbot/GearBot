@@ -11,6 +11,8 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 import pytz
 import sentry_sdk
+from aiohttp import ClientOSError, ServerDisconnectedError
+from discord import ConnectionClosed
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -141,7 +143,11 @@ def init_logger():
     # track commits to make sentry versions
     dsn = Configuration.get_master_var('SENTRY_DSN', '')
     if dsn != '':
-        sentry_sdk.init(dsn, before_send=before_send)
+        sentry_sdk.init(dsn, before_send=before_send, ignore_exceptions=[
+            ConnectionClosed,
+            ClientOSError,
+            ServerDisconnectedError
+        ])
 
     LOGGER.setLevel(logging.DEBUG)
 

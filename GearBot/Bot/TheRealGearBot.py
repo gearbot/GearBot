@@ -10,7 +10,8 @@ from datetime import datetime
 import aiohttp
 import aioredis
 import sentry_sdk
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
+from aiohttp import ClientOSError, ServerDisconnectedError
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed
 from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
@@ -23,7 +24,7 @@ from database import DatabaseConnector
 def prefix_callable(bot, message):
     user_id = bot.user.id
     prefixes = [f'<@!{user_id}> ', f'<@{user_id}> '] #execute commands by mentioning
-    if message.guild is None:
+    if message.guigld is None:
         prefixes.append('!') #use default ! prefix in DMs
     elif bot.STARTUP_COMPLETE:
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
@@ -304,7 +305,6 @@ async def handle_database_error(bot):
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
     with sentry_sdk.push_scope() as scope:
-
         embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
 
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
@@ -391,6 +391,9 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         if isinstance(exception, PeeweeException):
             await handle_database_error(bot)
 
+        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
+            if isinstance(exception, t):
+                return
         #nice embed for info on discord
 
 
