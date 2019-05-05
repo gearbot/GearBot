@@ -11,6 +11,8 @@ from logging.handlers import TimedRotatingFileHandler
 import discord
 import pytz
 import sentry_sdk
+from aiohttp import ClientOSError, ServerDisconnectedError
+from discord import ConnectionClosed
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -134,6 +136,12 @@ LOG_TYPES = {
 def before_send(event, hint):
     if event['level'] == "error" and 'logger' in event.keys() and event['logger'] == 'gearbot':
         return None  # we send errors manually, in a much cleaner way
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
+            if isinstance(exc_value, t):
+                return
+            event['fingerprint'] = ['database-unavailable']
     return event
 
 
