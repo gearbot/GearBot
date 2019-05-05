@@ -302,7 +302,7 @@ class Moderation(BaseCog):
                                     delete_message_days=0)
                 until = time.time() + duration_seconds
                 i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
-                GearbotLogging.log_to(ctx.guild.id, 'tempban_log', fuser=Utils.clean_user(user), user_id=user.id,
+                GearbotLogging.log_to(ctx.guild.id, 'tempban_log', user=Utils.clean_user(user), user_id=user.id,
                                       moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason,
                                       until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
                 await MessageUtils.send_to(ctx, "YES", "tempban_confirmation", user=Utils.clean_user(user),
