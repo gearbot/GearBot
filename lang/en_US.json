@@ -217,8 +217,9 @@
   "did_not_have_lvl4": "{member} did not have lvl 4 permissions for the `{command}` command.",
   "lvl4_help": "Allows adding/removing people to lvl 4 permission lvl for a command.",
   "purged_log": "Archived {count, plural, one {1 purged message} other {# purged messages}} from {channel}.",
-  "archived_count": "Archived {count, plural, one {1 message} other {# messages}}.",
-  "archive_empty": "I tried to make you an archive, but I couldn't find any messages because there are none to be archived or they were sent before edit logs were enabled on this server",
+  "archived_count": "Gear minions have returned with {count, plural, one {1 message} other {# messages}}.",
+  "archive_empty_user": "My gear minions have returned from their quest to the archives with empty hands. They looked everywhere, slayed all the guardians guarding the secrets, explored everything, then did it all over again just to make sure. But alas, nothing was found, it's as if that user never spoke anything while I listening",
+  "archive_empty_channel": "My gear minions have returned from their quest to the archives with empty hands. They looked everywhere, slayed all the guardians guarding the secrets, explored everything, then did it all over again just to make sure. But alas, nothing was found, it's as if nothing was ever said in that channel while I was listening",
   "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied.",
   "archive_no_subcommand": "See the subcommands `{prefix}help archive` for archival types and help.",
   "archive_no_edit_logs": "Please enable edit logs to be able to use archiving",
@@ -652,5 +653,6 @@
   "commit_hash": "GearBot version {hash}",
   "mute_duration_extended_log": "{user} (``{user_id}``) had their mute (``#{inf_id}``) extended by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
   "mute_duration_added_log": "{user} (``{user_id}``) has been re-muted (``#{inf_id}``) by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
-  "mute_duration_overwritten_log": "{user} (``{user_id}``) their mute (``#{inf_id}``) duration was overwritten by {moderator} (``{moderator_id}``) to {duration} and will now end at {end}"
+  "mute_duration_overwritten_log": "{user} (``{user_id}``) their mute (``#{inf_id}``) duration was overwritten by {moderator} (``{moderator_id}``) to {duration} and will now end at {end}",
+  "searching_archives": "Quest accepted, dispatching gears to the depths of archives to try and find those messages for you."
 }

@@ -644,8 +644,6 @@ class Moderation(BaseCog):
         if ctx.invoked_subcommand is None:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
-        else:
-            await ctx.trigger_typing()
 
     @archive.command()
     async def channel(self, ctx, channel: discord.TextChannel = None, amount=100):
@@ -656,15 +654,11 @@ class Moderation(BaseCog):
         if channel is None:
             channel = ctx.message.channel
         if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
-            permissions = channel.permissions_for(ctx.author)
-            if permissions.read_messages and permissions.read_message_history:
-                messages = LoggedMessage.select().where(
-                    (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(
-                    LoggedMessage.messageid.desc()).limit(amount)
-                await Archive.ship_messages(ctx, messages)
-            else:
-                ctx.send(
-                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_denied_read_perms', ctx, prefix=ctx.prefix)}")
+            await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
+            messages = LoggedMessage.select().where(
+                (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(
+                LoggedMessage.messageid.desc()).limit(amount)
+            await Archive.ship_messages(ctx, messages, "channel")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
@@ -675,10 +669,11 @@ class Moderation(BaseCog):
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
         if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+            await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = LoggedMessage.select().where(
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(
                 LoggedMessage.messageid.desc()).limit(amount)
-            await Archive.ship_messages(ctx, messages)
+            await Archive.ship_messages(ctx, messages, "user")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 

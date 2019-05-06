@@ -30,7 +30,7 @@ async def pack_messages(messages):
         out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))}\r\n"
     return out
 
-async def ship_messages(ctx, messages, filename="Message archive"):
+async def ship_messages(ctx, messages, t, filename="Message archive"):
     if len(messages) > 0:
         global archive_counter
         archive_counter += 1
@@ -48,4 +48,4 @@ async def ship_messages(ctx, messages, filename="Message archive"):
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(file, f"{filename}.txt"))
         os.remove(real_name)
     else:
-        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_empty', ctx)}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)}")
