@@ -145,12 +145,12 @@ class ModLog(BaseCog):
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
                 GearbotLogging.log_raw(guild.id, "EDIT_LOGS", embed=embed)
             else:
-                if type_string == None:
+                if type_string is None:
                     if len(message.content) != 0:
                         cleaned_content = await Utils.clean(message.content, channel.guild)
                         GearbotLogging.log_raw(guild.id, 'EDIT_LOGS', Translator.translate('content', guild.id, content=cleaned_content))
-                    else:
-                        GearbotLogging.log_raw(guild.id, "EDIT_LOGS", type_string)
+                else:
+                    GearbotLogging.log_raw(guild.id, "EDIT_LOGS", type_string)
 
                 count = 1
                 multiple_attachments = len(message.attachments) > 1
