@@ -64,7 +64,7 @@ LOG_TYPES = {
     'channel_update_simple_by': log_type('CHANNEL_CHANGES', 'ALTER'),
     'role_update_simple': log_type('ROLE_CHANGES', 'ALTER'),
     'role_update_simple_by': log_type('ROLE_CHANGES', 'ALTER'),
-    'command_used': log_type('ROLE_CHANGES', 'WRENCH'),
+    'command_used': log_type('COMMAND_EXECUTED', 'WRENCH'),
     'channel_created_by': log_type('ROLE_CHANGES', 'CREATE'),
     'channel_created': log_type('ROLE_CHANGES', 'CREATE'),
     'channel_deleted_by': log_type('channel_deleted_by', 'DELETE'),
@@ -127,7 +127,6 @@ LOG_TYPES = {
     'raid_notification_forbidden': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_triggered': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_terminated': log_type('RAID_LOGS', 'INNOCENT'),
-    'raid_notification_forbidden': log_type('RAID_LOGS', 'BAD_USER'),
 
 
 
