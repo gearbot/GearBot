@@ -233,6 +233,8 @@ async def bot_log(message=None, embed=None):
 
 def log_raw(guild_id, location, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+    if message is None and embed is None and file is None:
+        raise ValueError("What the heck is trying to log nothing?")
     for cid, info in channels.items():
         if location in info:
             LOG_PUMP.receive(cid, (message, embed, file))
