@@ -641,7 +641,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
         """archive_help"""
-        if ctx.subcommand_passed is None:
+        if ctx.invoked_subcommand is None:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
         else:
