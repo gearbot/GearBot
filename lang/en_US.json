@@ -218,7 +218,7 @@
   "lvl4_help": "Allows adding/removing people to lvl 4 permission lvl for a command.",
   "purged_log": "Archived {count, plural, one {1 purged message} other {# purged messages}} from {channel}.",
   "archived_count": "Gear minions have returned with {count, plural, one {1 message} other {# messages}}.",
-  "archive_empty_user": "My gear minions have returned from their quest to the archives with empty hands. They looked everywhere, slayed all the guardians guarding the secrets, explored everything, then did it all over again just to make sure. But alas, nothing was found, it's as if that user never spoke anything while I listening",
+  "archive_empty_user": "My gear minions have returned from their quest to the archives with empty hands. They looked everywhere, slayed all the guardians guarding the secrets, explored everything, then did it all over again just to make sure. But alas, nothing was found, it's as if that user never spoke while I was listening",
   "archive_empty_channel": "My gear minions have returned from their quest to the archives with empty hands. They looked everywhere, slayed all the guardians guarding the secrets, explored everything, then did it all over again just to make sure. But alas, nothing was found, it's as if nothing was ever said in that channel while I was listening",
   "archive_denied_read_perms": "Trying to archive a channel you don't have access to? Sorry, leek denied.",
   "archive_no_subcommand": "See the subcommands `{prefix}help archive` for archival types and help.",
