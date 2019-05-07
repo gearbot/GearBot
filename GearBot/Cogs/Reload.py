@@ -114,7 +114,7 @@ class Reload(BaseCog):
         async with ctx.typing():
             code, out, error = await Utils.execute(["git pull origin master"])
         if code is 0:
-            await Pages.create_new(self.bot, "pull", ctx, title=f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}", pages="----NEW PAGE----".join(Pages.paginate(out.decode('utf-8'))))
+            await Pages.create_new(self.bot, "pull", ctx, title=f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}", pages="----NEW PAGE----".join(Pages.paginate(out)))
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out}\n{error}```")
 
