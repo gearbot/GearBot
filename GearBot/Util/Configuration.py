@@ -201,10 +201,10 @@ def update_config(guild, config):
         d = f"config/backups/v{v}"
         if not os.path.isdir(d):
             os.makedirs(d)
-        Utils.saveToDisk(f"{d}/{guild}", config)
+        Utils.save_to_disk(f"{d}/{guild}", config)
         MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
-        Utils.saveToDisk(f"config/{guild}", config)
+        Utils.save_to_disk(f"config/{guild}", config)
 
     return config
 
@@ -246,4 +246,4 @@ def get_persistent_var(key, default):
 def set_persistent_var(key,  value):
     PERSISTENT = Utils.fetch_from_disk("persistent")
     PERSISTENT[key] = value
-    Utils.saveToDisk("persistent", PERSISTENT)
+    Utils.save_to_disk("persistent", PERSISTENT)

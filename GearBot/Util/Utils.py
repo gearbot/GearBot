@@ -29,7 +29,7 @@ def fetch_from_disk(filename, alternative=None):
             fetch_from_disk(alternative)
         return dict()
 
-def saveToDisk(filename, dict):
+def save_to_disk(filename, dict):
     with open(f"{filename}.json", "w") as file:
         json.dump(dict, file, indent=4, skipkeys=True, sort_keys=True)
 
@@ -199,7 +199,7 @@ async def execute(command):
     while p.poll() is None:
         await asyncio.sleep(1)
     out, error = p.communicate()
-    return p.returncode, out, error
+    return p.returncode, out.decode('utf-8'), error.decode('utf-8')
 
 def find_key(data, wanted):
     for k, v in data.items():
@@ -212,4 +212,4 @@ def chunks(l, n):
 
 async def get_commit():
     _, out, __ = await execute('git rev-parse --short HEAD')
-    return out.decode('utf-8')
+    return out

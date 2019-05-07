@@ -1,11 +1,11 @@
 import asyncio
+import datetime
 import hashlib
 import time
 import traceback
 from concurrent.futures import CancelledError
 
 import aiohttp
-import datetime
 import discord
 from discord import Embed, File
 from discord.ext import commands
@@ -157,7 +157,7 @@ async def updater(cog:BCVersionChecker):
 
                         message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
                         code, output, errors = await Utils.execute(f'cd BuildCraft/uploader && gradle curseforge -Pnew_version="{latestBC}"')
-                        GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output.decode('utf-8')}\n------stderr------\n{errors.decode('utf-8')}")
+                        GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output}\n------stderr------\n{errors}")
                         if code is 0:
                             content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded"
                             await message.edit(content=content)
