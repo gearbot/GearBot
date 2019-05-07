@@ -235,6 +235,7 @@ def log_raw(guild_id, location, message=None, embed=None, file=None):
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     if message is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
+    message = Utils.trim_message(message, 1998)
     for cid, info in channels.items():
         if location in info:
             LOG_PUMP.receive(cid, (message, embed, file))
@@ -258,7 +259,7 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
             else:
                 remaining = tag_on
     if message is not None:
-        message = Utils.trim_message(message, 1999)
+        message = Utils.trim_message(message, 1998)
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
 
     for cid, logging_keys in channels.items():
