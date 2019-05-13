@@ -4,7 +4,7 @@ import time
 from typing import Optional
 
 import discord
-from discord import Object, Emoji
+from discord import Object, Emoji, Forbidden
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -226,7 +226,6 @@ class Moderation(BaseCog):
         return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, data
 
     @commands.guild_only()
-    @commands.bot_has_permissions(add_reactions=True)
     @commands.command()
     async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
         """bean_help"""
@@ -240,7 +239,10 @@ class Moderation(BaseCog):
             except asyncio.TimeoutError:
                 pass
             else:
-                await message.add_reaction(Emoji.get_emoji('BEAN'))
+                try:
+                    await message.add_reaction(Emoji.get_emoji('BEAN'))
+                except Forbidden:
+                    await message.channel.send(Emoji.get_chat_emoji('BEAN'))
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
