@@ -175,7 +175,7 @@ class Basic(BaseCog):
                             await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
                     except discord.Forbidden:
                         await ctx.send(
-                            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_role_to_high', ctx, role=role.name)}")
+                            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
                 else:
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 

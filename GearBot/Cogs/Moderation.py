@@ -486,70 +486,73 @@ class Moderation(BaseCog):
                     f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_role_missing', ctx.guild.id, user=target.mention)}")
             else:
                 if (ctx.author != target and target != ctx.bot.user and ctx.author.top_role > target.top_role) or ctx.guild.owner == ctx.author:
-                    duration_seconds = duration.to_seconds(ctx)
-                    if duration_seconds > 0:
-                        infraction = Infraction.get_or_none((Infraction.user_id == target.id) & (Infraction.type == "Mute") & (Infraction.guild_id == ctx.guild.id) & Infraction.active)
-                        if infraction is None:
-                            await target.add_roles(role, reason=Utils.trim_message(
-                                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
-                                500))
-                            until = time.time() + duration_seconds
-                            i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
-                                                           end=until)
-                            await MessageUtils.send_to(ctx, 'MUTE', 'mute_confirmation', user=Utils.clean_user(target),
-                                                       duration=f'{duration.length} {duration.unit}', inf=i.id)
-                            GearbotLogging.log_to(ctx.guild.id, 'mute_log',
-                                                  user=Utils.clean_user(target),
-                                                  user_id=target.id,
-                                                  moderator=Utils.clean_user(ctx.author),
-                                                  moderator_id=ctx.author.id,
-                                                  duration=f'{duration.length} {duration.unit}',
-                                                  reason=reason, inf=i.id)
+                    if ctx.guild.me.top_role > role:
+                        duration_seconds = duration.to_seconds(ctx)
+                        if duration_seconds > 0:
+                            infraction = Infraction.get_or_none((Infraction.user_id == target.id) & (Infraction.type == "Mute") & (Infraction.guild_id == ctx.guild.id) & Infraction.active)
+                            if infraction is None:
+                                await target.add_roles(role, reason=Utils.trim_message(
+                                    f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
+                                    500))
+                                until = time.time() + duration_seconds
+                                i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
+                                                               end=until)
+                                await MessageUtils.send_to(ctx, 'MUTE', 'mute_confirmation', user=Utils.clean_user(target),
+                                                           duration=f'{duration.length} {duration.unit}', inf=i.id)
+                                GearbotLogging.log_to(ctx.guild.id, 'mute_log',
+                                                      user=Utils.clean_user(target),
+                                                      user_id=target.id,
+                                                      moderator=Utils.clean_user(ctx.author),
+                                                      moderator_id=ctx.author.id,
+                                                      duration=f'{duration.length} {duration.unit}',
+                                                      reason=reason, inf=i.id)
+                            else:
+                                d = f'{duration.length} {duration.unit}'
+                                async def extend():
+                                    infraction.end += datetime.timedelta(seconds=duration_seconds)
+                                    infraction.save()
+                                    await MessageUtils.send_to(ctx, 'YES', 'mute_duration_extended', duration=d, end=infraction.end)
+                                    GearbotLogging.log_to(ctx.guild.id, 'mute_duration_extended_log',  user=Utils.clean_user(target),
+                                                      user_id=target.id,
+                                                      moderator=Utils.clean_user(ctx.author),
+                                                      moderator_id=ctx.author.id,
+                                                      duration=f'{duration.length} {duration.unit}',
+                                                      reason=reason, inf_id=infraction.id, end=infraction.end)
+
+                                async def until():
+                                    infraction.end = time.time() + duration_seconds
+                                    infraction.save()
+                                    await MessageUtils.send_to(ctx, 'YES', 'mute_duration_added', duration=d)
+                                    GearbotLogging.log_to(ctx.guild.id, 'mute_duration_added_log',
+                                                          user=Utils.clean_user(target),
+                                                          user_id=target.id,
+                                                          moderator=Utils.clean_user(ctx.author),
+                                                          moderator_id=ctx.author.id,
+                                                          duration=f'{duration.length} {duration.unit}',
+                                                          reason=reason, inf_id=infraction.id, end=infraction.end)
+
+                                async def overwrite():
+                                    infraction.end = infraction.start + datetime.timedelta(seconds=duration_seconds)
+                                    infraction.save()
+                                    await MessageUtils.send_to(ctx, 'YES', 'mute_duration_overwritten', duration=d, end=infraction.end)
+                                    GearbotLogging.log_to(ctx.guild.id, 'mute_duration_overwritten_log',
+                                                          user=Utils.clean_user(target),
+                                                          user_id=target.id,
+                                                          moderator=Utils.clean_user(ctx.author),
+                                                          moderator_id=ctx.author.id,
+                                                          duration=f'{duration.length} {duration.unit}',
+                                                          reason=reason, inf_id=infraction.id, end=infraction.end)
+
+
+                                await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
+                                    Questions.Option(Emoji.get_emoji("1"), Translator.translate("mute_option_extend", ctx, duration=d), extend),
+                                    Questions.Option(Emoji.get_emoji("2"), Translator.translate("mute_option_until", ctx, duration=d), until),
+                                    Questions.Option(Emoji.get_emoji("3"), Translator.translate("mute_option_overwrite", ctx, duration=d), overwrite)
+                                ])
                         else:
-                            d = f'{duration.length} {duration.unit}'
-                            async def extend():
-                                infraction.end += datetime.timedelta(seconds=duration_seconds)
-                                infraction.save()
-                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_extended', duration=d, end=infraction.end)
-                                GearbotLogging.log_to(ctx.guild.id, 'mute_duration_extended_log',  user=Utils.clean_user(target),
-                                                  user_id=target.id,
-                                                  moderator=Utils.clean_user(ctx.author),
-                                                  moderator_id=ctx.author.id,
-                                                  duration=f'{duration.length} {duration.unit}',
-                                                  reason=reason, inf_id=infraction.id, end=infraction.end)
-
-                            async def until():
-                                infraction.end = time.time() + duration_seconds
-                                infraction.save()
-                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_added', duration=d)
-                                GearbotLogging.log_to(ctx.guild.id, 'mute_duration_added_log',
-                                                      user=Utils.clean_user(target),
-                                                      user_id=target.id,
-                                                      moderator=Utils.clean_user(ctx.author),
-                                                      moderator_id=ctx.author.id,
-                                                      duration=f'{duration.length} {duration.unit}',
-                                                      reason=reason, inf_id=infraction.id, end=infraction.end)
-
-                            async def overwrite():
-                                infraction.end = infraction.start + datetime.timedelta(seconds=duration_seconds)
-                                infraction.save()
-                                await MessageUtils.send_to(ctx, 'YES', 'mute_duration_overwritten', duration=d, end=infraction.end)
-                                GearbotLogging.log_to(ctx.guild.id, 'mute_duration_overwritten_log',
-                                                      user=Utils.clean_user(target),
-                                                      user_id=target.id,
-                                                      moderator=Utils.clean_user(ctx.author),
-                                                      moderator_id=ctx.author.id,
-                                                      duration=f'{duration.length} {duration.unit}',
-                                                      reason=reason, inf_id=infraction.id, end=infraction.end)
-
-
-                            await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
-                                Questions.Option(Emoji.get_emoji("1"), Translator.translate("mute_option_extend", ctx, duration=d), extend),
-                                Questions.Option(Emoji.get_emoji("2"), Translator.translate("mute_option_until", ctx, duration=d), until),
-                                Questions.Option(Emoji.get_emoji("3"), Translator.translate("mute_option_overwrite", ctx, duration=d), overwrite)
-                            ])
+                            await MessageUtils.send_to(ctx, 'NO', 'mute_negative_denied', duration=f'{duration.length} {duration.unit}')
                     else:
-                        await MessageUtils.send_to(ctx, 'NO', 'mute_negative_denied', duration=f'{duration.length} {duration.unit}')
+                        await MessageUtils.send_to(ctx, 'NO', 'role_too_high_add', role=role.name)
                 else:
                     await MessageUtils.send_to(ctx, 'NO', 'mute_not_allowed', user=target)
 
