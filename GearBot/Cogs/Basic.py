@@ -63,7 +63,7 @@ class Basic(BaseCog):
         click_here = Translator.translate('click_here', ctx)
         embed.add_field(name=Translator.translate('support_server', ctx), value=f"[{click_here}](https://discord.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
-        embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/AEnterprise/GearBot)")
+        embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
 
         await ctx.send(embed=embed)
