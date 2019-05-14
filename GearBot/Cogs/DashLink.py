@@ -18,6 +18,9 @@ class DashLink(BaseCog):
         self.handlers = dict(
             guild_perm_request=self.guild_perm_request
         )
+        self.recieve_handlers = dict(
+            crowdin_webhook=self.crowdin_webhook
+        )
         self.task = self._receiver()
 
     def cog_unload(self):
@@ -43,6 +46,8 @@ class DashLink(BaseCog):
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
             try:
+                if message["type"] in self.recieve_handlers.keys():
+                    await self.recieve_handlers[message["type"]](message)
                 reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"])
                 await self.redis_link.publish_json("bot-dash-messages", reply)
             except Exception as e:
@@ -71,6 +76,12 @@ class DashLink(BaseCog):
             if permission > 0:
                 info[guid] = dict(name=guild.name, permissions=permission, icon=guild.icon_url_as(size=256))
         return info
+
+
+
+    #crowdin
+    async def crowdin_webhook(self, message):
+        info = message["info"]
 
 
 
