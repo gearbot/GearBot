@@ -495,7 +495,7 @@ class Moderation(BaseCog):
                             i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
                                                            end=until)
                             await MessageUtils.send_to(ctx, 'MUTE', 'mute_confirmation', user=Utils.clean_user(target),
-                                                       duration=f'{duration.length} {duration.unit}', inf=i.id)
+                                                       duration=f'{duration.length} {duration.unit}', reason=reason, inf=i.id)
                             GearbotLogging.log_to(ctx.guild.id, 'mute_log',
                                                   user=Utils.clean_user(target),
                                                   user_id=target.id,
