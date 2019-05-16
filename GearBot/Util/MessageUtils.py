@@ -32,7 +32,7 @@ async def insert_message(bot, message):
     if is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, attachments='|'.join((a.url for a in message.attachments)))
+                         channel=message.channel.id, server=message.guild.id, attachments='|'.join((str(a.url) for a in message.attachments)))
         if message_type is not None:
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
@@ -48,8 +48,8 @@ async def update_message(bot, message_id, content):
         await bot.redis_pool.hmset_dict(f"messages:{message_id}", content=content)
     LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id).execute()
 
-def assemble(destination, emoji, message, translate=True, **kwargs):
-    translated = Translator.translate(message, destination, **kwargs) if translate else message
+def assemble(destination, emoji, m, translate=True, **kwargs):
+    translated = Translator.translate(m, destination, **kwargs) if translate else m
     return f"{Emoji.get_chat_emoji(emoji)} {translated}"
 
 async def archive_purge(bot, id_list, guild_id):

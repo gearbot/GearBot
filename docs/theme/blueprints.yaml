@@ -1,0 +1,27 @@
+name: GearBot
+version: 0.1.0
+description: Theme for the GearBot site
+icon: rebel
+author:
+  name: AEnterprise
+  email: aenterprise@aenterprise.info
+homepage: https://gearbot.rocks
+demo: https://gearbot.rocks
+keywords: grav, theme, etc
+bugs: https://github.com/aenterprise/gearbot/issues
+readme: https://github.com/aenterprise/gearbot/blob/master/README.md
+license: MIT
+
+form:
+  validation: loose
+  fields:
+    dropdown.enabled:
+        type: toggle
+        label: Dropdown in Menu
+        highlight: 1
+        default: 1
+        options:
+          1: PLUGIN_ADMIN.ENABLED
+          0: PLUGIN_ADMIN.DISABLED
+        validate:
+          type: bool

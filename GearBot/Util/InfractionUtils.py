@@ -34,7 +34,7 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
                 ("[user]" in fields and isinstance(query, int) and Infraction.user_id == query) |
                 ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
                 ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
-            Infraction.id.desc()).limit(amount)
+            Infraction.id.desc()).limit(int(amount))
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', guild_id))
     longest_timestamp = max(len(Translator.translate('timestamp', guild_id)), 19)
@@ -66,6 +66,11 @@ ID_MATCHER = re.compile("<@!?([0-9]+\s*)>")
 
 async def update_pages(guild_id, query, fields, amount, pages, start, longest_id, longest_type, longest_timestamp, header):
     key = get_key(guild_id, query, fields, amount)
+    count = len(pages)
+    if start >= count:
+        start = 0
+    elif start < 0:
+        start = count - 1
     order = [start]
     lower = start - 1
     upper = start + 1
@@ -152,9 +157,9 @@ async def inf_update(message, query, fields, amount, page_num):
 
     parts = {
         "page_num": page_num,
-        "cache_key": key
+        "cache_key": key,
     }
-    if len(fields) == 3:
+    if len(fields) != 0:
         parts["fields"] = "-".join(fields)
     if query is not None:
         parts["query"] = query

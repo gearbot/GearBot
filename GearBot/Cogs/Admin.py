@@ -1,14 +1,14 @@
 import contextlib
+import io
 import textwrap
 import traceback
 
 import discord
-import io
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Utils, Configuration, Pages, Emoji
-from Util.Converters import UserID
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils
+from Util.Converters import UserID, Guild
 
 
 class Admin(BaseCog):
@@ -21,7 +21,7 @@ class Admin(BaseCog):
         Pages.unregister("eval")
 
     async def cog_check(self, ctx):
-        return await ctx.bot.is_owner(ctx.author)
+        return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
 
 
     @commands.command(hidden=True)
@@ -30,12 +30,6 @@ class Admin(BaseCog):
         await ctx.send("Restarting...")
         await Utils.cleanExit(self.bot, ctx.author.name)
 
-
-    @commands.command(hidden=True)
-    async def nuke_tasks(self, ctx):
-        """nukes pending tasks"""
-        for r in self.bot.running_events:
-            r.cancel()
 
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
@@ -149,6 +143,14 @@ class Admin(BaseCog):
     async def update(self, ctx):
         await ctx.invoke(self.bot.get_command("pull"))
         await ctx.invoke(self.bot.get_command("hotreload"))
+
+    @commands.command()
+    async def blacklist(self, ctx, guild: Guild):
+        blocked = Configuration.get_persistent_var("blacklist", [])
+        blocked.append(guild.id)
+        Configuration.set_persistent_var("blacklist", blocked)
+        await guild.leave()
+        await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist", translate=False)
 
 
 

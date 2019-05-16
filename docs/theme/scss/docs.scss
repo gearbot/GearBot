@@ -1,0 +1,41 @@
+
+
+
+.docWrapper {
+	display: flex;
+	.docs {
+		flex-basis: 80vw;
+		float: right;
+		p {
+			overflow-wrap: break-word;
+		}
+	}
+
+
+	nav {
+		width: 300px;
+		float: left;
+		flex-basis: 300px;
+		ul {
+			li {
+
+				color: #f26c40;
+				list-style-image: url("../images/gearYellow.png");
+
+				.active,
+				:hover {
+					color: blue;
+					list-style-image: url("../images/gearGreen.png");
+				}
+
+
+				a {
+					color: inherit;
+					text-decoration: none;
+				}
+
+			}
+
+		}
+	}
+}

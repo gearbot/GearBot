@@ -24,7 +24,7 @@ class Infractions(BaseCog):
                     "min": 2,
                     "max": 6,
                     "commands": {
-                        "delete": {"required": 5, "min": 4, "max": 6}
+                        "delete": {"required": 5, "min": 3, "max": 6}
                     }
                 }
             }
@@ -48,14 +48,13 @@ class Infractions(BaseCog):
                 name = Utils.clean_user(member)
                 await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
                 aname = Utils.clean_user(ctx.author)
-                GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx.guild.id, 'WARNING', 'warning_added_modlog', user=name, moderator=aname, reason=reason, user_id=member.id, moderator_id=ctx.author.id, inf=i.id))
+                GearbotLogging.log_to(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason, user_id=member.id, moderator_id=ctx.author.id, inf=i.id)
                 if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
                     try:
                         dm_channel = await member.create_dm()
                         await dm_channel.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
                     except discord.Forbidden:
-                        GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS",
-                                              f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)}")
+                        GearbotLogging.log_to(ctx.guild.id, 'warning_could_not_dm', ctx.guild.id, user=name, userid=member.id)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
 
@@ -126,7 +125,7 @@ class Infractions(BaseCog):
         async def yes():
             infraction.delete_instance()
             await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
-            GearbotLogging.log_to(ctx.guild.id, "MOD_ACTIONS", MessageUtils.assemble(ctx, 'DELETE', 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target), target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason, user=Utils.clean_user(ctx.author), user_id=ctx.author.id))
+            GearbotLogging.log_to(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target), target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason, user=Utils.clean_user(ctx.author), user_id=ctx.author.id)
             await InfractionUtils.clear_cache(ctx.guild.id)
         await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id, reason=reason)}", on_yes=yes)
 

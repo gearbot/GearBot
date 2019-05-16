@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Emoji, Translator, DocUtils, Utils, Pages, Configuration
+from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils
 
 
 class Reload(BaseCog):
@@ -15,7 +15,7 @@ class Reload(BaseCog):
         Pages.register("pull", self.init_pull, self.update_pull)
 
     async def cog_check (self, ctx):
-        return await ctx.bot.is_owner(ctx.author)
+        return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
 
     @commands.command(hidden=True)
     async def reload(self, ctx, *, cog: str):
@@ -77,18 +77,20 @@ class Reload(BaseCog):
             self.bot.remove_command(c)
 
         await TheRealGearBot.initialize(self.bot)
-        GearbotLogging.info("Hot reload complete.")
-        m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete"
+        c = await Utils.get_commit()
+        GearbotLogging.info(f"Hot reload complete, now running on {c}")
+        m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete, now running on {c}"
+        self.bot.version = c
         await message.edit(content=m)
         await ctx_message.edit(content=m)
-        await Translator.upload()
         self.bot.hot_reloading = False
+        await Translator.upload()
 
     @commands.command()
     async def update_site(self, ctx):
         GearbotLogging.info("Site update initiated")
-        await DocUtils.update_docs(ctx)
-        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Purging cloudflare cache")
+        message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')} Updating site")
+        await DocUtils.generate_command_list(ctx.bot, message)
         cloudflare_info = Configuration.get_master_var("CLOUDFLARE", {})
         if 'ZONE' in cloudflare_info:
             headers = {
@@ -102,7 +104,7 @@ class Reload(BaseCog):
                 content = await reply.json()
                 GearbotLogging.info(f"Cloudflare purge response: {content}")
                 if content["success"]:
-                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Cloudflare cache has been purged")
+                    await message.edit(content=f"{Emoji.get_chat_emoji('YES')} Site has been updated and cloudflare cache has been purged")
                 else:
                     await message.edit(content=f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
 
@@ -112,9 +114,9 @@ class Reload(BaseCog):
         async with ctx.typing():
             code, out, error = await Utils.execute(["git pull origin master"])
         if code is 0:
-            await Pages.create_new(self.bot, "pull", ctx, title=f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}", pages="----NEW PAGE----".join(Pages.paginate(out.decode('utf-8'))))
+            await Pages.create_new(self.bot, "pull", ctx, title=f"{Emoji.get_chat_emoji('YES')} Pull completed with exit code {code}", pages="----NEW PAGE----".join(Pages.paginate(out)))
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out.decode('utf-8')}\n{error.decode('utf-8')}```")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} Pull completed with exit code {code}```yaml\n{out}\n{error}```")
 
     async def init_pull(self, ctx, title, pages):
         pages = pages.split("----NEW PAGE----")

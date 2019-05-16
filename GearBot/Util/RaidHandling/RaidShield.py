@@ -1,4 +1,4 @@
-from Util import GearbotLogging, MessageUtils
+from Util import GearbotLogging
 from Util.RaidHandling import RaidActions
 
 
@@ -11,16 +11,14 @@ class RaidShield:
         self.termination_actions = [action for action in shield_info["actions"]["terminated"]]
 
     async def raid_detected(self, bot, guild, raid_id, raider_ids, shield):
-        GearbotLogging.log_to(guild.id, "RAID_LOGS", MessageUtils.assemble(guild.id, "BAD_USER", "raid_shield_triggered", raid_id=raid_id, name=self.shield_name))
+        GearbotLogging.log_to(guild.id, "raid_shield_triggered", raid_id=raid_id, name=self.shield_name)
         await self.handle_actions(self.start_actions, bot, guild, raid_id, raider_ids, shield)
 
     async def handle_raider(self, bot, raider, raid_id, raider_ids, shield):
         await self.handle_actions(self.raider_actions, bot, raider, raid_id, raider_ids, shield)
 
     async def shield_terminated(self, bot, guild, raid_id, raider_ids, shield):
-        GearbotLogging.log_to(guild.id, "RAID_LOGS",
-                              MessageUtils.assemble(guild.id, "INNOCENT", "raid_shield_terminated", raid_id=raid_id,
-                                                    name=self.shield_name))
+        GearbotLogging.log_to(guild.id, "raid_shield_terminated", raid_id=raid_id, name=self.shield_name)
         await self.handle_actions(self.termination_actions, bot, guild, raid_id, raider_ids, shield)
 
     async def handle_actions(self, actions, bot, o, raid_id, raider_ids, shield):

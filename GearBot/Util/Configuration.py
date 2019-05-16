@@ -1,3 +1,32 @@
+#ugly but this prevents import loop errors
+
+MASTER_CONFIG = dict()
+SERVER_CONFIGS = dict()
+MASTER_LOADED = False
+CONFIG_VERSION = 0
+
+def load_master():
+    global MASTER_CONFIG, MASTER_LOADED
+    try:
+        with open('config/master.json', 'r') as jsonfile:
+            MASTER_CONFIG = json.load(jsonfile)
+            MASTER_LOADED = True
+    except FileNotFoundError:
+        GearbotLogging.error("Unable to load config, running with defaults.")
+    except Exception as e:
+        GearbotLogging.error("Failed to parse configuration.")
+        print(e)
+        raise e
+
+def get_master_var(key, default=None):
+    global MASTER_CONFIG, MASTER_LOADED
+    if not MASTER_LOADED:
+        load_master()
+    if not key in MASTER_CONFIG.keys():
+        MASTER_CONFIG[key] = default
+        save_master()
+    return MASTER_CONFIG[key]
+
 import json
 import os
 
@@ -5,10 +34,6 @@ from discord.ext import commands
 
 from Util import GearbotLogging, Utils, Features
 
-MASTER_CONFIG = dict()
-SERVER_CONFIGS = dict()
-MASTER_LOADED = False
-CONFIG_VERSION = 0
 
 def initial_migration(config):
     config["LOG_CHANNELS"] = dict()
@@ -98,13 +123,29 @@ def v8(config):
     }
     add_logging(config, "RAID_LOGS")
 
+def v9(config):
+    for k in ["cat", "dog", "jumbo"]:
+        overrides = config["PERM_OVERRIDES"]
+        if "Basic" in overrides:
+            b = overrides["Basic"]["commands"]
+            if k in b:
+                if "Fun" not in overrides:
+                    overrides["Fun"] = {
+                        "commands": {},
+                        "people": [],
+                        "required": -1
+                    }
+                overrides["Fun"]["commands"][k] = dict(b[k])
+                del b[k]
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
             info.extend(args)
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
@@ -116,19 +157,6 @@ async def initialize(bot: commands.Bot):
         load_config(guild.id)
         validate_config(guild)
 
-
-def load_master():
-    global MASTER_CONFIG, MASTER_LOADED
-    try:
-        with open('config/master.json', 'r') as jsonfile:
-            MASTER_CONFIG = json.load(jsonfile)
-            MASTER_LOADED = True
-    except FileNotFoundError:
-        GearbotLogging.error("Unable to load config, running with defaults.")
-    except Exception as e:
-        GearbotLogging.error("Failed to parse configuration.")
-        print(e)
-        raise e
 
 
 def load_config(guild):
@@ -173,10 +201,10 @@ def update_config(guild, config):
         d = f"config/backups/v{v}"
         if not os.path.isdir(d):
             os.makedirs(d)
-        Utils.saveToDisk(f"{d}/{guild}", config)
+        Utils.save_to_disk(f"{d}/{guild}", config)
         MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
-        Utils.saveToDisk(f"config/{guild}", config)
+        Utils.save_to_disk(f"config/{guild}", config)
 
     return config
 
@@ -203,14 +231,7 @@ def save(id):
     Features.check_server(id)
 
 
-def get_master_var(key, default=None):
-    global MASTER_CONFIG, MASTER_LOADED
-    if not MASTER_LOADED:
-        load_master()
-    if not key in MASTER_CONFIG.keys():
-        MASTER_CONFIG[key] = default
-        save_master()
-    return MASTER_CONFIG[key]
+
 
 
 def save_master():
@@ -225,4 +246,4 @@ def get_persistent_var(key, default):
 def set_persistent_var(key,  value):
     PERSISTENT = Utils.fetch_from_disk("persistent")
     PERSISTENT[key] = value
-    Utils.saveToDisk("persistent", PERSISTENT)
+    Utils.save_to_disk("persistent", PERSISTENT)

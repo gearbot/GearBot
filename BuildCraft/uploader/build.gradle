@@ -39,7 +39,7 @@ plugins {
 // Change this version to match the real version
 // Only works for 7.99.20 and later.
 ext.bc_version=project.getProperty("new_version")
-ext.bc_state='alpha'
+ext.bc_state='beta'
 ext.mc_version='1.12.2'
 ext.javaVersion = 'Java 8'
 

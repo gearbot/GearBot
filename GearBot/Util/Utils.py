@@ -1,16 +1,15 @@
 import asyncio
 import json
 import os
-import time
-from collections import namedtuple, OrderedDict
-
-import discord
 import subprocess
+from collections import namedtuple, OrderedDict
 from datetime import datetime
-from discord import NotFound
 from subprocess import Popen
 
-from Util import GearbotLogging, Translator, Emoji
+import discord
+from discord import NotFound
+
+from Util import GearbotLogging
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
@@ -30,7 +29,7 @@ def fetch_from_disk(filename, alternative=None):
             fetch_from_disk(alternative)
         return dict()
 
-def saveToDisk(filename, dict):
+def save_to_disk(filename, dict):
     with open(f"{filename}.json", "w") as file:
         json.dump(dict, file, indent=4, skipkeys=True, sort_keys=True)
 
@@ -154,7 +153,7 @@ async def get_user(uid, fetch=True):
                         id = user.id,
                         discriminator = user.discriminator,
                         bot = int(user.bot),
-                        avatar_url = user.avatar_url,
+                        avatar_url = str(user.avatar_url),
                         created_at = user.created_at.timestamp(),
                         is_avatar_animated = int(user.is_avatar_animated()),
                         mention = user.mention
@@ -200,64 +199,17 @@ async def execute(command):
     while p.poll() is None:
         await asyncio.sleep(1)
     out, error = p.communicate()
-    return p.returncode, out, error
+    return p.returncode, out.decode('utf-8'), error.decode('utf-8')
 
 def find_key(data, wanted):
     for k, v in data.items():
         if v == wanted:
             return k
 
-
-def server_info(guild, request_guild=None):
-    guild_features = ", ".join(guild.features)
-    if guild_features == "":
-        guild_features = None
-    guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.fromtimestamp(time.time()))
-    embed.set_thumbnail(url=guild.icon_url)
-    embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
-    embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
-    embed.add_field(name=Translator.translate('owner', request_guild), value=guild.owner, inline=True)
-    embed.add_field(name=Translator.translate('members', request_guild), value=guild.member_count, inline=True)
-    embed.add_field(name=Translator.translate('text_channels', request_guild), value=str(len(guild.text_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('voice_channels', request_guild), value=str(len(guild.voice_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('total_channel', request_guild),
-                    value=str(len(guild.text_channels) + len(guild.voice_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('created_at', request_guild),
-                    value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
-                    inline=True)
-    embed.add_field(name=Translator.translate('vip_features', request_guild), value=guild_features, inline=True)
-    if guild.icon_url != "":
-        embed.add_field(name=Translator.translate('server_icon', request_guild),
-                        value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url})", inline=True)
-    roles = ", ".join(role.name for role in guild.roles)
-    embed.add_field(name=Translator.translate('all_roles', request_guild),
-                    value=roles if len(roles) < 1024 else f"{len(guild.roles)} roles", inline=True)
-    if guild.emojis:
-        emoji = "".join(str(e) for e in guild.emojis)
-        embed.add_field(name=Translator.translate('emoji', request_guild),
-                        value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji")
-    statuses = dict(online=0, idle=0, dnd=0, offline=0)
-    for m in guild.members:
-        statuses[str(m.status)] += 1
-    embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
-    if guild.splash_url != "":
-        embed.set_image(url=guild.splash_url)
-    return embed
-
-
-def time_difference(begin, end, location):
-    diff = begin - end
-    minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    return (Translator.translate('days', location, days=diff.days)) if diff.days > 0 else Translator.translate('hours',
-                                                                                                               location,
-                                                                                                               hours=hours,
-                                                                                                               minutes=minutes)
-
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
+
+async def get_commit():
+    _, out, __ = await execute('git rev-parse --short HEAD')
+    return out

@@ -1,0 +1,36 @@
+<select class="langswitcher" onchange="if (this.value) window.location.href=this.value">
+    {% for language in langswitcher.languages %}
+
+        {% set show_language = true %}
+        {% if language == langswitcher.current %}
+            {% set lang_url = page.url %}
+            {% set active_class = ' selected' %}
+        {% else %}
+            {% set base_lang_url = base_url_simple ~ grav.language.getLanguageURLPrefix(language) %}
+            {% set lang_url = base_lang_url ~ langswitcher.page_route ~ page.urlExtension %}
+            {% set untranslated_pages_behavior = grav.config.plugins.langswitcher.untranslated_pages_behavior %}
+            {% if untranslated_pages_behavior != 'none' %}
+                {% set translated_page = langswitcher.translated_pages[language] %}
+                {% if (not translated_page) or (not translated_page.published) %}
+                    {% if untranslated_pages_behavior == 'redirect' %}
+                        {% set lang_url = base_lang_url ~ '/' %}
+                    {% elseif untranslated_pages_behavior == 'hide' %}
+                        {% set show_language = false %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            {% set active_class = '' %}
+        {% endif %}
+
+        {% if show_language %}
+            {% set target = lang_url ~ uri.params %}
+            {% if (target | slice(3,1) == '_') and (target | slice(6,1) == '/') %}
+                <option value="{{ lang_url ~ uri.params }}" {{ active_class }}>{{ native_name(language | slice(0, 2)) | capitalize }} </option>
+            {% else %}
+                <option value="/en_US{{ lang_url ~ uri.params }}" {{ active_class }}>{{ native_name(language | slice(0, 2)) | capitalize }} </option>
+            {% endif %}
+
+        {% endif %}
+
+    {% endfor %}
+</select>

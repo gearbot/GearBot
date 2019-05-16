@@ -1,21 +1,23 @@
 import asyncio
 import json
 import os
+import signal
 import sys
 import time
 import traceback
+from datetime import datetime
 
 import aiohttp
 import aioredis
 import sentry_sdk
-import signal
-from datetime import datetime
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
+from aiohttp import ClientOSError, ServerDisconnectedError
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed
 from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
+    server_info
 from database import DatabaseConnector
 
 
@@ -28,7 +30,7 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
 
-async def initialize(bot):
+async def initialize(bot, startup=False):
     #lock event handling while we get ready
     bot.locked = True
     try:
@@ -49,6 +51,11 @@ async def initialize(bot):
             "message_deletes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
+        if startup:
+            c = await Utils.get_commit()
+            bot.version = c
+            GearbotLogging.info(f"GearBot spinning up version {c}")
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot spinning up version {c}")
 
         if bot.redis_pool is None:
             try:
@@ -78,7 +85,7 @@ async def initialize(bot):
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
-        await initialize(bot)
+        await initialize(bot, True)
         #shutdown handler for clean exit on linux
         try:
             for signame in ('SIGINT', 'SIGTERM'):
@@ -122,6 +129,7 @@ async def keepDBalive(bot):
 
 
 async def translation_task(bot):
+    await Translator.upload()
     while not bot.is_closed():
         try:
             await Translator.update()
@@ -150,18 +158,32 @@ async def on_message(bot, message:Message):
             except Forbidden:
                 pass #closed DMs
         else:
+            f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
+            start = f()
             await bot.invoke(ctx)
+            bot.metrics.bot_command_timing.labels(command_name=ctx.command.qualified_name).observe((f() - start) / 1000000)
 
 
 async def on_guild_join(guild):
-    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.load_config(guild.id)
-    name = await Utils.clean(guild.name)
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=Utils.server_info(guild))
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id in blocked:
+        GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
+        try:
+            await guild.owner.send("Someone tried adding me to {guild.name} (``{guild.id}``) but the server has been blacklisted")
+        except Exception:
+            pass
+        await guild.leave()
+    else:
+        GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
+        Configuration.load_config(guild.id)
+        name = await Utils.clean(guild.name)
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
 
 async def on_guild_remove(guild):
-    GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id not in blocked:
+        GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info(guild))
 
 class PostParseError(commands.BadArgument):
 
@@ -182,13 +204,16 @@ async def on_command_error(bot, ctx: commands.Context, error):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
+        bot.help_command.context = ctx
         await ctx.send(
-            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, PostParseError):
-        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=error.error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+        bot.help_command.context = ctx
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=error.error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.BadArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
-        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+        bot.help_command.context = ctx
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.CommandNotFound):
         return
     elif isinstance(error, PeeweeException):
@@ -280,7 +305,6 @@ async def handle_database_error(bot):
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
     with sentry_sdk.push_scope() as scope:
-
         embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
 
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
@@ -367,6 +391,9 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         if isinstance(exception, PeeweeException):
             await handle_database_error(bot)
 
+        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
+            if isinstance(exception, t):
+                return
         #nice embed for info on discord
 
 

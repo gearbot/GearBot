@@ -1,0 +1,14 @@
+{% extends 'partials/base.html.twig' %}
+
+{% block stylesheets %}
+    {% do assets.addCss('theme://compiled-css/docs.css', 97) %}
+{% endblock %}
+
+{% block content %}
+    <div class="docWrapper">
+        {% include 'partials/doc_navigation.html.twig' %}
+        <div class="docs">
+            {{ page.content }}
+        </div>
+    </div>
+{% endblock %}

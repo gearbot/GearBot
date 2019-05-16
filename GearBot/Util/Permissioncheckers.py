@@ -80,7 +80,7 @@ def check_permission(ctx:commands.Context):
         return get_user_lvl(ctx) >= (ctx.cog.permissions["required"] if required == -1 else required)
 
 def get_command_pieces(ctx):
-    parts = ctx.message.content[len(ctx.prefix):].split(" ")
+    parts = (ctx.message.content[len(ctx.prefix):] if ctx.prefix is not None else ctx.message.content).split(" ")
     command_object = None
     while len(parts) > 0 and command_object is None:
         command_object = ctx.bot.get_command(" ".join(parts))

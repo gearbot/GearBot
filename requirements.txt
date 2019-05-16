@@ -1,11 +1,11 @@
-git+https://github.com/Rapptz/discord.py@rewrite
-peewee==3.7.1
+discord.py==1.0.1
+peewee==3.9.5
 Pillow==5.3.0
 PyMySQL==0.9.2
 requests==2.20.0
 aioredis==1.2.0
-sentry-sdk==0.6.4
-tornado==5.1.1
-python-socketio==3.1.2
+sentry-sdk==0.7.14
 pytz==2018.9
 pyseeyou==1.0.0
+ruamel.yaml==0.15.94
+prometheus_client==0.6.0

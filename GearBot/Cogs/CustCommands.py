@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils
+from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils
 from database.DatabaseConnector import CustomCommand
 
 
@@ -14,7 +14,7 @@ class CustCommands(BaseCog):
             "max": 6,
             "required": 0,
             "commands": {
-                "command": {
+                "commands": {
                     "required": 0,
                     "min": 0,
                     "max": 6,
@@ -79,6 +79,7 @@ class CustCommands(BaseCog):
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         else:
             trigger = trigger.lower()
+            trigger = await Utils.clean(trigger)
             command = CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
                 CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
@@ -97,6 +98,7 @@ class CustCommands(BaseCog):
     async def remove(self, ctx:commands.Context, trigger:str):
         """command_remove_help"""
         trigger = trigger.lower()
+        trigger = await Utils.clean(trigger)
         if len(trigger) > 20:
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         elif trigger in self.commands[ctx.guild.id]:
@@ -111,6 +113,7 @@ class CustCommands(BaseCog):
     async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """command_update_help"""
         trigger = trigger.lower()
+        trigger = await Utils.clean(trigger)
         if reply is None:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_empty_reply', ctx)}")
         else:
@@ -134,7 +137,8 @@ class CustCommands(BaseCog):
         if message.content.startswith(prefix, 0):
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
-                    await message.channel.send(self.commands[message.guild.id][trigger])
+                    command_content = self.commands[message.guild.id][trigger].replace("@", "@\u200b")
+                    await message.channel.send(command_content)
                     self.bot.custom_command_count += 1
 
 

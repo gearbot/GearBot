@@ -1,0 +1,151 @@
+$backgroundColor: #EAEAEA;
+$headerColor: #f9f9f9;
+$navAccentColor: blue;
+
+
+html, body {
+	padding: 0;
+	margin: 0;
+	background: $backgroundColor;
+	font-family: 'Helvetica Neue', arial, sans-serif;
+	font-weight: 400;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow-x: hidden;
+
+}
+
+.wrapper {
+	width: 100vw;
+	height: 100%;
+}
+
+@mixin gearspin($spintime, $spincount, $spinstyle) {
+	@keyframes rotation {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
+	}
+
+	@-webkit-keyframes rotation {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
+	}
+
+	@-moz-keyframes rotation {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(359deg);
+		}
+	}
+
+	&:hover {
+		animation: rotation $spintime $spincount $spinstyle;
+		-webkit-animation: rotation $spintime $spincount $spinstyle;
+		-moz-animation: rotation $spintime $spincount $spinstyle;
+	}
+}
+
+
+.wrapper {
+
+
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+
+	.header {
+		width: 100vw;
+		z-index: 10;
+		background: $backgroundColor;
+
+
+		.gearbot {
+			background: $headerColor;
+			float: left;
+			border-radius: 0 0 15% 0;
+		}
+
+		h1 {
+			position: relative;
+			z-index: -1;
+			text-align: center;
+			margin: 0;
+			font-size: 2em;
+			padding: 0.5em;
+			line-height: 56px;
+			font-weight: 400;
+			background: $headerColor;
+		}
+
+		nav {
+			float: right;
+			background: $headerColor;
+
+			ul {
+				line-height: 56px;
+				padding: 0;
+				margin: 1em;
+				min-width: 50px;
+				text-align: center;
+
+				li {
+
+					display: inline-block;
+					background: rgba(223, 223, 223, 0);
+					will-change: background-color;
+
+					&:not(:last-child) {
+						border-right: 2px solid black;
+					}
+
+					&:hover,
+					&:active {
+						background: rgba(0, 0, 0, 0.2);
+					}
+
+					a {
+						margin: 0.5em 1em;
+						color: black;
+						text-decoration: none;
+					}
+
+
+				}
+
+				.active {
+					background: rgba(0, 0, 0, 0.2);
+				}
+			}
+		}
+
+		.gearContainer {
+			padding: 1vw;
+			width: calc(150px - 1vw);
+			background: $headerColor;
+			border-radius: 0 0 0 15%;
+			float: right;
+
+			.gear {
+				@include gearspin(2s, infinite, linear);
+				width: 100%;
+
+			}
+		}
+	}
+}
+
+.langswitcher {
+	width: 8em;
+	float: right;
+	right: 0;
+}
