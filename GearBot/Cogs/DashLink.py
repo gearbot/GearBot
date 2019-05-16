@@ -82,6 +82,7 @@ class DashLink(BaseCog):
     #crowdin
     async def crowdin_webhook(self, message):
         info = message["info"]
+        
 
 
 
