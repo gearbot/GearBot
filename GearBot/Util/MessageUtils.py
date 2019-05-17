@@ -6,7 +6,8 @@ from datetime import datetime
 from discord import Object, HTTPException, MessageType
 
 from Util import Translator, Emoji, Archive
-from database.DatabaseConnector import LoggedMessage, LoggedAttachment
+from database import DBUtils
+from database.DatabaseConnector import LoggedMessage
 
 Message = namedtuple("Message", "messageid author content channel server attachments type")
 
@@ -37,11 +38,7 @@ async def insert_message(bot, message):
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
         await pipe.execute()
-    LoggedMessage.create(messageid=message.id, author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, type=message_type)
-    for a in message.attachments:
-        LoggedAttachment.create(id=a.id, url=a.url, isImage=(a.width is not None or a.width is 0),
-                                messageid=message.id)
+    DBUtils.insert_message(message)
 
 async def update_message(bot, message_id, content):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
