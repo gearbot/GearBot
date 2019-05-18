@@ -79,7 +79,8 @@ class Reminders(BaseCog):
             dm = True
         Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
                         to_remind=await Utils.clean(reminder, markdown=False),
-                        time=time.time() + duration_seconds, status=ReminderStatus.Pending)
+                        time=time.time() + duration_seconds, status=ReminderStatus.Pending,
+                        guild_id=ctx.guild.id, message_id=ctx.message.id)
         mode = "dm" if dm else "here"
         await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
                                      duration_identifier=duration.unit)
@@ -125,6 +126,7 @@ class Reminders(BaseCog):
                 "date": send_time.strftime('%c'),
                 "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
                 "now_date": now.strftime('%c'),
+                "jump_link": MessageUtils.jumplink_construct(package.guild_id, package.channel_id, package.message_id),
                 "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
             }
             parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)

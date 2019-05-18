@@ -78,3 +78,6 @@ async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
 def day_difference(a, b, location):
     diff = a - b
     return Translator.translate('days_ago', location, days=diff.days, date=a)
+
+def jumplink_construct(guild_id, channel_id, message_id):
+    return f"https://discordapp.com/channels/{guild_id}/{channel_id}/{message_id}"
