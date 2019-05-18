@@ -19,8 +19,11 @@ class DashLink(BaseCog):
             guild_perm_request=self.guild_perm_request
         )
         self.recieve_handlers = dict(
-            crowdin_webhook=self.crowdin_webhook
+
         )
+
+        if Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))["SOURCE"] == 'CROWDIN':
+            self.recieve_handlers["crowdin_webhook"] = self.crowdin_webhook
         self.task = self._receiver()
 
     def cog_unload(self):
