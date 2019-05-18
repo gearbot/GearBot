@@ -433,7 +433,7 @@
   "reminder_time_travel": "I'm sorry but time travel has not been invented yet in this reality, maybe you want to try in an alternative one?",
   "reminder_confirmation_dm": "Alright, I'll DM you for that in {duration} {duration_identifier}",
   "reminder_confirmation_here": "Alright, I'll ping you here for that in {duration} {duration_identifier}",
-  "reminder_delivery_dm": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: You're reading this, who do you think?\nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nReminder:",
+  "reminder_delivery_dm": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: You're reading this, who do you think?\nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nJump Link: {jump_link}\nReminder:",
   "reminder_delivery_channel": "⏰ ***DRING DRING*** ⏰\n\n**Reminder delivery**:\nFrom: ME!\nTo: {recipient} \nScheduled: ``{date}`` ({timediff} ago)\nDelivered: right now (``{now_date}``)\nJump Link: {jump_link}\nReminder:",
   "remind_help": "Base command for reminders",
   "remind_me_help": "Schedule to be reminded about something",

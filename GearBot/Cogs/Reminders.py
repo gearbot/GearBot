@@ -80,7 +80,7 @@ class Reminders(BaseCog):
         Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
                         to_remind=await Utils.clean(reminder, markdown=False),
                         time=time.time() + duration_seconds, status=ReminderStatus.Pending,
-                        guild_id=ctx.guild.id, message_id=ctx.message.id)
+                        guild_id=ctx.guild.id if ctx.guild is not None else "@me", message_id=ctx.message.id)
         mode = "dm" if dm else "here"
         await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
                                      duration_identifier=duration.unit)
