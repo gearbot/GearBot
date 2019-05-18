@@ -75,6 +75,8 @@ class Reminder(Model):
     id = PrimaryKeyField()
     user_id = BigIntegerField()
     channel_id = BigIntegerField()
+    guild_id = BigIntegerField()
+    message_id = BigIntegerField()
     dm = BooleanField()
     to_remind = CharField(max_length=1800, collation="utf8mb4_general_ci")
     send = TimestampField()
