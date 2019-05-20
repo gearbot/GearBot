@@ -5,7 +5,7 @@ from aioredis.pubsub import Receiver
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging
+from Util import Configuration, GearbotLogging, Translator
 
 
 class DashLink(BaseCog):
@@ -84,7 +84,7 @@ class DashLink(BaseCog):
 
     #crowdin
     async def crowdin_webhook(self, message):
-        info = message["info"]
+        await Translator.update_lang(message["info"]["language"])
         
 
 

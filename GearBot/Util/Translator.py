@@ -1,7 +1,6 @@
 import asyncio
 import hashlib
 import json
-import os
 import threading
 
 from ruamel.yaml import YAML
@@ -16,21 +15,21 @@ from pyseeyou import format
 from Util import Configuration, GearbotLogging, Emoji, Utils
 
 LANGS = dict()
+LANG_NAMES = dict()
+LANG_CODES = dict()
 BOT = None
 untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart", ''}
 
-def initialize(bot_in):
+async def initialize(bot_in):
     global BOT
     BOT = bot_in
+    await load_codes()
     load_translations()
+    for lang in LANG_CODES.values():
+        load_translations(lang)
 
-def load_translations():
-    directory = os.fsencode("lang")
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        if filename.endswith(".json"):
-            with open(f"lang/{filename}", encoding="UTF-8") as lang:
-                LANGS[filename[:-5]] = json.load(lang)
+def load_translations(lang):
+    LANGS[lang] = Utils.fetch_from_disk(f"lang/{lang}")
 
 def translate(key, location, **kwargs):
     lid = None
@@ -93,11 +92,12 @@ def upload_file():
     reply = requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['LOGIN']}&account-key={crowdin_data['KEY']}&json", files=data)
     GearbotLogging.info(reply)
 
-async def update_all():
+
+async def load_codes():
     t_info = Configuration.get_master_var("TRANSLATIONS")
     if t_info["SOURCE"] == "DISABLED": return
     GearbotLogging.info(f"Getting all translations from {t_info['SOURCE']}...")
-    #set the links for where to get stuff
+    # set the links for where to get stuff
     if t_info["SOURCE"] == "CROWDIN":
         list_link = f"https://api.crowdin.com/api/project/gearbot/status?login={t_info['LOGIN']}&account-key={t_info['KEY']}&json"
     else:
@@ -108,26 +108,37 @@ async def update_all():
         l = list()
         for lang in info:
             l.append(dict(name=lang["name"], code=lang["code"]))
+            LANG_NAMES[lang["code"]] = lang["name"]
+            LANG_NAMES[lang["name"]] = lang["code"]
         Utils.save_to_disk("lang/langs", l)
-    futures = [update_lang(lang) for lang in l]
-    for chunk in Utils.chunks(futures, 10):
+
+async def update_all():
+    futures = [update_lang(lang) for lang in LANG_CODES.values()]
+    for chunk in Utils.chunks(futures, 20):
         await asyncio.gather(*chunk)
 
 
-
-async def update_lang(lang):
+async def update_lang(lang, retry=True):
     t_info = Configuration.get_master_var("TRANSLATIONS")
     if t_info["SOURCE"] == "DISABLED": return
     if t_info["SOURCE"] == "CROWDIN":
-        download_link = f"https://api.crowdin.com/api/project/gearbot/export-file?login={t_info['LOGIN']}&account-key={t_info['KEY']}&json&file={urllib.parse.quote('/bot/commands.json', safe='')}&language={lang['code']}"
+        download_link = f"https://api.crowdin.com/api/project/gearbot/export-file?login={t_info['LOGIN']}&account-key={t_info['KEY']}&json&file={urllib.parse.quote('/bot/commands.json', safe='')}&language={lang}"
     else:
-        download_link = f"https://gearbot.rocks/lang/{lang['code']}.json"
-    GearbotLogging.info(f"Updating {lang['code']} ({lang['name']}) file...")
+        download_link = f"https://gearbot.rocks/lang/{lang}.json"
+    GearbotLogging.info(f"Updating {lang} ({LANG_NAMES[lang]}) file...")
     async with BOT.aiosession.get(download_link) as response:
         content = await response.text()
-        with open(f'lang/{lang["code"]}.json', 'w', encoding="UTF-8") as file:
-            file.write(content)
-    return True
+        content = json.loads(content)
+        if "success" in content:
+            if retry:
+                GearbotLogging.warn(f"Failed to update {lang} ({LANG_NAMES[lang]}), trying again in 3 seconds")
+                await asyncio.sleep(3)
+                await update_lang(lang, False)
+            else:
+                await tranlator_log('NO', f"Failed to update {lang} ({LANG_NAMES[lang]}) from {t_info['SOURCE']}")
+        Utils.save_to_disk(f'lang/{lang}', content)
+        LANGS[lang] = content
+        GearbotLogging.info(f"Updated {lang} ({LANG_NAMES[lang]})!")
 
 
 async def tranlator_log(emoji, message):

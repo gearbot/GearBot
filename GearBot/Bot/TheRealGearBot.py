@@ -43,7 +43,6 @@ async def initialize(bot, startup=False):
         GearbotLogging.initialize_pump(bot)
         Emoji.initialize(bot)
         Utils.initialize(bot)
-        Translator.initialize(bot)
         InfractionUtils.initialize(bot)
         bot.data = {
             "forced_exits": set(),
@@ -73,6 +72,8 @@ async def initialize(bot, startup=False):
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()
+
+        await Translator.initialize(bot)
         bot.being_cleaned.clear()
         await Configuration.initialize(bot)
     except Exception as ex:
