@@ -193,7 +193,7 @@ class ModLog(BaseCog):
                 GearbotLogging.log_to(channel.guild.id, 'edit_logging',  user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)
                 if Configuration.get_var(channel.guild.id, "EMBED_EDIT_LOGS"):
                     embed = discord.Embed()
-                    embed.set_author(name=user.name if hasUser else message.author,
+                    embed.set_author(name=user if hasUser else message.author,
                                      icon_url=user.avatar_url if hasUser else EmptyEmbed)
                     embed.set_footer(
                         text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
