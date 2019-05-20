@@ -15,8 +15,8 @@ from pyseeyou import format
 from Util import Configuration, GearbotLogging, Emoji, Utils
 
 LANGS = dict()
-LANG_NAMES = dict()
-LANG_CODES = dict()
+LANG_NAMES = dict(en_US= "English")
+LANG_CODES = dict(English="en_US")
 BOT = None
 untranlatable = {"Sets a playing/streaming/listening/watching status", "Reloads all server configs from disk", "Reset the cache", "Make a role pingable for announcements", "Pulls from github so an upgrade can be performed without full restart", ''}
 
