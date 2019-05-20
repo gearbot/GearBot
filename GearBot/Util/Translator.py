@@ -50,7 +50,7 @@ def translate(key, location, **kwargs):
         if key not in untranlatable:
             BOT.loop.create_task(tranlator_log('WARNING', f'Untranslatable string detected: {key}\n'))
             untranlatable.add(key)
-        return key
+        return key if key not in LANGS["en_US"] else format(LANGS['en_US'][key], kwargs, 'en_US')
     try:
         translated = format(LANGS[lang_key][key], kwargs, lang_key)
     except (KeyError, ValueError, ParseError, VisitationError) as ex:
