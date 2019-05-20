@@ -24,6 +24,7 @@ async def initialize(bot_in):
     global BOT
     BOT = bot_in
     await load_codes()
+    await update_all()
     for lang in LANG_CODES.values():
         load_translations(lang)
 
@@ -108,11 +109,11 @@ async def load_codes():
         for lang in info:
             l.append(dict(name=lang["name"], code=lang["code"]))
             LANG_NAMES[lang["code"]] = lang["name"]
-            LANG_NAMES[lang["name"]] = lang["code"]
+            LANG_CODES[lang["name"]] = lang["code"]
         Utils.save_to_disk("lang/langs", l)
 
 async def update_all():
-    futures = [update_lang(lang) for lang in LANG_CODES.values()]
+    futures = [update_lang(lang) for lang in LANG_CODES.values() if lang != "en_US"]
     for chunk in Utils.chunks(futures, 20):
         await asyncio.gather(*chunk)
 
