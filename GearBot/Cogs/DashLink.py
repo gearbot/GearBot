@@ -57,8 +57,9 @@ class DashLink(BaseCog):
             try:
                 if message["type"] in self.recieve_handlers.keys():
                     await self.recieve_handlers[message["type"]](message)
-                reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"])
-                await self.redis_link.publish_json("bot-dash-messages", reply)
+                else:
+                    reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"])
+                    await self.redis_link.publish_json("bot-dash-messages", reply)
             except Exception as e:
                 await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
 
