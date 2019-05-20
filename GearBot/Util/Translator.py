@@ -24,7 +24,6 @@ async def initialize(bot_in):
     global BOT
     BOT = bot_in
     await load_codes()
-    load_translations()
     for lang in LANG_CODES.values():
         load_translations(lang)
 
