@@ -141,11 +141,11 @@ async def update_lang(lang, retry=True):
         GearbotLogging.info(f"Updated {lang} ({LANG_NAMES[lang]})!")
 
 
-async def tranlator_log(emoji, message):
-    crowdin = Configuration.get_master_var("CROWDIN")
-    channel = BOT.get_channel(crowdin["CHANNEL"]) if crowdin is not None else None
+async def tranlator_log(emoji, message, embed=None):
     m = f'{Emoji.get_chat_emoji(emoji)} {message}'
-    if channel is not None:
-        return await channel.send(m)
-    else:
-        return await GearbotLogging.bot_log(m)
+    return await get_translator_log_channel()(m, embed=embed)
+
+def get_translator_log_channel():
+    crowdin = Configuration.get_master_var("TRANSLATIONS")
+    channel = BOT.get_channel(crowdin["CHANNEL"]) if crowdin is not None else None
+    return channel.send if channel is not None else GearbotLogging.bot_log

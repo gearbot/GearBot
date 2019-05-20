@@ -1,7 +1,10 @@
 import json
+import time
+from datetime import datetime
 
 import aioredis
 from aioredis.pubsub import Receiver
+from discord import Embed, Color
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -21,6 +24,9 @@ class DashLink(BaseCog):
         self.recieve_handlers = dict(
 
         )
+        self.last_update = datetime.now()
+        self.to_log = dict()
+        self.update_message = None
 
         if Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))["SOURCE"] == 'CROWDIN':
             self.recieve_handlers["crowdin_webhook"] = self.crowdin_webhook
@@ -84,8 +90,26 @@ class DashLink(BaseCog):
 
     #crowdin
     async def crowdin_webhook(self, message):
-        await Translator.update_lang(message["info"]["language"])
-        
+        code = message["info"]["language"]
+        await Translator.update_lang(code)
+        if (datetime.now() - self.last_update).seconds > 5*60:
+            self.update_message = None
+            self.to_log = dict()
+        if code not in self.to_log:
+            self.to_log[code] = 0
+        self.to_log[code] += 1
+
+        embed = Embed(color=Color(0x1183f6), timestamp=datetime.utcfromtimestamp(time.time()),
+                      description=f"**Live translation update summary!**" + '\n'.join(
+                          f"{Translator.LANG_NAMES[code]} : {count}" for code, count in self.to_log.items()))
+        if self.update_message is None:
+            self.update_message = Translator.get_translator_log_channel()(embed=embed)
+        else:
+            await self.update_message.edit(embed=embed)
+
+        self.last_update = datetime.now()
+
+
 
 
 
