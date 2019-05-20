@@ -113,7 +113,7 @@
   "configure_perm_msg_enabled": "I will let people know when they are missing permissions to run a command.",
   "configure_perm_msg_disabled": "I will silently ignore people who are missing permissions to run a command.",
   "lang_help": "Sets the language for GearBot to use.",
-  "lang_changed": "Language has been set to {lang}.",
+  "lang_changed": "Language has been set to {lang} ({lang_name}).",
   "lang_unknown": "Sorry, I don't know that language yet.",
   "mute_negative_denied": "How do you expect me to mute for {duration}? I'm not a time traveler!",
   "message_removed": "Message by {name} (``{user_id}``) in {channel} has been removed.",

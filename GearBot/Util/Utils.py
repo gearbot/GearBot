@@ -22,7 +22,7 @@ def initialize(actual_bot):
 
 def fetch_from_disk(filename, alternative=None):
     try:
-        with open(f"{filename}.json") as file:
+        with open(f"{filename}.json", encoding="UTF-8") as file:
             return json.load(file)
     except FileNotFoundError:
         if alternative is not None:
@@ -30,7 +30,7 @@ def fetch_from_disk(filename, alternative=None):
         return dict()
 
 def save_to_disk(filename, dict):
-    with open(f"{filename}.json", "w") as file:
+    with open(f"{filename}.json", "w", encoding="UTF-8") as file:
         json.dump(dict, file, indent=4, skipkeys=True, sort_keys=True)
 
 

@@ -392,9 +392,20 @@ class Serveradmin(BaseCog):
         if lang_code is None:
             await ctx.send(f"See https://crowdin.com/project/gearbot for all available languages and their translation statuses")
         else:
-            if lang_code in Translator.LANGS:
-                Configuration.set_var(ctx.guild.id, "LANG", lang_code)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=lang_code)}")
+            code = None
+            lang_code = lang_code.lower().replace("_", "-")
+            for name, lcode in Translator.LANG_CODES.items():
+                if lang_code == lcode.lower() or lang_code == name.lower():
+                    code = lcode
+                    break
+            if code is None:
+                for name, lcode in Translator.LANG_CODES.values():
+                    if lang_code == lcode.lower()[:2]:
+                        code = lcode
+                        break
+            if code is not None:
+                Configuration.set_var(ctx.guild.id, "LANG", code)
+                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=code, lang_name=Translator.LANG_NAMES[code])}")
             else:
                 await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('lang_unknown', ctx.guild.id)}")
 
