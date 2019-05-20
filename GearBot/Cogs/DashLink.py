@@ -104,7 +104,7 @@ class DashLink(BaseCog):
                       description=f"**Live translation update summary!**" + '\n'.join(
                           f"{Translator.LANG_NAMES[code]} : {count}" for code, count in self.to_log.items()))
         if self.update_message is None:
-            self.update_message = Translator.get_translator_log_channel()(embed=embed)
+            self.update_message = await Translator.get_translator_log_channel()(embed=embed)
         else:
             await self.update_message.edit(embed=embed)
 
