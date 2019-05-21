@@ -2,9 +2,8 @@ import prometheus_client as prom
 
 class PromMonitors:
     def __init__(self, bot) -> None:
-        self.command_counter = prom.Counter("commands_ran", "How many times commands were ran and who ran them", [
+        self.command_counter = prom.Counter("commands_ran", "How many times commands were ran", [
             "command_name",
-            "guild_id"
         ])
 
         self.guild_messages = prom.Counter("messages_sent", "What messages have been sent and by who", [
