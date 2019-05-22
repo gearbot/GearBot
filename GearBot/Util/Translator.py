@@ -88,13 +88,13 @@ async def upload():
 
 def upload_file():
     data = {'files[/bot/commands.json]': open('lang/en_US.json', 'r')}
-    crowdin_data = Configuration.get_master_var("TRANSLATIONS")
+    crowdin_data = Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))
     reply = requests.post(f"https://api.crowdin.com/api/project/gearbot/update-file?login={crowdin_data['LOGIN']}&account-key={crowdin_data['KEY']}&json", files=data)
     GearbotLogging.info(reply)
 
 
 async def load_codes():
-    t_info = Configuration.get_master_var("TRANSLATIONS")
+    t_info = Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))
     if t_info["SOURCE"] == "DISABLED": return
     GearbotLogging.info(f"Getting all translations from {t_info['SOURCE']}...")
     # set the links for where to get stuff
@@ -146,6 +146,6 @@ async def tranlator_log(emoji, message, embed=None):
     return await get_translator_log_channel()(m, embed=embed)
 
 def get_translator_log_channel():
-    crowdin = Configuration.get_master_var("TRANSLATIONS")
+    crowdin = Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))
     channel = BOT.get_channel(crowdin["CHANNEL"]) if crowdin is not None else None
     return channel.send if channel is not None else GearbotLogging.bot_log

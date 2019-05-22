@@ -653,5 +653,9 @@
   "mute_duration_extended_log": "{user} (``{user_id}``) had their mute (``#{inf_id}``) extended by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
   "mute_duration_added_log": "{user} (``{user_id}``) has been re-muted (``#{inf_id}``) by {moderator} (``{moderator_id}``) for {duration} and will now end at {end}",
   "mute_duration_overwritten_log": "{user} (``{user_id}``) their mute (``#{inf_id}``) duration was overwritten by {moderator} (``{moderator_id}``) to {duration} and will now end at {end}",
-  "searching_archives": "Quest accepted, dispatching gears to the depths of archives to try and find those messages for you."
+  "searching_archives": "Quest accepted, dispatching gears to the depths of archives to try and find those messages for you.",
+  "softban_unable": "Unable to clean-kick {user} as I do not have a higher role than them.",
+  "temprole": "Temprole",
+  "Temproles": "{count, plural, one {1 temprole} other {# temproles}}",
+  "inf_temprole": "{mod} gave a temporary role to {user}"
 }
