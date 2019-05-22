@@ -127,6 +127,7 @@ LOG_TYPES = {
     'raid_notification_forbidden': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_triggered': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_terminated': log_type('RAID_LOGS', 'INNOCENT'),
+    'unknown_nickname_removed': log_type('NAME_CHANGES', 'NICKTAG')
 
 
 
