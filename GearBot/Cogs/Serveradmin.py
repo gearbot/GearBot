@@ -399,7 +399,7 @@ class Serveradmin(BaseCog):
                     code = lcode
                     break
             if code is None:
-                for name, lcode in Translator.LANG_CODES.values():
+                for name, lcode in Translator.LANG_CODES.items():
                     if lang_code == lcode.lower()[:2]:
                         code = lcode
                         break
