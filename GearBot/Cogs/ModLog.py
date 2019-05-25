@@ -216,7 +216,7 @@ class ModLog(BaseCog):
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
             age = (Translator.translate('days', member.guild.id,
-                                        days=dif.days)) if dif.days > 0 else Translator.translate('hours',
+                                        amount=dif.days)) if dif.days > 0 else Translator.translate('hours',
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
