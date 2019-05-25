@@ -421,7 +421,7 @@ class Moderation(BaseCog):
 
 
             tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
-                                          (Infraction.guild_id == ctx.guild.id)))
+                                                      (Infraction.guild_id == ctx.guild.id) & Infraction.active))
             if len(tempbans) > 0:
                 inf = tempbans[0]
                 timeframe = datetime.datetime.utcfromtimestamp(inf.end.timestamp()) - datetime.datetime.utcfromtimestamp(time.time())
