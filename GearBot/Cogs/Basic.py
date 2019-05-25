@@ -71,14 +71,13 @@ class Basic(BaseCog):
     @commands.command(hidden=True)
     async def ping(self, ctx: commands.Context):
         """ping_help"""
-        if await self.bot.is_owner(ctx.author):
-            t1 = time.perf_counter()
-            await ctx.trigger_typing()
-            t2 = time.perf_counter()
-            await ctx.send(
-                f":hourglass: REST API ping is {round((t2 - t1) * 1000)}ms | Websocket ping is {round(self.bot.latency*1000, 2)}ms :hourglass:")
-        else:
-            await ctx.send(":ping_pong:")
+        t1 = time.perf_counter()
+        message = await ctx.send(":ping_pong:")
+        t2 = time.perf_counter()
+        rest = round((t2 - t1) * 1000)
+        latency = round(self.bot.latency*1000, 2)
+        await message.edit(content=f":hourglass: {Translator.translate('ping_pong', ctx, rest=rest, latency=latency)} :hourglass:")
+
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
