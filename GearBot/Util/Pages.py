@@ -29,6 +29,8 @@ async def create_new(bot, type, ctx, **kwargs):
         except discord.Forbidden:
             await MessageUtils.send_to(ctx, 'WARNING', 'paginator_missing_perms', prev=Emoji.get_chat_emoji('LEFT'),
                                        next=Emoji.get_chat_emoji('RIGHT'))
+        except discord.NotFound:
+            await MessageUtils.send_to(ctx, 'WARNING', 'fix_censor')
 
 
 async def update(bot, message, action, user, **kwargs):

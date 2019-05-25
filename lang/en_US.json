@@ -658,5 +658,6 @@
   "temprole": "Temprole",
   "Temproles": "{count, plural, one {1 temprole} other {# temproles}}",
   "inf_temprole": "{mod} gave a temporary role to {user}",
-  "forceban_banned_confirmation": "This user is already banned, are you sure you want to them again?"
+  "forceban_banned_confirmation": "This user is already banned, are you sure you want to them again?",
+  "fix_censor": "Wow there! Did i just get censored? Cause it sure looks like some other bot censored that. Please tell that bot to stop doing that and try again!"
 }
