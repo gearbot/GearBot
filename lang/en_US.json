@@ -657,5 +657,6 @@
   "softban_unable": "Unable to clean-kick {user} as I do not have a higher role than them.",
   "temprole": "Temprole",
   "Temproles": "{count, plural, one {1 temprole} other {# temproles}}",
-  "inf_temprole": "{mod} gave a temporary role to {user}"
+  "inf_temprole": "{mod} gave a temporary role to {user}",
+  "forceban_banned_confirmation": "This user is already banned, are you sure you want to them again?"
 }

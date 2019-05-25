@@ -4,7 +4,7 @@ import time
 from typing import Optional
 
 import discord
-from discord import Object, Emoji, Forbidden
+from discord import Object, Emoji, Forbidden, NotFound
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -404,36 +404,56 @@ class Moderation(BaseCog):
         """forceban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
+        # check if the user is a member
         try:
             member = await commands.MemberConverter().convert(ctx, str(user.id))
         except BadArgument:
-            self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-            await ctx.guild.ban(user, reason=Utils.trim_message(
-                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
-                                delete_message_days=0)
-            Infraction.update(active=False).where(
-                (Infraction.user_id == user.id) & ((Infraction.type == "Unban") | (Infraction.type == "Tempban")) &
-                (Infraction.guild_id == ctx.guild.id)).execute()
-            i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason, inf=i.id)}")
-            GearbotLogging.log_to(ctx.guild.id, 'forceban_log',  user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
-
-
-            tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
-                                                      (Infraction.guild_id == ctx.guild.id) & Infraction.active))
-            if len(tempbans) > 0:
-                inf = tempbans[0]
-                timeframe = datetime.datetime.utcfromtimestamp(inf.end.timestamp()) - datetime.datetime.utcfromtimestamp(time.time())
-                hours, remainder = divmod(int(timeframe.total_seconds()), 3600)
-                minutes, seconds = divmod(remainder, 60)
-                tt = Translator.translate("hours", ctx, hours=hours, minutes=minutes)
-                await MessageUtils.send_to(ctx, "WARNING", "forceban_override_tempban", user=Utils.clean_user(user), timeframe=tt, inf_id=inf.id)
-
+            #they are not, check for existing ban
+            try:
+                await ctx.guild.fetch_ban(user)
+            except NotFound:
+                #not banned, wack em
+                await self._forceban(ctx, user, reason)
+            else:
+                # already banned, ask for confirmation
+                message = MessageUtils.assemble(ctx, 'QUESTION', 'forceban_banned_confirmation', user=Utils.clean_user(user))
+                async def yes():
+                    await self._forceban(ctx, user, reason)
+                await Confirmation.confirm(ctx, message, on_yes=yes)
         else:
-            await ctx.send(
-                f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('forceban_to_ban', ctx.guild.id, user=Utils.clean_user(member))}")
+            # they are here, reroute to regular ban
+            await MessageUtils.send_to(ctx, 'WARNING', 'forceban_to_ban', user=Utils.clean_user(member))
             await ctx.invoke(self.ban, member, reason=reason)
+
+    async def _forceban(self, ctx, user, reason):
+        # not banned, wack with the hammer
+        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+        await ctx.guild.ban(user, reason=Utils.trim_message(
+            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+                            delete_message_days=0)
+        Infraction.update(active=False).where(
+            (Infraction.user_id == user.id) & ((Infraction.type == "Unban") | (Infraction.type == "Tempban")) &
+            (Infraction.guild_id == ctx.guild.id)).execute()
+        i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Forced ban", reason)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('forceban_confirmation', ctx.guild.id, user=Utils.clean_user(user), user_id=user.id, reason=reason, inf=i.id)}")
+        GearbotLogging.log_to(ctx.guild.id, 'forceban_log', user=Utils.clean_user(user), user_id=user.id,
+                              moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason,
+                              inf=i.id)
+
+        # check for pending tembans
+        tempbans = list(Infraction.select().where((Infraction.user_id == user.id) & (Infraction.type == "Tempban") &
+                                                  (Infraction.guild_id == ctx.guild.id) & Infraction.active))
+        if len(tempbans) > 0:
+            # mark as complete and inform
+            inf = tempbans[0]
+            timeframe = datetime.datetime.utcfromtimestamp(inf.end.timestamp()) - datetime.datetime.utcfromtimestamp(
+                time.time())
+            hours, remainder = divmod(int(timeframe.total_seconds()), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            tt = Translator.translate("hours", ctx, hours=hours, minutes=minutes)
+            await MessageUtils.send_to(ctx, "WARNING", "forceban_override_tempban", user=Utils.clean_user(user),
+                                       timeframe=tt, inf_id=inf.id)
 
     @commands.command()
     @commands.guild_only()
