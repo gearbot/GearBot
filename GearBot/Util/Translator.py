@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import json
 import threading
+import traceback
 
 from ruamel.yaml import YAML
 
@@ -55,6 +56,7 @@ def translate(key, location, **kwargs):
         translated = format(LANGS[lang_key][key], kwargs, lang_key)
     except (KeyError, ValueError, ParseError, VisitationError) as ex:
         BOT.loop.create_task(tranlator_log('NO', f'Corrupt translation detected!\n**Lang code:** {lang_key}\n**Translation key:** {key}\n```\n{LANGS[lang_key][key]}```'))
+        GearbotLogging.error(traceback.print_exc())
         GearbotLogging.error(ex)
         if key in LANGS["en_US"].keys():
             try:
