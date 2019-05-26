@@ -56,11 +56,11 @@ class Fun(BaseCog):
     async def dog(self, ctx):
         """dog_help"""
         await ctx.trigger_typing()
-        future_fact = self.get_json("https://dog-api.kinduff.com/api/facts?number=1")
+        future_fact = self.get_json("https://animal.gearbot.rocks/dog/fact")
         key = Configuration.get_master_var("DOG_KEY", "")
         future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
-        embed = discord.Embed(description=fact_json["facts"][0])
+        embed = discord.Embed(description=fact_json["fact"])
         if key != "":
             embed.set_image(url=dog_json[0]["url"])
         await ctx.send(embed=embed)
@@ -70,7 +70,7 @@ class Fun(BaseCog):
     async def cat(self, ctx):
         """cat_help"""
         await ctx.trigger_typing()
-        future_fact = self.get_json("https://cat.gearbot.rocks/catfact")
+        future_fact = self.get_json("https://animal.gearbot.rocks/cat/fact")
         key = Configuration.get_master_var("CAT_KEY", "")
         future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
