@@ -78,6 +78,8 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
 
         # re-assemble emoji so such a way that they don't turn into twermoji
 
+    urls = set(URL_MATCHER.findall(text))
+
     if markdown:
         text = escape_markdown(text)
     else:
@@ -90,8 +92,8 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
 
     if links:
         #find urls last so the < escaping doesn't break it
-        for url in set(URL_MATCHER.findall(text)):
-            text = text.replace(url, f"<{url}>")
+        for url in urls:
+            text = text.replace(escape_markdown(url), f"<{url}>")
 
     return text
 
