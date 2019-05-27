@@ -54,7 +54,7 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
     pages = Pages.paginate(out, max_chars=mcount)
     if bot.redis_pool is not None:
-        GearbotLogging.info(f"Pushing placeholders for {key}")
+        GearbotLogging.debug(f"Pushing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
         for page in pages:
             pipe.lpush(key, "---NO PAGE YET---")
@@ -74,7 +74,7 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
     order = [start]
     lower = start - 1
     upper = start + 1
-    GearbotLogging.info(f"Determining page order for {key}")
+    GearbotLogging.debug(f"Determining page order for {key}")
     while len(order) < len(pages):
         if upper == len(pages):
             upper = 0
@@ -86,7 +86,7 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
             lower = len(pages)-1
         order.append(lower)
         lower -= 1
-    GearbotLogging.info(f"Updating pages for {key}, ordering: {order}")
+    GearbotLogging.debug(f"Updating pages for {key}, ordering: {order}")
     for number in order:
         longest_name = max(len(Translator.translate('moderator', guild_id)), len(Translator.translate('user', guild_id)))
         page = pages[number]
@@ -98,16 +98,16 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
             name = Utils.pad(await Utils.username(int(uid.strip()), clean=False), longest_name)
             page = page.replace(f"<@{uid}>", name).replace(f"<@!{uid}>", name)
         page = f"{header}```md\n{get_header(longest_id, longest_name, longest_type, longest_timestamp, guild_id)}\n{page}```"
-        GearbotLogging.info(f"Finished assembling page {number} for key {key}")
+        GearbotLogging.debug(f"Finished assembling page {number} for key {key}")
         await bot.redis_pool.lset(key, number, page)
         pages[number] = page
-        GearbotLogging.info(f"Pushed page {number} for key {key} to redis")
+        GearbotLogging.debug(f"Pushed page {number} for key {key} to redis")
         bot.dispatch("page_assembled", {
             "key": key,
             "page_num": number,
             "page": page
         })
-    GearbotLogging.info(f"All pages assembled for key {key}, setting expiry to 60 minutes")
+    GearbotLogging.debug(f"All pages assembled for key {key}, setting expiry to 60 minutes")
     bot.dispatch("all_pages_assembled", {
         "key": key,
         "pages": pages
