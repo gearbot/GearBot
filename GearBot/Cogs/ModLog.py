@@ -181,7 +181,10 @@ class ModLog(BaseCog):
             hasUser = user is not None
             if message.content == event.data["content"]:
                 # either pinned or embed data arrived, if embed data arrives it's gona be a recent one so we'll have the cached message to compare to
-                old = None if ((not hasattr(event, 'cached_message')) and event.cached_message) is None else event.cached_message.pinned
+                if hasattr(event, 'cached_message') and event.cached_message is not None:
+                    old = event.cached_message.pinned
+                else:
+                    old = None
                 new = event.data["pinned"]
                 if old == new:
                     return
