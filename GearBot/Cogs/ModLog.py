@@ -184,7 +184,7 @@ class ModLog(BaseCog):
                 if hasattr(event, 'cached_message') and event.cached_message is not None:
                     old = event.cached_message.pinned
                 else:
-                    old = None
+                    old = False
                 new = event.data["pinned"]
                 if old == new:
                     return
