@@ -111,7 +111,7 @@ class Censor(BaseCog):
 
             else:
                 self.bot.data["forced_exits"].remove(message.author.id)
-                GearbotLogging.log_to(message.guild.id, 'automod_ban_failed', message.guild.id, user=message.author,
+                GearbotLogging.log_to(message.guild.id, 'automod_ban_failed', user=message.author,
                                                   user_id=message.author.id, reason=reason)
 
 
