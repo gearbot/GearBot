@@ -180,8 +180,28 @@ class ModLog(BaseCog):
             user: discord.User = self.bot.get_user(message.author)
             hasUser = user is not None
             if message.content == event.data["content"]:
-                # prob just pinned
-                return
+                # either pinned or embed data arrived, if embed data arrives it's gona be a recent one so we'll have the cached message to compare to
+                old = None if event.cached_message is None else event.cached_message.pinned
+                new = event.data["pinned"]
+                if old == new:
+                    return
+                else:
+                    parts = dict(channel=Utils.escape_markdown(c.name), channel_id=c.id)
+                    if new:
+                        # try to find who pinned it
+                        key = "message_pinned"
+                        m = await c.history(limit=5).get(type = MessageType.pins_add)
+                        if m is not None:
+                            key += "_by"
+                            parts.update(user=Utils.escape_markdown(m.author), user_id=m.author.id)
+                    else:
+                        # impossible to determine who unpinned it :meowsad:
+                        key = "message_unpinned"
+                    GearbotLogging.log_to(c.guild.id, key, **parts)
+                    GearbotLogging.log_raw(c.guild.id, 'EDIT_LOGS', f'```\n{Utils.trim_message(event.data["content"], 1990)}\n```')
+                    GearbotLogging.log_raw(c.guild.id, 'EDIT_LOGS', f"{Translator.translate('jump_link', c.guild.id)}: {MessageUtils.construct_jumplink(c.guild.id, c.id, event.message_id)}")
+                    return
+
             mc = message.content
             if mc is None or mc == "":
                 mc = f"<{Translator.translate('no_content', channel.guild.id)}>"

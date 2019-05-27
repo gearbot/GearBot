@@ -127,7 +127,10 @@ LOG_TYPES = {
     'raid_notification_forbidden': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_triggered': log_type('RAID_LOGS', 'BAD_USER'),
     'raid_shield_terminated': log_type('RAID_LOGS', 'INNOCENT'),
-    'unknown_nickname_removed': log_type('NAME_CHANGES', 'NICKTAG')
+    'unknown_nickname_removed': log_type('NAME_CHANGES', 'NICKTAG'),
+    'message_pinned': log_type('EDIT_LOGS', 'PIN'),
+    'message_pinned_by': log_type('EDIT_LOGS', 'PIN'),
+    'message_unpinned': log_type('EDIT_LOGS', 'PIN')
 
 
 

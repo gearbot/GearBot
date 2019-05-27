@@ -43,6 +43,7 @@ BACKUPS = {
     "NO": "🚫",
     "OFFLINE": "💙",
     "ONLINE": "💚",
+    "PIN": "📌",
     "QUESTION": "❓",
     "REFRESH": "🔁",
     "RIGHT": "▶",

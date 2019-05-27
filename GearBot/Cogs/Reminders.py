@@ -122,7 +122,7 @@ class Reminders(BaseCog):
             if package.guild_id is None:
                 jumplink_available = "Unavailable"
             else:
-                jumplink_available = MessageUtils.jumplink_construct(package.guild_id, package.channel_id, package.message_id)
+                jumplink_available = MessageUtils.construct_jumplink(package.guild_id, package.channel_id, package.message_id)
             mode = "dm" if isinstance(location, User) else "channel"
             now = datetime.utcfromtimestamp(time.time())
             send_time = datetime.utcfromtimestamp(package.send.timestamp())
