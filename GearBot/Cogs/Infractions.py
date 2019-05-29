@@ -58,7 +58,7 @@ class Infractions(BaseCog):
                         await dm_channel.send(
                             f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
                     except discord.Forbidden:
-                        GearbotLogging.log_to(ctx.guild.id, 'warning_could_not_dm', ctx.guild.id, user=name,
+                        GearbotLogging.log_to(ctx.guild.id, 'warning_could_not_dm', user=name,
                                               userid=member.id)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
