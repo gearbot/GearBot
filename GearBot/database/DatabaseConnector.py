@@ -31,6 +31,7 @@ class LoggedMessage(Model):
     channel = BigIntegerField()
     server = BigIntegerField()
     type = TinyIntField(null=True)
+    pinned = BooleanField(default=False)
 
     class Meta:
         database = connection

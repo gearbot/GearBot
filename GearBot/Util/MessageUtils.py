@@ -9,7 +9,7 @@ from Util import Translator, Emoji, Archive
 from database import DBUtils
 from database.DatabaseConnector import LoggedMessage
 
-Message = namedtuple("Message", "messageid author content channel server attachments type")
+Message = namedtuple("Message", "messageid author content channel server attachments type pinned")
 
 def is_cache_enabled(bot):
     return bot.redis_pool is not None
@@ -18,8 +18,8 @@ async def get_message_data(bot, message_id):
     message = None
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
-        if len(parts) is 5:
-            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None)
+        if len(parts) is 6:
+            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), parts["attachments"].split("|") if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1')
     if message is None:
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
     return message
@@ -33,17 +33,20 @@ async def insert_message(bot, message):
     if is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, attachments='|'.join((str(a.url) for a in message.attachments)))
+                         channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((str(a.url) for a in message.attachments)))
         if message_type is not None:
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
         await pipe.execute()
     DBUtils.insert_message(message)
 
-async def update_message(bot, message_id, content):
+async def update_message(bot, message_id, content, pinned):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
-        await bot.redis_pool.hmset_dict(f"messages:{message_id}", content=content)
-    LoggedMessage.update(content=content).where(LoggedMessage.messageid == message_id).execute()
+        pipe = bot.redis_pool.pipeline()
+        pipe.hmset_dict(f"messages:{message_id}", content=content)
+        pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
+        await pipe.execute()
+    LoggedMessage.update(content=content, pinned=pinned).where(LoggedMessage.messageid == message_id).execute()
 
 def assemble(destination, emoji, m, translate=True, **kwargs):
     translated = Translator.translate(m, destination, **kwargs) if translate else m

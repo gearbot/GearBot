@@ -181,10 +181,7 @@ class ModLog(BaseCog):
             hasUser = user is not None
             if message.content == event.data["content"]:
                 # either pinned or embed data arrived, if embed data arrives it's gona be a recent one so we'll have the cached message to compare to
-                if hasattr(event, 'cached_message') and event.cached_message is not None:
-                    old = event.cached_message.pinned
-                else:
-                    old = False
+                old = message.pinned
                 new = event.data["pinned"]
                 if old == new:
                     return
@@ -203,6 +200,7 @@ class ModLog(BaseCog):
                     GearbotLogging.log_to(c.guild.id, key, **parts)
                     GearbotLogging.log_raw(c.guild.id, 'EDIT_LOGS', f'```\n{Utils.trim_message(event.data["content"], 1990)}\n```')
                     GearbotLogging.log_raw(c.guild.id, 'EDIT_LOGS', f"{Translator.translate('jump_link', c.guild.id)}: {MessageUtils.construct_jumplink(c.guild.id, c.id, event.message_id)}")
+                    await MessageUtils.update_message(self.bot, event.message_id, message.content, new)
                     return
 
             mc = message.content
@@ -230,7 +228,7 @@ class ModLog(BaseCog):
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_raw(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}")
                     GearbotLogging.log_raw(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}")
-            await MessageUtils.update_message(self.bot, event.message_id, after)
+            await MessageUtils.update_message(self.bot, event.message_id, after, after.pinned)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
