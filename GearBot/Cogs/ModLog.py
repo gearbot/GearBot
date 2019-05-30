@@ -228,7 +228,7 @@ class ModLog(BaseCog):
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_raw(channel.guild.id, "EDIT_LOGS", f"**Old:** {clean_old}")
                     GearbotLogging.log_raw(channel.guild.id, "EDIT_LOGS", f"**New:** {clean_new}")
-            await MessageUtils.update_message(self.bot, event.message_id, after, after.pinned)
+            await MessageUtils.update_message(self.bot, event.message_id, after, event.data["pinned"])
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
