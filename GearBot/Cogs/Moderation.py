@@ -180,7 +180,7 @@ class Moderation(BaseCog):
 
     @commands.guild_only()
     @commands.command("mkick")
-    @commands.bot_has_permissions(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True, add_reactions=True)
     async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mkick_help"""
         if reason == "":
@@ -248,7 +248,7 @@ class Moderation(BaseCog):
 
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
-    @commands.bot_has_permissions(ban_members=True)
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
         if ctx.guild.get_member(user.id) is not None:
@@ -328,7 +328,7 @@ class Moderation(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    @commands.bot_has_permissions(ban_members=True)
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def mban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mban_help"""
         if reason == "":
@@ -399,7 +399,7 @@ class Moderation(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(ban_members=True)
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def forceban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """forceban_help"""
         if reason == "":
@@ -486,7 +486,7 @@ class Moderation(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if reason == "":
