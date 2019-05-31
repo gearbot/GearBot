@@ -56,7 +56,10 @@ class Reload(BaseCog):
         message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
         ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
         GearbotLogging.info("Initiating hot reload")
-
+        antiraid = self.bot.get_cog('AntiRaid')
+        trackers = None
+        if antiraid is not None:
+            trackers = antiraid.raid_trackers
         GearbotLogging.LOG_PUMP.running = False
         untranslatable = Translator.untranlatable
         importlib.reload(Reloader)
@@ -75,6 +78,10 @@ class Reload(BaseCog):
         to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
         for c in to_unload:
             self.bot.remove_command(c)
+
+        antiraid = self.bot.get_cog('AntiRaid')
+        if antiraid is not None and trackers is not None:
+            antiraid.raid_trackers = trackers
 
         await TheRealGearBot.initialize(self.bot)
         c = await Utils.get_commit()
