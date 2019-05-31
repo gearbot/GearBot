@@ -128,9 +128,15 @@ class AntiRaid(BaseCog):
 
 
     async def resetting(self, guild_id, handler, shield, data):
+        initialized_at = datetime.utcfromtimestamp(time.time())
         while True:
             try:
                 self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
+                diff = abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
+                if diff > 60*60:
+                    GearbotLogging.log_to(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])
+                    await self.terminate_shield(guild_id, handler, shield)
+                    return
             except asyncio.TimeoutError:
                 # no more joins! turn off the handler
                 await self.terminate_shield(guild_id, handler, shield)
