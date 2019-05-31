@@ -140,7 +140,8 @@ class AntiRaid(BaseCog):
             except asyncio.TimeoutError:
                 # no more joins! turn off the handler
                 await self.terminate_shield(guild_id, handler, shield)
-                pass # timer reset!
+                if abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds()) >= shield["trigger"]["seconds"]:
+                    return # don't leak tasks
 
 
     async def terminate_shield(self, guild_id, handler, shield):
