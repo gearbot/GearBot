@@ -130,7 +130,18 @@ LOG_TYPES = {
     'unknown_nickname_removed': log_type('NAME_CHANGES', 'NICKTAG'),
     'message_pinned': log_type('EDIT_LOGS', 'PIN'),
     'message_pinned_by': log_type('EDIT_LOGS', 'PIN'),
-    'message_unpinned': log_type('EDIT_LOGS', 'PIN')
+    'message_unpinned': log_type('EDIT_LOGS', 'PIN'),
+    'raid_message_failed_missing_channel': log_type('RAID_LOGS', 'WARN'),
+    'raid_message_failed_channel': log_type('RAID_LOGS', 'WARN'),
+    'raid_message_failed_channel_unknown_error': log_type('RAID_LOGS', 'WARN'),
+    'raid_message_user_not_found': log_type('RAID_LOGS', 'WARN'),
+    'raid_message_user_forbidden': log_type('RAID_LOGS', 'WARN'),
+    'raid_mute_forbidden': log_type('RAID_LOGS', 'WARN'),
+    'raid_mute_unknown_error': log_type('RAID_LOGS', 'WARN'),
+    'raid_kick_forbidden': log_type('RAID_LOGS', 'WARN'),
+    'raid_kick_unknown_error': log_type('RAID_LOGS', 'WARN'),
+    'raid_ban_forbidden': log_type('RAID_LOGS', 'WARN'),
+    'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARN'),
 
 
 
