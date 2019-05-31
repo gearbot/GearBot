@@ -7,7 +7,7 @@ from Util import GearbotLogging, Utils, Configuration, InfractionUtils
 from database import DatabaseConnector
 
 
-async def log(key, gid, shield, **kwargs):
+async def log(gid, key, shield, **kwargs):
     await GearbotLogging.log_to(gid, key, shield_name=Utils.escape_markdown(shield["name"]), **kwargs)
 
 class RaidAction(ABC):
