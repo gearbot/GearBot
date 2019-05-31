@@ -236,6 +236,8 @@ async def bot_log(message=None, embed=None):
 
 
 def log_raw(guild_id, location, message=None, embed=None, file=None):
+    if isinstance(embed, int):
+        raise ValueError("WTH IS SPAMMING MY LOGS?")
     channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
     if message is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
@@ -247,6 +249,8 @@ def log_raw(guild_id, location, message=None, embed=None, file=None):
 
 
 def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **kwargs):
+    if isinstance(embed, int):
+        raise ValueError("WTH IS SPAMMING MY LOGS?")
     info = LOG_TYPES[key]
     remaining = None
     if key is None and embed is None and file is None:
