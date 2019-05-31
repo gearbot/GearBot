@@ -610,7 +610,7 @@
   "command_remove_help": "Removes a custom command",
   "command_update_help": "Sets a new reply for the specified command",
   "raid_new": "A shield has been raised, this server is now under raid, tracking... (raid id ``#{raid_id}``)",
-  "raid_terminated": "All shields have been lowered, for now",
+  "raid_terminated": "All shields have been lowered",
   "raid_message_failed": "Failed to DM {user} (tried as per raid shield **{shield_name}**)",
   "raid_notification_forbidden": "Raid notification message failed to send: {user_name} (``{user_id}``) does not have DMs open or blocked me (tried as per raid shield **{shield_name}**)",
   "raid_shield_triggered": "A raid shield has been raised: **{name}**",
