@@ -63,7 +63,7 @@ class ModLog(BaseCog):
                                              channel=channel.id, server=channel.guild.id,
                                              type=message_type)
                         for a in message.attachments:
-                            LoggedAttachment.create(id=a.id, url=a.url,
+                            LoggedAttachment.create(id=a.id, url=a.proxy_url,
                                                     isImage=(a.width is not None or a.width is 0),
                                                     messageid=message.id)
                         newCount = newCount + 1

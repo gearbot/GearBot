@@ -33,7 +33,7 @@ async def insert_message(bot, message):
     if is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((str(a.url) for a in message.attachments)))
+                         channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((str(a.proxy_url) for a in message.attachments)))
         if message_type is not None:
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
