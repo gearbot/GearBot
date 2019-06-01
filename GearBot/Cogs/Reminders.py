@@ -5,28 +5,28 @@ from datetime import datetime
 from discord import Embed, User, NotFound, Forbidden
 from discord.ext import commands
 
-from Bot.GearBot import GearBot
-from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils
+from Bot import TheRealGearBot
+from Cogs.BaseCog import BaseCog
+from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
 
-class Reminders:
-    permissions = {
-        "min": 0,
-        "max": 6,
-        "required": 0,
-        "commands": {
-        }
-    }
+class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        self.bot: GearBot = bot
+        super().__init__(bot, {
+            "min": 0,
+            "max": 6,
+            "required": 0,
+            "commands": {
+            }
+        })
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
 
-    def __unload(self):
+    def cog_unload(self):
         self.running = False
 
     @commands.group(aliases=["r", "reminder"])
@@ -36,10 +36,14 @@ class Reminders:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
 
     @remind.command("me", aliases=["add", "m", "a"])
-    async def remind_me(self, ctx, duration_number: int, duration_identifier: Duration, *, reminder: ReminderText):
+    async def remind_me(self, ctx, duration: Duration, *, reminder: ReminderText):
         """remind_me_help"""
-        duration = Utils.convertToSeconds(duration_number, duration_identifier)
-        if duration <= 0:
+        if duration.unit is None:
+            parts = reminder.split(" ")
+            duration.unit = parts[0]
+            reminder = " ".join(parts[1:])
+        duration_seconds = duration.to_seconds(ctx)
+        if duration_seconds <= 0:
             await MessageUtils.send_to(ctx, "NO", "reminder_time_travel")
             return
         if ctx.guild is not None:
@@ -75,10 +79,11 @@ class Reminders:
             dm = True
         Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
                         to_remind=await Utils.clean(reminder, markdown=False),
-                        time=time.time() + duration, status=ReminderStatus.Pending)
+                        time=time.time() + duration_seconds, status=ReminderStatus.Pending,
+                        guild_id=ctx.guild.id if ctx.guild is not None else "@me", message_id=ctx.message.id)
         mode = "dm" if dm else "here"
-        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration_number,
-                                     duration_identifier=duration_identifier)
+        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
+                                     duration_identifier=duration.unit)
 
     async def delivery_service(self):
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")
@@ -111,25 +116,38 @@ class Reminders:
         r.save()
 
     async def attempt_delivery(self, location, package):
-        if location is None:
-            return False
-        mode = "dm" if isinstance(location, User) else "channel"
-        now = datetime.utcfromtimestamp(time.time())
-        send_time = datetime.utcfromtimestamp(package.send.timestamp())
-        parts = {
-            "date": send_time.strftime('%c'),
-            "timediff": Utils.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
-            "now_date": now.strftime('%c'),
-            "reminder": package.to_remind,
-            "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
-        }
-        parcel = Translator.translate(f"reminder_delivery_{mode}", location, **parts)
         try:
-            await location.send(parcel)
-        except (Forbidden, NotFound):
+            if location is None:
+                return False
+            if package.guild_id is None:
+                jumplink_available = "Unavailable"
+            else:
+                jumplink_available = MessageUtils.construct_jumplink(package.guild_id, package.channel_id, package.message_id)
+            mode = "dm" if isinstance(location, User) else "channel"
+            now = datetime.utcfromtimestamp(time.time())
+            send_time = datetime.utcfromtimestamp(package.send.timestamp())
+            parts = {
+                "date": send_time.strftime('%c'),
+                "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
+                "now_date": now.strftime('%c'),
+                "jump_link": jumplink_available,
+                "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
+            }
+            parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
+            content = f"```\n{package.to_remind}\n```"
+            try:
+                if len(parcel) + len(content) < 2000:
+                    await location.send(parcel + content)
+                else:
+                    await location.send(parcel)
+                    await location.send(content)
+            except (Forbidden, NotFound):
+                return False
+            else:
+                return True
+        except Exception as ex:
+            await TheRealGearBot.handle_exception("Reminder delivery", self.bot, ex, None, None, None, location, package)
             return False
-        else:
-            return True
 
 
 def setup(bot):

@@ -79,9 +79,17 @@ def check_permission(ctx:commands.Context):
             required = get_required(ctx, ctx.cog.permissions)
         return get_user_lvl(ctx) >= (ctx.cog.permissions["required"] if required == -1 else required)
 
+def get_command_pieces(ctx):
+    parts = (ctx.message.content[len(ctx.prefix):] if ctx.prefix is not None else ctx.message.content).split(" ")
+    command_object = None
+    while len(parts) > 0 and command_object is None:
+        command_object = ctx.bot.get_command(" ".join(parts))
+        parts.pop(len(parts)-1)
+    return command_object.qualified_name.lower().split(" ") if command_object is not None else []
+
 
 def get_required(ctx, perm_dict):
-    return get_perm_dict(ctx.command.qualified_name.split(" "), perm_dict)["required"]
+    return get_perm_dict(get_command_pieces(ctx), perm_dict)["required"]
 
 def get_perm_dict(pieces, perm_dict, strict=False):
     found = True
@@ -105,7 +113,7 @@ def get_user_lvl(ctx:commands.Context):
     overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
     if cog_name in overrides:
         target = overrides[cog_name]
-        pieces = ctx.command.qualified_name.lower()[len(ctx.prefix):].split(" ")
+        pieces = get_command_pieces(ctx)
         while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
             target = target["commands"][pieces.pop(0)]
             if ctx.author.id in target["people"]:

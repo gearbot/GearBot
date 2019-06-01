@@ -5,7 +5,6 @@ import os
 import discord
 
 from Util import Utils, GearbotLogging, Translator, Emoji
-from database.DatabaseConnector import LoggedAttachment
 
 archive_counter = 0
 
@@ -19,7 +18,7 @@ async def archive_purge(bot, guild_id, messages):
     with open(filename, "w", encoding="utf-8") as file:
         file.write(out)
     file = open (filename, "rb")
-    GearbotLogging.log_to(guild_id, "EDIT_LOGS", message=Translator.translate('purged_log', guild_id, count=len(messages), channel=channel.mention), file=discord.File(file, "Purged messages archive.txt"))
+    GearbotLogging.log_to(guild_id, 'purged_log', count=len(messages), channel=channel.mention, file=discord.File(filename, "Purged messages archive.txt"))
     await asyncio.sleep(60) # things are not logged after 60 seconds, something is seriously messed up
     file.close()
     os.remove(filename)
@@ -28,10 +27,10 @@ async def pack_messages(messages):
     out = ""
     for message in messages:
         name = await Utils.username(message.author, clean=False)
-        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {', '.join(attachment.url for attachment in LoggedAttachment.select().where(LoggedAttachment.messageid == message.messageid))}\r\n"
+        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))}\r\n"
     return out
 
-async def ship_messages(ctx, messages, filename="Message archive"):
+async def ship_messages(ctx, messages, t, filename="Message archive"):
     if len(messages) > 0:
         global archive_counter
         archive_counter += 1
@@ -49,4 +48,4 @@ async def ship_messages(ctx, messages, filename="Message archive"):
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(file, f"{filename}.txt"))
         os.remove(real_name)
     else:
-        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_empty', ctx)}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)}")

@@ -1,9 +1,7 @@
 import asyncio
 import json
 import os
-import re
 import subprocess
-import time
 from collections import namedtuple, OrderedDict
 from datetime import datetime
 from subprocess import Popen
@@ -11,7 +9,8 @@ from subprocess import Popen
 import discord
 from discord import NotFound
 
-from Util import GearbotLogging, Translator, Emoji
+from Util import GearbotLogging
+from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
 
@@ -23,37 +22,17 @@ def initialize(actual_bot):
 
 def fetch_from_disk(filename, alternative=None):
     try:
-        with open(f"{filename}.json") as file:
+        with open(f"{filename}.json", encoding="UTF-8") as file:
             return json.load(file)
     except FileNotFoundError:
         if alternative is not None:
             fetch_from_disk(alternative)
         return dict()
 
-def saveToDisk(filename, dict):
-    with open(f"{filename}.json", "w") as file:
+def save_to_disk(filename, dict):
+    with open(f"{filename}.json", "w", encoding="UTF-8") as file:
         json.dump(dict, file, indent=4, skipkeys=True, sort_keys=True)
 
-def convertToSeconds(value: int, type: str):
-    type = type.lower()
-    if len(type) > 1 and type[-1:] == 's': # plural -> singular
-        type = type[:-1]
-    if type == 'w' or type == 'week':
-        value = value * 7
-        type = 'd'
-    if type == 'd' or type == 'day':
-        value = value * 24
-        type = 'h'
-    if type == 'h' or type == 'hour':
-        value = value * 60
-        type = 'm'
-    if type == 'm' or type == 'minute':
-        value = value * 60
-        type = 's'
-    if type != 's' and type != 'second':
-        return None
-    else:
-        return value
 
 async def cleanExit(bot, trigger):
     await GearbotLogging.bot_log(f"Shutdown triggered by {trigger}.")
@@ -68,13 +47,9 @@ def trim_message(message, limit):
     return f"{message[:limit-3]}..."
 
 
-ID_MATCHER = re.compile("<@!?([0-9]+)>")
-ROLE_ID_MATCHER = re.compile("<@&([0-9]+)>")
-CHANNEL_ID_MATCHER = re.compile("<#([0-9]+)>")
-URL_MATCHER = re.compile(r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)?)', re.IGNORECASE)
-EMOJI_MATCHER = re.compile('<(a?):([^:]+):([0-9]+)>')
 
-async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
+
+async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True):
     text = str(text)
     if guild is not None:
         # resolve user mentions
@@ -103,27 +78,29 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True):
 
         # re-assemble emoji so such a way that they don't turn into twermoji
 
+    urls = set(URL_MATCHER.findall(text))
+
     if markdown:
         text = escape_markdown(text)
     else:
         text = text.replace("@", "@\u200b").replace("**", "*​*").replace("``", "`​`")
 
-    for e in set(EMOJI_MATCHER.findall(text)):
-        a, b, c = zip(e)
-        text.replace(f"<{a}:{b}:{c}>", f"<{a}:\u200b{b}:{c}>".replace('\\\\', '\\'))
+    if emoji:
+        for e in set(EMOJI_MATCHER.findall(text)):
+            a, b, c = zip(e)
+            text = text.replace(f"<{a[0]}:{b[0]}:{c[0]}>", f"<{a[0]}\\:{b[0]}\\:{c[0]}>")
 
     if links:
         #find urls last so the < escaping doesn't break it
-        for url in set(URL_MATCHER.findall(text)):
-            text = text.replace(url, f"<{url}>")
-
+        for url in urls:
+            text = text.replace(escape_markdown(url), f"<{url}>")
 
     return text
 
 def escape_markdown(text):
     text = str(text)
-    for c in ("\\", "`", "*", "_", "~", "<"):
-        text = text.replace(c, f"\{c}")
+    for c in ["\\", "`", "*", "_", "~", "|", "{"]:
+        text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 
 def clean_name(text):
@@ -147,21 +124,20 @@ async def username(uid, fetch=True, clean=True):
 
 
 async def get_user(uid, fetch=True):
-    UserClass = namedtuple("UserClass", "name id discriminator avatar bot avatar_url created_at is_avatar_animated mention")
+    UserClass = namedtuple("UserClass", "name id discriminator bot avatar_url created_at is_avatar_animated mention")
     user = BOT.get_user(uid)
     if user is None:
         if uid in known_invalid_users:
             return None
 
         if BOT.redis_pool is not None:
-            userCacheInfo = await BOT.redis_pool.hgetall(uid)
+            userCacheInfo = await BOT.redis_pool.hgetall(f"users:{uid}")
 
-            if len(userCacheInfo) == 9: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
+            if len(userCacheInfo) == 8: # It existed in the Redis cache, check length cause sometimes somehow things are missing, somehow
                 userFormed = UserClass(
                     userCacheInfo["name"],
                     userCacheInfo["id"],
                     userCacheInfo["discriminator"],
-                    userCacheInfo["avatar"],
                     userCacheInfo["bot"] == "1",
                     userCacheInfo["avatar_url"],
                     datetime.fromtimestamp(float(userCacheInfo["created_at"])),
@@ -172,21 +148,20 @@ async def get_user(uid, fetch=True):
                 return userFormed
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     pipeline = BOT.redis_pool.pipeline()
-                    pipeline.hmset_dict(uid,
+                    pipeline.hmset_dict(f"users:{uid}",
                         name = user.name,
                         id = user.id,
                         discriminator = user.discriminator,
-                        avatar = user.avatar,
                         bot = int(user.bot),
-                        avatar_url = user.avatar_url,
+                        avatar_url = str(user.avatar_url),
                         created_at = user.created_at.timestamp(),
                         is_avatar_animated = int(user.is_avatar_animated()),
                         mention = user.mention
                     )
 
-                    pipeline.expire(uid, 300) # 5 minute cache life
+                    pipeline.expire(f"users:{uid}", 3000) # 5 minute cache life
                     
                     BOT.loop.create_task(pipeline.execute())
 
@@ -198,7 +173,7 @@ async def get_user(uid, fetch=True):
                 return user_cache[uid]
             if fetch:
                 try:
-                    user = await BOT.get_user_info(uid)
+                    user = await BOT.fetch_user(uid)
                     if len(user_cache) >= 10: # Limit the cache size to the most recent 10
                         user_cache.popitem()
                     user_cache[uid] = user
@@ -226,58 +201,17 @@ async def execute(command):
     while p.poll() is None:
         await asyncio.sleep(1)
     out, error = p.communicate()
-    return p.returncode, out, error
+    return p.returncode, out.decode('utf-8'), error.decode('utf-8')
 
 def find_key(data, wanted):
     for k, v in data.items():
         if v == wanted:
             return k
 
+def chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
 
-def server_info(guild, request_guild=None):
-    guild_features = ", ".join(guild.features)
-    if guild_features == "":
-        guild_features = None
-    guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=0x7289DA, timestamp=datetime.fromtimestamp(time.time()))
-    embed.set_thumbnail(url=guild.icon_url)
-    embed.add_field(name=Translator.translate('name', request_guild), value=guild.name, inline=True)
-    embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
-    embed.add_field(name=Translator.translate('owner', request_guild), value=guild.owner, inline=True)
-    embed.add_field(name=Translator.translate('members', request_guild), value=guild.member_count, inline=True)
-    embed.add_field(name=Translator.translate('text_channels', request_guild), value=str(len(guild.text_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('voice_channels', request_guild), value=str(len(guild.voice_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('total_channel', request_guild),
-                    value=str(len(guild.text_channels) + len(guild.voice_channels)),
-                    inline=True)
-    embed.add_field(name=Translator.translate('created_at', request_guild),
-                    value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
-                    inline=True)
-    embed.add_field(name=Translator.translate('vip_features', request_guild), value=guild_features, inline=True)
-    if guild.icon_url != "":
-        embed.add_field(name=Translator.translate('server_icon', request_guild),
-                        value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url})", inline=True)
-    roles = ", ".join(role.name for role in guild.roles)
-    embed.add_field(name=Translator.translate('all_roles', request_guild),
-                    value=roles if len(roles) < 1024 else f"{len(guild.roles)} roles", inline=True)
-    if guild.emojis:
-        emoji = "".join(str(e) for e in guild.emojis)
-        embed.add_field(name=Translator.translate('emoji', request_guild),
-                        value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji")
-    statuses = dict(online=0, idle=0, dnd=0, offline=0)
-    for m in guild.members:
-        statuses[str(m.status)] += 1
-    embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
-    return embed
-
-
-def time_difference(begin, end, location):
-    diff = begin - end
-    minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    return (Translator.translate('days', location, days=diff.days)) if diff.days > 0 else Translator.translate('hours',
-                                                                                                               location,
-                                                                                                               hours=hours,
-                                                                                                               minutes=minutes)
+async def get_commit():
+    _, out, __ = await execute('git rev-parse --short HEAD')
+    return out

@@ -10,12 +10,14 @@ from datetime import datetime
 import aiohttp
 import aioredis
 import sentry_sdk
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden
+from aiohttp import ClientOSError, ServerDisconnectedError
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed
 from discord.abc import PrivateChannel
 from discord.ext import commands
 from peewee import PeeweeException
 
-from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, DocUtils, InfractionUtils
+from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
+    server_info
 from database import DatabaseConnector
 
 
@@ -28,7 +30,7 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
     return prefixes
 
-async def initialize(bot):
+async def initialize(bot, startup=False):
     #lock event handling while we get ready
     bot.locked = True
     try:
@@ -40,9 +42,7 @@ async def initialize(bot):
 
         GearbotLogging.initialize_pump(bot)
         Emoji.initialize(bot)
-        Pages.initialize(bot)
         Utils.initialize(bot)
-        Translator.initialize(bot)
         InfractionUtils.initialize(bot)
         bot.data = {
             "forced_exits": set(),
@@ -50,20 +50,30 @@ async def initialize(bot):
             "message_deletes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
+        if startup:
+            c = await Utils.get_commit()
+            bot.version = c
+            GearbotLogging.info(f"GearBot spinning up version {c}")
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot spinning up version {c}")
 
         if bot.redis_pool is None:
             try:
-                bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
-                # bot.redis_raid_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=1)
+                socket = Configuration.get_master_var("REDIS_SOCKET", "")
+                if socket == "":
+                    bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
+                else:
+                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching and anti-raid connections unavailable")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
             else:
                 GearbotLogging.info("Redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, caching and anti-raid connections established")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, let's go full speed!")
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()
+
+        await Translator.initialize(bot)
         bot.being_cleaned.clear()
         await Configuration.initialize(bot)
     except Exception as ex:
@@ -76,7 +86,7 @@ async def initialize(bot):
 
 async def on_ready(bot):
     if not bot.STARTUP_COMPLETE:
-        await initialize(bot)
+        await initialize(bot, True)
         #shutdown handler for clean exit on linux
         try:
             for signame in ('SIGINT', 'SIGTERM'):
@@ -98,10 +108,9 @@ async def on_ready(bot):
         for c in to_unload:
             bot.remove_command(c)
 
-        if Configuration.get_master_var("CROWDIN_KEY") is not None:
+        if Configuration.get_master_var("CROWDIN") is not None:
             bot.loop.create_task(translation_task(bot))
 
-        await DocUtils.update_docs(bot)
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
@@ -121,25 +130,12 @@ async def keepDBalive(bot):
 
 
 async def translation_task(bot):
+    await Translator.upload()
     while not bot.is_closed():
         try:
             await Translator.update()
         except Exception as ex:
-            GearbotLogging.error("Something went wrong during translation updates")
-            GearbotLogging.error(traceback.format_exc())
-            embed = Embed(colour=Colour(0xff0000),
-                                  timestamp=datetime.utcfromtimestamp(time.time()))
-            embed.set_author(name="Something went wrong during translation updates")
-            embed.add_field(name="Exception", value=str(ex))
-            v = ""
-            for line in traceback.format_exc().splitlines():
-                if len(v) + len(line) >= 1024:
-                    embed.add_field(name="Stacktrace", value=v)
-                    v = ""
-                v = f"{v}\n{line}"
-            if len(v) > 0:
-                embed.add_field(name="Stacktrace", value=v)
-            await GearbotLogging.bot_log(embed=embed)
+            await handle_exception("Translation task", bot, ex)
 
         try:
             await asyncio.sleep(6*60*60)
@@ -163,38 +159,62 @@ async def on_message(bot, message:Message):
             except Forbidden:
                 pass #closed DMs
         else:
+            f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
+            start = f()
             await bot.invoke(ctx)
+            bot.metrics.bot_command_timing.labels(command_name=ctx.command.qualified_name).observe((f() - start) / 1000000)
 
 
 async def on_guild_join(guild):
-    GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-    Configuration.load_config(guild.id)
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id in blocked:
+        GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
+        try:
+            await guild.owner.send("Someone tried adding me to {guild.name} (``{guild.id}``) but the server has been blacklisted")
+        except Exception:
+            pass
+        await guild.leave()
+    else:
+        GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
+        Configuration.load_config(guild.id)
+        name = await Utils.clean(guild.name)
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
 
 async def on_guild_remove(guild):
-    GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
-    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=Utils.server_info(guild))
+    blocked = Configuration.get_persistent_var("blacklist", [])
+    if guild.id not in blocked:
+        GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info(guild))
+
+class PostParseError(commands.BadArgument):
+
+    def __init__(self, type, error):
+        super().__init__(None)
+        self.type = type
+        self.error=error
+
 
 async def on_command_error(bot, ctx: commands.Context, error):
-    if isinstance(error, commands.NoPrivateMessage):
-        await ctx.send("This command cannot be used in private messages.")
-    elif isinstance(error, commands.BotMissingPermissions):
+    if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
-    elif isinstance(error, commands.DisabledCommand):
-        await ctx.send("Sorry. This command is disabled and cannot be used.")
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "PERM_DENIED_MESSAGE"):
-            await ctx.send(":lock: You do not have the required permissions to run this command")
+            await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)
     elif isinstance(error, commands.MissingRequiredArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
+        bot.help_command.context = ctx
         await ctx.send(
-            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+            f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
+    elif isinstance(error, PostParseError):
+        bot.help_command.context = ctx
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=error.error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.BadArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
-        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=ctx.prefix.replace(ctx.me.mention, f'@{ctx.me.name}') + ctx.command.signature)}")
+        bot.help_command.context = ctx
+        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=error)}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.CommandNotFound):
         return
     elif isinstance(error, PeeweeException):
@@ -286,7 +306,6 @@ async def handle_database_error(bot):
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
     bot.errors = bot.errors + 1
     with sentry_sdk.push_scope() as scope:
-
         embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
 
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
@@ -373,6 +392,9 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         if isinstance(exception, PeeweeException):
             await handle_database_error(bot)
 
+        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
+            if isinstance(exception, t):
+                return
         #nice embed for info on discord
 
 

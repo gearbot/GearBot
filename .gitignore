@@ -6,10 +6,11 @@ venv/
 site/
 .idea/
 .gradle/
-
-docs/commands.md
 logs/
 *.json
 
 !lang/*
 !config/template.json
+*.css
+
+*.map
