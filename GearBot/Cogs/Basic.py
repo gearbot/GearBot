@@ -80,6 +80,7 @@ class Basic(BaseCog):
 
 
     @commands.command()
+    @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def quote(self, ctx: commands.Context, *, message:Message):
         """quote_help"""
