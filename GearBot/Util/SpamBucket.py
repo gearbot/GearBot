@@ -13,35 +13,37 @@ class SpamBucket:
         self.max_actions = max_actions
         self.period = period
 
-    def incr(self, key, amt=1):
-        self._remove_expired_keys(key)
+    async def incr(self, key, amt=1):
+        await self._remove_expired_keys(key)
         key = self.key_format.format(key)
         for i in range(0, amt):
-            self.redis.zadd(key, ms_time(), f"{ms_time()}-{i}")
-        self.redis.expire(key, self.period)
-        return self.redis.zcount(key)
+            await self.redis.zadd(key, ms_time(), f"{ms_time()}-{i}")
+        await self.redis.expire(key, self.period)
+        return await self.redis.zcount(key)
 
-    def check(self, key, amount=1):
-        self._remove_expired_keys(key)
+    async def check(self, key, amount=1):
+        await self._remove_expired_keys(key)
         key = self.key_format.format(key)
-        return self.incr(key, amount) >= self.max_actions
+        amt = await self.incr(key, amount)
+        print(f"{amt}/{self.max_actions}")
+        return amt >= self.max_actions
 
-    def count(self, key):
-        self._remove_expired_keys(key)
+    async def count(self, key):
+        await self._remove_expired_keys(key)
         key = self.key_format.format(key)
-        return self.redis.zcount(key)
+        return await self.redis.zcount(key)
 
-    def size(self, key):
-        self._remove_expired_keys(key)
+    async def size(self, key):
+        await self._remove_expired_keys(key)
         key = self.key_format.format(key)
-        values = self.redis.zrangebyscore(key)
+        values = await self.redis.zrangebyscore(key)
         if len(values) <= 1:
             return 0
-        return self.redis.zscore(key, values[:-1]) - self.redis.zscore(key, values[0])
+        return (await self.redis.zscore(key, values[:-1])) - (await self.redis.zscore(key, values[0]))
 
-    def clear(self, key):
+    async def clear(self, key):
         key = self.key_format.format(key)
-        self.redis.zremrangebyscore(key)
+        await self.redis.zremrangebyscore(key)
 
-    def _remove_expired_keys(self, key):
+    async def _remove_expired_keys(self, key):
         self.redis.zremrangebyscore(self.key_format.format(key), max=(ms_time() - (self.period * 1000)))
