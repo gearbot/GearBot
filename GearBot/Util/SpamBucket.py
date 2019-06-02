@@ -13,27 +13,27 @@ class SpamBucket:
         self.max_actions = max_actions
         self.period = period
 
-    async def incr(self, key, amt=1):
-        await self._remove_expired_keys(key)
+    async def incr(self, key, current_time, amt=1):
+        await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         for i in range(0, amt):
-            await self.redis.zadd(k, ms_time(), f"{ms_time()}-{i}")
+            await self.redis.zadd(k, current_time, f"{current_time}-{i}")
         await self.redis.expire(k, self.period)
         return await self.redis.zcount(k)
 
-    async def check(self, key, amount=1):
-        await self._remove_expired_keys(key)
-        amt = await self.incr(key, amount)
+    async def check(self, key, current_time, amount=1):
+        await self._remove_expired_keys(key, current_time)
+        amt = await self.incr(key, current_time, amount)
         print(f"{amt}/{self.max_actions}")
         return amt >= self.max_actions
 
-    async def count(self, key):
-        await self._remove_expired_keys(key)
+    async def count(self, key, current_time):
+        await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         return await self.redis.zcount(k)
 
-    async def size(self, key):
-        await self._remove_expired_keys(key)
+    async def size(self, key, current_time):
+        await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         values = await self.redis.zrangebyscore(k)
         if len(values) <= 1:
@@ -44,5 +44,5 @@ class SpamBucket:
         k = self.key_format.format(key)
         await self.redis.zremrangebyscore(k)
 
-    async def _remove_expired_keys(self, key):
-        await self.redis.zremrangebyscore(self.key_format.format(key), max=(ms_time() - (self.period * 1000)))
+    async def _remove_expired_keys(self, key, current_time):
+        await self.redis.zremrangebyscore(self.key_format.format(key), max=(current_time - (self.period * 1000)))

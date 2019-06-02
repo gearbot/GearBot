@@ -59,14 +59,17 @@ class AntiSpam(BaseCog):
             await self.violate(ex)
 
     async def process_message(self, ctx: Message):
+        # Use the discord's message timestamp to hopefully not trigger false positives
+        msg_time = int(ctx.created_at.timestamp()) * 1000
+
         async def check_bucket(check, friendly_text, amount):
             print(f"Checking bucket {check}")
             if amount == 0:
                 return
             bucket = self.get_bucket(ctx.guild.id, check)
-            if await bucket.check(ctx.author.id, amount):
-                count = await bucket.count(ctx.author.id)
-                period = await bucket.size(ctx.author.id) / 1000
+            if await bucket.check(ctx.author.id, msg_time, amount):
+                count = await bucket.count(ctx.author.id, msg_time)
+                period = await bucket.size(ctx.author.id, msg_time) / 1000
                 raise ViolationException(check, ctx.guild, f"{friendly_text} ({count}/{period}s)", ctx.author,
                                          ctx.channel)
 
