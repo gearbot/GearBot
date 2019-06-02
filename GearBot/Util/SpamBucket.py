@@ -24,7 +24,6 @@ class SpamBucket:
     async def check(self, key, current_time, amount=1):
         await self._remove_expired_keys(key, current_time)
         amt = await self.incr(key, current_time, amount)
-        print(f"{amt}/{self.max_actions}")
         return amt >= self.max_actions
 
     async def count(self, key, current_time):
