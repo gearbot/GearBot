@@ -341,6 +341,13 @@ class DurationHolder:
         else:
             return length
 
+    def __str__(self):
+        if len(self.unit) == 1:
+            return f"{self.length}{self.unit}"
+        if self.unit[-1] != "s":
+            return f"{self.length} {self.unit}s"
+        return f"{self.length} {self.unit}"
+
 
 class Duration(Converter):
     async def convert(self, ctx, argument):

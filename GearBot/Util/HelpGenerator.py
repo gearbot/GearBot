@@ -71,7 +71,7 @@ async def gen_command_help(bot, ctx, command):
     if ctx.prefix is None:
         ctx.prefix = ""
     bot.help_command.context = ctx
-    usage = ctx.bot.help_command.get_command_signature(ctx.command)
+    usage = ctx.bot.help_command.get_command_signature(command)
     sub_info = None
     if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
         subcommands, longest = await gen_commands_list(bot, ctx, command.all_commands.values())
@@ -79,7 +79,7 @@ async def gen_command_help(bot, ctx, command):
             sub_info = "\nSub commands:\n"
             for command_name, info in subcommands.items():
                 sub_info += "  " + command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
-            sub_info += Translator.translate('help_footer', ctx, prefix=ctx.prefix, signature=ctx.bot.help_command.get_command_signature(ctx.command).replace(ctx.prefix, ""))
+            sub_info += Translator.translate('help_footer', ctx, prefix=ctx.prefix, signature=ctx.bot.help_command.get_command_signature(command).replace(ctx.prefix, ""))
 
     return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, ctx)}\n{'' if sub_info is None else sub_info}".replace(ctx.me.mention, f"@{ctx.me.name}"))
 
