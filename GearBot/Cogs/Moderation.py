@@ -396,6 +396,23 @@ class Moderation(BaseCog):
             GearbotLogging.log_to(ctx.guild.id, 'softban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
+                                  
+    @commands.command()
+    @commands.guild_only()
+    @commands.bot_has_permission(manage_channel=True)
+    async def slowmode(self, ctx: commands.Context, channel: discord.TextChannel, interval: int):
+        if interval > 21600:
+            return await ctx.send('You can only set the slowmode interval up to 6 hours')
+        if channel.slowmode_delay == interval:
+            return await ctx.send(f'The slowmode interval is already set to `{interval} seconds` on {channel}')
+        try:
+            await channel.edit(slowmode_delay=interval)
+        except (discord.Forbidden, discord.HTTPException):
+            await ctx.send(f'Failed to apply slowmode on {channel}')
+            raise
+        else:
+            #await GearbotLogging.log_to(f':timer: {ctx.author} set the slowmode interval to `{interval} seconds` on {channel}')
+            await ctx.send(f'Successfully set the slowmode interval to `{interval} seconds` on {channel}')
 
     @commands.command()
     @commands.guild_only()
