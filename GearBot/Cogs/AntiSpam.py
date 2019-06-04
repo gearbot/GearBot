@@ -173,7 +173,7 @@ class AntiSpam(BaseCog):
     def is_exempt(guild_id, member: Member):
         config = Configuration.get_var(guild_id, "ANTI_SPAM")
         for role in member.roles:
-            if str(role.id) in config["EXEMPT_ROLES"]:
+            if role.id in config["EXEMPT_ROLES"]:
                 return True
         return member.id in config["EXEMPT_USERS"]
 
