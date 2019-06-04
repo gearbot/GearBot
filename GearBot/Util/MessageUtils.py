@@ -29,7 +29,10 @@ async def insert_message(bot, message):
     if message_type == MessageType.default:
         message_type = None
     else:
-        message_type = message_type.value
+        try:
+            message_type = message_type.value
+        except AttributeError:
+            pass #not in d.py yet, just shut up
     if is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
