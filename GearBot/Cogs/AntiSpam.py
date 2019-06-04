@@ -1,5 +1,6 @@
 from Cogs.BaseCog import BaseCog
 from discord.ext import commands
+from discord import Object
 from discord.guild import Guild
 from discord.message import Message
 from discord.member import Member
@@ -11,15 +12,18 @@ import re
 import time
 import datetime
 
+BUCKET_RE = r"(\d{17,18})-(\d{17,18})-\d+"
+
 
 class ViolationException(Exception):
 
-    def __init__(self, check, guild: Guild, friendly, member: Member, channel: TextChannel):
+    def __init__(self, check, guild: Guild, friendly, member: Member, channel: TextChannel, offending_messages: set):
         self.check = check
         self.guild = guild
         self.friendly = friendly
         self.member = member
         self.channel = channel
+        self.offending_messages = offending_messages
 
 
 class AntiSpam(BaseCog):
@@ -59,11 +63,11 @@ class AntiSpam(BaseCog):
             if amount == 0:
                 return
             bucket = self.get_bucket(ctx.guild.id, check)
-            if bucket is not None and await bucket.check(ctx.author.id, msg_time, amount):
-                count = await bucket.count(ctx.author.id, msg_time)
-                period = await bucket.size(ctx.author.id, msg_time) / 1000
+            if bucket is not None and await bucket.check(ctx.author.id, msg_time, amount, f"{ctx.channel.id}-{ctx.id}"):
+                count = await bucket.count(ctx.author.id, msg_time, expire=False)
+                period = await bucket.size(ctx.author.id, msg_time, expire=False) / 1000
                 raise ViolationException(check, ctx.guild, f"{friendly_text} ({count}/{period}s)", ctx.author,
-                                         ctx.channel)
+                                         ctx.channel, await bucket.get(ctx.author.id, msg_time, expire=False))
 
         await check_bucket("max_messages", "too many messages", 1)
         await check_bucket("max_newlines", "too many newlines", len(re.split("\\r\\n|\\r|\\n", ctx.content)))
@@ -71,16 +75,16 @@ class AntiSpam(BaseCog):
         await self.check_duplicates(ctx)
 
     async def check_duplicates(self, ctx: Message):
-        # TODO 6/2/2019: Figure out how to do this but using message timestamps
-        key = f"spam:duplicates:{ctx.guild.id}:{ctx.author.id}:{ctx.content}"
         rule = Configuration.get_var(ctx.guild.id, "ANTI_SPAM")["MAX_DUPLICATES"]
-        existing = await self.bot.redis_pool.incr(key)
-        if existing == 1:
-            await self.bot.redis_pool.expire(key, rule["PERIOD"])
-        if existing >= rule["COUNT"]:
-            raise ViolationException("max_duplicates", ctx.guild, f"Too many duplicates ({existing})", ctx.author,
-                                     ctx.channel)
-        pass
+        spam_bucket = SpamBucket(self.bot.redis_pool,
+                                 "spam:duplicates:{}:{}:{}".format(ctx.guild.id, ctx.author.id, "{}"), rule["COUNT"],
+                                 rule["PERIOD"])
+        t = int(ctx.created_at.timestamp()) * 1000
+        if await spam_bucket.check(ctx.content, t, 1, f"{ctx.channel.id}-{ctx.id}"):
+            count = await spam_bucket.count(ctx.content, t, expire=False)
+            raise ViolationException("max_duplicates", ctx.guild,
+                                     f"Too many duplicates ({count})",
+                                     ctx.author, ctx.channel, await spam_bucket.get(ctx.content, t, expire=False))
 
     async def violate(self, ex: ViolationException):
         lv_key = f"lv:{ex.guild.id}:{ex.member.id}"
@@ -99,6 +103,7 @@ class AntiSpam(BaseCog):
 
             reason = f"Spam Detected in #{ex.channel.name}: {ex.friendly}"
             print(f"Punishing {ex.member} with {punishment}: {reason}")
+            # TODO 6/3/2019: Log to modlogs
             # GearbotLogging.log_to(ex.guild.id, 'spam_violate', user=Utils.clean_user(ex.member))
             if punishment == "kick":
                 self.bot.data["forced_exits"].add(f"{ex.guild.id}-{ex.member.id}")
@@ -141,7 +146,23 @@ class AntiSpam(BaseCog):
                                       moderator_id=ex.guild.me.id, reason=reason,
                                       until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
 
-            # TODO 6/2/2019: Clean up their mess
+            if cfg.get("CLEAN", False):
+                to_clean = AntiSpam._process_bucket_entries(ex.offending_messages)
+                by_channel = {}
+                for (chan, msg) in to_clean:
+                    by_channel.setdefault(chan, []).append(msg)
+
+                for (chan, msgs) in by_channel.items():
+                    guild_chan = ex.guild.get_channel(int(chan))
+                    msgs = [Object(id=x) for x in msgs]
+                    if guild_chan is not None:
+                        def divide_msgs(l, n=100):
+                            for i in range(0, len(l), n):
+                                yield l[i:i + n]
+
+                        # Ensure we only delete 100 at a time. Probably not necessary but you never know with people
+                        for group in divide_msgs(msgs):
+                            await guild_chan.delete_messages(group)
 
     @staticmethod
     def is_exempt(guild_id, member: Member):
@@ -158,6 +179,17 @@ class AntiSpam(BaseCog):
             return None
         role = guild.get_role(role_id)
         return role
+
+    @staticmethod
+    def _process_bucket_entries(entries):
+        def extract_re(key):
+            matches = re.findall(BUCKET_RE, key)
+            if len(matches) > 0:
+                return matches[0][0], matches[0][1]
+            else:
+                return None
+
+        return set(filter(lambda x: x is not None, map(extract_re, entries)))
 
 
 def setup(bot):

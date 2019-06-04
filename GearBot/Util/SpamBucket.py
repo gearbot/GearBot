@@ -13,26 +13,36 @@ class SpamBucket:
         self.max_actions = max_actions
         self.period = period
 
-    async def incr(self, key, current_time, amt=1):
-        await self._remove_expired_keys(key, current_time)
+    async def incr(self, key, current_time, message, amt=1, expire=True):
+        if expire:
+            await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         for i in range(0, amt):
-            await self.redis.zadd(k, current_time, f"{current_time}-{i}")
+            await self.redis.zadd(k, current_time, f"{message}-{i}")
         await self.redis.expire(k, self.period)
         return await self.redis.zcount(k)
 
-    async def check(self, key, current_time, amount=1):
-        await self._remove_expired_keys(key, current_time)
-        amt = await self.incr(key, current_time, amount)
+    async def check(self, key, current_time, message, amount=1, expire=True):
+        if expire:
+            await self._remove_expired_keys(key, current_time)
+        amt = await self.incr(key, current_time, amount, message)
         return amt >= self.max_actions
 
-    async def count(self, key, current_time):
-        await self._remove_expired_keys(key, current_time)
+    async def count(self, key, current_time, expire=True):
+        if expire:
+            await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         return await self.redis.zcount(k)
 
-    async def size(self, key, current_time):
-        await self._remove_expired_keys(key, current_time)
+    async def get(self, key, current_time, expire=True):
+        if expire:
+            await self._remove_expired_keys(key, current_time)
+        k = self.key_format.format(key)
+        return await self.redis.zrangebyscore(k)
+
+    async def size(self, key, current_time, expire=True):
+        if expire:
+            await self._remove_expired_keys(key, current_time)
         k = self.key_format.format(key)
         values = await self.redis.zrangebyscore(k)
         if len(values) <= 1:
