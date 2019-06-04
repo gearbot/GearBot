@@ -318,6 +318,8 @@ class DurationHolder:
         self.unit = None
 
     def to_seconds(self, ctx):
+        if self.unit is None:
+            self.unit = "seconds"
         unit = self.unit.lower()
         length = self.length
         if len(unit) > 1 and unit[-1:] == 's':  # plural -> singular
@@ -363,6 +365,8 @@ class Duration(Converter):
 
 class DurationIdentifier(Converter):
     async def convert(self, ctx, argument):
+        if argument is None:
+            argument = "seconds"
         if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second",
                                     "seconds", "w", "d", "h", "m", "s"]:
             raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
