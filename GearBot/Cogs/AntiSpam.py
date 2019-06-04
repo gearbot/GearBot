@@ -6,7 +6,7 @@ from discord.message import Message
 from discord.member import Member
 from discord.channel import TextChannel
 from Util.SpamBucket import SpamBucket
-from Util import Configuration, InfractionUtils, GearbotLogging, Utils
+from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator
 from database.DatabaseConnector import Infraction
 import re
 import time
@@ -69,9 +69,9 @@ class AntiSpam(BaseCog):
                 raise ViolationException(check, ctx.guild, f"{friendly_text} ({count}/{period}s)", ctx.author,
                                          ctx.channel, await bucket.get(ctx.author.id, msg_time, expire=False))
 
-        await check_bucket("max_messages", "Too many messages", 1)
-        await check_bucket("max_newlines", "Too many newlines", len(re.split("\\r\\n|\\r|\\n", ctx.content)))
-        await check_bucket("max_mentions", "Too many mentions", len(re.findall("<@[!&]?\\d+>", ctx.content)))
+        await check_bucket("max_messages", Translator.translate('spam_max_messages', ctx), 1)
+        await check_bucket("max_newlines", Translator.translate('spam_max_newlines', ctx), len(re.split("\\r\\n|\\r|\\n", ctx.content)))
+        await check_bucket("max_mentions", Translator.translate('spam_max_mentions', ctx), len(re.findall("<@[!&]?\\d+>", ctx.content)))
         await self.check_duplicates(ctx)
 
     async def check_duplicates(self, ctx: Message):
@@ -82,8 +82,9 @@ class AntiSpam(BaseCog):
         t = int(ctx.created_at.timestamp()) * 1000
         if await spam_bucket.check(ctx.content, t, 1, f"{ctx.channel.id}-{ctx.id}"):
             count = await spam_bucket.count(ctx.content, t, expire=False)
+            str = Translator.translate('spam_max_duplicates', ctx)
             raise ViolationException("max_duplicates", ctx.guild,
-                                     f"Too many duplicates ({count})",
+                                     f"{str} ({count})",
                                      ctx.author, ctx.channel, await spam_bucket.get(ctx.content, t, expire=False))
 
     async def violate(self, ex: ViolationException):
