@@ -408,7 +408,7 @@ class Moderation(BaseCog):
         if duration_seconds > 21600:
             await MessageUtils.send_to(ctx, 'NO', "slowmode_too_high")
         elif channel.slowmode_delay == duration_seconds:
-            await MessageUtils.send_to(ctx, 'NO', "slowmode_too_high", duration=duration, channel=channel.mention)
+            await MessageUtils.send_to(ctx, 'NO', "slowmode_no_change", duration=duration, channel=channel.mention)
         else:
             try:
                 await channel.edit(slowmode_delay=duration_seconds)
