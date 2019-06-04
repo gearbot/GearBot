@@ -681,5 +681,6 @@
   "spam_max_messages": "Too many messages",
   "spam_max_newlines": "Too many newlines",
   "spam_max_mentions": "Too many mentions",
-  "spam_max_duplicates": "Too many duplicates"
+  "spam_max_duplicates": "Too many duplicates",
+  "spam_infraction_reason": "Spam detected in {channel}: {friendly}"
 }

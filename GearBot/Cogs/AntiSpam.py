@@ -102,8 +102,7 @@ class AntiSpam(BaseCog):
             duration = cfg.get("PUNISHMENT_DURATION", 0)
             until = time.time() + duration
 
-            reason = f"Spam Detected in #{ex.channel.name}: {ex.friendly}"
-            # TODO 6/3/2019: Log to modlogs
+            reason = Translator.translate('spam_infraction_reason', ex.guild, channel=f"#{ex.channel}", friendly=ex.friendly)
             GearbotLogging.log_to(ex.guild.id, 'spam_violate', user=Utils.clean_user(ex.member), user_id=ex.member.id,
                                   check=ex.check.upper(), friendly=ex.friendly, channel=ex.channel.mention)
             if punishment == "kick":
