@@ -98,7 +98,7 @@ class AntiSpam(BaseCog):
             # Punish and Clean
             cfg = Configuration.get_var(ex.guild.id, "ANTI_SPAM")
             punishment = cfg.get("PUNISHMENT", "none").lower()
-            duration = cfg.get("PUNIHSMENT_DURATION", 0)
+            duration = cfg.get("PUNISHMENT_DURATION", 0)
             until = time.time() + duration
 
             reason = f"Spam Detected in #{ex.channel.name}: {ex.friendly}"
@@ -137,7 +137,7 @@ class AntiSpam(BaseCog):
                     GearbotLogging.log_to(ex.guild.id, 'mute_log',
                                           user=Utils.clean_user(ex.member),
                                           user_id=ex.member.id,
-                                          moderator=Utils.clean_user(ex.guild.me.author),
+                                          moderator=Utils.clean_user(ex.guild.me),
                                           moderator_id=ex.guild.me.id,
                                           duration=f'{duration} seconds',
                                           reason=reason, inf=i.id)
