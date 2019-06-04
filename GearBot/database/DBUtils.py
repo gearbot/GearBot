@@ -22,5 +22,5 @@ def insert_message(message):
                                        isImage=(a.width is not None or a.width is 0),
                                        messageid=message.id)
     except IntegrityError:
-        pass
+        return message
     return logged

@@ -57,7 +57,7 @@ class Basic(BaseCog):
                               MessageUtils.assemble(ctx, 'WOOD', 'about_guilds', guilds=len(self.bot.guilds)) + "\n" +
                               MessageUtils.assemble(ctx, 'INNOCENT', 'about_users', total=total, unique=unique) + "\n" +
                               MessageUtils.assemble(ctx, 'TACO', 'about_tacos', tacos=tacos) + "\n" +
-                              MessageUtils.assemble(ctx, 'ALTER', 'commit_hash', hash=self.bot.version) +
+                              MessageUtils.assemble(ctx, 'ALTER', 'commit_hash', hash=self.bot.version) + '\n' +
                               MessageUtils.assemble(ctx, 'TODO', 'about_stats'))
 
         click_here = Translator.translate('click_here', ctx)
