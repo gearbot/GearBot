@@ -69,9 +69,9 @@ class AntiSpam(BaseCog):
                 raise ViolationException(check, ctx.guild, f"{friendly_text} ({count}/{period}s)", ctx.author,
                                          ctx.channel, await bucket.get(ctx.author.id, msg_time, expire=False))
 
-        await check_bucket("max_messages", "too many messages", 1)
-        await check_bucket("max_newlines", "too many newlines", len(re.split("\\r\\n|\\r|\\n", ctx.content)))
-        await check_bucket("max_mentions", "too many mentions", len(re.findall("<@[!&]?\\d+>", ctx.content)))
+        await check_bucket("max_messages", "Too many messages", 1)
+        await check_bucket("max_newlines", "Too many newlines", len(re.split("\\r\\n|\\r|\\n", ctx.content)))
+        await check_bucket("max_mentions", "Too many mentions", len(re.findall("<@[!&]?\\d+>", ctx.content)))
         await self.check_duplicates(ctx)
 
     async def check_duplicates(self, ctx: Message):
@@ -102,9 +102,9 @@ class AntiSpam(BaseCog):
             until = time.time() + duration
 
             reason = f"Spam Detected in #{ex.channel.name}: {ex.friendly}"
-            print(f"Punishing {ex.member} with {punishment}: {reason}")
             # TODO 6/3/2019: Log to modlogs
-            # GearbotLogging.log_to(ex.guild.id, 'spam_violate', user=Utils.clean_user(ex.member))
+            GearbotLogging.log_to(ex.guild.id, 'spam_violate', user=Utils.clean_user(ex.member), user_id=ex.member.id,
+                                  check=ex.check.upper(), friendly=ex.friendly, channel=ex.channel.mention)
             if punishment == "kick":
                 self.bot.data["forced_exits"].add(f"{ex.guild.id}-{ex.member.id}")
                 await ex.guild.kick(ex.member, reason=reason)
@@ -113,6 +113,11 @@ class AntiSpam(BaseCog):
                 GearbotLogging.log_to(ex.guild.id, 'kick_log', user=Utils.clean_user(ex.member), user_id=ex.member.id,
                                       moderator=Utils.clean_user(ex.guild.me), moderator_id=ex.guild.me.id,
                                       reason=reason, inf=i.id)
+            if punishment == "warn":
+                i = InfractionUtils.add_infraction(ex.guild.id, ex.member.id, self.bot.user.id, 'Warn', reason)
+                GearbotLogging.log_to(ex.guild.id, 'warning_added_modlog', user=Utils.clean_user(ex.member),
+                                      moderator=Utils.clean_user(ex.guild.me), reason=reason,
+                                      user_id=ex.member.id, moderator_id=ex.guild.me.id, inf=i.id)
             if punishment == "ban":
                 self.bot.data["forced_exists"].add(f"{ex.guild.id}-{ex.member.id}")
                 await ex.guild.ban(ex.member, reason=reason, delete_message_days=0)
