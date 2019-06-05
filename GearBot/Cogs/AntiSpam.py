@@ -12,7 +12,7 @@ import re
 import time
 import datetime
 
-BUCKET_RE = r"(\d{17,18})-(\d{17,18})-\d+"
+MENTION_RE = re.compile("<@[!&]?\\d+>")
 
 
 class ViolationException(Exception):
@@ -53,13 +53,15 @@ class AntiSpam(BaseCog):
             await self.violate(ex)
 
     async def process_message(self, ctx: Message):
-        # Use the discord's message timestamp to hopefully not trigger false positives
-        msg_time = int(ctx.created_at.timestamp()) * 1000
-
+        # print(f'{datetime.datetime.now().isoformat()} - Processing message')
         if self.is_exempt(ctx.guild.id, ctx.author):
             return
 
+        # Use the discord's message timestamp to hopefully not trigger false positives
+        msg_time = int(ctx.created_at.timestamp()) * 1000
+
         async def check_bucket(check, friendly_text, amount):
+            print(f"{check} - {amount}")
             if amount == 0:
                 return
             bucket = self.get_bucket(ctx.guild.id, check)
@@ -70,8 +72,10 @@ class AntiSpam(BaseCog):
                                          ctx.channel, await bucket.get(ctx.author.id, msg_time, expire=False))
 
         await check_bucket("max_messages", Translator.translate('spam_max_messages', ctx), 1)
-        await check_bucket("max_newlines", Translator.translate('spam_max_newlines', ctx), len(re.split("\\r\\n|\\r|\\n", ctx.content)))
-        await check_bucket("max_mentions", Translator.translate('spam_max_mentions', ctx), len(re.findall("<@[!&]?\\d+>", ctx.content)))
+        await check_bucket("max_newlines", Translator.translate('spam_max_newlines', ctx),
+                           len(ctx.content.split("\n")))
+        await check_bucket("max_mentions", Translator.translate('spam_max_mentions', ctx),
+                           len(MENTION_RE.findall(ctx.content)))
         await self.check_duplicates(ctx)
 
     async def check_duplicates(self, ctx: Message):
@@ -102,7 +106,8 @@ class AntiSpam(BaseCog):
             duration = cfg.get("PUNISHMENT_DURATION", 0)
             until = time.time() + duration
 
-            reason = Translator.translate('spam_infraction_reason', ex.guild, channel=f"#{ex.channel}", friendly=ex.friendly)
+            reason = Translator.translate('spam_infraction_reason', ex.guild, channel=f"#{ex.channel}",
+                                          friendly=ex.friendly)
             GearbotLogging.log_to(ex.guild.id, 'spam_violate', user=Utils.clean_user(ex.member), user_id=ex.member.id,
                                   check=ex.check.upper(), friendly=ex.friendly, channel=ex.channel.mention)
             if punishment == "kick":
@@ -188,11 +193,10 @@ class AntiSpam(BaseCog):
     @staticmethod
     def _process_bucket_entries(entries):
         def extract_re(key):
-            matches = re.findall(BUCKET_RE, key)
-            if len(matches) > 0:
-                return matches[0][0], matches[0][1]
-            else:
+            parts = key.split("-")
+            if len(parts) != 3:
                 return None
+            return parts[0], parts[1]
 
         return set(filter(lambda x: x is not None, map(extract_re, entries)))
 
