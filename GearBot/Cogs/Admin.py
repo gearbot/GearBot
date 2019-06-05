@@ -152,6 +152,11 @@ class Admin(BaseCog):
         await guild.leave()
         await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist", translate=False)
 
+    @commands.command()
+    async def pendingchanges(self, ctx):
+        await ctx.send(f'https://github.com/gearbot/GearBot/compare/{self.bot.version}..master')
+
+
 
 
 def setup(bot):

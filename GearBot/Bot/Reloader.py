@@ -3,7 +3,7 @@ from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator,
     VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils, Enums, \
     Matchers, Questions, Selfroles, ReactionManager
 from Util.RaidHandling import RaidActions, RaidShield
-from database import DatabaseConnector
+from database import DatabaseConnector, DBUtils
 
 components = [
     Configuration,
@@ -30,5 +30,6 @@ components = [
     RaidActions,
     RaidShield,
     ReactionManager,
-    Selfroles
+    Selfroles,
+    DBUtils
 ]

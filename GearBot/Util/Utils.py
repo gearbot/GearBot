@@ -201,7 +201,7 @@ async def execute(command):
     while p.poll() is None:
         await asyncio.sleep(1)
     out, error = p.communicate()
-    return p.returncode, out.decode('utf-8'), error.decode('utf-8')
+    return p.returncode, out.decode('utf-8').strip(), error.decode('utf-8').strip()
 
 def find_key(data, wanted):
     for k, v in data.items():

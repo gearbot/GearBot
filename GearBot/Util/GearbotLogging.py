@@ -142,7 +142,8 @@ LOG_TYPES = {
     'raid_kick_unknown_error': log_type('RAID_LOGS', 'WARNING'),
     'raid_ban_forbidden': log_type('RAID_LOGS', 'WARNING'),
     'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARNING'),
-    'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING')
+    'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING'),
+    'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER')
 
 
 

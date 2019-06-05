@@ -72,7 +72,7 @@ class Serveradmin(BaseCog):
 
     LOGGING_TYPES = [
         "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSORED_MESSAGES", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED",
-        "ROLE_CHANGES", "CHANNEL_CHANGES", "VOICE_CHANGES", "VOICE_CHANGES_DETAILED", "FUTURE_LOGS"
+        "CHANNEL_CHANGES", "VOICE_CHANGES", "VOICE_CHANGES_DETAILED", "FUTURE_LOGS"
     ]
 
     def __init__(self, bot):
@@ -854,12 +854,12 @@ class Serveradmin(BaseCog):
     @blacklist.command("add")
     async def blacklist_add(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "WORD_BLACKLIST")
-        if word in blacklist:
+        if word.lower() in blacklist:
             await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
             await MessageUtils.send_to(ctx, "NO", "entry_too_short")
         else:
-            blacklist.append(word)
+            blacklist.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
 

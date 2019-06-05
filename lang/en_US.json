@@ -676,5 +676,11 @@
   "raid_kick_unknown_error": "Attempted to kick {user_name} (```{user_id}```) but something went wrong, the bot maintainer has been notified about this failure to be investigated. Triggered by shield **{shield_name}**",
   "raid_ban_forbidden": "CRITICAL RAID SHIELD CONFIGURATION ERROR: Attempted to ban {user_name} (```{user_id}```) but i am missing the permission to do so! Triggered by shield **{shield_name}**",
   "raid_ban_unknown_error": "Attempted to ban {user_name} (```{user_id}```) but something went wrong, the bot maintainer has been notified about this failure to be investigated. Triggered by shield **{shield_name}***",
-  "shield_time_limit_reached": "CRITICAL: The **{shield_name}** shield has been up for an hour, this almost surely is due the resetting timer for this shield being set too high. The shield has been terminated to prevent infinite server lockdowns. If this server is actually still being raided it should automatically trigger again in a few seconds."
+  "shield_time_limit_reached": "CRITICAL: The **{shield_name}** shield has been up for an hour, this almost surely is due the resetting timer for this shield being set too high. The shield has been terminated to prevent infinite server lockdowns. If this server is actually still being raided it should automatically trigger again in a few seconds.",
+  "slowmode_too_high": "You can only set a slowmode interval up to 6 hours",
+  "slowmode_no_change": "The slowmode interval is already set to {duration} in {channel}",
+  "slowmode_no_perms": "Unable to set the slowmode for {channel}, i do not have the required permissions",
+  "slowmode_log": "f'{user} (``{user_id}``) set the slowmode interval to {duration} seconds in {channel} (``{channel_id}``)'",
+  "slowmode_set": "Slowmode is now set to {duration} in {channel}",
+  "slowmode_help": "Control the slowmode on a channel"
 }

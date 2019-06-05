@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import time
+import typing
 from typing import Optional
 
 import discord
@@ -399,20 +400,23 @@ class Moderation(BaseCog):
                                   
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permission(manage_channel=True)
-    async def slowmode(self, ctx: commands.Context, channel: discord.TextChannel, interval: int):
-        if interval > 21600:
-            return await ctx.send('You can only set the slowmode interval up to 6 hours')
-        if channel.slowmode_delay == interval:
-            return await ctx.send(f'The slowmode interval is already set to `{interval} seconds` on {channel}')
-        try:
-            await channel.edit(slowmode_delay=interval)
-        except (discord.Forbidden, discord.HTTPException):
-            await ctx.send(f'Failed to apply slowmode on {channel}')
-            raise
+    async def slowmode(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], duration: Duration):
+        """slowmode_help"""
+        if channel is None:
+            channel = ctx.channel
+        duration_seconds = duration.to_seconds(ctx)
+        if duration_seconds > 21600:
+            await MessageUtils.send_to(ctx, 'NO', "slowmode_too_high")
+        elif channel.slowmode_delay == duration_seconds:
+            await MessageUtils.send_to(ctx, 'NO', "slowmode_no_change", duration=duration, channel=channel.mention)
         else:
-            #await GearbotLogging.log_to(f':timer: {ctx.author} set the slowmode interval to `{interval} seconds` on {channel}')
-            await ctx.send(f'Successfully set the slowmode interval to `{interval} seconds` on {channel}')
+            try:
+                await channel.edit(slowmode_delay=duration_seconds)
+            except discord.Forbidden:
+                await MessageUtils.send_to(ctx, 'NO', "slowmode_no_perms", channel=channel.mention)
+            else:
+                GearbotLogging.log_to(ctx.guild.id, "slowmode_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, channel=channel.mention, channel_id=channel.id, duration=duration)
+                await MessageUtils.send_to(ctx, 'YES', "slowmode_set", duration=duration, channel=channel.mention)
 
     @commands.command()
     @commands.guild_only()
