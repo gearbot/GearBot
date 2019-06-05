@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import time
+import typing
 from typing import Optional
 
 import discord
@@ -396,6 +397,26 @@ class Moderation(BaseCog):
             GearbotLogging.log_to(ctx.guild.id, 'softban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
+                                  
+    @commands.command()
+    @commands.guild_only()
+    async def slowmode(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], duration: Duration):
+        """slowmode_help"""
+        if channel is None:
+            channel = ctx.channel
+        duration_seconds = duration.to_seconds(ctx)
+        if duration_seconds > 21600:
+            await MessageUtils.send_to(ctx, 'NO', "slowmode_too_high")
+        elif channel.slowmode_delay == duration_seconds:
+            await MessageUtils.send_to(ctx, 'NO', "slowmode_no_change", duration=duration, channel=channel.mention)
+        else:
+            try:
+                await channel.edit(slowmode_delay=duration_seconds)
+            except discord.Forbidden:
+                await MessageUtils.send_to(ctx, 'NO', "slowmode_no_perms", channel=channel.mention)
+            else:
+                GearbotLogging.log_to(ctx.guild.id, "slowmode_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, channel=channel.mention, channel_id=channel.id, duration=duration)
+                await MessageUtils.send_to(ctx, 'YES', "slowmode_set", duration=duration, channel=channel.mention)
 
     @commands.command()
     @commands.guild_only()

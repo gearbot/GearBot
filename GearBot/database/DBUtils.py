@@ -12,7 +12,8 @@ def insert_message(message):
         if message_type == MessageType.default:
             message_type = None
         else:
-            message_type = message_type.value
+            if not isinstance(message_type, int):
+                message_type = message_type.value
         logged = LoggedMessage.create(messageid=message.id, content=message.content,
                                    author=message.author.id,
                                    channel=message.channel.id, server=message.guild.id,
@@ -22,5 +23,5 @@ def insert_message(message):
                                        isImage=(a.width is not None or a.width is 0),
                                        messageid=message.id)
     except IntegrityError:
-        pass
+        return message
     return logged
