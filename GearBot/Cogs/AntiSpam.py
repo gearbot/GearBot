@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import re
 import time
+from asyncio import futures
 
 from discord import Object, Forbidden, NotFound
 from discord.channel import TextChannel
@@ -60,6 +61,7 @@ class AntiSpam(BaseCog):
             "ban": 5
         }
         self.recent = dict()
+        self.locks = set()
 
     def get_bucket(self, guild_id, rule_name, bucket_info, member_id):
         key = f"{guild_id}-{member_id}-{bucket_info['TYPE']}"
@@ -107,19 +109,30 @@ class AntiSpam(BaseCog):
             t = bucket["TYPE"]
             counter = counters.get(t, 0)
             if t == "duplicates":
-                await self.check_duplicates(message, counter, bucket)
+                handler = self.check_duplicates(message, counter, bucket)
             else:
                 if t in cache:
                     v = cache[t]
                 else:
                     v = self.generators[t](message)
                     cache[t] = v
-                await check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
+                handler = check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
+            key = f"{t}:{counter}:{message.guild.id}:{message.author.id}"
+            while key in self.locks:
+                try:
+                    await self.bot.wait_for("bucket_check_complete", check=lambda k: k == key, timeout=5)
+                except futures.TimeoutError:
+                    pass
+            self.locks.add(key)
+            await handler
+            self.locks.remove(key)
+            self.bot.dispatch("bucket_check_complete", key)
 
     async def check_duplicates(self, message: Message, count: int, bucket):
         rule = bucket["SIZE"]
         key = f"{message.guild.id}-{message.author.id}-{bucket['TYPE']}"
         old = self.recent.get(key, 0)
+        print(self.recent)
         spam_bucket = SpamBucket(self.bot.redis_pool,
                                  f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"] + old,
                                  rule["PERIOD"])
@@ -163,7 +176,7 @@ class AntiSpam(BaseCog):
                             await guild_chan.delete_messages(group)
                         except NotFound:
                             pass
-        await asyncio.sleep(v.bucket["SIZE"]["PERIOD"] - 0.5)
+        await asyncio.sleep(v.bucket["SIZE"]["PERIOD"] - 1)
         old = self.recent.get(key, 0)
         new = old - v.count
         if new <= 0:
