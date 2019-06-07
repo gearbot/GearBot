@@ -9,49 +9,35 @@ def is_owner():
     return commands.check(predicate)
 
 
-def is_trusted(ctx):
-    return is_user("TRUSTED", ctx)
+def is_trusted(member):
+    return is_user("TRUSTED", member)
 
-def is_mod(ctx:commands.Context):
-    return is_user("MOD", ctx) or (hasattr(ctx.author, "roles") and ctx.channel.permissions_for(ctx.author).ban_members)
+def is_mod(member):
+    return is_user("MOD", member) or (hasattr(member, "roles") and member.guild_permissions.ban_members)
 
-def is_admin(ctx:commands.Context):
-    return is_user("ADMIN", ctx) or (hasattr(ctx.author, "roles") and ctx.channel.permissions_for(ctx.author).administrator)
+def is_admin(member):
+    return is_user("ADMIN", member) or (hasattr(member, "roles") and member.guild_permissions.administrator)
 
 def is_server_owner(ctx):
     return ctx.guild is not None and ctx.author == ctx.guild.owner
 
 
-def is_user(perm_type, ctx):
-    if ctx.guild is None:
+def is_user(perm_type, member):
+    if member.guild is None:
         return False
-    if not hasattr(ctx.author, "roles"):
+    if not hasattr(member, "roles"):
         return False
-    roles = Configuration.get_var(ctx.guild.id, f"{perm_type}_ROLES")
-    for role in ctx.author.roles:
+    roles = Configuration.get_var(member.guild.id, f"{perm_type}_ROLES")
+    for role in member.roles:
         if role.id in roles:
             return True
     return False
 
 def mod_only():
     async def predicate(ctx):
-        return is_mod(ctx) or is_admin(ctx)
+        return is_mod(ctx.author) or is_admin(ctx.author)
     return commands.check(predicate)
 
-def is_dev(ctx:commands.Context):
-    if ctx.guild is None:
-        return False
-    devrole = Configuration.get_var(ctx.guild.id, "DEV_ROLE")
-    if devrole != 0:
-        for role in ctx.author.roles:
-            if role.id == devrole:
-                return True
-    return is_admin(ctx)
-
-def devOnly():
-    async def predicate(ctx):
-        return is_dev(ctx)
-    return commands.check(predicate)
 
 def is_server(ctx, id):
     return ctx.guild is not None and ctx.guild.id == id
@@ -59,11 +45,6 @@ def is_server(ctx, id):
 def bc_only():
     async def predicate(ctx):
         return is_server(ctx, 309218657798455298)
-    return commands.check(predicate)
-
-def no_testers():
-    async def predicate(ctx):
-        return not is_server(ctx, 197038439483310086)
     return commands.check(predicate)
 
 def check_permission(ctx:commands.Context):
@@ -118,10 +99,10 @@ def get_user_lvl(ctx:commands.Context):
             target = target["commands"][pieces.pop(0)]
             if ctx.author.id in target["people"]:
                 return 4
-    if is_admin(ctx):
+    if is_admin(ctx.author):
         return 3
-    if is_mod(ctx):
+    if is_mod(ctx.author):
         return 2
-    if is_trusted(ctx):
+    if is_trusted(ctx.author):
         return 1
     return 0

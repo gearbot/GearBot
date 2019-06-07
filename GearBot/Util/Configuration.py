@@ -140,29 +140,26 @@ def v9(config):
 
 def v10(config):
     config["ANTI_SPAM"] = {
-        "CLEAN": False,
         "ENABLED": False,
         "EXEMPT_ROLES": [],
         "EXEMPT_USERS": [],
-        "MAX_DUPLICATES": {
-            "COUNT": 10,
-            "PERIOD": 60
-        },
-        "MAX_MENTIONS": {
-            "COUNT": 10,
-            "PERIOD": 60
-        },
-        "MAX_MESSAGES": {
-            "COUNT": 7,
-            "PERIOD": 10
-        },
-        "MAX_NEWLINES": {
-            "COUNT": 20,
-            "PERIOD": 60
-        },
-        "PUNISHMENT": "none",
-        "PUNISHMENT_DURATION": 300
+        "BUCKETS": []
     }
+    if config["MAX_MENTIONS"] > 0:
+        config["ANTI_SPAM"]["ENABLED"] = True
+        config["ANTI_SPAM"]["BUCKETS"] = [
+            {
+                "TYPE": "max_mentions",
+                "SIZE": {
+                    "COUNT": config["MAX_MENTIONS"],
+                    "PERIOD": 5
+                },
+                "PUNISHMENT": {
+                    "TYPE": "ban"
+                }
+            }
+        ]
+        del config["MAX_MENTIONS"]
 
 
 def add_logging(config, *args):

@@ -4,7 +4,6 @@
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
   "WORD_BLACKLIST": [],
-  "MAX_MENTIONS": 0,
   "EMBED_EDIT_LOGS": false,
   "FUTURE_LOGS": false,
   "ADMIN_ROLES": [],

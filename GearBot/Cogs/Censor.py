@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils
+from Util import Configuration, GearbotLogging, Permissioncheckers, Utils
 from Util.Matchers import INVITE_MATCHER
 
 
@@ -64,7 +64,6 @@ class Censor(BaseCog):
         if Permissioncheckers.get_user_lvl(ctx) >= 2:
             return
         blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
-        max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
         guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
         content = message.content.replace('\\', '')
         decoded_content = parse.unquote(content)
@@ -100,19 +99,6 @@ class Censor(BaseCog):
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
                         GearbotLogging.log_to(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
-
-        mentions = len(message.mentions) + len(message.role_mentions)
-        if mentions > max_mentions > 4:
-            self.bot.data["forced_exits"].add(message.author.id)
-            reason = Translator.translate('autoban_too_many_mentions', message.guild.id, count=mentions)
-
-            if message.guild.me.guild_permissions.ban_members:
-                await message.guild.ban(message.author, reason=reason)
-
-            else:
-                self.bot.data["forced_exits"].remove(message.author.id)
-                GearbotLogging.log_to(message.guild.id, 'automod_ban_failed', user=message.author,
-                                                  user_id=message.author.id, reason=reason)
 
 
 def setup(bot):

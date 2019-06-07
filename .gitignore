@@ -10,7 +10,6 @@ logs/
 *.json
 
 !lang/*
-!config/template.json
 *.css
 
 *.map
