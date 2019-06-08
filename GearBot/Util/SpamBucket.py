@@ -7,11 +7,12 @@ def ms_time():
 
 class SpamBucket:
 
-    def __init__(self, redis, key_format, max_actions, period):
+    def __init__(self, redis, key_format, max_actions, period, extra_actions):
         self.redis = redis
         self.key_format = key_format
         self.max_actions = max_actions
         self.period = period
+        self.extra_actions = extra_actions
 
     async def incr(self, key, current_time, message, amt=1, expire=True):
         if expire:
@@ -26,7 +27,7 @@ class SpamBucket:
         if expire:
             await self._remove_expired_keys(key, current_time)
         amt = await self.incr(key, current_time, amount, message)
-        return amt >= self.max_actions
+        return amt >= (self.max_actions + self.extra_actions.count)
 
     async def count(self, key, current_time, expire=True):
         if expire:

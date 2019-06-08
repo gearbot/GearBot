@@ -2,7 +2,8 @@ import asyncio
 import datetime
 import re
 import time
-from asyncio import futures
+from collections import deque
+from weakref import WeakValueDictionary
 
 from discord import Object, Forbidden, NotFound
 from discord.channel import TextChannel
@@ -33,6 +34,11 @@ class Violation:
         self.bucket = bucket
         self.count = count
 
+class ActionHolder:
+
+    def __init__ (self, count: int):
+        self.count = count
+
 
 class AntiSpam(BaseCog):
 
@@ -60,29 +66,38 @@ class AntiSpam(BaseCog):
             "temp_ban": 4,
             "ban": 5
         }
-        self.recent = dict()
-        self.locks = set()
+        self.extra_actions = WeakValueDictionary()
+        self.processed = deque(maxlen=500)
+
+    def get_extra_actions(self, key):
+        if key not in self.extra_actions:
+            a = ActionHolder(0)
+            self.extra_actions[key] = a
+
+        return self.extra_actions[key]
 
     def get_bucket(self, guild_id, rule_name, bucket_info, member_id):
         key = f"{guild_id}-{member_id}-{bucket_info['TYPE']}"
-        old = self.recent.get(key, 0)
-        c = bucket_info.get("SIZE").get("COUNT") +old
+        c = bucket_info.get("SIZE").get("COUNT")
         p = bucket_info.get("SIZE").get("PERIOD")
-        return SpamBucket(self.bot.redis_pool, "{}:{}:{}".format(guild_id, rule_name, "{}"), c, p)
+        return SpamBucket(self.bot.redis_pool, "{}:{}:{}".format(guild_id, rule_name, "{}"), c, p, self.get_extra_actions(key))
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
         if message.author.id == self.bot.user.id or message.guild is None:
             return  # Don't track anti-spam for ourselves or DMs
         cfg = Configuration.get_var(message.guild.id, "ANTI_SPAM")
-        if not cfg.get("ENABLED", False):
+        if not cfg.get("ENABLED", False) or message.id in self.processed:
             return
+        self.processed.append(message.id)
         await self.process_message(message)
 
     async def process_message(self, message: Message):
         # print(f'{datetime.datetime.now().isoformat()} - Processing message')
         if self.is_exempt(message.guild.id, message.author):
             return
+
+
 
         # Use the discord's message timestamp to hopefully not trigger false positives
         msg_time = int(message.created_at.timestamp()) * 1000
@@ -91,6 +106,7 @@ class AntiSpam(BaseCog):
             # print(f"{check} - {amount}")
             if amount == 0:
                 return
+
             bucket = self.get_bucket(message.guild.id, check, b, message.author.id)
             if bucket is not None and await bucket.check(message.author.id, msg_time, amount,
                                                          f"{message.channel.id}-{message.id}"):
@@ -109,33 +125,23 @@ class AntiSpam(BaseCog):
             t = bucket["TYPE"]
             counter = counters.get(t, 0)
             if t == "duplicates":
-                handler = self.check_duplicates(message, counter, bucket)
+                await self.check_duplicates(message, counter, bucket)
             else:
                 if t in cache:
                     v = cache[t]
                 else:
                     v = self.generators[t](message)
                     cache[t] = v
-                handler = check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
-            key = f"{t}:{counter}:{message.guild.id}:{message.author.id}"
-            while key in self.locks:
-                try:
-                    await self.bot.wait_for("bucket_check_complete", check=lambda k: k == key, timeout=5)
-                except futures.TimeoutError:
-                    pass
-            self.locks.add(key)
-            await handler
-            self.locks.remove(key)
-            self.bot.dispatch("bucket_check_complete", key)
+                await check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
+
 
     async def check_duplicates(self, message: Message, count: int, bucket):
         rule = bucket["SIZE"]
         key = f"{message.guild.id}-{message.author.id}-{bucket['TYPE']}"
-        old = self.recent.get(key, 0)
-        print(self.recent)
+        print(self.extra_actions)
         spam_bucket = SpamBucket(self.bot.redis_pool,
-                                 f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"] + old,
-                                 rule["PERIOD"])
+                                 f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"],
+                                 rule["PERIOD"], self.get_extra_actions(key))
         t = int(message.created_at.timestamp()) * 1000
         if await spam_bucket.check(message.content, t, 1, f"{message.channel.id}-{message.id}"):
             count = await spam_bucket.count(message.content, t, expire=False)
@@ -152,7 +158,8 @@ class AntiSpam(BaseCog):
         t = punish_info["TYPE"]
         self.bot.dispatch('spam_violation', v)
         key = f"{v.guild.id}-{v.member.id}-{v.bucket['TYPE']}"
-        self.recent[key] = self.recent.get(key, 0) + v.count
+        a = self.get_extra_actions(key)
+        a.count += v.count
 
         # Punish and Clean
         GearbotLogging.log_to(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
@@ -176,13 +183,9 @@ class AntiSpam(BaseCog):
                             await guild_chan.delete_messages(group)
                         except NotFound:
                             pass
-        await asyncio.sleep(v.bucket["SIZE"]["PERIOD"] - 1)
-        old = self.recent.get(key, 0)
-        new = old - v.count
-        if new <= 0:
-            del self.recent[key]
-        else:
-            self.recent[key] = new
+        await asyncio.sleep(v.bucket["SIZE"]["PERIOD"])
+        a = self.get_extra_actions(key)
+        a.count -= v.count
 
 
     async def warn_punishment(self, v: Violation):
