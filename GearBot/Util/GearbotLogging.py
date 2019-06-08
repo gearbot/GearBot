@@ -344,6 +344,8 @@ class LogPump:
                                 break
                         try:
                             senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
+                        except CancelledError:
+                            return
                         except Exception as e:
                             await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                                   cid=cid, todo=todo, to_send=to_send,
