@@ -4,6 +4,7 @@ import os
 import subprocess
 from collections import namedtuple, OrderedDict
 from datetime import datetime
+from json import JSONDecodeError
 from subprocess import Popen
 
 import discord
@@ -28,6 +29,7 @@ def fetch_from_disk(filename, alternative=None):
     except FileNotFoundError:
         if alternative is not None:
             fetch_from_disk(alternative)
+    except JSONDecodeError:
         return dict()
 
 def save_to_disk(filename, dict):
