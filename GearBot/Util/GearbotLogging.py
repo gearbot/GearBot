@@ -358,6 +358,8 @@ class LogPump:
                         await s
                     except discord.Forbidden:
                         pass
+                    except CancelledError:
+                        return
                     except Exception as e:
                         await log_error()
                         await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
