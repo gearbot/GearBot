@@ -23,7 +23,7 @@ def is_server_owner(ctx):
 
 
 def is_user(perm_type, member):
-    if member.guild is None:
+    if not hasattr(member, "guild") or member.guild is None:
         return False
     if not hasattr(member, "roles"):
         return False
