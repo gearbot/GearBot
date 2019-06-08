@@ -48,7 +48,7 @@ class AntiSpam(BaseCog):
         # store values as functions so only what is needed is computed
         self.generators = {
             "max_messages": lambda m: 1,
-            "max_newlines": lambda m: len(m.content.split("\n")),
+            "max_newlines": lambda m: len(m.content.split("\n") - 1),
             "max_mentions": lambda m: len(MENTION_RE.findall(m.content))
         }
 
