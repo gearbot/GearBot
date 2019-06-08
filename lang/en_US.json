@@ -688,5 +688,6 @@
   "slowmode_no_perms": "Unable to set the slowmode for {channel}, i do not have the required permissions",
   "slowmode_log": "{user} (``{user_id}``) set the slowmode interval to {duration} seconds in {channel} (``{channel_id}``)",
   "slowmode_set": "Slowmode is now set to {duration} in {channel}",
-  "slowmode_help": "Control the slowmode on a channel"
+  "slowmode_help": "Control the slowmode on a channel",
+  "mute_punishment_failure":"Failed to mute {user} (``{user_id}``) for {duration} for ``{reason}`` (``#{inf}``) due to missing permissions!"
 }

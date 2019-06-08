@@ -2,7 +2,6 @@ import re
 import typing
 
 import discord
-import math
 from discord.ext import commands
 from discord.ext.commands import BadArgument
 
@@ -161,23 +160,8 @@ class Infractions(BaseCog):
         if infraction.end is None:
             duration = Translator.translate("unknown_duration", ctx)
         else:
-            partcount = 0
-            parts = {
-                'weeks': 60 * 60 * 24 * 7,
-                'days': 60 * 60 * 24,
-                'hours_solo': 60 * 60,
-                'minutes': 60,
-                'seconds': 1
-            }
-            duration = ""
             time = (infraction.end - infraction.start).total_seconds()
-            for k, v in parts.items():
-                if time / v >= 1:
-                    amount = math.floor(time/v)
-                    time -= amount
-                    if partcount == 1:
-                        duration += ", "
-                    duration += Translator.translate(k, ctx, amount=amount)
+            duration = Utils.to_pretty_time(time, ctx.guild.id)
 
         embed.set_author(
             name=Translator.translate(key, ctx, mod=Utils.username_from_user(mod), user=Utils.username_from_user(user),

@@ -7,9 +7,10 @@ from datetime import datetime
 from subprocess import Popen
 
 import discord
+import math
 from discord import NotFound
 
-from Util import GearbotLogging
+from Util import GearbotLogging, Translator
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
@@ -215,3 +216,22 @@ def chunks(l, n):
 async def get_commit():
     _, out, __ = await execute('git rev-parse --short HEAD')
     return out
+
+def to_pretty_time(seconds, guild_id):
+    partcount = 0
+    parts = {
+        'weeks': 60 * 60 * 24 * 7,
+        'days': 60 * 60 * 24,
+        'hours_solo': 60 * 60,
+        'minutes': 60,
+        'seconds': 1
+    }
+    duration = ""
+
+    for k, v in parts.items():
+        if seconds / v >= 1:
+            amount = math.floor(seconds / v)
+            seconds -= amount
+            if partcount == 1:
+                duration += ", "
+            duration += Translator.translate(k, guild_id, amount=amount)
