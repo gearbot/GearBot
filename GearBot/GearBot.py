@@ -9,7 +9,7 @@ from Util import Configuration, GearbotLogging
 def prefix_callable(bot, message):
     return TheRealGearBot.prefix_callable(bot, message)
 
-gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True, max_messages = 100) #100 is the min for some reason
+gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True, max_messages = 100, shard_count=2) #100 is the min for some reason
 
 
 
