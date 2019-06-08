@@ -288,6 +288,8 @@ class AntiSpam(BaseCog):
 
     @staticmethod
     def is_exempt(guild_id, member: Member):
+        if not hasattr(member, "roles"):
+            return False
         config = Configuration.get_var(guild_id, "ANTI_SPAM")
         for role in member.roles:
             if role.id in config["EXEMPT_ROLES"]:
