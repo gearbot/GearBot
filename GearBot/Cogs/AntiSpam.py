@@ -208,7 +208,6 @@ class AntiSpam(BaseCog):
         role = AntiSpam._get_mute_role(v.guild)
         i = Infraction.get_or_none((Infraction.user_id == v.member.id) & (Infraction.type == "Mute") & (
                 Infraction.guild_id == v.member.guild.id) & Infraction.active)
-        "mute_duration_extended_log"
         if i is None:
             i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Mute', reason,
                                                end=until)
@@ -230,25 +229,32 @@ class AntiSpam(BaseCog):
                                       reason=reason, inf=i.id)
         else:
             i.end += datetime.timedelta(seconds=duration)
-            i.reason += f'{+ reason}'
+            i.reason += f'+ {reason}'
             i.save()
-            GearbotLogging.log_to(v.guild.id, 'mute_duration_added_log',
+            GearbotLogging.log_to(v.guild.id, 'mute_duration_extended_log',
                                   user=Utils.clean_user(v.member),
                                   user_id=v.member.id,
                                   moderator=Utils.clean_user(v.guild.me),
                                   moderator_id=v.guild.me.id,
                                   duration=Utils.to_pretty_time(duration, v.guild.id),
                                   reason=reason, inf_id=i.id, end=i.end)
+            await InfractionUtils.clear_cache(v.guild.id)
 
     async def kick_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
-        self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
-        await v.guild.kick(v.member, reason=reason)
         i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Kick', reason,
                                            active=False)
-        GearbotLogging.log_to(v.guild.id, 'kick_log', user=Utils.clean_user(v.member), user_id=v.member.id,
-                              moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
-                              reason=reason, inf=i.id)
+        self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
+        try:
+            await v.guild.kick(v.member, reason=reason)
+        except Forbidden:
+            GearbotLogging.log_to(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                  moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
+                                  reason=reason, inf=i.id)
+        else:
+            GearbotLogging.log_to(v.guild.id, 'kick_log', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                  moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
+                                  reason=reason, inf=i.id)
 
     async def temp_ban_punishment(self, v: Violation):
         reason = self.assemble_reason(v)

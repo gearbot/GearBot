@@ -690,4 +690,5 @@
   "slowmode_set": "Slowmode is now set to {duration} in {channel}",
   "slowmode_help": "Control the slowmode on a channel",
   "mute_punishment_failure":"Failed to mute {user} (``{user_id}``) for {duration} for ``{reason}`` (``#{inf}``) due to missing permissions!"
+  "kick_punishment_failure":"Failed to kick {user} (``{user_id}``) for ``{reason}`` (``#{inf}``) due to missing permissions!"
 }

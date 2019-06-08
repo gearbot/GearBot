@@ -231,7 +231,10 @@ def to_pretty_time(seconds, guild_id):
     for k, v in parts.items():
         if seconds / v >= 1:
             amount = math.floor(seconds / v)
-            seconds -= amount
+            seconds -= amount * v
             if partcount == 1:
                 duration += ", "
-            duration += Translator.translate(k, guild_id, amount=amount)
+            duration += " " + Translator.translate(k, guild_id, amount=amount)
+        if seconds == 0:
+            break
+    return duration.strip()
