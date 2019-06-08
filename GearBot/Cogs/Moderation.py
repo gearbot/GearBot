@@ -808,6 +808,8 @@ class Moderation(BaseCog):
                 total += len(deleted)
             except discord.HTTPException:
                 failed.add(channel)
+            finally:
+                self.bot.loop.create_task(self.finish_cleaning(channel.id, ctx.guild.id))
         await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
 
 
