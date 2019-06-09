@@ -193,7 +193,7 @@ class Emoji(BaseCog):
         else:
             message = ""
         if len(refused) > 0:
-            message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_roles_already_in_list",
+            message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_role_already_in_list",
                                                     roles=self.pretty_role_list(refused, ctx))
         await ctx.send(message)
 
