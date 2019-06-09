@@ -12,7 +12,7 @@ def server_info(guild, request_guild=None):
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
     embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.utcfromtimestamp(time.time()))
-    embed.set_thumbnail(url=guild.icon_url)
+    embed.set_thumbnail(url=guild.icon_url_as())
     embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
     embed.add_field(name=Translator.translate('owner', request_guild), value=guild.owner, inline=True)
@@ -28,9 +28,9 @@ def server_info(guild, request_guild=None):
                     value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
                     inline=True)
     embed.add_field(name=Translator.translate('vip_features', request_guild), value=guild_features, inline=True)
-    if guild.icon_url != "":
+    if guild.icon_url_as() != "":
         embed.add_field(name=Translator.translate('server_icon', request_guild),
-                        value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url})", inline=True)
+                        value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url_as()})", inline=True)
     roles = ", ".join(role.name for role in guild.roles)
     embed.add_field(name=Translator.translate('all_roles', request_guild),
                     value=roles if len(roles) < 1024 else f"{len(guild.roles)} roles", inline=True)
@@ -44,6 +44,8 @@ def server_info(guild, request_guild=None):
     embed.add_field(name=Translator.translate('member_statuses', request_guild), value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items()))
     if guild.splash_url != "":
         embed.set_image(url=guild.splash_url)
+    if guild.banner_url_as() != "":
+        embed.set_image(url=guild.banner_url_as())
     return embed
 
 

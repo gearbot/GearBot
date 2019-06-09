@@ -72,6 +72,8 @@ def translate_by_code(key, code, **kwargs):
 
 
 async def upload():
+    t_info = Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY="", LOGIN="", WEBROOT=""))
+    if t_info["SOURCE"] == "DISABLED": return
     new = hashlib.md5(open(f"lang/en_US.json", 'rb').read()).hexdigest()
     old = Configuration.get_persistent_var('lang_hash', '')
     if old == new:
