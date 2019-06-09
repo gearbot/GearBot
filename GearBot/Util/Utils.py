@@ -28,9 +28,11 @@ def fetch_from_disk(filename, alternative=None):
             return json.load(file)
     except FileNotFoundError:
         if alternative is not None:
-            fetch_from_disk(alternative)
+            return fetch_from_disk(alternative)
     except JSONDecodeError:
-        return dict()
+        if alternative is not None:
+            return fetch_from_disk(alternative)
+    return dict()
 
 def save_to_disk(filename, dict):
     with open(f"{filename}.json", "w", encoding="UTF-8") as file:
