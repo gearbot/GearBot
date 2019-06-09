@@ -381,8 +381,6 @@ class ModLog(BaseCog):
                 if entry is not None:
                     removed = entry.changes.before.roles
                     added = entry.changes.after.roles
-                    if isinstance(entry.target, discord.Object):
-                        GearbotLogging.info(entry.target)
                     for role in removed:
                         GearbotLogging.log_to(guild.id, 'role_removed_by', role=role.name, user=Utils.clean_user(entry.target), user_id=entry.target.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id)
                     for role in added:
@@ -655,6 +653,8 @@ class ModLog(BaseCog):
         if entry is None and retry:
             await asyncio.sleep(2)
             return await ModLog.find_log(guild, action, matcher, check_limit, False)
+        if isinstance(entry.target, discord.Object):
+            entry.target = Utils.get_user(entry.target.id)
         return entry
 
 
