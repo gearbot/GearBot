@@ -647,7 +647,7 @@ class Moderation(BaseCog):
         if member is not None:
             status = str(member.status)
             status_emoji = Emoji.get_chat_emoji(status.upper())
-            if member.acitivty is not None:
+            if member.activity is not None:
                 listening_emoji = Emoji.get_chat_emoji("MUSIC")
                 watching_emoji = Emoji.get_chat_emoji("WATCHING")
                 game_emoji = Emoji.get_chat_emoji("GAMING")
