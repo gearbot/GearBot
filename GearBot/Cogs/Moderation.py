@@ -5,7 +5,7 @@ import typing
 from typing import Optional
 
 import discord
-from discord import Object, Emoji, Forbidden, NotFound
+from discord import Object, Emoji, Forbidden, NotFound, ActivityType
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -647,6 +647,21 @@ class Moderation(BaseCog):
         if member is not None:
             status = str(member.status)
             status_emoji = Emoji.get_chat_emoji(status.upper())
+            if member.acitivty is not None:
+                listening_emoji = Emoji.get_chat_emoji("MUSIC")
+                watching_emoji = Emoji.get_chat_emoji("WATCHING")
+                game_emoji = Emoji.get_chat_emoji("GAMING")
+                streaming_emoji = Emoji.get_chat_emoji("STREAMING")
+                if member.activity.type == ActivityType.listening:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, listening_emoji, 'listening_to', song=member.activity.title)} {listening_emoji}")
+                elif member.activity.type == ActivityType.watching:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, watching_emoji, 'watching', name=member.activity.name)} {watching_emoji}")
+                elif member.activity.type == ActivityType.streaming:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, streaming_emoji, 'streaming', title=member.activity.name)} {streaming_emoji}")
+                elif member.activity.type == ActivityType.playing:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, game_emoji, 'playing', game=member.activity.name)} {game_emoji}")
+                else:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=Translator.translate("unknown_activity", ctx))
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
             embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick), inline=True)
 
