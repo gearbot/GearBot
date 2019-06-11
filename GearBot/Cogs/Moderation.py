@@ -653,13 +653,13 @@ class Moderation(BaseCog):
                 game_emoji = Emoji.get_chat_emoji("GAMING")
                 streaming_emoji = Emoji.get_chat_emoji("STREAMING")
                 if member.activity.type == ActivityType.listening:
-                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, listening_emoji, 'listening_to', song=member.activity.title)} {listening_emoji}")
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{listening_emoji} {Translator.translate('listening_to', ctx, song=member.activity.title)} {listening_emoji}")
                 elif member.activity.type == ActivityType.watching:
-                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, watching_emoji, 'watching', name=member.activity.name)} {watching_emoji}")
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{watching_emoji} {Translator.translate('watching', ctx, name=member.activity.name)} {watching_emoji}")
                 elif member.activity.type == ActivityType.streaming:
-                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, streaming_emoji, 'streaming', title=member.activity.name)} {streaming_emoji}")
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{streaming_emoji} {Translator.translate(streaming_emoji, ctx, 'streaming', title=member.activity.name)} {streaming_emoji}")
                 elif member.activity.type == ActivityType.playing:
-                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{MessageUtils.assemble(ctx, game_emoji, 'playing', game=member.activity.name)} {game_emoji}")
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{game_emoji} {Translator.translate(game_emoji, ctx, 'playing', game=member.activity.name)} {game_emoji}")
                 else:
                     embed.add_field(name=Translator.translate("activity", ctx), value=Translator.translate("unknown_activity", ctx))
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
