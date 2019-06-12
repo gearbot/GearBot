@@ -659,7 +659,7 @@ class Moderation(BaseCog):
                 elif member.activity.type == ActivityType.streaming:
                     embed.add_field(name=Translator.translate("activity", ctx), value=f"{streaming_emoji} {Translator.translate('streaming', ctx, title=member.activity.name)} {streaming_emoji}")
                 elif member.activity.type == ActivityType.playing:
-                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{game_emoji} {Translator.translate(ctx, 'playing', game=member.activity.name)} {game_emoji}")
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{game_emoji} {Translator.translate('playing', ctx, game=member.activity.name)} {game_emoji}")
                 else:
                     embed.add_field(name=Translator.translate("activity", ctx), value=Translator.translate("unknown_activity", ctx))
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
