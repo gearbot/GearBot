@@ -1,4 +1,5 @@
 import asyncio
+import io
 import logging
 import os
 import sys
@@ -288,11 +289,21 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
 
     for cid, logging_keys in channels.items():
         if info.category in logging_keys:
+            f = None
+            if file is not None:
+                buffer = file[0]
+                name = file[1]
+                buffer.seek(0)
+                b2 = io.BytesIO()
+                for line in buffer.readlines():
+                    b2.write(line)
+                b2.seek(0)
+                f = discord.File(b2, name)
             if remaining is None:
-                LOG_PUMP.receive(cid, (message, embed, file))
+                LOG_PUMP.receive(cid, (message, embed, f))
             else:
                 LOG_PUMP.receive(cid, (message, None, None))
-                LOG_PUMP.receive(cid, (tag_on, embed, file))
+                LOG_PUMP.receive(cid, (tag_on, embed, f))
 
 
 async def message_owner(bot, message):
