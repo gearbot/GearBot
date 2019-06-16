@@ -19,7 +19,8 @@ class DashLink(BaseCog):
         self.redis_link = None
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
-            guild_perm_request=self.guild_perm_request
+            guild_perms=self.guild_perm_request,
+            user_info=self.user_info_request
         )
         self.recieve_handlers = dict(
 
@@ -62,6 +63,18 @@ class DashLink(BaseCog):
                     await self.redis_link.publish_json("bot-dash-messages", reply)
             except Exception as e:
                 await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
+
+    async def user_info_request(self, message):
+        user_id = message["uid"]
+        user_info = await self.bot.fetch_user(user_id)
+        return_info = {
+            "username": user_info.name,
+            "discrim": user_info.discriminator,
+            "avatar_url": user_info.avatar,
+            "bot_admin_status": await self.bot.is_owner(user_info) or user_id in Configuration.get_master_var("BOT_ADMINS", [])
+        }
+
+        return return_info
 
 
     async def guild_perm_request(self, message):
