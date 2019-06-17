@@ -29,7 +29,7 @@ class DashLink(BaseCog):
         self.to_log = dict()
         self.update_message = None
 
-        if Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY= "", LOGIN="", WEBROOT=""))["SOURCE"] == 'CROWDIN':
+        if Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY="", LOGIN="", WEBROOT=""))["SOURCE"] == 'CROWDIN':
             self.recieve_handlers["crowdin_webhook"] = self.crowdin_webhook
         self.task = self._receiver()
 
@@ -46,8 +46,9 @@ class DashLink(BaseCog):
     async def init(self):
         try:
             self.redis_link = await aioredis.create_redis_pool(
-                (Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)),
-                encoding="utf-8", db=0, maxsize=2) # size 2: one send, one receive
+                (Configuration.get_master_var('REDIS_HOST', "localhost"),
+                 Configuration.get_master_var('REDIS_PORT', 6379)),
+                encoding="utf-8", db=0, maxsize=2)  # size 2: one send, one receive
             self.bot.loop.create_task(self._receiver())
             await self.redis_link.subscribe(self.receiver.channel("dash-bot-messages"))
         except OSError:
@@ -65,7 +66,7 @@ class DashLink(BaseCog):
                 await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
 
     async def user_info_request(self, message):
-        user_id = message["uid"]
+        user_id = message["user_id"]
         user_info = await self.bot.fetch_user(user_id)
         return_info = {
             "username": user_info.name,
@@ -75,7 +76,6 @@ class DashLink(BaseCog):
         }
 
         return return_info
-
 
     async def guild_perm_request(self, message):
         info = dict()
@@ -87,8 +87,8 @@ class DashLink(BaseCog):
                 member = guild.get_member(int(message["user_id"]))
                 mod_roles = Configuration.get_var(guid, "MOD_ROLES")
                 if member.guild_permissions.ban_members or any(r.id in mod_roles for r in member.roles):
-                    permission |= (1 << 0) # dash access
-                    permission |= (1 << 1) # infraction access
+                    permission |= (1 << 0)  # dash access
+                    permission |= (1 << 1)  # infraction access
 
                 admin_roles = Configuration.get_var(guid, "ADMIN_ROLES")
                 if member.guild_permissions.administrator or any(r.id in admin_roles for r in member.roles):
@@ -100,13 +100,11 @@ class DashLink(BaseCog):
                 info[guid] = dict(name=guild.name, permissions=permission, icon=guild.icon_url_as(size=256))
         return info
 
-
-
-    #crowdin
+    # crowdin
     async def crowdin_webhook(self, message):
         code = message["info"]["language"]
         await Translator.update_lang(code)
-        if (datetime.now() - self.last_update).seconds > 5*60:
+        if (datetime.now() - self.last_update).seconds > 5 * 60:
             self.update_message = None
             self.to_log = dict()
         if code not in self.to_log:
@@ -122,11 +120,6 @@ class DashLink(BaseCog):
             await self.update_message.edit(embed=embed)
 
         self.last_update = datetime.now()
-
-
-
-
-
 
 
 def setup(bot):
