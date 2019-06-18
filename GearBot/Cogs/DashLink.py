@@ -78,7 +78,7 @@ class DashLink(BaseCog):
         return return_info
 
     async def guild_perm_request(self, message):
-        info = dict()
+        info = []
         for guid in message["guild_list"]:
             guid = int(guid)
             guild = self.bot.get_guild(guid)
@@ -97,7 +97,12 @@ class DashLink(BaseCog):
                     permission |= (1 << 3)  # config write access
 
             if permission > 0:
-                info[guid] = dict(name=guild.name, permissions=permission, icon=guild.icon_url_as(size=256))
+                info.append({ guid: {
+                    "name": guild.name, 
+                    "permissions": permission,
+                    "icon": str(guild.icon_url_as(size=256))
+                }})
+
         return info
 
     # crowdin
