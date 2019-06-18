@@ -78,7 +78,7 @@ class DashLink(BaseCog):
         return return_info
 
     async def guild_perm_request(self, message):
-        info = []
+        info = dict()
         for guid in message["guild_list"]:
             guid = int(guid)
             guild = self.bot.get_guild(guid)
@@ -87,7 +87,7 @@ class DashLink(BaseCog):
                 member = guild.get_member(int(message["user_id"]))
                 mod_roles = Configuration.get_var(guid, "MOD_ROLES")
                 if member.guild_permissions.ban_members or any(r.id in mod_roles for r in member.roles):
-                    permission |= (1 << 0)  # dash access
+                    permission |= (1 << 0)  # dash accessgear
                     permission |= (1 << 1)  # infraction access
 
                 admin_roles = Configuration.get_var(guid, "ADMIN_ROLES")
@@ -97,11 +97,11 @@ class DashLink(BaseCog):
                     permission |= (1 << 3)  # config write access
 
             if permission > 0:
-                info.append({ guid: {
-                    "name": guild.name, 
+                info[guid]= {
+                    "name": guild.name,
                     "permissions": permission,
                     "icon": str(guild.icon_url_as(size=256))
-                }})
+                }
 
         return info
 
