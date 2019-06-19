@@ -312,10 +312,10 @@ class ServerInfraction(Converter):
 
 class DurationHolder:
 
-    def __init__(self, length) -> None:
+    def __init__(self, length, unit=None) -> None:
         super().__init__()
         self.length = length
-        self.unit = None
+        self.unit = unit
 
     def to_seconds(self, ctx):
         if self.unit is None:

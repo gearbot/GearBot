@@ -1,10 +1,9 @@
 {
-  "VERSION": 9,
+  "VERSION": 11,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
   "WORD_BLACKLIST": [],
-  "MAX_MENTIONS": 0,
   "EMBED_EDIT_LOGS": false,
   "FUTURE_LOGS": false,
   "ADMIN_ROLES": [],
@@ -30,5 +29,29 @@
     "ENABLED": false,
     "HANDLERS": [],
     "INVITE": ""
+  },
+  "ANTI_SPAM": {
+    "CLEAN": false,
+    "ENABLED": false,
+    "EXEMPT_ROLES": [],
+    "EXEMPT_USERS": [],
+    "MAX_DUPLICATES": {
+      "COUNT": 10,
+      "PERIOD": 60
+    },
+    "MAX_MENTIONS": {
+      "COUNT": 10,
+      "PERIOD": 60
+    },
+    "MAX_MESSAGES": {
+      "COUNT": 7,
+      "PERIOD": 10
+    },
+    "MAX_NEWLINES": {
+      "COUNT": 20,
+      "PERIOD": 60
+    },
+    "PUNISHMENT": "none",
+    "PUNISHMENT_DURATION": 300
   }
 }

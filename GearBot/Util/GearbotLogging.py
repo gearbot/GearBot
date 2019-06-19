@@ -1,4 +1,5 @@
 import asyncio
+import io
 import logging
 import os
 import sys
@@ -143,7 +144,9 @@ LOG_TYPES = {
     'raid_ban_forbidden': log_type('RAID_LOGS', 'WARNING'),
     'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARNING'),
     'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING'),
-    'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER')
+    'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER'),
+    'spam_violate': log_type('SPAM_VIOLATION', 'BAD_USER')
+    
 
 
 
@@ -286,11 +289,21 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
 
     for cid, logging_keys in channels.items():
         if info.category in logging_keys:
+            f = None
+            if file is not None:
+                buffer = file[0]
+                name = file[1]
+                buffer.seek(0)
+                b2 = io.BytesIO()
+                for line in buffer.readlines():
+                    b2.write(line)
+                b2.seek(0)
+                f = discord.File(b2, name)
             if remaining is None:
-                LOG_PUMP.receive(cid, (message, embed, file))
+                LOG_PUMP.receive(cid, (message, embed, f))
             else:
                 LOG_PUMP.receive(cid, (message, None, None))
-                LOG_PUMP.receive(cid, (tag_on, embed, file))
+                LOG_PUMP.receive(cid, (tag_on, embed, f))
 
 
 async def message_owner(bot, message):
@@ -342,6 +355,8 @@ class LogPump:
                                 break
                         try:
                             senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
+                        except CancelledError:
+                            return
                         except Exception as e:
                             await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                                   cid=cid, todo=todo, to_send=to_send,
@@ -356,6 +371,8 @@ class LogPump:
                         await s
                     except discord.Forbidden:
                         pass
+                    except CancelledError:
+                        return
                     except Exception as e:
                         await log_error()
                         await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,

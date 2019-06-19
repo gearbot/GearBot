@@ -653,6 +653,8 @@ class ModLog(BaseCog):
         if entry is None and retry:
             await asyncio.sleep(2)
             return await ModLog.find_log(guild, action, matcher, check_limit, False)
+        if entry is not None and isinstance(entry.target, discord.Object):
+            entry.target = await Utils.get_user(entry.target.id)
         return entry
 
 

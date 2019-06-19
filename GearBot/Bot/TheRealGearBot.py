@@ -108,9 +108,6 @@ async def on_ready(bot):
         for c in to_unload:
             bot.remove_command(c)
 
-        if Configuration.get_master_var("CROWDIN") is not None:
-            bot.loop.create_task(translation_task(bot))
-
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
@@ -127,20 +124,6 @@ async def keepDBalive(bot):
     while not bot.is_closed():
         bot.database_connection.connection().ping(True)
         await asyncio.sleep(3600)
-
-
-async def translation_task(bot):
-    await Translator.upload()
-    while not bot.is_closed():
-        try:
-            await Translator.update()
-        except Exception as ex:
-            await handle_exception("Translation task", bot, ex)
-
-        try:
-            await asyncio.sleep(6*60*60)
-        except asyncio.CancelledError:
-            pass # bot shutting down
 
 
 async def on_message(bot, message:Message):

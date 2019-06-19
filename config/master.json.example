@@ -27,7 +27,8 @@
     "Minecraft",
     "DMMessages",
     "Reminders",
-    "Emoji"
+    "Emoji",
+    "AntiSpam"
   ],
   "DOCS": true,
   "DOG_KEY": "",

@@ -5,7 +5,7 @@ import typing
 from typing import Optional
 
 import discord
-from discord import Object, Emoji, Forbidden, NotFound
+from discord import Object, Emoji, Forbidden, NotFound, ActivityType
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -647,6 +647,21 @@ class Moderation(BaseCog):
         if member is not None:
             status = str(member.status)
             status_emoji = Emoji.get_chat_emoji(status.upper())
+            if member.activity is not None:
+                listening_emoji = Emoji.get_chat_emoji("MUSIC")
+                watching_emoji = Emoji.get_chat_emoji("WATCHING")
+                game_emoji = Emoji.get_chat_emoji("GAMING")
+                streaming_emoji = Emoji.get_chat_emoji("STREAMING")
+                if member.activity.type == ActivityType.listening:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{listening_emoji} {Translator.translate('listening_to', ctx, song=member.activity.title)} {listening_emoji}")
+                elif member.activity.type == ActivityType.watching:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{watching_emoji} {Translator.translate('watching', ctx, name=member.activity.name)} {watching_emoji}")
+                elif member.activity.type == ActivityType.streaming:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{streaming_emoji} {Translator.translate('streaming', ctx, title=member.activity.name)} {streaming_emoji}")
+                elif member.activity.type == ActivityType.playing:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{game_emoji} {Translator.translate('playing', ctx, game=member.activity.name)} {game_emoji}")
+                else:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=Translator.translate("unknown_activity", ctx))
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
             embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick), inline=True)
 
@@ -808,6 +823,8 @@ class Moderation(BaseCog):
                 total += len(deleted)
             except discord.HTTPException:
                 failed.add(channel)
+            finally:
+                self.bot.loop.create_task(self.finish_cleaning(channel.id, ctx.guild.id))
         await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
 
 

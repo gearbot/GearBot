@@ -138,14 +138,42 @@ def v9(config):
                 overrides["Fun"]["commands"][k] = dict(b[k])
                 del b[k]
 
+def v10(config):
+    config["ANTI_SPAM"] = {
+        "ENABLED": False,
+        "EXEMPT_ROLES": [],
+        "EXEMPT_USERS": [],
+        "BUCKETS": []
+    }
+    if config["MAX_MENTIONS"] > 0:
+        config["ANTI_SPAM"]["ENABLED"] = True
+        config["ANTI_SPAM"]["BUCKETS"] = [
+            {
+                "TYPE": "max_mentions",
+                "SIZE": {
+                    "COUNT": config["MAX_MENTIONS"],
+                    "PERIOD": 5
+                },
+                "PUNISHMENT": {
+                    "TYPE": "ban"
+                }
+            }
+        ]
+        del config["MAX_MENTIONS"]
+
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
             info.extend(args)
 
+def v11(config):
+    for cid, info in config["LOG_CHANNELS"].items():
+        if "MOD_ACTIONS" in info:
+            info.extend("SPAM_VIOLATION")
+
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION

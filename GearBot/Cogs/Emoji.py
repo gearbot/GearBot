@@ -67,7 +67,7 @@ class Emoji(BaseCog):
         data["page"] = page_num
         return None, self.gen_emoji_page(message.guild, page_num), data
 
-    def gen_emoji_page(self, guild, page):
+    def gen_emoji_page(self, guild: discord.Guild, page):
         se = sorted(guild.emojis, key=lambda e: e.name)
 
         embed = Embed(color=0x2db1f3)
@@ -80,7 +80,7 @@ class Emoji(BaseCog):
             static = set()
             for e in guild.emojis:
                 (animated if e.animated else static).add(str(e))
-            max_emoji = 200 if "MORE_EMOJI" in guild.features else 50
+            max_emoji = guild.emoji_limit
             embed.add_field(name=Translator.translate('static_emoji', guild), value=f"{len(static)} / {max_emoji}")
             embed.add_field(name=Translator.translate('animated_emoji', guild), value=f"{len(animated)} / {max_emoji}")
         else:
@@ -193,7 +193,7 @@ class Emoji(BaseCog):
         else:
             message = ""
         if len(refused) > 0:
-            message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_roles_already_in_list",
+            message += "\n" + MessageUtils.assemble(ctx, "NO", "emoji_roles_add_role_already_in_list",
                                                     roles=self.pretty_role_list(refused, ctx))
         await ctx.send(message)
 
