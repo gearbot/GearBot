@@ -117,7 +117,7 @@ class Serveradmin(BaseCog):
     @configure.group(aliases=["adminroles"])
     async def admin_roles(self, ctx: commands.Context):
         """configure_admin_roles_help"""
-        if ctx.invoked_subcommand is self.admin_roles:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, 'admin')
 
     @admin_roles.command(name="add")
@@ -131,7 +131,7 @@ class Serveradmin(BaseCog):
     @configure.group(aliases=["modroles"])
     async def mod_roles(self, ctx: commands.Context):
         """configure_mod_roles_help"""
-        if ctx.invoked_subcommand is self.mod_roles:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, 'mod')
 
     @mod_roles.command(name="add")
@@ -145,7 +145,7 @@ class Serveradmin(BaseCog):
     @configure.group(aliases=["trustedroles"])
     async def trusted_roles(self, ctx: commands.Context):
         """configure_trusted_roles_help"""
-        if ctx.invoked_subcommand is self.trusted_roles:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, 'trusted')
 
     @trusted_roles.command(name="add")
@@ -198,7 +198,7 @@ class Serveradmin(BaseCog):
     @configure.group(aliases=["selfrole", "self_role"])
     async def self_roles(self, ctx:commands.Context):
         """configure_self_roles_help"""
-        if ctx.invoked_subcommand is self.self_roles:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, 'self')
 
     @self_roles.command()
@@ -216,7 +216,7 @@ class Serveradmin(BaseCog):
     @configure.group()
     async def invite_whitelist(self, ctx: commands.Context):
         """configure_invite_whitelist_help"""
-        if ctx.invoked_subcommand is self.invite_whitelist:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}")
 
     @invite_whitelist.command(name="add")
@@ -230,7 +230,7 @@ class Serveradmin(BaseCog):
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """configure_ignored_users_help"""
-        if ctx.invoked_subcommand is self.ignored_users:
+        if ctx.invoked_subcommand is None:
             await list_list(ctx, "ignored", "users", "<@{item}>")
 
     @ignored_users.command(name="add")
@@ -245,7 +245,7 @@ class Serveradmin(BaseCog):
     @configure.group("cog_overrides")
     async def configure_cog_overrides(self, ctx):
         """cog_overrides_help"""
-        if ctx.invoked_subcommand is self.configure_cog_overrides:
+        if ctx.invoked_subcommand is None:
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             desc = ""
             for k, v in overrides.items():
@@ -302,7 +302,7 @@ class Serveradmin(BaseCog):
     @configure.group()
     async def command_overrides(self, ctx):
         """command_overrides_help"""
-        if ctx.invoked_subcommand is self.command_overrides:
+        if ctx.invoked_subcommand is None:
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx))
             has_overrides = False
@@ -470,7 +470,7 @@ class Serveradmin(BaseCog):
     @configure.group()
     @commands.guild_only()
     async def logging(self, ctx):
-        if ctx.invoked_subcommand is self.logging:
+        if ctx.invoked_subcommand is None:
             embed = discord.Embed(color=6008770, title=Translator.translate('log_channels', ctx))
             channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
             if len(channels) > 0:
@@ -836,7 +836,7 @@ class Serveradmin(BaseCog):
 
     @configure.group()
     async def blacklist(self, ctx):
-        if ctx.invoked_subcommand is self.blacklist:
+        if ctx.invoked_subcommand is None:
             await Pages.create_new(self.bot, "blacklist", ctx)
 
     @staticmethod
@@ -879,7 +879,7 @@ class Serveradmin(BaseCog):
     @commands.bot_has_permissions(embed_links=True)
     async def role_list(self, ctx):
         """configure_role_list_help"""
-        if ctx.invoked_subcommand is self.role_list:
+        if ctx.invoked_subcommand is None:
             items = Configuration.get_var(ctx.guild.id, f"ROLE_LIST")
             mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST") else "blacklist"
             if len(items) == 0:
