@@ -693,7 +693,7 @@ class Moderation(BaseCog):
         """serverinfo_help"""
         if guild is None:
             guild = ctx.guild
-        embed = server_info.server_info(guild, ctx.guild)
+        embed = server_info.server_info_embed(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
