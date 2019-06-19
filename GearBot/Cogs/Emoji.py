@@ -170,7 +170,7 @@ class Emoji(BaseCog):
     @emoji.group("roles", aliases=["role"])
     async def emoji_roles(self, ctx):
         """emoji_roles_help"""
-        if ctx.invoked_subcommand is self.emoji_roles:
+        if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command("help"), query="emoji roles")
 
     @emoji_roles.command("add")
