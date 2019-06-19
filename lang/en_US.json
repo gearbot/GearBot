@@ -127,6 +127,7 @@
   "days": "{amount, plural, one {1 day} other {# days}}",
   "hours": "{hours, plural, one {1 hour} other {# hours}}, {minutes, plural, one {1 minute} other {# minutes}}",
   "join_logging": "{user} (``{user_id}``) has joined, account created {age} ago.",
+  "join_logging_new": "{user} (``{user_id}``) has joined, account created {age} ago. :new:",
   "leave_logging": "{user} (`{user_id}`) has left the server.",
   "paginator_missing_perms": "I am missing the permissions to add {prev} and {next} emoji for page navigation, please grant me reaction and external emoji permissions and try again.",
   "current_server_prefix": "The current server prefix is `{prefix}`.",
