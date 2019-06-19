@@ -91,6 +91,7 @@ LOG_TYPES = {
     'role_update_perm_revoked_by': log_type('ROLE_CHANGES', 'DELETE'),
     'manual_ban_log': log_type('MOD_ACTIONS', 'BAN'),
     'join_logging': log_type('JOIN_LOGS', 'JOIN'),
+    'join_logging_new': log_type('JOIN_LOGS', 'JOIN'),
     'leave_logging': log_type('JOIN_LOGS', 'LEAVE'),
     'manual_unban_log': log_type('MOD_ACTIONS', 'INNOCENT'),
     'own_nickname_changed': log_type('NAME_CHANGES', 'NICKTAG'),
@@ -145,8 +146,8 @@ LOG_TYPES = {
     'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARNING'),
     'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING'),
     'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER'),
-    'spam_violate': log_type('MOD_ACTIONS', 'BAD_USER')
-    
+    'spam_violate': log_type('SPAM_VIOLATION', 'BAD_USER')
+
 
 
 

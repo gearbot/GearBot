@@ -234,6 +234,7 @@ class ModLog(BaseCog):
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
             dif = (datetime.datetime.utcnow() - member.created_at)
+            new_user_threshold = Configuration.get_var(member.guild.id, "NEW_USER_THRESHOLD")
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
             age = (Translator.translate('days', member.guild.id,
@@ -241,7 +242,10 @@ class ModLog(BaseCog):
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
-            GearbotLogging.log_to(member.guild.id, 'join_logging', user=Utils.clean_user(member), user_id=member.id, age=age)
+            if new_user_threshold > dif.seconds:
+                GearbotLogging.log_to(member.guild.id, 'join_logging_new', user=Utils.clean_user(member), user_id=member.id, age=age)
+            else:
+                GearbotLogging.log_to(member.guild.id, 'join_logging', user=Utils.clean_user(member), user_id=member.id, age=age)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):

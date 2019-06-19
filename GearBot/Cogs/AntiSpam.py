@@ -163,7 +163,7 @@ class AntiSpam(BaseCog):
 
         # Punish and Clean
         GearbotLogging.log_to(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
-                              check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention)
+                              check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention, punishment_type=t)
 
         await self.punishments[t](v)
 
