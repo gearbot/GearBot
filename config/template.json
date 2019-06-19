@@ -1,5 +1,5 @@
 {
-  "VERSION": 10,
+  "VERSION": 13,
   "LOG_CHANNELS": {},
   "EDIT_LOGS": false,
   "CENSOR_MESSAGES": false,
@@ -19,6 +19,7 @@
   "SELF_ROLES": [],
   "TRUSTED_ROLES": [],
   "TIMESTAMPS": true,
+  "NEW_USER_THRESHOLD": 86400,
   "DM_ON_WARN": false,
   "ROLE_WHITELIST": true,
   "ROLE_LIST": [],
