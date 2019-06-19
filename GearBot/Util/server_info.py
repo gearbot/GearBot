@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from Util import Translator, Emoji
+from Util import Translator, Emoji, Utils
 
 
 def server_info_embed(guild, request_guild=None):
@@ -24,7 +24,7 @@ def server_info_embed(guild, request_guild=None):
         inline=True
     )
     embed.add_field(
-        name=Translator.translate('voice_channels', request_guild), 
+        name=Translator.translate('voice_channels', request_guild),
         value=str(len(guild.voice_channels)),
         inline=True
     )
@@ -39,15 +39,15 @@ def server_info_embed(guild, request_guild=None):
         inline=True
     )
     embed.add_field(
-        name=Translator.translate('vip_features', request_guild), 
-        value=guild_features, 
+        name=Translator.translate('vip_features', request_guild),
+        value=guild_features,
         inline=True
     )
 
     if guild.icon_url_as() != "":
         embed.add_field(
             name=Translator.translate('server_icon', request_guild),
-            value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url_as()})", 
+            value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url_as()})",
             inline=True
         )
 
@@ -69,8 +69,10 @@ def server_info_embed(guild, request_guild=None):
     for m in guild.members:
         statuses[str(m.status)] += 1
     embed.add_field(
-        name=Translator.translate('member_statuses', request_guild), 
-        value="\n".join(f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for status, count in statuses.items())
+        name=Translator.translate('member_statuses', request_guild),
+        value="\n".join(
+            f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for
+            status, count in statuses.items())
     )
 
     if guild.splash_url != "":
@@ -79,6 +81,7 @@ def server_info_embed(guild, request_guild=None):
         embed.set_image(url=guild.banner_url_as())
 
     return embed
+
 
 def server_info_raw(guild):
     guild_features = ", ".join(guild.features)
@@ -90,23 +93,24 @@ def server_info_raw(guild):
         statuses[str(m.status)] += 1
 
     server_info = dict(
-        server_name = guild.name,
-        guild_id = guild.id,
-        server_icon = str(guild.icon_url_as(size=256)),
-        owner = guild.owner,
-        members = guild.member_count,
-        text_channels = len(guild.text_channels),
-        voice_channels = len(guild.voice_channels),
-        total_channels = (len(guild.text_channels) + len(guild.voice_channels)),
-        creation_date = guild.created_at.strftime("%d-%m-%Y"),
-        age_days = (datetime.fromtimestamp(time.time()) - guild.created_at).days,
-        vip_features = guild_features,
-        role_list = guild.roles,
-        emojis = [str(e) for e in guild.emojis],
-        member_statuses = statuses
+        server_name=guild.name,
+        guild_id=guild.id,
+        server_icon=str(guild.icon_url_as(size=256)),
+        owner=Utils.clean_user(guild.owner),
+        members=guild.member_count,
+        text_channels=len(guild.text_channels),
+        voice_channels=len(guild.voice_channels),
+        total_channels=(len(guild.text_channels) + len(guild.voice_channels)),
+        creation_date=guild.created_at.strftime("%d-%m-%Y"),
+        age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
+        vip_features=guild_features,
+        role_list=guild.roles,
+        emojis=[str(e) for e in guild.emojis],
+        member_statuses=statuses
     )
 
     return server_info
+
 
 def time_difference(begin, end, location):
     diff = begin - end
