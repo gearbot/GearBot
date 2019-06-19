@@ -8,8 +8,9 @@ from discord import Embed, Color
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator
+from Util import Configuration, GearbotLogging, Translator, server_info
 
+from time import perf_counter_ns
 
 class DashLink(BaseCog):
 
@@ -20,7 +21,8 @@ class DashLink(BaseCog):
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
             guild_perms=self.guild_perm_request,
-            user_info=self.user_info_request
+            user_info=self.user_info_request,
+            guild_info=self.guild_info_request
         )
         self.recieve_handlers = dict(
 
@@ -61,7 +63,11 @@ class DashLink(BaseCog):
                     await self.recieve_handlers[message["type"]](message)
                 else:
                     reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"])
+                    start_time = perf_counter_ns()
                     await self.redis_link.publish_json("bot-dash-messages", reply)
+                    finish_time = perf_counter_ns()
+                    final_time = (finish_time - start_time) / 1000000
+                    print("It took this long to send our reply: " + str(final_time))
             except Exception as e:
                 await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
 
@@ -71,17 +77,17 @@ class DashLink(BaseCog):
         return_info = {
             "username": user_info.name,
             "discrim": user_info.discriminator,
-            "avatar_url": user_info.avatar,
+            "avatar_url": str(user_info.avatar_url_as(size=256)),
             "bot_admin_status": await self.bot.is_owner(user_info) or user_id in Configuration.get_master_var("BOT_ADMINS", [])
         }
 
         return return_info
 
     async def guild_perm_request(self, message):
+        start_time = perf_counter_ns()
         info = dict()
-        for guid in message["guild_list"]:
-            guid = int(guid)
-            guild = self.bot.get_guild(guid)
+        for guild in self.bot.guilds:
+            guid = guild.id
             permission = 0
             if guild is not None:
                 member = guild.get_member(int(message["user_id"]))
@@ -97,13 +103,32 @@ class DashLink(BaseCog):
                     permission |= (1 << 3)  # config write access
 
             if permission > 0:
-                info[guid]= {
+                info[guid] = {
                     "name": guild.name,
                     "permissions": permission,
                     "icon": str(guild.icon_url_as(size=256))
                 }
 
+        finish_time = perf_counter_ns()
+        final_time = (finish_time - start_time) / 1000000
+        print("The perms calculation operation took: " + str(final_time))
+
         return info
+
+    async def guild_info_request(self, message):
+        guid = message["guid"]
+        user_id = message["user_id"]
+
+        requested_guild = self.bot.get_guild(guid)
+        if requested_guild == None:
+            return {"guild_stats": None}
+        
+        requester = requested_guild.get_member(user_id)
+        if requester == None:
+            return {"guild_stats": False}
+        
+        guild_info = server_info.server_info_raw(requested_guild, requested_guild)
+
 
     # crowdin
     async def crowdin_webhook(self, message):
