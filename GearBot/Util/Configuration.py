@@ -170,7 +170,7 @@ def add_logging(config, *args):
 def v11(config):
     for cid, info in config["LOG_CHANNELS"].items():
         if "MOD_ACTIONS" in info:
-            info.extend("SPAM_VIOLATION")
+            info.append("SPAM_VIOLATION")
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
 MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11]
