@@ -172,8 +172,11 @@ def v11(config):
         if "MOD_ACTIONS" in info:
             info.append("SPAM_VIOLATION")
 
+def v12(config):
+    config["NEW_USER_THRESHOLD"] = 86400
+
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12]
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
