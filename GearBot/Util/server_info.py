@@ -84,28 +84,36 @@ def server_info_embed(guild, request_guild=None):
 
 
 def server_info_raw(guild):
-    guild_features = ", ".join(guild.features)
-    if guild_features == "":
-        guild_features = None
-
     statuses = dict(online=0, idle=0, dnd=0, offline=0)
     for m in guild.members:
         statuses[str(m.status)] += 1
 
     server_info = dict(
-        server_name=guild.name,
-        guild_id=guild.id,
+        name=guild.name,
+        id=str(guild.id),  # send as string, js can't deal with it otherwise
         server_icon=str(guild.icon_url_as(size=256)),
-        owner=Utils.clean_user(guild.owner),
+        owner={
+            "id": guild.owner.id,
+            "name": Utils.clean_user(guild.owner)
+        },
         members=guild.member_count,
         text_channels=len(guild.text_channels),
         voice_channels=len(guild.voice_channels),
-        total_channels=(len(guild.text_channels) + len(guild.voice_channels)),
-        creation_date=guild.created_at.strftime("%d-%m-%Y"),
+        creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
         age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
-        vip_features=guild_features,
-        role_list=guild.roles,
-        emojis=[str(e) for e in guild.emojis],
+        vip_features=guild.features,
+        role_list=[
+            {
+                "id": str(r.id),
+                "name": r.name,
+                "color": r.color.value
+            } for r in guild.roles],
+        emojis=[
+            {
+                "id": str(e.id),
+                "name": e.name
+            }
+            for e in guild.emojis],
         member_statuses=statuses
     )
 
@@ -117,7 +125,7 @@ def time_difference(begin, end, location):
     minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
     hours, minutes = divmod(minutes, 60)
     if diff.days > 0:
-        return (Translator.translate('days', location, amount=diff.days))
+        return Translator.translate('days', location, amount=diff.days)
     else:
         return Translator.translate(
             'hours',

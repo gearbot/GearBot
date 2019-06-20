@@ -64,28 +64,31 @@ class DashLink(BaseCog):
         except OSError:
             await GearbotLogging.bot_log("Failed to connect to the dash!")
 
+    async def _handle(self, sender, message):
+        try:
+            if message["type"] in self.recieve_handlers.keys():
+                await self.recieve_handlers[message["type"]](message)
+            else:
+                try:
+                    reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"],
+                                 state="OK")
+                except UnauthorizedException:
+                    reply = dict(uid=message["uid"], state="Unauthorized")
+                except CancelledError:
+                    return
+                except Exception as ex:
+                    reply = dict(uid=message["uid"], state="Failed")
+                    await self.redis_link.publish_json("bot-dash-messages", reply)
+                    raise ex
+                await self.redis_link.publish_json("bot-dash-messages", reply)
+        except CancelledError:
+            return
+        except Exception as e:
+            await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
+
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
-            try:
-                if message["type"] in self.recieve_handlers.keys():
-                    await self.recieve_handlers[message["type"]](message)
-                else:
-                    try:
-                        reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"],
-                                     state="OK")
-                    except UnauthorizedException:
-                        reply = dict(uid=message["uid"], state="Unauthorized")
-                    except CancelledError:
-                        return
-                    except Exception as ex:
-                        reply = dict(uid=message["uid"], state="Failed")
-                        await self.redis_link.publish_json("bot-dash-messages", reply)
-                        raise ex
-                    await self.redis_link.publish_json("bot-dash-messages", reply)
-            except CancelledError:
-                return
-            except Exception as e:
-                await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
+            self.bot.loop.create_task(self._handle(sender, message))
 
     async def user_info_request(self, message):
         user_id = message["user_id"]
@@ -105,9 +108,10 @@ class DashLink(BaseCog):
         info = dict()
         for guild in self.bot.guilds:
             guid = guild.id
-            permission = self.get_guild_perms(guild, int(message["user_id"]))
+            permission = self.get_guild_perms(guid, int(message["user_id"]))
             if permission > 0:
-                info[guid] = {
+                info[str(guid)] = {
+                    "id": str(guid),
                     "name": guild.name,
                     "permissions": permission,
                     "icon": str(guild.icon_url_as(size=256))
@@ -135,6 +139,7 @@ class DashLink(BaseCog):
         admin_roles = Configuration.get_var(guild_id, "ADMIN_ROLES")
         if member.guild_permissions.administrator or any(r.id in admin_roles for r in member.roles):
             permission |= (1 << 0)  # dash access
+            permission |= (1 << 1)  # infraction access
             permission |= (1 << 2)  # config read access
             permission |= (1 << 3)  # config write access
         return permission
@@ -143,10 +148,13 @@ class DashLink(BaseCog):
         guid = message["guid"]
         user_id = message["user_id"]
 
-        if self.get_guild_perms(guid, int(user_id)) & (1 << 0) is 0:
-            raise UnauthorizedException()
+        perms = self.get_guild_perms(guid, int(user_id))
 
-        return server_info.server_info_raw(self.bot.get_guild(guid))
+        if perms & (1 << 0) is 0:
+            raise UnauthorizedException()
+        info = server_info.server_info_raw(self.bot.get_guild(guid))
+        info["user_perms"] = perms
+        return info
 
     # crowdin
     async def crowdin_webhook(self, message):
