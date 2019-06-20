@@ -242,7 +242,7 @@ class ModLog(BaseCog):
                                                                                                   member.guild.id,
                                                                                                   hours=hours,
                                                                                                   minutes=minutes)
-            if new_user_threshold > dif.seconds:
+            if new_user_threshold > dif.total_seconds():
                 GearbotLogging.log_to(member.guild.id, 'join_logging_new', user=Utils.clean_user(member), user_id=member.id, age=age)
             else:
                 GearbotLogging.log_to(member.guild.id, 'join_logging', user=Utils.clean_user(member), user_id=member.id, age=age)
