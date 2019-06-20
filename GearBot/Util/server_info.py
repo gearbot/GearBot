@@ -106,7 +106,8 @@ def server_info_raw(guild):
             {
                 "id": str(r.id),
                 "name": r.name,
-                "color": r.color.value
+                "color": r.color.value,
+                "members": len(r.members)
             } for r in guild.roles],
         emojis=[
             {
