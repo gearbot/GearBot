@@ -12,7 +12,28 @@ from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Translator, server_info
 
-from time import perf_counter_ns
+
+class DASH_PERMS:
+    VIEW_DASH = (1 << 0)
+    VIEW_INFRACTIONS = (1 << 1)
+    VIEW_CONFIG = (1 << 2)
+    ALTER_CONFIG = (1 << 3)
+
+def needs_perm(mask):
+    def decorator(f):
+        def wrap(self, message, *args, **kwargs):
+            guid = message["guild_id"]
+            user_id = message["user_id"]
+
+            perms = self.get_guild_perms(guid, int(user_id))
+
+            if perms & mask is 0:
+                raise UnauthorizedException()
+            return f(self, message, *args, **kwargs)
+
+        return wrap
+
+    return decorator
 
 
 class UnauthorizedException(Exception):
@@ -29,7 +50,8 @@ class DashLink(BaseCog):
         self.handlers = dict(
             guild_perms=self.guild_perm_request,
             user_info=self.user_info_request,
-            guild_info=self.guild_info_request
+            guild_info=self.guild_info_request,
+            get_config_section=self.get_config_section
         )
         self.recieve_handlers = dict(
 
@@ -104,7 +126,6 @@ class DashLink(BaseCog):
         return return_info
 
     async def guild_perm_request(self, message):
-        start_time = perf_counter_ns()
         info = dict()
         for guild in self.bot.guilds:
             guid = guild.id
@@ -116,10 +137,6 @@ class DashLink(BaseCog):
                     "permissions": permission,
                     "icon": str(guild.icon_url_as(size=256))
                 }
-
-        finish_time = perf_counter_ns()
-        final_time = (finish_time - start_time) / 1000000
-        print("The perms calculation operation took: " + str(final_time))
 
         return info
 
@@ -133,28 +150,22 @@ class DashLink(BaseCog):
         permission = 0
         mod_roles = Configuration.get_var(guild_id, "ROLES", "MOD_ROLES")
         if member.guild_permissions.ban_members or any(r.id in mod_roles for r in member.roles):
-            permission |= (1 << 0)  # dash access
-            permission |= (1 << 1)  # infraction access
+            permission |= DASH_PERMS.VIEW_DASH | DASH_PERMS.VIEW_INFRACTIONS | DASH_PERMS.VIEW_CONFIG
 
         admin_roles = Configuration.get_var(guild_id, "ROLES", "ADMIN_ROLES")
         if member.guild_permissions.administrator or any(r.id in admin_roles for r in member.roles):
-            permission |= (1 << 0)  # dash access
-            permission |= (1 << 1)  # infraction access
-            permission |= (1 << 2)  # config read access
-            permission |= (1 << 3)  # config write access
+            permission |= DASH_PERMS.VIEW_DASH | DASH_PERMS.VIEW_INFRACTIONS | DASH_PERMS.VIEW_CONFIG | DASH_PERMS.ALTER_CONFIG
         return permission
 
+    @needs_perm(DASH_PERMS.VIEW_DASH)
     async def guild_info_request(self, message):
-        guid = message["guid"]
-        user_id = message["user_id"]
-
-        perms = self.get_guild_perms(guid, int(user_id))
-
-        if perms & (1 << 0) is 0:
-            raise UnauthorizedException()
-        info = server_info.server_info_raw(self.bot.get_guild(guid))
-        info["user_perms"] = perms
+        info = server_info.server_info_raw(self.bot.get_guild(message["guild_id"]))
+        info["user_perms"] = self.get_guild_perms(message["guild_id"], message["user_id"])
         return info
+
+    @needs_perm(DASH_PERMS.VIEW_CONFIG)
+    async def get_config_section(self, message):
+        return Configuration.get_var(message["guild_id"], message["section"])
 
     # crowdin
     async def crowdin_webhook(self, message):
