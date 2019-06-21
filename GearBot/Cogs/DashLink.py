@@ -162,7 +162,7 @@ class DashLink(BaseCog):
     @needs_perm(DASH_PERMS.VIEW_DASH)
     async def guild_info_request(self, message):
         info = server_info.server_info_raw(self.bot.get_guild(message["guild_id"]))
-        info["user_perms"] = self.get_guild_perms(message["guild_id"], message["user_id"])
+        info["user_perms"] = self.get_guild_perms(message["guild_id"], int(message["user_id"]))
         return info
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
