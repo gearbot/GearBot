@@ -233,7 +233,7 @@ class ModLog(BaseCog):
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "JOIN_LOGS"):
             dif = (datetime.datetime.utcnow() - member.created_at)
-            new_user_threshold = Configuration.get_var(member.guild.id, "NEW_USER_THRESHOLD")
+            new_user_threshold = Configuration.get_var(member.guild.id, "GENERAL", "NEW_USER_THRESHOLD")
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
             age = (Translator.translate('days', member.guild.id,

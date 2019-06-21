@@ -19,6 +19,7 @@ class DASH_PERMS:
     VIEW_CONFIG = (1 << 2)
     ALTER_CONFIG = (1 << 3)
 
+
 def needs_perm(mask):
     def decorator(f):
         def wrap(self, message, *args, **kwargs):
@@ -51,7 +52,8 @@ class DashLink(BaseCog):
             guild_perms=self.guild_perm_request,
             user_info=self.user_info_request,
             guild_info=self.guild_info_request,
-            get_config_section=self.get_config_section
+            get_config_section=self.get_config_section,
+            languages=self.languages
         )
         self.recieve_handlers = dict(
 
@@ -166,6 +168,9 @@ class DashLink(BaseCog):
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
     async def get_config_section(self, message):
         return Configuration.get_var(message["guild_id"], message["section"])
+
+    async def languages(self, message):
+        return Translator.LANG_CODES
 
     # crowdin
     async def crowdin_webhook(self, message):
