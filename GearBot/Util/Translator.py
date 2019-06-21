@@ -44,7 +44,7 @@ def translate(key, location, **kwargs):
     if lid is None:
         lang_key = "en_US"
     else:
-        lang_key = Configuration.get_var(lid, "LANG")
+        lang_key = Configuration.get_var(lid, "GENERAL", "LANG")
     translated = key
     if key not in LANGS[lang_key]:
         if key not in untranlatable:

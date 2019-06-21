@@ -27,7 +27,7 @@ def is_user(perm_type, member):
         return False
     if not hasattr(member, "roles"):
         return False
-    roles = Configuration.get_var(member.guild.id, f"{perm_type}_ROLES")
+    roles = Configuration.get_var(member.guild.id, "ROLES", f"{perm_type}_ROLES")
     for role in member.roles:
         if role.id in roles:
             return True

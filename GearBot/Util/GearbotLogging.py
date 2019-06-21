@@ -272,7 +272,7 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
     remaining = None
     if key is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
-    stamp = f"[``{datetime.strftime(datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'TIMEZONE'))), '%H:%M:%S')}``] " if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS") else ""
+    stamp = f"[``{datetime.strftime(datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))), '%H:%M:%S')}``] " if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS") else ""
     m = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
     message = f"{stamp}{Utils.trim_message(m, 1984)}"
     if tag_on is not None:

@@ -51,7 +51,7 @@ class Infractions(BaseCog):
                 aname = Utils.clean_user(ctx.author)
                 GearbotLogging.log_to(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
                                       user_id=member.id, moderator_id=ctx.author.id, inf=i.id)
-                if Configuration.get_var(ctx.guild.id, "DM_ON_WARN"):
+                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN"):
                     try:
                         dm_channel = await member.create_dm()
                         await dm_channel.send(

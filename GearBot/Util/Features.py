@@ -22,6 +22,3 @@ requires_logging = {
 
 def can_enable(guild, feature):
     return feature not in requires_logging or is_logged(guild, requires_logging[feature])
-
-def is_enabled(guild, feature):
-    return Configuration.get_var(guild, feature)

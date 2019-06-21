@@ -164,7 +164,7 @@ class Basic(BaseCog):
             except BadArgument as ex:
                 await ctx.send(Translator.translate("role_not_found", ctx))
             else:
-                roles = Configuration.get_var(ctx.guild.id, "SELF_ROLES")
+                roles = Configuration.get_var(ctx.guild.id, "ROLES", "SELF_ROLES")
                 if role.id in roles:
                     try:
                         if role in ctx.author.roles:
@@ -244,7 +244,7 @@ class Basic(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: discord.Role):
-        roles = Configuration.get_var(role.guild.id, "SELF_ROLES")
+        roles = Configuration.get_var(role.guild.id, "ROLES", "SELF_ROLES")
         if role.id in roles:
             roles.remove(role.id)
             Configuration.save(role.guild.id)

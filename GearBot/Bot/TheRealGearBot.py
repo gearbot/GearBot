@@ -27,7 +27,7 @@ def prefix_callable(bot, message):
     if message.guild is None:
         prefixes.append('!') #use default ! prefix in DMs
     elif bot.STARTUP_COMPLETE:
-        prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
+        prefixes.append(Configuration.get_var(message.guild.id, "GENERAL", "PREFIX"))
     return prefixes
 
 async def initialize(bot, startup=False):
@@ -182,7 +182,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "PERM_DENIED_MESSAGE"):
+        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
             await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)

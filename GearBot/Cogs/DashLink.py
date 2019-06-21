@@ -131,12 +131,12 @@ class DashLink(BaseCog):
         if member is None:
             return 0
         permission = 0
-        mod_roles = Configuration.get_var(guild_id, "MOD_ROLES")
+        mod_roles = Configuration.get_var(guild_id, "ROLES", "MOD_ROLES")
         if member.guild_permissions.ban_members or any(r.id in mod_roles for r in member.roles):
             permission |= (1 << 0)  # dash access
             permission |= (1 << 1)  # infraction access
 
-        admin_roles = Configuration.get_var(guild_id, "ADMIN_ROLES")
+        admin_roles = Configuration.get_var(guild_id, "ROLES", "ADMIN_ROLES")
         if member.guild_permissions.administrator or any(r.id in admin_roles for r in member.roles):
             permission |= (1 << 0)  # dash access
             permission |= (1 << 1)  # infraction access

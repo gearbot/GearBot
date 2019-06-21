@@ -36,14 +36,14 @@ class Censor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSOR_MESSAGES") or self.bot.user.id == message.author.id:
+        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
         await self.censor_message(message)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
-        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSOR_MESSAGES"):
+        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED"):
             return
         permissions = channel.permissions_for(channel.guild.me)
         if permissions.read_messages and permissions.read_message_history:
@@ -63,8 +63,8 @@ class Censor(BaseCog):
         ctx = await self.bot.get_context(message)
         if Permissioncheckers.get_user_lvl(ctx) >= 2:
             return
-        blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
-        guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
+        blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
+        guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")
         content = message.content.replace('\\', '')
         decoded_content = parse.unquote(content)
         censored = False

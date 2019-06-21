@@ -118,7 +118,7 @@ class AntiSpam(BaseCog):
                                            b, count)))
 
         counters = dict()
-        buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM")["BUCKETS"]
+        buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
 
         # so if someone does 20 levels of too many mentions for some stupid reason we don't end up running the same regex 20 times for nothing
         cache = dict()
@@ -298,7 +298,7 @@ class AntiSpam(BaseCog):
 
     @staticmethod
     def _get_mute_role(guild):
-        role_id = Configuration.get_var(guild.id, "MUTE_ROLE")
+        role_id = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if role_id is 0:
             return None
         role = guild.get_role(role_id)

@@ -123,8 +123,8 @@ class Moderation(BaseCog):
                 return
 
         if self._can_act(f"role_{action}", ctx, user, check_bot=False):
-            role_list = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
-            mode = Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST")
+            role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
+            mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST")
             mode_name = "whitelist" if mode else "blacklist"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
@@ -516,7 +516,7 @@ class Moderation(BaseCog):
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
-        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
@@ -604,7 +604,7 @@ class Moderation(BaseCog):
         """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
         else:
@@ -714,7 +714,7 @@ class Moderation(BaseCog):
             return
         if channel is None:
             channel = ctx.message.channel
-        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = LoggedMessage.select().where(
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(
@@ -729,7 +729,7 @@ class Moderation(BaseCog):
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
-        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = LoggedMessage.select().where(
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(
@@ -867,7 +867,7 @@ class Moderation(BaseCog):
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
-        roleid = Configuration.get_var(guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if roleid is not 0:
             role = guild.get_role(roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
@@ -893,7 +893,7 @@ class Moderation(BaseCog):
                                   Infraction.guild_id == member.guild.id,
                                   Infraction.user_id == member.id)
         if i is not None:
-            roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
+            roleid = Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE")
             if roleid is not 0:
                 role = member.guild.get_role(roleid)
                 if role is not None:
@@ -939,7 +939,7 @@ class Moderation(BaseCog):
                 f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
             return self.end_infraction(infraction)
 
-        role = Configuration.get_var(guild.id, "MUTE_ROLE")
+        role = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         member = guild.get_member(infraction.user_id)
         role = guild.get_role(role)
         if role is None or member is None:
