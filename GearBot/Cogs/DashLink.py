@@ -53,6 +53,7 @@ class DashLink(BaseCog):
             user_info=self.user_info_request,
             guild_info=self.guild_info_request,
             get_config_section=self.get_config_section,
+            update_config_section=self.update_config_section,
             languages=self.languages
         )
         self.recieve_handlers = dict(
@@ -168,6 +169,17 @@ class DashLink(BaseCog):
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
     async def get_config_section(self, message):
         return Configuration.get_var(message["guild_id"], message["section"])
+
+    @needs_perm(DASH_PERMS.ALTER_CONFIG)
+    async def update_config_section(self, message):
+        # This will return a dict
+        # Error Dict: Error message title and then the details: error, error_details 
+        # Success Dict: Update status if it was written to the file
+        return Configuration.update_config_section(
+            message["guild_id"], 
+            message["section"], 
+            message["modified_values"]
+        )
 
     async def languages(self, message):
         return Translator.LANG_CODES

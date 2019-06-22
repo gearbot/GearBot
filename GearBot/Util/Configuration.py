@@ -1,11 +1,102 @@
-# ugly but this prevents import loop errors
+from typing import NamedTuple, List, Dict
+from enum import Enum
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
 MASTER_LOADED = False
 CONFIG_VERSION = 0
 
+class ConfigGeneral(NamedTuple):
+    lang: str
+    perm_denied_message: bool
+    prefix: str
+    timestamps: bool
+    new_user_threshold: int
+    timezone: str
 
+class ConfigRoles(NamedTuple):
+    admin_roles: List[int]
+    mod_roles: List[int]
+    self_roles: List[int]
+    trusted_roles: List[int]
+    role_list: List[int]
+    role_whitelist: bool
+    mute_role: int
+
+LogChannel = Dict[str, List[str]]
+LogChannels = Dict[str, LogChannel]
+
+class ConfigMessageLogs(NamedTuple):
+    enabled: bool
+    ignored_channels_changes: List[int]
+    ignored_channels_other: List[int]
+    ignored_users: List[int]
+    embed: bool
+
+class ConfigCensoring(NamedTuple):
+    enabled: bool
+    word_blacklist: List[str]
+    invite_whitelist: List[str]
+
+class ConfigInfractions(NamedTuple):
+    dm_on_warn: bool
+
+
+RaidShield = None #Dict[] TODO
+
+class ConfigRaidHandling(NamedTuple):
+    enabled: bool
+    handlers: List[RaidShield] # TODO: Need a example to make a type sig
+    invite: str
+
+
+class PunishmentTypes(Enum):
+    warn: "warn"
+    kick: "kick"
+    ban: "ban"
+    forced_ban: "forced_ban"
+    mute: "mute"
+
+class SpamTypes(Enum):
+    duplicates: "duplicates"
+    messages: "max_messages" 
+    newlines: "max_newlines"
+    mentions: "max_mentions"
+
+class SpamSize(NamedTuple):
+    count: int
+    period: int
+
+class SpamBucketParts(NamedTuple):
+    spam_type: SpamTypes
+    punishment: Dict[str, PunishmentTypes] # May need tweaked
+    size: SpamSize
+
+SpamBucket = List[SpamBucketParts]
+
+
+class ConfigAntiSpam(NamedTuple):
+    clean: bool
+    enabled: bool
+    exempt_roles: List[int]
+    exempt_users: List[int]
+    buckets: List[SpamBucket]
+
+class ConfigTypes(NamedTuple):
+    version: int
+    general: ConfigGeneral
+    roles: ConfigRoles
+    log_channels: LogChannels
+    message_logs: ConfigMessageLogs
+    censoring: ConfigCensoring
+    infrations: ConfigInfractions
+    perm_overrides: None # TODO: How to represent this reasonably
+    raid_handling: ConfigRaidHandling
+    anti_spam: ConfigAntiSpam
+
+
+
+# Ugly but this prevents import loop errors
 def load_master():
     global MASTER_CONFIG, MASTER_LOADED
     try:
@@ -341,3 +432,29 @@ def set_persistent_var(key, value):
     PERSISTENT = Utils.fetch_from_disk("persistent")
     PERSISTENT[key] = value
     Utils.save_to_disk("persistent", PERSISTENT)
+
+def update_config_section(guild_id, section: str, modified_values: dict):
+    config_part_types = dict(dict(ConfigTypes._field_types)[section.lower()]._field_types)
+
+    for key, value in modified_values.items():
+        key: str = key.lower()
+        if key in config_part_types:
+            if type(value) == config_part_types[key]:
+                guild_config: dict = get_var(guild_id, section)
+                if modified_values.items() <= guild_config.items():
+                    return dict(updated=False) # It is the exact same, no unneeded disk writes please
+                else:
+                    guild_config.update(modified_values)
+                    save(guild_id)
+                    return dict(updated=True) # We wrote something to disk
+            else:
+                proper_type = str(config_part_types[key]).split("'")[1]
+                return dict(
+                    error="A configuration value was the wrong type!",
+                    error_details=f"Value {value} should be of the type {proper_type}",
+                )
+        else:
+            return dict(
+                error="A key could not be found",
+                error_details=f"Unknown key: {key.upper()}",
+            )
