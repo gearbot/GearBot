@@ -182,7 +182,7 @@ class DashLink(BaseCog):
         )
 
     async def languages(self, message):
-        return Translator.LANG_CODES
+        return Translator.LANG_NAMES
 
     # crowdin
     async def crowdin_webhook(self, message):
