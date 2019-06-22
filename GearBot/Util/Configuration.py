@@ -6,6 +6,7 @@ SERVER_CONFIGS = dict()
 MASTER_LOADED = False
 CONFIG_VERSION = 0
 
+
 class ConfigGeneral(NamedTuple):
     lang: str
     perm_denied_message: bool
@@ -13,6 +14,7 @@ class ConfigGeneral(NamedTuple):
     timestamps: bool
     new_user_threshold: int
     timezone: str
+
 
 class ConfigRoles(NamedTuple):
     admin_roles: List[int]
@@ -23,8 +25,10 @@ class ConfigRoles(NamedTuple):
     role_whitelist: bool
     mute_role: int
 
+
 LogChannel = Dict[str, List[str]]
 LogChannels = Dict[str, LogChannel]
+
 
 class ConfigMessageLogs(NamedTuple):
     enabled: bool
@@ -33,20 +37,23 @@ class ConfigMessageLogs(NamedTuple):
     ignored_users: List[int]
     embed: bool
 
+
 class ConfigCensoring(NamedTuple):
     enabled: bool
     word_blacklist: List[str]
     invite_whitelist: List[str]
 
+
 class ConfigInfractions(NamedTuple):
     dm_on_warn: bool
 
 
-RaidShield = None #Dict[] TODO
+RaidShield = None  # Dict[] TODO
+
 
 class ConfigRaidHandling(NamedTuple):
     enabled: bool
-    handlers: List[RaidShield] # TODO: Need a example to make a type sig
+    handlers: List[RaidShield]  # TODO: Need a example to make a type sig
     invite: str
 
 
@@ -57,20 +64,24 @@ class PunishmentTypes(Enum):
     forced_ban: "forced_ban"
     mute: "mute"
 
+
 class SpamTypes(Enum):
     duplicates: "duplicates"
-    messages: "max_messages" 
+    messages: "max_messages"
     newlines: "max_newlines"
     mentions: "max_mentions"
+
 
 class SpamSize(NamedTuple):
     count: int
     period: int
 
+
 class SpamBucketParts(NamedTuple):
     spam_type: SpamTypes
-    punishment: Dict[str, PunishmentTypes] # May need tweaked
+    punishment: Dict[str, PunishmentTypes]  # May need tweaked
     size: SpamSize
+
 
 SpamBucket = List[SpamBucketParts]
 
@@ -82,6 +93,7 @@ class ConfigAntiSpam(NamedTuple):
     exempt_users: List[int]
     buckets: List[SpamBucket]
 
+
 class ConfigTypes(NamedTuple):
     version: int
     general: ConfigGeneral
@@ -90,10 +102,9 @@ class ConfigTypes(NamedTuple):
     message_logs: ConfigMessageLogs
     censoring: ConfigCensoring
     infrations: ConfigInfractions
-    perm_overrides: None # TODO: How to represent this reasonably
+    perm_overrides: None  # TODO: How to represent this reasonably
     raid_handling: ConfigRaidHandling
     anti_spam: ConfigAntiSpam
-
 
 
 # Ugly but this prevents import loop errors
@@ -433,6 +444,7 @@ def set_persistent_var(key, value):
     PERSISTENT[key] = value
     Utils.save_to_disk("persistent", PERSISTENT)
 
+
 def update_config_section(guild_id, section: str, modified_values: dict):
     config_part_types = dict(dict(ConfigTypes._field_types)[section.lower()]._field_types)
 
@@ -442,11 +454,11 @@ def update_config_section(guild_id, section: str, modified_values: dict):
             if type(value) == config_part_types[key]:
                 guild_config: dict = get_var(guild_id, section)
                 if modified_values.items() <= guild_config.items():
-                    return dict(updated=False) # It is the exact same, no unneeded disk writes please
+                    return dict(updated=False)  # It is the exact same, no unneeded disk writes please
                 else:
                     guild_config.update(modified_values)
                     save(guild_id)
-                    return dict(updated=True) # We wrote something to disk
+                    return dict(updated=True)  # We wrote something to disk
             else:
                 proper_type = str(config_part_types[key]).split("'")[1]
                 return dict(
