@@ -402,6 +402,15 @@ def v13(config):
 
     move_keys(config, "INFRACTIONS", "DM_ON_WARN")
 
+def v14(config):
+    if len(config["ANTI_SPAM"]) is 0:
+        config["ANTI_SPAM"] = {
+            "ENABLED": False,
+            "BUCKETS": [],
+            "EXEMPT_ROLES": [],
+            "EXEMPT_USERS": []
+        }
+
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
