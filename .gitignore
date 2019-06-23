@@ -9,7 +9,8 @@ site/
 logs/
 *.json
 
-!lang/en_US.json*
+lang/*
+!lang/en_US.json
 *.css
 
 *.map

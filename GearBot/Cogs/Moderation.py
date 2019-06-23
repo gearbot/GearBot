@@ -397,7 +397,7 @@ class Moderation(BaseCog):
             GearbotLogging.log_to(ctx.guild.id, 'softban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
-                                  
+
     @commands.command()
     @commands.guild_only()
     async def slowmode(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], duration: Duration):
@@ -898,8 +898,11 @@ class Moderation(BaseCog):
                 role = member.guild.get_role(roleid)
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
-                        await member.add_roles(role,
+                        try:
+                            await member.add_roles(role,
                                                reason=Translator.translate('mute_reapply_reason', member.guild.id))
+                        except NotFound:
+                            pass  # probably kicked out again by antiraid, nothing to do here
                         GearbotLogging.log_to(member.guild.id, 'mute_reapply_log', user=Utils.clean_user(member), user_id=member.id, inf=i.id)
                     else:
                         GearbotLogging.log_to(member.guild.id, 'mute_reapply_failed_log', inf=i.id)
