@@ -589,4 +589,4 @@ def update_config_section(guild_id, section: str, modified_values: dict):
 
     guild_config.update(changed_values)
     save(guild_id)
-    return dict(updated=True)  # We wrote something to disk
+    return dict(updated=True, new_values=get_var(guild_id, section))  # We wrote something to disk
