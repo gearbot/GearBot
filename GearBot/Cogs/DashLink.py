@@ -11,6 +11,7 @@ from discord import Embed, Color
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Translator, server_info
+from Util.Configuration import ValidationException
 
 
 class DASH_PERMS:
@@ -99,6 +100,8 @@ class DashLink(BaseCog):
                                  state="OK")
                 except UnauthorizedException:
                     reply = dict(uid=message["uid"], state="Unauthorized")
+                except ValidationException as ex:
+                    reply = dict(uid=message["uid"], state="Bad Request", errors=ex.errors)
                 except CancelledError:
                     return
                 except Exception as ex:
@@ -172,11 +175,8 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def update_config_section(self, message):
-        # This will return a dict
-        # Error Dict: Error message title and then the details: error, error_details 
-        # Success Dict: Update status if it was written to the file
         return Configuration.update_config_section(
-            message["guild_id"], 
+            self.bot.get_guild(message["guild_id"]),
             message["section"], 
             message["modified_values"]
         )

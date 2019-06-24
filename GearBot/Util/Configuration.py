@@ -8,190 +8,65 @@ MASTER_LOADED = False
 CONFIG_VERSION = 0
 
 
-def validate_bool_value(value):
-    if type(value) == bool:
+class ValidationException(Exception):
+
+    def __init__(self, errors) -> None:
+        self.errors = errors
+
+
+def check_type(t, allow_none=False, **illegal):
+    def checker(guild, value):
+        if value is None and not allow_none:
+            return "This value can not be none"
+        if not isinstance(value, t):
+            return f"This isn't a {t}"
+        if value in illegal:
+            return "This value is not allowed"
         return True
-    else:
-        return False
 
-def validate_string_value(value):
-    if type(value) == str:
-        if value != "":
-            return True
-    return False
+    return checker
 
 
-class ConfigGeneral(NamedTuple):
-    lang: str
-    def validate_lang(value):
-        if validate_string_value():
-            if len(value) <= 25:
-                return True
-        return False
-
-    perm_denied_message: bool
-    def validate_perm_denied_message(value):
-        return validate_bool_value(value)
-
-    prefix: str
-    def validate_prefix(value):
-        if validate_string_value(value):
-            if len(value) <= 10:
-                    return True
-        return False
-
-    timestamps: bool
-    def validate_timestamps(value):
-        return validate_bool_value(value)
-
-    new_user_threshold: int
-    def validate_new_user_threshold(value):
-        if type(value) == int:
-            if value >= 0 and value <= (60 * 60 * 24 * 14):
-                return True
-        return False
-
-    timezone: str
-    def validate_timezone(value): 
-        if validate_string_value(value):
-            try:
-                timezone(value)
-                return True
-            except UnknownTimeZoneError:
-                return False
-        return False
+def validate_timezone(guild, value):
+    try:
+        timezone(value)
+        return True
+    except UnknownTimeZoneError:
+        return "Unknown timezone"
 
 
-class ConfigRoles(NamedTuple):
-    def validate_role(role_id):
-        if type(role_id) == int:
-            return True # TODO: See if role exists in guild
-        else:
-            return False
-            
-    admin_roles: List[int]
-    mod_roles: List[int]
-    self_roles: List[int]
-    trusted_roles: List[int]
-    role_list: List[int]
+def check_number_range(lower, upper):
+    def checker(guild, value):
+        if value < lower:
+            return f"Value too low, must be at least {lower}"
+        if value > upper:
+            return f"Value too high, must be at most {upper}"
+        return True
 
-    role_whitelist: bool
-    def validate_role_whitelist(value): 
-        return validate_bool_value(value)
-
-    mute_role: int
-    def validate_mute_role(role_id): 
-        return validate_role()
+    return checker
 
 
-LogChannel = Dict[str, List[str]]
-LogChannels = Dict[str, LogChannel]
+def multicheck(*args):
+    def check(guild, value):
+        for arg in args:
+            c = arg(guild, value)
+            if c is not True:
+                return c
+        return True
+
+    return check
 
 
-class ConfigMessageLogs(NamedTuple):
-    def validate_channel(channel_id):
-        if type(channel_id) == int:
-            if channel_id: # TODO: See if channel ID exists
-                return True
-        return False
-
-    enabled: bool
-    def validate_enabled(value): 
-        return validate_bool_value(value)
-
-    ignored_channels_changes: List[int]
-    ignored_channels_other: List[int]
-    ignored_users: List[int]
-
-    embed: bool
-    def validate_embed(value): 
-        return validate_bool_value(value)
-
-
-class ConfigCensoring(NamedTuple):
-    enabled: bool
-    def validate_enabled(value): 
-        return validate_bool_value(value)
-
-    word_blacklist: List[str]
-    invite_whitelist: List[str]
-
-
-class ConfigInfractions(NamedTuple):
-    dm_on_warn: bool
-    def validate_dm_on_warn(value): 
-        return validate_bool_value(value)
-
-
-RaidShield = None  # Dict[] TODO
-
-
-class ConfigRaidHandling(NamedTuple):
-    enabled: bool
-    def validate_enabled(value):
-        return validate_bool_value(value)
-
-    handlers: List[RaidShield]  # TODO: Need a example to make a type sig
-
-    invite: str
-    def validate_invite(value): 
-        return validate_string_value(value)
-
-
-class PunishmentTypes(Enum):
-    warn: "warn"
-    kick: "kick"
-    ban: "ban"
-    forced_ban: "forced_ban"
-    mute: "mute"
-
-
-class SpamTypes(Enum):
-    duplicates: "duplicates"
-    messages: "max_messages"
-    newlines: "max_newlines"
-    mentions: "max_mentions"
-
-
-class SpamSize(NamedTuple):
-    count: int
-    period: int
-
-
-class SpamBucketParts(NamedTuple):
-    spam_type: SpamTypes
-    punishment: Dict[str, PunishmentTypes]  # May need tweaked
-    size: SpamSize
-
-
-SpamBucket = List[SpamBucketParts]
-
-
-class ConfigAntiSpam(NamedTuple):
-    clean: bool
-    def validate_clean(value):
-        return validate_bool_value(value)
-
-    enabled: bool
-    def validate_enabled(value): 
-        return validate_bool_value(value)
-
-    exempt_roles: List[int]
-    exempt_users: List[int]
-    buckets: List[SpamBucket]
-
-
-class ConfigTypes(NamedTuple):
-    version: int
-    general: ConfigGeneral
-    roles: ConfigRoles
-    log_channels: LogChannels
-    message_logs: ConfigMessageLogs
-    censoring: ConfigCensoring
-    infrations: ConfigInfractions
-    perm_overrides: None  # TODO: How to represent this reasonably
-    raid_handling: ConfigRaidHandling
-    anti_spam: ConfigAntiSpam
+VALIDATORS = {
+    "GENERAL": {
+        "PREFIX": multicheck(check_type(str), lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
+        "LANG": lambda g, v: v in Translator.LANGS or "Unknown language",
+        "PERM_DENIED_MESSAGE": check_type(bool),
+        "TIMESTAMPS": check_type(bool),
+        "NEW_USER_THRESHOLD": multicheck(check_type(int), check_number_range(0, 60 * 60 * 24 * 14)),
+        "TIMEZONE": validate_timezone
+    }
+}
 
 
 # Ugly but this prevents import loop errors
@@ -224,7 +99,7 @@ import os
 
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils, Features
+from Util import GearbotLogging, Utils, Features, Translator
 
 
 def initial_migration(config):
@@ -402,6 +277,7 @@ def v13(config):
 
     move_keys(config, "INFRACTIONS", "DM_ON_WARN")
 
+
 def v14(config):
     if len(config["ANTI_SPAM"]) is 0:
         config["ANTI_SPAM"] = {
@@ -541,61 +417,24 @@ def set_persistent_var(key, value):
     Utils.save_to_disk("persistent", PERSISTENT)
 
 
-def update_config_section(guild_id, section: str, modified_values: dict):
-    config_part_types = dict(dict(ConfigTypes._field_types)[section.lower()]._field_types)
-    config_part_validators = dict(ConfigTypes._field_types)[section.lower()]
-
-    # Check if their requested update is identical. We don't need to waste CPU cycles and disk writes
-    guild_config: dict = get_var(guild_id, section)
-    if modified_values.items() <= guild_config.items():
-        return dict(updated=False)
-
-    valid_modified_values = {}
-    for key, value in modified_values.items():
-        key: str = key.lower()
-        if key in config_part_types:
-            # Check if the primitive type of the value matches
-            if type(value) == config_part_types[key]:
-                # Validate the key to requirements...
-                # Every key has a `validate_KEY` function that can be defined for validation checks
-                try:
-                    if getattr(config_part_validators, f"validate_{key}")(value):
-                        valid_modified_values.update(
-                            { f"{key.upper()}": value }
-                        )
-                    else:
-                        # The entire request must be good, no partial updates
-                        return dict(
-                            error="A configuration key's value is malformed",
-                            error_details=f"Value {value} does not conform to requirements!"
-                        )
-                except AttributeError:
-                    # This protects against causing errors due to a value not currently having a validator function
-                    return dict(
-                        error="Not Implemented",
-                        error_details="The current function doesn't yet exist, or won't"
-                    )
-            else:
-                # Inform the API user that a value was the wrong type
-                proper_type = str(config_part_types[key]).split("'")[1]
-                return dict(
-                    error="A configuration value was the wrong type!",
-                    error_details=f"Value {value} should be of the type {proper_type}",
-                )
+def update_config_section(guild, section, new_values):
+    fields = VALIDATORS[section]
+    errors = dict()
+    s = get_var(guild.id, section)
+    todo = dict(**new_values)
+    for k, v in new_values.items():
+        if k not in fields:
+            errors[k] = "Unknown key"
+        elif s[k] == v:
+            todo.pop(k)
         else:
-            # Inform the API user tried to change an invalid key
-            return dict(
-                error="A key could not be found",
-                error_details=f"Unknown key: {key.upper()}",
-            )
-
-    # If we managed to get here, then all the values were valid and we can write them
-    # Check *exactly* what was modifed so we only write what is needed
-    changed_values = valid_modified_values.copy()
-    for key, value in valid_modified_values.items():
-        if guild_config[key] == value:
-            changed_values.pop(key)
-
-    guild_config.update(changed_values)
-    save(guild_id)
-    return dict(updated=True, new_values=get_var(guild_id, section))  # We wrote something to disk
+            validated = fields[k](guild, v)
+            if validated is not True:
+                errors[k] = validated
+    if len(todo) is 0:
+        errors[section] = "Nothing to save!"
+    if len(errors) > 0:
+        raise ValidationException(errors)
+    s.update(**todo)
+    save(guild.id)
+    return dict(status="OK", new_values=s)
