@@ -19,7 +19,8 @@ class ServerHolder(object):
         self.name = sid
 
 async def add_item(ctx, item, item_type, list_name="roles"):
-    roles = Configuration.get_var(ctx.guild.id, "ROLES", f"{item_type}_{list_name}".upper())
+    target = f"{item_type}_{list_name}".upper()
+    roles = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
     if item == ctx.guild.default_role:
         return await ctx.send(
@@ -35,7 +36,8 @@ async def add_item(ctx, item, item_type, list_name="roles"):
 
 
 async def remove_item(ctx, item, item_type, list_name="roles"):
-    roles = Configuration.get_var(ctx.guild.id, "ROLES", f"{item_type}_{list_name}".upper())
+    target = f"{item_type}_{list_name}".upper()
+    roles = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
     if item.id not in roles:
         await ctx.send(
@@ -48,7 +50,8 @@ async def remove_item(ctx, item, item_type, list_name="roles"):
 
 
 async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>"):
-    items = Configuration.get_var(ctx.guild.id, "ROLES", f"{item_type}_{list_name}".upper())
+    target = f"{item_type}_{list_name}".upper()
+    items = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
     if len(items) == 0:
         desc = Translator.translate(f"no_{item_type}_{list_name}", ctx)
     else:
