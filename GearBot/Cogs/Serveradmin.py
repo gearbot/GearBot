@@ -608,7 +608,7 @@ class Serveradmin(BaseCog):
     @configure.group()
     @commands.guild_only()
     async def features(self, ctx):
-        if ctx.invoked_subcommand == self.features:
+        if ctx.invoked_subcommand is None:
             await ctx.send(embed=self.get_features_status(ctx))
 
     @features.command(name="enable")
@@ -632,7 +632,7 @@ class Serveradmin(BaseCog):
                 ignored.append(t)
             else:
                 enabled.append(t)
-                Configuration.set_var(ctx.guild.id, t, True)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", True)
                 if t == "EDIT_LOGS":
                     await ctx.send(Translator.translate('minor_log_caching_start', ctx))
                     self.bot.to_cache.append(ctx)
@@ -654,7 +654,7 @@ class Serveradmin(BaseCog):
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
-            e = Configuration.get_var(ctx.guild.id, f)
+            e = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", f)
             embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
@@ -690,7 +690,7 @@ class Serveradmin(BaseCog):
                 ignored.append(t)
             else:
                 disabled.append(t)
-                Configuration.set_var(ctx.guild.id, t, False)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", False)
 
         if len(disabled) > 0:
             message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_disabled', count=len(disabled)) + ', '.join(disabled)
