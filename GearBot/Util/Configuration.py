@@ -14,18 +14,31 @@ class ValidationException(Exception):
         self.errors = errors
 
 
-def check_type(t, allow_none=False, **illegal):
+def check_type(valid_type, allow_none=False, **illegal):
     def checker(guild, value):
         if value is None and not allow_none:
             return "This value can not be none"
-        if not isinstance(value, t):
-            return f"This isn't a {t}"
+        if not isinstance(value, valid_type):
+            return f"This isn't a {valid_type}"
         if value in illegal:
             return "This value is not allowed"
         return True
 
     return checker
 
+def validate_list_type(valid_type, allow_none=False, **illegal):
+    def checker(guild, bad_list):
+        for value in bad_list:
+            if value is not None and not allow_none:
+                return f"A value in the group, {value}, was not defined!"
+            if not isinstance(value, valid_type):
+                return f"A value in the group, {value}, is the wrong type! It should be a {valid_type}"
+            if value in illegal:
+                return f"A value in the group, {value}, is not allowed!"
+            return True
+    
+    return checker
+        
 
 def validate_timezone(guild, value):
     try:
@@ -34,6 +47,23 @@ def validate_timezone(guild, value):
     except UnknownTimeZoneError:
         return "Unknown timezone"
 
+
+def validate_role(guild, role_id):
+    if guild.get_role(role_id) != None:
+        return True
+    return f"{role_id} isn't a valid role"
+
+def validate_role_list(guild, role_list):
+    for role in role_list:
+        # Make sure the roles are the right type
+        if not isinstance(role, int):
+            return f"One of the roles, {role} is not a integer!"
+
+        # Check if the role exists
+        if guild.get_role(role) == None:
+            return f"One of the roles, {role}, is not valid!"
+
+        return True
 
 def check_number_range(lower, upper):
     def checker(guild, value):
@@ -49,9 +79,9 @@ def check_number_range(lower, upper):
 def multicheck(*args):
     def check(guild, value):
         for arg in args:
-            c = arg(guild, value)
-            if c is not True:
-                return c
+            validator = arg(guild, value)
+            if validator is not True:
+                return validator
         return True
 
     return check
@@ -65,6 +95,15 @@ VALIDATORS = {
         "TIMESTAMPS": check_type(bool),
         "NEW_USER_THRESHOLD": multicheck(check_type(int), check_number_range(0, 60 * 60 * 24 * 14)),
         "TIMEZONE": validate_timezone
+    },
+    "ROLES": {
+        "ADMIN_ROLES": validate_role_list,
+        "MOD_ROLES": validate_role_list,
+        "SELF_ROLES": validate_role_list,
+        "TRUSTED_ROLES": validate_role_list,
+        # ROLE_LIST is managed internally by Gearbot (Probably)
+        "ROLE_WHITELIST": check_type(bool),
+        "MUTE_ROLE": multicheck(check_type(int), validate_role)
     }
 }
 
@@ -420,21 +459,33 @@ def set_persistent_var(key, value):
 def update_config_section(guild, section, new_values):
     fields = VALIDATORS[section]
     errors = dict()
-    s = get_var(guild.id, section)
-    todo = dict(**new_values)
+    guild_config = get_var(guild.id, section)
+    values_to_update = dict(**new_values)
+    config_field_updated = None
+
     for k, v in new_values.items():
         if k not in fields:
             errors[k] = "Unknown key"
-        elif s[k] == v:
-            todo.pop(k)
+        elif guild_config[k] == v:
+            values_to_update.pop(k)
         else:
             validated = fields[k](guild, v)
+            config_field_updated = k
             if validated is not True:
                 errors[k] = validated
-    if len(todo) is 0:
+
+    if len(values_to_update) is 0:
         errors[section] = "Nothing to save!"
     if len(errors) > 0:
         raise ValidationException(errors)
-    s.update(**todo)
+
+    # Make sure that lists merge, not overwrite
+    # Any values in the old lists will remain unless their key is overwritten manually (AntiRaid, etc)
+    if isinstance(values_to_update[config_field_updated], list):
+        values_merged = list(set(guild_config[config_field_updated] + values_to_update[config_field_updated]))
+        values_to_update[config_field_updated] = values_merged
+
+
+    guild_config.update(**values_to_update)
     save(guild.id)
-    return dict(status="OK", new_values=s)
+    return dict(status="Updated", new_values=guild_config)
