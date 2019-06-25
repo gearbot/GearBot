@@ -18,9 +18,10 @@ class ServerHolder(object):
         self.id = sid
         self.name = sid
 
-async def add_item(ctx, item, item_type, list_name="roles"):
+
+async def add_item(ctx, item, item_type, config_section="ROLES", list_name="roles"):
     target = f"{item_type}_{list_name}".upper()
-    roles = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
+    roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
     if item == ctx.guild.default_role:
         return await ctx.send(
@@ -35,9 +36,9 @@ async def add_item(ctx, item, item_type, list_name="roles"):
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
 
 
-async def remove_item(ctx, item, item_type, list_name="roles"):
+async def remove_item(ctx, item, item_type, config_section, list_name="ROLES"):
     target = f"{item_type}_{list_name}".upper()
-    roles = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
+    roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
     if item.id not in roles:
         await ctx.send(
@@ -49,9 +50,9 @@ async def remove_item(ctx, item, item_type, list_name="roles"):
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_removed', ctx, item=item.name)}")
 
 
-async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>"):
+async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>", config_section="ROLES"):
     target = f"{item_type}_{list_name}".upper()
-    items = Configuration.get_var(ctx.guild.id, "ROLES" if target != "IGNORED_USERS" else "MESSAGE_LOGS", target)
+    items = Configuration.get_var(ctx.guild.id, config_section, target)
     if len(items) == 0:
         desc = Translator.translate(f"no_{item_type}_{list_name}", ctx)
     else:
@@ -220,29 +221,29 @@ class Serveradmin(BaseCog):
     async def invite_whitelist(self, ctx: commands.Context):
         """configure_invite_whitelist_help"""
         if ctx.invoked_subcommand is None:
-            await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}")
+            await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}", config_section="CENSORING")
 
     @invite_whitelist.command(name="add")
     async def add_to_whitelist(self, ctx: commands.Context, server:int):
-        await add_item(ctx, ServerHolder(server), "invite", list_name="whitelist")
+        await add_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
 
     @invite_whitelist.command(name="remove")
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
-        await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist")
+        await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
 
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """configure_ignored_users_help"""
         if ctx.invoked_subcommand is None:
-            await list_list(ctx, "ignored", "users", "<@{item}>")
+            await list_list(ctx, "ignored", "users", "<@{item}>", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="add")
     async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
-        await add_item(ctx, user, "ignored", "users")
+        await add_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="remove")
     async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
-        await remove_item(ctx, user, "ignored", "users")
+        await remove_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
 
 
     @configure.group("cog_overrides")
