@@ -171,7 +171,10 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
     async def get_config_section(self, message):
-        return Configuration.get_var(message["guild_id"], message["section"])
+        section = Configuration.get_var(message["guild_id"], message["section"])
+        if message['section'] == "ROLES":
+            section = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in section.items()}
+        return section
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def update_config_section(self, message):

@@ -26,6 +26,7 @@ def check_type(valid_type, allow_none=False, **illegal):
 
     return checker
 
+
 def validate_list_type(valid_type, allow_none=False, **illegal):
     def checker(guild, bad_list):
         for value in bad_list:
@@ -36,9 +37,9 @@ def validate_list_type(valid_type, allow_none=False, **illegal):
             if value in illegal:
                 return f"A value in the group, {value}, is not allowed!"
             return True
-    
+
     return checker
-        
+
 
 def validate_timezone(guild, value):
     try:
@@ -48,10 +49,13 @@ def validate_timezone(guild, value):
         return "Unknown timezone"
 
 
-def validate_role(guild, role_id):
-    if guild.get_role(role_id) != None:
-        return True
-    return f"{role_id} isn't a valid role"
+def validate_role(guild, role_id, allow_everyone=False):
+    if guild.get_role(role_id) is None:
+        return "Unable to find a role with that id on the server"
+    if guild.id == role_id and not allow_everyone:
+        return "You can't use the @everyone role here!"
+    return True
+
 
 def validate_role_list(guild, role_list):
     for role in role_list:
@@ -63,7 +67,8 @@ def validate_role_list(guild, role_list):
         if guild.get_role(role) == None:
             return f"One of the roles, {role}, is not valid!"
 
-        return True
+    return True
+
 
 def check_number_range(lower, upper):
     def checker(guild, value):
@@ -101,7 +106,7 @@ VALIDATORS = {
         "MOD_ROLES": validate_role_list,
         "SELF_ROLES": validate_role_list,
         "TRUSTED_ROLES": validate_role_list,
-        # ROLE_LIST is managed internally by Gearbot (Probably)
+        "ROLE_LIST": validate_role_list,
         "ROLE_WHITELIST": check_type(bool),
         "MUTE_ROLE": multicheck(check_type(int), validate_role)
     }
@@ -460,32 +465,29 @@ def update_config_section(guild, section, new_values):
     fields = VALIDATORS[section]
     errors = dict()
     guild_config = get_var(guild.id, section)
-    values_to_update = dict(**new_values)
-    config_field_updated = None
+
+    if section == "ROLES":
+        new_values = {k: [int(rid) if rid.numeric() else rid for rid in v] if isinstance(v, list) else int(v) if v.numeric() else v for k, v in new_values.items()}
 
     for k, v in new_values.items():
         if k not in fields:
             errors[k] = "Unknown key"
         elif guild_config[k] == v:
-            values_to_update.pop(k)
+            new_values.pop(k)
         else:
             validated = fields[k](guild, v)
-            config_field_updated = k
             if validated is not True:
                 errors[k] = validated
 
-    if len(values_to_update) is 0:
+    if len(new_values) is 0:
         errors[section] = "Nothing to save!"
     if len(errors) > 0:
         raise ValidationException(errors)
 
-    # Make sure that lists merge, not overwrite
-    # Any values in the old lists will remain unless their key is overwritten manually (AntiRaid, etc)
-    if isinstance(values_to_update[config_field_updated], list):
-        values_merged = list(set(guild_config[config_field_updated] + values_to_update[config_field_updated]))
-        values_to_update[config_field_updated] = values_merged
-
-
-    guild_config.update(**values_to_update)
+    guild_config.update(**new_values)
     save(guild.id)
+    print(guild_config)
+    if section == "ROLES":
+        guild_config = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in guild_config.items()}
+    print(guild_config)
     return dict(status="Updated", new_values=guild_config)

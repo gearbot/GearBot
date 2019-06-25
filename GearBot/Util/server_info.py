@@ -102,13 +102,15 @@ def server_info_raw(guild):
         creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
         age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
         vip_features=guild.features,
-        role_list=[
-            {
+        role_list={
+            r.id: {
                 "id": str(r.id),
                 "name": r.name,
-                "color": r.color.value,
-                "members": len(r.members)
-            } for r in guild.roles],
+                "color": '#{:0>6x}'.format(r.color.value),
+                "members": len(r.members),
+                "is_admin": r.permissions.administrator,
+                "is_mod": r.permissions.ban_members
+            } for r in guild.roles},
         emojis=[
             {
                 "id": str(e.id),
