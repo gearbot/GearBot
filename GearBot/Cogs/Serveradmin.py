@@ -36,7 +36,7 @@ async def add_item(ctx, item, item_type, config_section="ROLES", list_name="role
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
 
 
-async def remove_item(ctx, item, item_type, config_section, list_name="ROLES"):
+async def remove_item(ctx, item, item_type, config_section="ROLES", list_name="roles"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
