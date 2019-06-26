@@ -61,7 +61,7 @@ def validate_role_list(guild, role_list):
     for role in role_list:
         # Make sure the roles are the right type
         if not isinstance(role, int):
-            return f"One of the roles, {role} is not a integer!"
+            return f"One of the roles, {role}, is not a integer!"
 
         # Check if the role exists
         if guild.get_role(role) == None:
@@ -465,29 +465,30 @@ def update_config_section(guild, section, new_values):
     fields = VALIDATORS[section]
     errors = dict()
     guild_config = get_var(guild.id, section)
+    modified_values = new_values.copy()
 
     if section == "ROLES":
-        new_values = {k: [int(rid) if rid.numeric() else rid for rid in v] if isinstance(v, list) else int(v) if v.numeric() else v for k, v in new_values.items()}
+        new_values = {k: [int(rid) if rid.isnumeric() else rid for rid in v] if isinstance(v, list) else int(v) if v.isnumeric() else v for k, v in new_values.items()}
 
     for k, v in new_values.items():
         if k not in fields:
             errors[k] = "Unknown key"
         elif guild_config[k] == v:
-            new_values.pop(k)
+            modified_values.pop(k)
         else:
             validated = fields[k](guild, v)
             if validated is not True:
                 errors[k] = validated
 
-    if len(new_values) is 0:
+    if len(modified_values) is 0:
         errors[section] = "Nothing to save!"
     if len(errors) > 0:
         raise ValidationException(errors)
 
-    guild_config.update(**new_values)
+    guild_config.update(**modified_values)
     save(guild.id)
     print(guild_config)
     if section == "ROLES":
         guild_config = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in guild_config.items()}
     print(guild_config)
-    return dict(status="Updated", new_values=guild_config)
+    return dict(status="Updated", modified_values=guild_config)
