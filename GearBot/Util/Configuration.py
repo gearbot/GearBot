@@ -461,6 +461,14 @@ def set_persistent_var(key, value):
     Utils.save_to_disk("persistent", PERSISTENT)
 
 
+def is_numeric(value):
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
+
+
 def update_config_section(guild, section, new_values):
     fields = VALIDATORS[section]
     errors = dict()
@@ -468,7 +476,7 @@ def update_config_section(guild, section, new_values):
     modified_values = new_values.copy()
 
     if section == "ROLES":
-        new_values = {k: [int(rid) if rid.isnumeric() else rid for rid in v] if isinstance(v, list) else int(v) if v.isnumeric() else v for k, v in new_values.items()}
+        new_values = {k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(v) else v for k, v in new_values.items()}
 
     for k, v in new_values.items():
         if k not in fields:
