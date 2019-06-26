@@ -629,11 +629,11 @@ class Serveradmin(BaseCog):
                         unknown.append(t)
         message = ""
         for t in known:
-            if Configuration.get_var(ctx.guild.id, t):
+            if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED"):
                 ignored.append(t)
             else:
                 enabled.append(t)
-                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", True)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", True)
                 if t == "EDIT_LOGS":
                     await ctx.send(Translator.translate('minor_log_caching_start', ctx))
                     self.bot.to_cache.append(ctx)
@@ -655,7 +655,7 @@ class Serveradmin(BaseCog):
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
-            e = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", f)
+            e = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", f)
             embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
@@ -687,11 +687,11 @@ class Serveradmin(BaseCog):
                         unknown.append(t)
         message = ""
         for t in known:
-            if not Configuration.get_var(ctx.guild.id, t):
+            if not Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED"):
                 ignored.append(t)
             else:
                 disabled.append(t)
-                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT LOGS" else "CENSORING", "ENABLED", False)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", False)
 
         if len(disabled) > 0:
             message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_disabled', count=len(disabled)) + ', '.join(disabled)
