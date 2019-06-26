@@ -146,7 +146,13 @@ LOG_TYPES = {
     'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARNING'),
     'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING'),
     'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER'),
-    'spam_violate': log_type('SPAM_VIOLATION', 'BAD_USER')
+    'spam_violate': log_type('SPAM_VIOLATION', 'BAD_USER'),
+    "config_change": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_change_role_removed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_change_role_added": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_disabled": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_changed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_set": log_type('CONFIG_CHANGES', 'WRENCH'),
 
 
 

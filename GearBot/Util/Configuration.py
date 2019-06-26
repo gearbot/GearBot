@@ -1,6 +1,8 @@
-from typing import NamedTuple, List, Dict
-from enum import Enum
+import asyncio
+
 from pytz import timezone, UnknownTimeZoneError
+
+from database.DatabaseConnector import Infraction
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
@@ -94,7 +96,9 @@ def multicheck(*args):
 
 VALIDATORS = {
     "GENERAL": {
-        "PREFIX": multicheck(check_type(str), lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
+        "PREFIX": multicheck(check_type(str),
+                             lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(
+                                 v) is 0 else True),
         "LANG": lambda g, v: v in Translator.LANGS or "Unknown language",
         "PERM_DENIED_MESSAGE": check_type(bool),
         "TIMESTAMPS": check_type(bool),
@@ -109,6 +113,59 @@ VALIDATORS = {
         "ROLE_LIST": validate_role_list,
         "ROLE_WHITELIST": check_type(bool),
         "MUTE_ROLE": multicheck(check_type(int), validate_role)
+    }
+}
+
+
+def role_list_logger(t):
+    def handler(guild, old, new, user_parts):
+        removed = list(set(old) - set(new))
+        added = list(set(new) - set(old))
+        for r in removed:
+            role = guild.get_role(int(r))
+            role_name = Utils.escape_markdown(role.name) if role is not None else r
+            GearbotLogging.log_to(guild.id, f"config_change_role_removed", role_name=role_name, role_id=r, type=t,
+                                  **user_parts)
+
+        for r in added:
+            role = guild.get_role(int(r))
+            role_name = Utils.escape_markdown(role.name) if role is not None else r
+            GearbotLogging.log_to(guild.id, f"config_change_role_added", role_name=role_name, role_id=r, type=t,
+                                  **user_parts)
+
+    return handler
+
+
+async def role_remover(active_mutes, guild, role):
+    pass
+
+
+async def role_adder(active_mutes, guild, role):
+    pass
+
+
+def swap_mute_role(guild, old, new):
+    active_mutes = Infraction.get().where(
+        (Infraction.type == "Mute") & (Infraction.guild_id == guild.id) & Infraction.active)
+    loop = asyncio.get_running_loop()
+
+    old = guild.get_role(int(old))
+    old_role_name = Utils.escape_markdown(old.name) if old is not None else old
+
+    if old != "0":
+
+        loop.create_task(role_remover(active_mutes, guild, new))
+        loop.create_task(role_adder(active_mutes, guild, new))
+        GearbotLogging.log_to(guild.id, "config_mute_role_changed", )
+
+
+SPECIAL_HANDLERS = {
+    "ROLES": {
+        "MUTE_ROLE": swap_mute_role,
+        "ADMIN_ROLES": role_list_logger("ADMIN"),
+        "MOD_ROLES": role_list_logger("MOD"),
+        "TRUSTED_ROLES": role_list_logger("TRUSTED"),
+        "SELF_ROLES": role_list_logger("SELF"),
     }
 }
 
@@ -332,6 +389,10 @@ def v14(config):
         }
 
 
+def v15(config):
+    add_logging(config, 'CONFIG_CHANGES')
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
@@ -354,7 +415,7 @@ def move_keys(config, section, *keys):
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15]
 
 
 async def initialize(bot: commands.Bot):
@@ -405,8 +466,8 @@ def checklist(guid, key, getter):
 
 
 def update_config(guild, config):
-    v = config["VERSION"]
     while config["VERSION"] < CONFIG_VERSION:
+        v = config["VERSION"]
         GearbotLogging.info(f"Upgrading config version from version {v} to {v + 1}")
         d = f"config/backups/v{v}"
         if not os.path.isdir(d):
@@ -469,14 +530,16 @@ def is_numeric(value):
         return False
 
 
-def update_config_section(guild, section, new_values):
+def update_config_section(guild, section, new_values, user):
     fields = VALIDATORS[section]
     errors = dict()
     guild_config = get_var(guild.id, section)
     modified_values = new_values.copy()
 
     if section == "ROLES":
-        new_values = {k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(v) else v for k, v in new_values.items()}
+        new_values = {
+            k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(
+                v) else v for k, v in new_values.items()}
 
     for k, v in new_values.items():
         if k not in fields:
@@ -493,9 +556,22 @@ def update_config_section(guild, section, new_values):
     if len(errors) > 0:
         raise ValidationException(errors)
 
+    user_parts = {
+        "user": Utils.clean_user(user),
+        "user_id": user.id
+    }
+    old = dict(**guild_config)
     guild_config.update(**modified_values)
     save(guild.id)
-    print(guild_config)
+
+    for k, v in modified_values.items():
+        if section in SPECIAL_HANDLERS and k in SPECIAL_HANDLERS[section]:
+            SPECIAL_HANDLERS[section][k](guild, old[k], modified_values[k], user_parts)
+        else:
+            GearbotLogging.log_to(guild.id, "config_change",
+                                  option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
+                                  old=old[k], new=modified_values[k], **user_parts)
+
     if section == "ROLES":
         guild_config = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in guild_config.items()}
     print(guild_config)

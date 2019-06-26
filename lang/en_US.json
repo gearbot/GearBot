@@ -697,5 +697,17 @@
   "slowmode_set": "Slowmode is now set to {duration} in {channel}",
   "slowmode_help": "Control the slowmode on a channel",
   "mute_punishment_failure":"Failed to mute {user} (``{user_id}``) for {duration} for ``{reason}`` (``#{inf}``) due to missing permissions!",
-  "kick_punishment_failure":"Failed to kick {user} (``{user_id}``) for ``{reason}`` (``#{inf}``) due to missing permissions!"
+  "kick_punishment_failure":"Failed to kick {user} (``{user_id}``) for ``{reason}`` (``#{inf}``) due to missing permissions!",
+  "config_change": "The **{option_name}** config option was changed from **``{old}``** to **``{new}``** by **{user}** (``{user_id}``)",
+  "config_change_role_removed": "The **{role_name}** role (``{role_id}``) was removed from the {type} role list by **{user}** (``{user_id}``)",
+  "config_change_role_added": "The **{role_name}** role (``{role_id}``) was added to the {type} role list by **{user}** (``{user_id}``)",
+  "config_general_prefix": "bot prefix",
+  "config_general_lang": "bot language",
+  "config_general_new_user_threshold": "new user account age",
+  "config_general_timezone": "timezone",
+  "config_general_perm_denied_message": "permission denied",
+  "config_general_timestamps": "timestamps",
+  "config_mute_role_disabled": "The muterole was deconfigured by **{user}** (``{user_id}``), {count, plural, zero, {Nobody was muted to unmute}, one {unmuting 1 person}, other {unmuting # people}}",
+  "config_mute_role_changed": "The mute role was changed from {old_name} ``({old_id}``) to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)",
+  "config_mute_role_set": "The mute role was set to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)"
 }

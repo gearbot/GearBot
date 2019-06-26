@@ -181,11 +181,20 @@ class DashLink(BaseCog):
         return Configuration.update_config_section(
             self.bot.get_guild(message["guild_id"]),
             message["section"], 
-            message["modified_values"]
+            message["modified_values"],
+            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"]))
         )
 
     async def languages(self, message):
         return Translator.LANG_NAMES
+
+    @needs_perm(DASH_PERMS.ALTER_CONFIG)
+    async def setup_mute(self, message):
+        pass
+
+    @needs_perm(DASH_PERMS.ALTER_CONFIG)
+    async def cleanup_mute(self, message):
+        pass
 
     # crowdin
     async def crowdin_webhook(self, message):
