@@ -11,7 +11,7 @@ from discord import Embed, Color
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig
-from Util.Configuration import ValidationException
+from Util.DashConfig import ValidationException
 
 
 class DASH_PERMS:

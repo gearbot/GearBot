@@ -323,7 +323,7 @@ class ModLog(BaseCog):
             # this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
             log = await self.find_log(guild, AuditLogAction.unban, lambda e: e.target == user and e.created_at > limit)
         if log is not None:
-            i = InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual ban")
+            i = InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual unban")
             GearbotLogging.log_to(guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id,
                                   moderator=log.user, moderator_id=log.user.id, reason='Manual unban', inf=i.id)
 

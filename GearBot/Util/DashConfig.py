@@ -47,12 +47,14 @@ def validate_timezone(guild, value):
         return "Unknown timezone"
 
 
-def validate_role(guild, role_id, allow_everyone=False):
-    if guild.get_role(role_id) is None:
-        return "Unable to find a role with that id on the server"
-    if guild.id == role_id and not allow_everyone:
-        return "You can't use the @everyone role here!"
-    return True
+def validate_role(allow_everyone=False, allow_zero=False):
+    def validator(guild, role_id):
+        if guild.get_role(role_id) is None and not allow_zero:
+            return "Unable to find a role with that id on the server"
+        if guild.id == role_id and not allow_everyone:
+            return "You can't use the @everyone role here!"
+        return True
+    return validator
 
 
 def validate_role_list(guild, role_list):
@@ -62,7 +64,7 @@ def validate_role_list(guild, role_list):
             return f"One of the roles, {role}, is not a integer!"
 
         # Check if the role exists
-        if guild.get_role(role) == None:
+        if guild.get_role(role) is None:
             return f"One of the roles, {role}, is not valid!"
 
     return True
@@ -108,7 +110,7 @@ VALIDATORS = {
         "TRUSTED_ROLES": validate_role_list,
         "ROLE_LIST": validate_role_list,
         "ROLE_WHITELIST": check_type(bool),
-        "MUTE_ROLE": multicheck(check_type(int), validate_role)
+        "MUTE_ROLE": multicheck(check_type(int), validate_role(allow_zero=True))
     }
 }
 
@@ -133,11 +135,17 @@ def role_list_logger(t):
 
 
 async def role_remover(active_mutes, guild, role):
-    pass
+    for mute in active_mutes:
+        member = guild.get_member(mute.user_id)
+        if member is not None:
+            await member.remove_roles(role)
 
 
 async def role_adder(active_mutes, guild, role):
-    pass
+    for mute in active_mutes:
+        member = guild.get_member(mute.user_id)
+        if member is not None:
+            await member.add_roles(role)
 
 
 def swap_mute_role(guild, old, new, parts):
@@ -145,24 +153,26 @@ def swap_mute_role(guild, old, new, parts):
         (Infraction.type == "Mute") & (Infraction.guild_id == guild.id) & Infraction.active)
     loop = asyncio.get_running_loop()
 
-    old_role = guild.get_role(int(old)),
-    new_role = guild.get_role(int(new)),
+    old_role = guild.get_role(old)
+    new_role = guild.get_role(new)
     parts.update(
         old_id=old,
-        old_role_name=Utils.escape_markdown(old_role.name) if old_role is not None else old,
+        old_name=Utils.escape_markdown(old_role.name) if old_role is not None else old,
         new_id=new,
-        new_role_name=Utils.escape_markdown(new_role.name) if new_role is not None else new,
+        new_name=Utils.escape_markdown(new_role.name) if new_role is not None else new,
     )
 
-    if old != "0":
-        loop.create_task(role_remover(active_mutes, guild, old_role))
-        if new != "0":
+    if old != 0:
+        if old_role is not None:
+            loop.create_task(role_remover(active_mutes, guild, old_role))
+        if new != 0:
             GearbotLogging.log_to(guild.id, "config_mute_role_changed", **parts)
         else:
             GearbotLogging.log_to(guild.id, "config_mute_role_disabled", **parts)
-    if new != "0":
-        loop.create_task(role_adder(active_mutes, guild, new_role))
-        if old == "0":
+    if new != 0:
+        if new_role is not None:
+            loop.create_task(role_adder(active_mutes, guild, new_role))
+        if old == 0:
             GearbotLogging.log_to(guild.id, "config_mute_role_set", **parts)
 
 
@@ -190,12 +200,13 @@ def update_config_section(guild, section, new_values, user):
     fields = VALIDATORS[section]
     errors = dict()
     guild_config = Configuration.get_var(guild.id, section)
-    modified_values = new_values.copy()
 
     if section == "ROLES":
         new_values = {
-            k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(
-                v) else v for k, v in new_values.items()}
+            k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(v) else v for k, v in new_values.items()
+        }
+
+    modified_values = new_values.copy()
 
     for k, v in new_values.items():
         if k not in fields:
@@ -230,5 +241,4 @@ def update_config_section(guild, section, new_values, user):
 
     if section == "ROLES":
         guild_config = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in guild_config.items()}
-    print(guild_config)
     return dict(status="Updated", modified_values=guild_config)
