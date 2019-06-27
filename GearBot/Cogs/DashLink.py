@@ -10,7 +10,7 @@ from discord import Embed, Color
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator, server_info
+from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig
 from Util.Configuration import ValidationException
 
 
@@ -178,7 +178,7 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def update_config_section(self, message):
-        return Configuration.update_config_section(
+        return DashConfig.update_config_section(
             self.bot.get_guild(message["guild_id"]),
             message["section"], 
             message["modified_values"],
