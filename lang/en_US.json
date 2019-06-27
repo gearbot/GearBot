@@ -708,6 +708,6 @@
   "config_general_perm_denied_message": "permission denied",
   "config_general_timestamps": "timestamps",
   "config_mute_role_disabled": "The muterole was deconfigured by **{user}** (``{user_id}``), {count, plural, zero, {Nobody was muted to unmute}, one {unmuting 1 person}, other {unmuting # people}}",
-  "config_mute_role_changed": "The mute role was changed from {old_name} ``({old_id}``) to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)",
+  "config_mute_role_changed": "The mute role was changed from {old_name} (``{old_id}``) to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)",
   "config_mute_role_set": "The mute role was set to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)"
 }
