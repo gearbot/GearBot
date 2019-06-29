@@ -1,3 +1,4 @@
+import asyncio
 import json
 from concurrent.futures import CancelledError
 
@@ -6,16 +7,16 @@ from datetime import datetime
 
 import aioredis
 from aioredis.pubsub import Receiver
-from discord import Embed, Color
+from discord import Embed, Color, Forbidden
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig
+from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers
 from Util.DashConfig import ValidationException
 
 
 class DASH_PERMS:
-    VIEW_DASH = (1 << 0)
+    ACCESS = (1 << 0)
     VIEW_INFRACTIONS = (1 << 1)
     VIEW_CONFIG = (1 << 2)
     ALTER_CONFIG = (1 << 3)
@@ -55,7 +56,9 @@ class DashLink(BaseCog):
             guild_info=self.guild_info_request,
             get_config_section=self.get_config_section,
             update_config_section=self.update_config_section,
-            languages=self.languages
+            languages=self.languages,
+            setup_mute=self.setup_mute,
+            cleanup_mute=self.cleanup_mute
         )
         self.recieve_handlers = dict(
 
@@ -153,34 +156,41 @@ class DashLink(BaseCog):
         member = guild.get_member(user_id)
         if member is None:
             return 0
-        permission = 0
-        mod_roles = Configuration.get_var(guild_id, "ROLES", "MOD_ROLES")
-        if member.guild_permissions.ban_members or any(r.id in mod_roles for r in member.roles):
-            permission |= DASH_PERMS.VIEW_DASH | DASH_PERMS.VIEW_INFRACTIONS | DASH_PERMS.VIEW_CONFIG
 
-        admin_roles = Configuration.get_var(guild_id, "ROLES", "ADMIN_ROLES")
-        if member.guild_permissions.administrator or any(r.id in admin_roles for r in member.roles):
-            permission |= DASH_PERMS.VIEW_DASH | DASH_PERMS.VIEW_INFRACTIONS | DASH_PERMS.VIEW_CONFIG | DASH_PERMS.ALTER_CONFIG
+        mappings = {
+            "ACCESS": DASH_PERMS.ACCESS,
+            "INFRACTION": DASH_PERMS.VIEW_INFRACTIONS,
+            "VIEW_CONFIG": DASH_PERMS.VIEW_CONFIG,
+            "ALTER_CONFIG": DASH_PERMS.ALTER_CONFIG
+        }
+
+        permission = 0
+        user_lvl = Permissioncheckers.user_lvl(member)
+        for k, v in mappings.items():
+            if user_lvl >= Configuration.get_var(guild_id, "DASH_SECURITY", k):
+                permission |= v
+
         return permission
 
-    @needs_perm(DASH_PERMS.VIEW_DASH)
+    @needs_perm(DASH_PERMS.ACCESS)
     async def guild_info_request(self, message):
         info = server_info.server_info_raw(self.bot.get_guild(message["guild_id"]))
         info["user_perms"] = self.get_guild_perms(message["guild_id"], int(message["user_id"]))
+        info["user_level"] = Permissioncheckers.user_lvl(self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])))
         return info
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
     async def get_config_section(self, message):
         section = Configuration.get_var(message["guild_id"], message["section"])
-        if message['section'] == "ROLES":
-            section = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in section.items()}
+        section = {k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) else str(
+            v) if isinstance(v, int) else v for k, v in section.items()}
         return section
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def update_config_section(self, message):
         return DashConfig.update_config_section(
             self.bot.get_guild(message["guild_id"]),
-            message["section"], 
+            message["section"],
             message["modified_values"],
             self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"]))
         )
@@ -190,11 +200,53 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def setup_mute(self, message):
-        pass
+        await self.override_handler(message, "setup", dict(send_messages=False, add_reactions=False),
+                                    dict(speak=False, connect=False))
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def cleanup_mute(self, message):
-        pass
+        await self.override_handler(message, "cleanup", None, None)
+
+    async def override_handler(self, message, t, text, voice):
+        guild = self.bot.get_guild(message["guild_id"])
+
+        if not DashConfig.is_numeric(message["role_id"]):
+            raise ValidationException(dict(role_id="Not a valid id"))
+
+        role = guild.get_role(int(message["role_id"]))
+        if role is None:
+            raise ValidationException(dict(role_id="Not a valid id"))
+        user = await Utils.get_user(message["user_id"])
+        parts = {
+            "role_name": Utils.escape_markdown(role.name),
+            "role_id": role.id,
+            "user": Utils.clean_user(user),
+            "user_id": user.id
+        }
+        GearbotLogging.log_to(guild.id, f"config_mute_{t}_triggered", **parts)
+        failed = []
+        for channel in guild.text_channels:
+            try:
+                if text is None:
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), overwrite=None)
+                else:
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), **text)
+            except Forbidden as ex:
+                failed.append(channel.mention)
+        for channel in guild.voice_channels:
+            try:
+                if voice is None:
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), overwrite=None)
+                else:
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), **voice)
+            except Forbidden as ex:
+                failed.append(Translator.translate('voice_channel', guild.id, channel=channel.name))
+
+        await asyncio.sleep(1)  # delay logging so the channel overrides can get querried and logged
+        GearbotLogging.log_to(guild.id, f"config_mute_{t}_complete", **parts)
+        out = '\n'.join(failed)
+        GearbotLogging.log_to(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
+                              tag_on=None if len(failed) is 0 else f'```{out}```')
 
     # crowdin
     async def crowdin_webhook(self, message):

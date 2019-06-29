@@ -709,5 +709,17 @@
   "config_general_timestamps": "timestamps",
   "config_mute_role_disabled": "The muterole was deconfigured (was {old_name} (``{old_id}``) before) by **{user}** (``{user_id}``), {count, plural, zero, {Nobody was muted to unmute}, one {unmuting 1 person}, other {unmuting # people}}",
   "config_mute_role_changed": "The mute role was changed from {old_name} (``{old_id}``) to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)",
-  "config_mute_role_set": "The mute role was set to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)"
+  "config_mute_role_set": "The mute role was set to {new_name} (``{new_id}``) by **{user}** (``{user_id}``)",
+  "config_mute_setup_triggered": "The mute role setup was triggered for the {role_name} (``{role_id}``) role by **{user}** (``{user_id}``).",
+  "config_mute_setup_complete": "Mute role setup completed for the {role_name} (``{role_id}``) role",
+  "config_mute_setup_failed": "Mute role setup failed for {count, plural, one {1 channel} other {# channels}}",
+  "config_mute_cleanup_triggered": "The mute role cleanup was triggered for the {role_name} (``{role_id}``) role by **{user}** (``{user_id}``).",
+  "config_mute_cleanup_complete": "Mute role cleanup completed for the {role_name} (``{role_id}``) role",
+  "config_mute_cleanup_failed": "Mute role cleanup failed for {count, plural, one {1 channel} other {# channels}}",
+  "mute_cleanup": "Mute cleanup",
+  "config_dash_security_change": "The required permission level for {type} on the dashboard was changed from {old} to {new} by **{user}** (``{user_id}``).",
+  "config_dash_security_access": "dashboard access",
+  "config_dash_security_infractions": "infraction access",
+  "config_dash_security_view_config": "seeing the configuration",
+  "config_dash_security_alter_config": "altering the configuration"
 }

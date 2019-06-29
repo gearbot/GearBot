@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from Util import Translator, Emoji, Utils
+from Util import Translator, Emoji, Utils, Permissioncheckers
 
 
 def server_info_embed(guild, request_guild=None):
@@ -109,7 +109,8 @@ def server_info_raw(guild):
                 "color": '#{:0>6x}'.format(r.color.value),
                 "members": len(r.members),
                 "is_admin": r.permissions.administrator,
-                "is_mod": r.permissions.ban_members
+                "is_mod": r.permissions.ban_members,
+                "can_be_self_role": not r.managed and guild.me.top_role > r and r.id != guild.id
             } for r in guild.roles},
         emojis=[
             {

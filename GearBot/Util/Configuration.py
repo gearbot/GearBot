@@ -227,6 +227,26 @@ def v15(config):
     add_logging(config, 'CONFIG_CHANGES')
 
 
+def v16(config):
+    config["DASH_SECURITY"] = {
+        "ACCESS": 2,
+        "INFRACTION": 2,
+        "VIEW_CONFIG": 2,
+        "ALTER_CONFIG": 3
+    }
+    config["PERMISSIONS"] = {
+        "LVL4_ROLES": [],
+        "LVL4_USERS": [],
+        "ADMIN_USERS": [],
+        "MOD_USERS": [],
+        "TRUSTED_USERS": []
+    }
+    for s in ["ADMIN", "MOD", "TRUSTED"]:
+        key = f'{s}_ROLES'
+        config["PERMISSIONS"][key] = config["ROLES"][key]
+        del config["ROLES"][key]
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
@@ -249,7 +269,7 @@ def move_keys(config, section, *keys):
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16]
 
 
 async def initialize(bot: commands.Bot):
@@ -281,14 +301,14 @@ def load_config(guild):
 
 
 def validate_config(guild):
-    for key in ["ADMIN_ROLES", "MOD_ROLES", "SELF_ROLES", "TRUSTED_ROLES"]:
+    for key in ["ADMIN_ROLES", "MOD_ROLES", "TRUSTED_ROLES"]:
         checklist(guild.id, key, guild.get_role)
 
 
 def checklist(guid, key, getter):
     changed = False
     tr = list()
-    cl = get_var(guid, "ROLES", key)
+    cl = get_var(guid, "PERMISSIONS", key)
     for c in cl:
         if getter(c) is None:
             tr.append(c)

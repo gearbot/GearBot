@@ -1,5 +1,5 @@
 {
-	"VERSION": 15,
+	"VERSION": 16,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -9,10 +9,7 @@
 		"TIMEZONE": "Europe/Brussels"
 	},
 	"ROLES": {
-		"ADMIN_ROLES": [],
-		"MOD_ROLES": [],
 		"SELF_ROLES": [],
-		"TRUSTED_ROLES": [],
 		"ROLE_LIST": [],
 		"ROLE_WHITELIST": true,
 		"MUTE_ROLE": 0
@@ -45,5 +42,21 @@
 		"EXEMPT_ROLES": [],
 		"EXEMPT_USERS": [],
 		"BUCKETS": []
+	},
+	"DASH_SECURITY": {
+		"ACCESS": 2,
+		"INFRACTION": 2,
+		"VIEW_CONFIG": 2,
+		"ALTER_CONFIG": 3
+	},
+	"PERMISSIONS": {
+		"LVL4_ROLES": [],
+		"LVL4_USERS":  [],
+		"ADMIN_ROLES": [],
+		"ADMIN_USERS": [],
+		"MOD_ROLES": [],
+		"MOD_USERS": [],
+		"TRUSTED_ROLES": [],
+		"TRUSTED_USERS": []
 	}
 }

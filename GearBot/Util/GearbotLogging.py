@@ -153,6 +153,13 @@ LOG_TYPES = {
     "config_mute_role_disabled": log_type('CONFIG_CHANGES', 'WRENCH'),
     "config_mute_role_changed": log_type('CONFIG_CHANGES', 'WRENCH'),
     "config_mute_role_set": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_triggered": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_complete": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_failed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_triggered": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_complete": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_failed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_dash_security_change": log_type('CONFIG_CHANGES', 'WRENCH')
 
 
 

@@ -2,8 +2,15 @@ import asyncio
 
 from pytz import UnknownTimeZoneError, timezone
 
-from Util import GearbotLogging, Utils, Translator, Configuration
+from Util import GearbotLogging, Utils, Translator, Configuration, Permissioncheckers
 from database.DatabaseConnector import Infraction
+
+BOT = None
+
+
+def initialize(bot_in):
+    global BOT
+    BOT = bot_in
 
 
 class ValidationException(Exception):
@@ -13,7 +20,7 @@ class ValidationException(Exception):
 
 
 def check_type(valid_type, allow_none=False, **illegal):
-    def checker(guild, value):
+    def checker(guild, value, preview, user):
         if value is None and not allow_none:
             return "This value can not be none"
         if not isinstance(value, valid_type):
@@ -26,7 +33,7 @@ def check_type(valid_type, allow_none=False, **illegal):
 
 
 def validate_list_type(valid_type, allow_none=False, **illegal):
-    def checker(guild, bad_list):
+    def checker(guild, bad_list, preview, user):
         for value in bad_list:
             if value is not None and not allow_none:
                 return f"A value in the group, {value}, was not defined!"
@@ -39,7 +46,7 @@ def validate_list_type(valid_type, allow_none=False, **illegal):
     return checker
 
 
-def validate_timezone(guild, value):
+def validate_timezone(guild, value, preview, user):
     try:
         timezone(value)
         return True
@@ -48,16 +55,17 @@ def validate_timezone(guild, value):
 
 
 def validate_role(allow_everyone=False, allow_zero=False):
-    def validator(guild, role_id):
+    def validator(guild, role_id, preview, user):
         if guild.get_role(role_id) is None and not allow_zero:
             return "Unable to find a role with that id on the server"
         if guild.id == role_id and not allow_everyone:
             return "You can't use the @everyone role here!"
         return True
+
     return validator
 
 
-def validate_role_list(guild, role_list):
+def validate_role_list(guild, role_list, preview, user):
     for role in role_list:
         # Make sure the roles are the right type
         if not isinstance(role, int):
@@ -71,7 +79,7 @@ def validate_role_list(guild, role_list):
 
 
 def check_number_range(lower, upper):
-    def checker(guild, value):
+    def checker(guild, value, preview, user):
         if value < lower:
             return f"Value too low, must be at least {lower}"
         if value > upper:
@@ -82,12 +90,24 @@ def check_number_range(lower, upper):
 
 
 def multicheck(*args):
-    def check(guild, value):
+    def check(guild, value, preview, user):
         for arg in args:
-            validator = arg(guild, value)
+            validator = arg(guild, value, preview, user)
             if validator is not True:
                 return validator
         return True
+
+    return check
+
+
+def perm_range_check(lower, upper, other_min=None):
+    def check(guild, value, preview, user):
+        user_lvl = Permissioncheckers.user_lvl(user)
+        new_upper = min(upper, user_lvl)
+        new_lower = lower
+        if other_min is not None:
+            new_lower = max(lower, preview[other_min])
+        return check_number_range(new_lower, new_upper)(guild, value, preview, user)
 
     return check
 
@@ -103,14 +123,23 @@ VALIDATORS = {
         "NEW_USER_THRESHOLD": multicheck(check_type(int), check_number_range(0, 60 * 60 * 24 * 14)),
         "TIMEZONE": validate_timezone
     },
-    "ROLES": {
+    "PERMISSIONS": {
+        "LVL4_ROLES": validate_role_list,
         "ADMIN_ROLES": validate_role_list,
         "MOD_ROLES": validate_role_list,
-        "SELF_ROLES": validate_role_list,
         "TRUSTED_ROLES": validate_role_list,
+    },
+    "ROLES": {
+        "SELF_ROLES": validate_role_list,
         "ROLE_LIST": validate_role_list,
         "ROLE_WHITELIST": check_type(bool),
         "MUTE_ROLE": multicheck(check_type(int), validate_role(allow_zero=True))
+    },
+    "DASH_SECURITY": {
+        "ACCESS": perm_range_check(1, 5),
+        "INFRACTION": perm_range_check(1, 5, other_min="ACCESS"),
+        "VIEW_CONFIG": perm_range_check(1, 5, other_min="ACCESS"),
+        "ALTER_CONFIG": perm_range_check(2, 5, other_min="VIEW_CONFIG")
     }
 }
 
@@ -176,16 +205,39 @@ def swap_mute_role(guild, old, new, parts):
             GearbotLogging.log_to(guild.id, "config_mute_role_set", **parts)
 
 
+def self_role_updater(guild, old, new, parts):
+    role_list_logger("SELF")(guild, old, new, parts)
+    BOT.dispatch("self_roles_update", guild.id)
+
+
+def dash_perm_change_logger(t):
+    def handler(guild, old, new, parts):
+        GearbotLogging.log_to(guild.id, f"config_dash_security_change",
+                              type=Translator.translate(f'config_dash_security_{t.lower()}', guild.id),
+                              old=Translator.translate(f'perm_lvl_{old}', guild.id),
+                              new=Translator.translate(f'perm_lvl_{new}', guild.id), **parts)
+
+    return handler
+
+
 SPECIAL_HANDLERS = {
     "ROLES": {
         "MUTE_ROLE": swap_mute_role,
+        "SELF_ROLES": self_role_updater,
+    },
+    "PERMISSIONS": {
+        "LVL4_ROLES": role_list_logger("LVL4"),
         "ADMIN_ROLES": role_list_logger("ADMIN"),
         "MOD_ROLES": role_list_logger("MOD"),
         "TRUSTED_ROLES": role_list_logger("TRUSTED"),
-        "SELF_ROLES": role_list_logger("SELF"),
+    },
+    "DASH_SECURITY": {
+        "ACCESS": dash_perm_change_logger("ACCESS"),
+        "INFRACTION": dash_perm_change_logger("INFRACTION"),
+        "VIEW_CONFIG": dash_perm_change_logger("VIEW_CONFIG"),
+        "ALTER_CONFIG": dash_perm_change_logger("ALTER_CONFIG")
     }
 }
-
 
 
 def is_numeric(value):
@@ -201,12 +253,13 @@ def update_config_section(guild, section, new_values, user):
     errors = dict()
     guild_config = Configuration.get_var(guild.id, section)
 
-    if section == "ROLES":
-        new_values = {
-            k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(v) else v for k, v in new_values.items()
-        }
+    new_values = {
+        k: [int(rid) if is_numeric(rid) else rid for rid in v] if isinstance(v, list) else int(v) if is_numeric(
+            v) else v for k, v in new_values.items()}
 
     modified_values = new_values.copy()
+    preview = guild_config.copy()
+    preview.update(**new_values)
 
     for k, v in new_values.items():
         if k not in fields:
@@ -214,7 +267,7 @@ def update_config_section(guild, section, new_values, user):
         elif guild_config[k] == v:
             modified_values.pop(k)
         else:
-            validated = fields[k](guild, v)
+            validated = fields[k](guild, v, preview, user)
             if validated is not True:
                 errors[k] = validated
 
@@ -239,6 +292,8 @@ def update_config_section(guild, section, new_values, user):
                                   option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
                                   old=old[k], new=modified_values[k], **user_parts)
 
-    if section == "ROLES":
-        guild_config = {k: [str(rid) for rid in v] if isinstance(v, list) else str(v) for k, v in guild_config.items()}
-    return dict(status="Updated", modified_values=guild_config)
+    to_return = {
+        k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) else str(v) if isinstance(v,
+                                                                                                                     int) else v
+        for k, v in guild_config.items()}
+    return dict(status="Updated", modified_values=to_return)

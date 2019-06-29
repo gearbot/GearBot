@@ -19,7 +19,7 @@ class ServerHolder(object):
         self.name = sid
 
 
-async def add_item(ctx, item, item_type, config_section="ROLES", list_name="roles"):
+async def add_item(ctx, item, item_type, config_section="PERMISSIONS", list_name="roles"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
@@ -36,7 +36,7 @@ async def add_item(ctx, item, item_type, config_section="ROLES", list_name="role
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
 
 
-async def remove_item(ctx, item, item_type, config_section="ROLES", list_name="roles"):
+async def remove_item(ctx, item, item_type, config_section="PERMISSIONS", list_name="roles"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
@@ -50,7 +50,7 @@ async def remove_item(ctx, item, item_type, config_section="ROLES", list_name="r
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_removed', ctx, item=item.name)}")
 
 
-async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>", config_section="ROLES"):
+async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>", config_section="PERMISSIONS"):
     target = f"{item_type}_{list_name}".upper()
     items = Configuration.get_var(ctx.guild.id, config_section, target)
     if len(items) == 0:
@@ -76,7 +76,7 @@ class Serveradmin(BaseCog):
 
     LOGGING_TYPES = [
         "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSORED_MESSAGES", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED",
-        "CHANNEL_CHANGES", "VOICE_CHANGES", "VOICE_CHANGES_DETAILED", "FUTURE_LOGS", "SPAM_VIOLATION", "CONFIG_CHANGES"
+        "CHANNEL_CHANGES", "VOICE_CHANGES", "VOICE_CHANGES_DETAILED", "FUTURE_LOGS", "SPAM_VIOLATION", "CONFIG_CHANGES", "RAID_LOGS"
     ]
 
     def __init__(self, bot):
@@ -946,18 +946,6 @@ class Serveradmin(BaseCog):
                 else:
                     Configuration.set_var(ctx.guild.id, "GENERAL", "TIMEZONE", zone)
                     await MessageUtils.send_to(ctx, "YES", "timezone_set", timezone=zone)
-
-    @commands.Cog.listener()
-    async def on_guild_role_delete(self, role):
-        lists = ["ROLE_LIST", "TRUSTED_ROLES", "MOD_ROLES", "ADMIN_ROLES"]
-        changed = False
-        for l in lists:
-            roles = Configuration.get_var(role.guild.id, "ROLES", l)
-            if role.id in roles:
-                roles.remove(role.id)
-                changed = True
-        if changed:
-            Configuration.save(role.guild.id)
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):

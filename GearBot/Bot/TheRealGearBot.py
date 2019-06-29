@@ -17,7 +17,7 @@ from discord.ext import commands
 from peewee import PeeweeException
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
-    server_info
+    server_info, DashConfig
 from database import DatabaseConnector
 
 
@@ -76,6 +76,7 @@ async def initialize(bot, startup=False):
         await Translator.initialize(bot)
         bot.being_cleaned.clear()
         await Configuration.initialize(bot)
+        DashConfig.initialize(bot)
     except Exception as ex:
         #make sure we always unlock, even when something went wrong!
         bot.locked = False
