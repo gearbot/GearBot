@@ -129,7 +129,7 @@ def get_user_lvl(ctx: commands.Context):
 
 
 def user_lvl(member):
-    if member.guild.owner == member:
+    if member.guild.owner.id == member.id:
         return 5
     if is_lvl4(member):
         return 4
@@ -139,3 +139,4 @@ def user_lvl(member):
         return 2
     if is_trusted(member):
         return 1
+    return 0
