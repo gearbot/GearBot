@@ -231,6 +231,28 @@ class Serveradmin(BaseCog):
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
         await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
 
+    @configure.command(name="censortrustedbypass")
+    async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
+        config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS")
+        
+        if enabled_status is None:
+            await ctx.send(f"{Translator.translate('missing_arg', ctx, arg='enabled')}")
+
+        if enabled_status == True:
+            message = MessageUtils.assemble(ctx, "YES", "features_enabled", count=1) + "Censor Trusted Bypass"
+        else:
+            message = MessageUtils.assemble(ctx, "YES", "features_disabled", count=1) + "Censor Trusted Bypass"
+
+        if enabled_status == config_status:
+            if enabled_status == True:
+                message = MessageUtils.assemble(ctx, "NO", "feature_already_enabled", count=1) + "Censor Trusted Bypass"
+            else:
+                message = MessageUtils.assemble(ctx, "NO", "feature_already_disabled", count=1) + "Censor Trusted Bypass"
+        else:
+            Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS", enabled_status)
+
+        await ctx.send(message)
+
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """configure_ignored_users_help"""

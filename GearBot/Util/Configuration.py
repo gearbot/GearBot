@@ -246,6 +246,9 @@ def v16(config):
         config["PERMISSIONS"][key] = config["ROLES"][key]
         del config["ROLES"][key]
 
+def v17(config):
+    config["CENSORING"]["ALLOW_TRUSTED_BYPASS"] = False
+
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
@@ -269,7 +272,7 @@ def move_keys(config, section, *keys):
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17]
 
 
 async def initialize(bot: commands.Bot):
