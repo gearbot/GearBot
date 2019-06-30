@@ -315,6 +315,13 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
     async def _ban(self, ctx, user, reason, confirm, days=0):
+        banned_member = ctx.guild.get_member(user.id)
+
+        # Check if they aren't here anymore so we don't error if they leave first
+        if banned_member and banned_member.top_role > ctx.guild.me.top_role:
+            await MessageUtils.send_to(ctx, "NO", "ban_unable", user=Utils.clean_user(user))
+            return
+        
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
