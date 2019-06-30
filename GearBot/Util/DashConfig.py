@@ -14,7 +14,6 @@ def initialize(bot_in):
 
 
 class ValidationException(Exception):
-
     def __init__(self, errors) -> None:
         self.errors = errors
 
@@ -36,11 +35,11 @@ def validate_list_type(valid_type, allow_none=False, **illegal):
     def checker(guild, bad_list, preview, user):
         for value in bad_list:
             if value is not None and not allow_none:
-                return f"A value in the group, {value}, was not defined!"
+                return f"A value in the group, '{value}', was not defined!"
             if not isinstance(value, valid_type):
-                return f"A value in the group, {value}, is the wrong type! It should be a {valid_type}"
+                return f"A value in the group, '{value}', is the wrong type! It should be a {valid_type}"
             if value in illegal:
-                return f"A value in the group, {value}, is not allowed!"
+                return f"A value in the group, '{value}', is not allowed!"
             return True
 
     return checker
@@ -55,25 +54,50 @@ def validate_timezone(guild, value, preview, user):
 
 
 def validate_role(allow_everyone=False, allow_zero=False):
-    def validator(guild, role_id, preview, user):
-        if guild.get_role(role_id) is None and not allow_zero:
+    def validator(guild, role_id, preview, user, new_values):
+        role_type = list(new_values.keys())[0]
+
+        role = guild.get_role(role_id)
+        if role is None and not allow_zero:
             return "Unable to find a role with that id on the server"
         if guild.id == role_id and not allow_everyone:
-            return "You can't use the @everyone role here!"
+            return "You can't use the '@everyone' role here!"
+        if role_type == "SELF_ROLES":
+            role = guild.get_role(role)
+            if not(guild.me.top_role > role and role.managed == False):
+                return "The specified role can not be managed by Gearbot!"
+
         return True
 
     return validator
 
 
-def validate_role_list(guild, role_list, preview, user):
-    for role in role_list:
+def validate_role_list(guild, role_list, preview, user, new_values):
+    rolelist_type = list(new_values.keys())[0]
+
+    last_role_id = None
+    for role_id in role_list:
         # Make sure the roles are the right type
-        if not isinstance(role, int):
-            return f"One of the roles, {role}, is not a integer!"
+        if not isinstance(role_id, int):
+            return f"One of the roles, '{role}', is not a integer!"
 
         # Check if the role exists
-        if guild.get_role(role) is None:
-            return f"One of the roles, {role}, is not valid!"
+        if role_id is None:
+            return f"One of the roles, '{role}', is not valid!"
+
+        if role_id == guild.id:
+            return "You can't use the '@everyone' role here!"
+        
+        # Validate that there are no duplicate roles in the list
+        if role_id == last_role_id:
+            return f"The role '{role}' was specified twice!"
+
+        if rolelist_type == "SELF_ROLES":
+            role = guild.get_role(role_id)
+            if not(guild.me.top_role > role and role.managed == False):
+                return f"The specified role, {role_id}, can not be managed by Gearbot!"
+
+        last_role = role_id
 
     return True
 
@@ -114,9 +138,10 @@ def perm_range_check(lower, upper, other_min=None):
 
 VALIDATORS = {
     "GENERAL": {
-        "PREFIX": multicheck(check_type(str),
-                             lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(
-                                 v) is 0 else True),
+        "PREFIX": multicheck(
+            check_type(str),
+            lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
+
         "LANG": lambda g, v: v in Translator.LANGS or "Unknown language",
         "PERM_DENIED_MESSAGE": check_type(bool),
         "TIMESTAMPS": check_type(bool),
@@ -151,14 +176,24 @@ def role_list_logger(t):
         for r in removed:
             role = guild.get_role(int(r))
             role_name = Utils.escape_markdown(role.name) if role is not None else r
-            GearbotLogging.log_to(guild.id, f"config_change_role_removed", role_name=role_name, role_id=r, type=t,
-                                  **user_parts)
+            GearbotLogging.log_to(
+                guild.id, 
+                f"config_change_role_removed", 
+                role_name=role_name, role_id=r, type=t,
+                **user_parts
+            )
 
         for r in added:
             role = guild.get_role(int(r))
             role_name = Utils.escape_markdown(role.name) if role is not None else r
-            GearbotLogging.log_to(guild.id, f"config_change_role_added", role_name=role_name, role_id=r, type=t,
-                                  **user_parts)
+            GearbotLogging.log_to(
+                guild.id,
+                f"config_change_role_added", 
+                role_name=role_name, 
+                role_id=r, 
+                type=t,
+                **user_parts
+            )
 
     return handler
 
@@ -180,6 +215,7 @@ async def role_adder(active_mutes, guild, role):
 def swap_mute_role(guild, old, new, parts):
     active_mutes = Infraction.select().where(
         (Infraction.type == "Mute") & (Infraction.guild_id == guild.id) & Infraction.active)
+
     loop = asyncio.get_running_loop()
 
     old_role = guild.get_role(old)
@@ -212,10 +248,13 @@ def self_role_updater(guild, old, new, parts):
 
 def dash_perm_change_logger(t):
     def handler(guild, old, new, parts):
-        GearbotLogging.log_to(guild.id, f"config_dash_security_change",
-                              type=Translator.translate(f'config_dash_security_{t.lower()}', guild.id),
-                              old=Translator.translate(f'perm_lvl_{old}', guild.id),
-                              new=Translator.translate(f'perm_lvl_{new}', guild.id), **parts)
+        GearbotLogging.log_to(
+            guild.id, 
+            f"config_dash_security_change",
+            type=Translator.translate(f'config_dash_security_{t.lower()}', guild.id),
+            old=Translator.translate(f'perm_lvl_{old}', guild.id),
+            new=Translator.translate(f'perm_lvl_{new}', guild.id), **parts
+        )
 
     return handler
 
@@ -267,7 +306,7 @@ def update_config_section(guild, section, new_values, user):
         elif guild_config[k] == v:
             modified_values.pop(k)
         else:
-            validated = fields[k](guild, v, preview, user)
+            validated = fields[k](guild, v, preview, user, new_values)
             if validated is not True:
                 errors[k] = validated
 
@@ -288,12 +327,15 @@ def update_config_section(guild, section, new_values, user):
         if section in SPECIAL_HANDLERS and k in SPECIAL_HANDLERS[section]:
             SPECIAL_HANDLERS[section][k](guild, old[k], modified_values[k], user_parts)
         else:
-            GearbotLogging.log_to(guild.id, "config_change",
-                                  option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
-                                  old=old[k], new=modified_values[k], **user_parts)
+            GearbotLogging.log_to(
+                guild.id, 
+                "config_change",
+                option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
+                old=old[k], new=modified_values[k], **user_parts
+            )
 
     to_return = {
-        k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) else str(v) if isinstance(v,
-                                                                                                                     int) else v
-        for k, v in guild_config.items()}
+        k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) 
+        else str(v) if isinstance(v, int) else v for k, v in guild_config.items()
+    }
     return dict(status="Updated", modified_values=to_return)
