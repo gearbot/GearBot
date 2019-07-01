@@ -203,17 +203,17 @@ class Serveradmin(BaseCog):
     async def self_roles(self, ctx:commands.Context):
         """configure_self_roles_help"""
         if ctx.invoked_subcommand is None:
-            await list_list(ctx, 'self')
+            await list_list(ctx, 'self', config_section="ROLES")
 
     @self_roles.command()
     async def add(self, ctx:commands.Context, *, role:discord.Role):
-        await add_item(ctx, role, 'self')
+        await add_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @self_roles.command()
     async def remove(self, ctx:commands.Context, *, role:discord.Role):
-        await remove_item(ctx, role, 'self')
+        await remove_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
 
