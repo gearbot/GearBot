@@ -45,6 +45,10 @@ class Infractions(BaseCog):
                 message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
                 await Confirmation.confirm(ctx, message, on_yes=yes)
             else:
+                if member.bot:
+                    await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
+                    return
+
                 i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                 name = Utils.clean_user(member)
                 await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
