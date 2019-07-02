@@ -584,6 +584,7 @@
   "inf_search_compiling": "Looking up things and stuff, I think",
   "inf_summary": "Infraction summary:",
   "warn": "Warning",
+  "cant_warn_bot": "Why are you trying to warn a bot? Maybe try contacting the bot author instead",
   "ban": "Ban",
   "forced ban": "Forced ban",
   "mute": "Mute",
