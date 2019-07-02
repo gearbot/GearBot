@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils
-from Util.Converters import UserID, Guild
+from Util.Converters import UserID, Guild, DiscordUser
 
 
 class Admin(BaseCog):
@@ -145,12 +145,22 @@ class Admin(BaseCog):
         await ctx.invoke(self.bot.get_command("hotreload"))
 
     @commands.command()
-    async def blacklist(self, ctx, guild: Guild):
-        blocked = Configuration.get_persistent_var("blacklist", [])
+    async def blacklist_server(self, ctx, guild: Guild):
+        blocked = Configuration.get_persistent_var("server_blacklist", [])
         blocked.append(guild.id)
-        Configuration.set_persistent_var("blacklist", blocked)
+        Configuration.set_persistent_var("server_blacklist", blocked)
         await guild.leave()
         await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist", translate=False)
+
+    @commands.command()
+    async def blacklist_user(self, ctx, user:DiscordUser):
+        for guild in self.bot.guilds:
+            if guild.owner.id == user.id:
+                await guild.leave()
+        blocked = Configuration.get_persistent_var("user_blacklist", [])
+        blocked.append(user.id)
+        Configuration.set_persistent_var("user_blacklist", blocked)
+        await MessageUtils.send_to(ctx, "YES",f"{Utils.clean_user(user)} (``{user.id}``) has been added to the blacklist", translate=False)
 
     @commands.command()
     async def pendingchanges(self, ctx):

@@ -1,7 +1,9 @@
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
 MASTER_LOADED = False
+PERSISTENT_LOADED = False
 CONFIG_VERSION = 0
+PERSISTENT = dict()
 
 
 # Ugly but this prevents import loop errors
@@ -365,12 +367,18 @@ def save_master():
         jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
 
 
+def load_persistent():
+    global PERSISTENT_LOADED, PERSISTENT
+    PERSISTENT = Utils.fetch_from_disk('persistent')
+    PERSISTENT_LOADED = True
+
+
 def get_persistent_var(key, default):
-    PERSISTENT = Utils.fetch_from_disk("persistent")
+    if not PERSISTENT_LOADED:
+        load_persistent()
     return PERSISTENT[key] if key in PERSISTENT else default
 
 
 def set_persistent_var(key, value):
-    PERSISTENT = Utils.fetch_from_disk("persistent")
     PERSISTENT[key] = value
     Utils.save_to_disk("persistent", PERSISTENT)
