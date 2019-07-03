@@ -45,7 +45,7 @@ def validate_list_type(valid_type, allow_none=False, **illegal):
     return checker
 
 
-def validate_timezone(guild, value, preview, user):
+def validate_timezone(guild, value, preview, user, *_):
     try:
         timezone(value)
         return True
@@ -114,9 +114,9 @@ def check_number_range(lower, upper):
 
 
 def multicheck(*args):
-    def check(guild, value, preview, user, *_):
+    def check(*checkargs):
         for arg in args:
-            validator = arg(guild, value, preview, user)
+            validator = arg(*checkargs)
             if validator is not True:
                 return validator
         return True
