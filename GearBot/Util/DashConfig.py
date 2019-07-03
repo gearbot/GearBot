@@ -19,7 +19,7 @@ class ValidationException(Exception):
 
 
 def check_type(valid_type, allow_none=False, **illegal):
-    def checker(guild, value, preview, user):
+    def checker(guild, value, preview, user, *_):
         if value is None and not allow_none:
             return "This value can not be none"
         if not isinstance(value, valid_type):
@@ -32,7 +32,7 @@ def check_type(valid_type, allow_none=False, **illegal):
 
 
 def validate_list_type(valid_type, allow_none=False, **illegal):
-    def checker(guild, bad_list, preview, user):
+    def checker(guild, bad_list, preview, user, *_):
         for value in bad_list:
             if value is not None and not allow_none:
                 return f"A value in the group, '{value}', was not defined!"
@@ -103,7 +103,7 @@ def validate_role_list(guild, role_list, preview, user, new_values):
 
 
 def check_number_range(lower, upper):
-    def checker(guild, value, preview, user):
+    def checker(guild, value, preview, user, *_):
         if value < lower:
             return f"Value too low, must be at least {lower}"
         if value > upper:
@@ -114,7 +114,7 @@ def check_number_range(lower, upper):
 
 
 def multicheck(*args):
-    def check(guild, value, preview, user):
+    def check(guild, value, preview, user, *_):
         for arg in args:
             validator = arg(guild, value, preview, user)
             if validator is not True:
@@ -125,7 +125,7 @@ def multicheck(*args):
 
 
 def perm_range_check(lower, upper, other_min=None):
-    def check(guild, value, preview, user):
+    def check(guild, value, preview, user, *_):
         user_lvl = Permissioncheckers.user_lvl(user)
         new_upper = min(upper, user_lvl)
         new_lower = lower
@@ -140,9 +140,9 @@ VALIDATORS = {
     "GENERAL": {
         "PREFIX": multicheck(
             check_type(str),
-            lambda g, v: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
+            lambda g, v, *_: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
 
-        "LANG": lambda g, v: v in Translator.LANGS or "Unknown language",
+        "LANG": lambda g, v, *_: v in Translator.LANGS or "Unknown language",
         "PERM_DENIED_MESSAGE": check_type(bool),
         "TIMESTAMPS": check_type(bool),
         "NEW_USER_THRESHOLD": multicheck(check_type(int), check_number_range(0, 60 * 60 * 24 * 14)),
