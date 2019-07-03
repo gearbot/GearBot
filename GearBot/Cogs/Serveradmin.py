@@ -19,7 +19,7 @@ class ServerHolder(object):
         self.name = sid
 
 
-async def add_item(ctx, item, item_type, config_section="PERMISSIONS", list_name="roles"):
+async def add_item(ctx, item, item_type, list_name="roles", config_section="PERMISSIONS"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
