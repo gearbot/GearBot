@@ -77,14 +77,12 @@ class Moderation(BaseCog):
 
     @staticmethod
     def _can_act(action, ctx, user, check_bot=True):
-        member = ctx.guild.get_member(user.id)
-
-        # Check if they aren't here anymore so we don't error if they leave first
-        if member and member.top_role > ctx.guild.me.top_role:
-            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
-
         if not isinstance(user, discord.Member):
             return True, None
+
+        # Check if they aren't here anymore so we don't error if they leave first
+        if user and user.top_role > ctx.guild.me.top_role:
+            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
 
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
@@ -276,10 +274,12 @@ class Moderation(BaseCog):
         await self._ban_command(ctx, user, reason, days)
 
     async def _ban_command(self, ctx, user, reason, days):
+        member = ctx.guild.get_member(user.id)
+
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("ban", ctx, user)
+        allowed, message = self._can_act("ban", ctx, member)
         if allowed:
             await self._ban(ctx, user, reason, True, days=days)
         else:
