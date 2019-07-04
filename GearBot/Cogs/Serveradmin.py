@@ -234,20 +234,14 @@ class Serveradmin(BaseCog):
     @configure.command(name="censortrustedbypass")
     async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
         config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS")
-        
-        if enabled_status is None:
-            await ctx.send(f"{Translator.translate('missing_arg', ctx, arg='enabled')}")
 
-        if enabled_status == True:
-            message = MessageUtils.assemble(ctx, "YES", "features_enabled", count=1) + "Censor Trusted Bypass"
-        else:
-            message = MessageUtils.assemble(ctx, "YES", "features_disabled", count=1) + "Censor Trusted Bypass"
+        enabled_string = "enabled" if enabled_status else "disabled"
+        enabled_string = Translator.translate(enabled_string, ctx.guild.id)
+
+        message = MessageUtils.assemble(ctx, "YES", "censor_trusted_bypass", status=enabled_string)
 
         if enabled_status == config_status:
-            if enabled_status == True:
-                message = MessageUtils.assemble(ctx, "NO", "feature_already_enabled", count=1) + "Censor Trusted Bypass"
-            else:
-                message = MessageUtils.assemble(ctx, "NO", "feature_already_disabled", count=1) + "Censor Trusted Bypass"
+            message = MessageUtils.assemble(ctx, "NO", f"censor_trusted_bypass_unchanged", status=enabled_string)
         else:
             Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS", enabled_status)
 
