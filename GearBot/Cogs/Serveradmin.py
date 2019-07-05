@@ -231,6 +231,22 @@ class Serveradmin(BaseCog):
     async def remove_from_whitelist(self, ctx: commands.Context, server:int):
         await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
 
+    @configure.command(name="censortrustedbypass")
+    async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
+        config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS")
+
+        enabled_string = "enabled" if enabled_status else "disabled"
+        enabled_string = Translator.translate(enabled_string, ctx.guild.id)
+
+        message = MessageUtils.assemble(ctx, "YES", "censor_trusted_bypass", status=enabled_string)
+
+        if enabled_status == config_status:
+            message = MessageUtils.assemble(ctx, "NO", f"censor_trusted_bypass_unchanged", status=enabled_string)
+        else:
+            Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS", enabled_status)
+
+        await ctx.send(message)
+
     @configure.group(aliases=["ignoredUsers"])
     async def ignored_users(self, ctx):
         """configure_ignored_users_help"""

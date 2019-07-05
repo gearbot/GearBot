@@ -11,6 +11,10 @@ from Util.Matchers import INVITE_MATCHER
 
 
 async def censor_invite(ctx, code, server_name):
+    # Allow for users with a trusted role, or trusted users, to post invite links
+    if Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(ctx.author):
+        return
+
     ctx.bot.data["message_deletes"].add(ctx.message.id)
     clean_message = await clean_content().convert(ctx, ctx.message.content)
     clean_name = Utils.clean_user(ctx.message.author)
