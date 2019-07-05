@@ -1,5 +1,6 @@
 import asyncio
 import json
+from collections import OrderedDict
 from concurrent.futures import CancelledError
 
 import time
@@ -147,7 +148,7 @@ class DashLink(BaseCog):
                     "icon": str(guild.icon_url_as(size=256))
                 }
 
-        return info
+        return OrderedDict(sorted(info.items()))
 
     def get_guild_perms(self, guild_id, user_id):
         guild = self.bot.get_guild(guild_id)
