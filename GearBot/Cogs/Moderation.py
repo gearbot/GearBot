@@ -335,15 +335,15 @@ class Moderation(BaseCog):
                                          reason=reason, inf=i.id)
 
     async def _unban(self, ctx, user, reason, confirm, days=0):
-        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+        self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.unban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
         Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
                                               (Infraction.guild_id == ctx.guild.id)).execute()
         i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Unban", reason)
-        GearbotLogging.log_to(ctx.guild.id, 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
+        GearbotLogging.log_to(ctx.guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         if confirm:
-            await MessageUtils.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
+            await MessageUtils.send_to(ctx, "YES", "unban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason, inf=i.id)
 
     @commands.guild_only()
@@ -390,7 +390,7 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def munban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
-        """mban_help"""
+        """munban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
@@ -404,17 +404,13 @@ class Moderation(BaseCog):
                 except BadArgument as bad:
                     failures.append(f"{t}: {bad}")
                 else:
-                    allowed, message = self._can_act("ban", ctx, user)
-                    if allowed:
-                        try:
-                            await self._unban(ctx, user, reason, False)
-                        except NotFound:
-                            ban_not_found = Translator.translate("ban_not_found", ctx)
-                            failures.append(f"{t}: {ban_not_found}")
-                        else:
-                            valid += 1
+                    try:
+                        await self._unban(ctx, user, reason, False)
+                    except NotFound:
+                        ban_not_found = Translator.translate("ban_not_found", ctx)
+                        failures.append(f"{t}: {ban_not_found}")
                     else:
-                        failures.append(f"{t}: {message}")
+                        valid += 1
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=valid)
             if len(failures) > 0:

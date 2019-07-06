@@ -341,6 +341,7 @@
   "archive_channel_help": "Archive messages from a channel",
   "archive_user_help": "Archive messages from a user",
   "mban_help": "Bans multiple users with the same reason",
+  "munban_help": "Unbans multiple users with the same reason",
   "mkick_help": "Kicks multiple users with the same reason",
   "NaN": "Not a number",
   "number_too_small": "Number too small, must be at least {min}",
