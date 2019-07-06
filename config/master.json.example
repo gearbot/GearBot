@@ -1,6 +1,7 @@
 {
   "LOGIN_TOKEN": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "BOT_LOG_CHANNEL": 365908831328403456,
+  "MAX_API_OUTAGE_WARNINGS": 3,
   "CROWDIN_KEY": null,
   "DATABASE_HOST": "localhost",
   "DATABASE_NAME": "gearbot",
@@ -31,7 +32,5 @@
     "AntiSpam"
   ],
   "DOCS": true,
-  "DOG_KEY": "",
-  "CAT_KEY": "",
   "DISABLED_COMMANDS": []
 }
