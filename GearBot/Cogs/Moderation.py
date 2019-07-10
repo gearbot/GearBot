@@ -441,7 +441,7 @@ class Moderation(BaseCog):
                     if reason == "":
                         reason = Translator.translate("no_reason", ctx.guild.id)
                     else:
-                        reason = f"with reason {reason}"
+                        reason = f"{reason}"
                     GearbotLogging.log_to(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
                     await MessageUtils.send_to(ctx, 'YES', "verification_set", level=v1, reason=reason)
 
