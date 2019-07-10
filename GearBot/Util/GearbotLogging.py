@@ -159,7 +159,8 @@ LOG_TYPES = {
     "config_mute_cleanup_triggered": log_type('CONFIG_CHANGES', 'WRENCH'),
     "config_mute_cleanup_complete": log_type('CONFIG_CHANGES', 'WRENCH'),
     "config_mute_cleanup_failed": log_type('CONFIG_CHANGES', 'WRENCH'),
-    "config_dash_security_change": log_type('CONFIG_CHANGES', 'WRENCH')
+    "config_dash_security_change": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "verification_log": log_type('MOD_ACTIONS', 'WRENCH')
 
 
 

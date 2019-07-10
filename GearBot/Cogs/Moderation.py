@@ -29,6 +29,7 @@ class Moderation(BaseCog):
                 "userinfo": {"required": 2, "min": 0, "max": 6},
                 "serverinfo": {"required": 2, "min": 0, "max": 6},
                 "roles": {"required": 2, "min": 0, "max": 6},
+                "verification": {"required": 3, "min": 2, "max": 6},
             }
         })
         self.running = True
@@ -424,6 +425,26 @@ class Moderation(BaseCog):
             else:
                 GearbotLogging.log_to(ctx.guild.id, "slowmode_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, channel=channel.mention, channel_id=channel.id, duration=duration)
                 await MessageUtils.send_to(ctx, 'YES', "slowmode_set", duration=duration, channel=channel.mention)
+    
+    @commands.command()
+    @commands.guild_only()
+    async def verification(self, ctx: commands.Context, level: str, *, reason: str = None):
+        """verification_help"""
+        v1 = discord.VerificationLevel.__members__.get(level.lower())
+        if v1 is not None:
+            if ctx.guild.verification_level != v1:
+                try:
+                    await ctx.guild.edit(verification_level=v1, reason=reason)
+                except discord.Forbidden:
+                    await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
+                    return
+                else:
+                    if reason is None:
+                        reason = ''
+                    else:
+                        reason = f"with reason `{reason}`"
+                        GearbotLogging.log_to(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
+                        await MessageUtils.send_to(ctx, 'YES', "verification_set", level=v1, reason=reason)
 
     @commands.command()
     @commands.guild_only()
