@@ -437,7 +437,6 @@ class Moderation(BaseCog):
                     await ctx.guild.edit(verification_level=v1, reason=reason)
                 except discord.Forbidden:
                     await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
-                    return
                 else:
                     if reason is None:
                         reason = ''
