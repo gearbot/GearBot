@@ -1,10 +1,12 @@
-#ugly but this prevents import loop errors
-
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
 MASTER_LOADED = False
+PERSISTENT_LOADED = False
 CONFIG_VERSION = 0
+PERSISTENT = dict()
 
+
+# Ugly but this prevents import loop errors
 def load_master():
     global MASTER_CONFIG, MASTER_LOADED
     try:
@@ -18,6 +20,7 @@ def load_master():
         print(e)
         raise e
 
+
 def get_master_var(key, default=None):
     global MASTER_CONFIG, MASTER_LOADED
     if not MASTER_LOADED:
@@ -27,12 +30,13 @@ def get_master_var(key, default=None):
         save_master()
     return MASTER_CONFIG[key]
 
+
 import json
 import os
 
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils, Features
+from Util import GearbotLogging, Utils, Features, Translator
 
 
 def initial_migration(config):
@@ -73,6 +77,7 @@ def v2(config):
     config["MAX_MENTIONS"] = 0
     config["EMBED_EDIT_LOGS"] = True
 
+
 def v3(config):
     for v in ["JOIN_LOGS", "MOD_ACTIONS", "NAME_CHANGES", "ROLE_CHANGES", "COMMAND_EXECUTED"]:
         del config[v]
@@ -81,6 +86,7 @@ def v3(config):
         if "CENSOR_LOGS" in info:
             info.remove("CENSOR_LOGS")
             info.append("CENSORED_MESSAGES")
+
 
 def v4(config):
     if "CENSOR_LOGS" in config.keys():
@@ -92,6 +98,7 @@ def v4(config):
             info.append("VOICE_CHANGES")
             info.append("VOICE_CHANGES_DETAILED")
 
+
 def v5(config):
     config["ROLE_WHITELIST"] = True
     config["ROLE_LIST"] = []
@@ -99,17 +106,21 @@ def v5(config):
         config["PERM_OVERRIDES"]["self_role"] = config["PERM_OVERRIDES"]["role"]
         del config["PERM_OVERRIDES"]["role"]
 
+
 def v6(config):
     config["IGNORED_CHANNELS_CHANGES"] = []
     config["IGNORED_CHANNELS_OTHER"] = []
+
 
 def v7(config):
     config["RAID_DETECTION"] = False
     config["RAID_TIME_LIMIT"] = 0
     config["RAID_TRIGGER_AMOUNT"] = 0
     config["RAID_CHANNEL"] = 0
-    config["RAID_MESSAGE"] = "<:gearDND:528335386238255106> RAID DETECTED, CALLING REINFORCEMENTS! <:gearDND:528335386238255106>"
+    config[
+        "RAID_MESSAGE"] = "<:gearDND:528335386238255106> RAID DETECTED, CALLING REINFORCEMENTS! <:gearDND:528335386238255106>"
     config["TIMEZONE"] = "Europe/Brussels"
+
 
 def v8(config):
     for k in ["RAID_DETECTION", "RAID_TIME_LIMIT", "RAID_TRIGGER_AMOUNT", "RAID_CHANNEL"]:
@@ -122,6 +133,7 @@ def v8(config):
         "NEXT_ID": 0
     }
     add_logging(config, "RAID_LOGS")
+
 
 def v9(config):
     for k in ["cat", "dog", "jumbo"]:
@@ -139,13 +151,131 @@ def v9(config):
                 del b[k]
 
 
+def v10(config):
+    config["ANTI_SPAM"] = {
+        "ENABLED": False,
+        "EXEMPT_ROLES": [],
+        "EXEMPT_USERS": [],
+        "BUCKETS": []
+    }
+    if config["MAX_MENTIONS"] > 0:
+        config["ANTI_SPAM"]["ENABLED"] = True
+        config["ANTI_SPAM"]["BUCKETS"] = [
+            {
+                "TYPE": "max_mentions",
+                "SIZE": {
+                    "COUNT": config["MAX_MENTIONS"],
+                    "PERIOD": 5
+                },
+                "PUNISHMENT": {
+                    "TYPE": "ban"
+                }
+            }
+        ]
+        del config["MAX_MENTIONS"]
+
+
+def v11(config):
+    for cid, info in config["LOG_CHANNELS"].items():
+        if "MOD_ACTIONS" in info:
+            info.append("SPAM_VIOLATION")
+
+
+def v12(config):
+    config["NEW_USER_THRESHOLD"] = 86400
+
+
+def v13(config):
+    # fix antispam configs
+    nuke_keys(config["ANTI_SPAM"], "CLEAN", "MAX_DUPLICATES", "MAX_MENTIONS", "MAX_MESSAGES", "MAX_NEWLINES",
+              "PUNISHMENT",
+              "PUNISHMENT_DURATION")
+    if "BUCKETS" not in config["ANTI_SPAM"]:
+        config["ANTI_SPAM"] = []
+
+    # cleanup old junk
+    nuke_keys(config, "DEV_ROLE", "FUTURE_LOGS")
+
+    # restructuring
+    move_keys(config, "GENERAL", "LANG", "PERM_DENIED_MESSAGE", "PREFIX", "TIMESTAMPS", "NEW_USER_THRESHOLD",
+              "TIMEZONE")
+    move_keys(config, "ROLES", "ADMIN_ROLES", "MOD_ROLES", "SELF_ROLES", "TRUSTED_ROLES", "ROLE_LIST", "ROLE_WHITELIST",
+              "MUTE_ROLE")
+
+    move_keys(config, "MESSAGE_LOGS", "IGNORED_CHANNELS_CHANGES", "IGNORED_CHANNELS_OTHER", "IGNORED_USERS")
+    config["MESSAGE_LOGS"]["ENABLED"] = config["EDIT_LOGS"]
+    del config["EDIT_LOGS"]
+    config["MESSAGE_LOGS"]["EMBED"] = config["EMBED_EDIT_LOGS"]
+    del config["EMBED_EDIT_LOGS"]
+
+    move_keys(config, "CENSORING", "WORD_BLACKLIST", "INVITE_WHITELIST")
+    config["CENSORING"]["ENABLED"] = config["CENSOR_MESSAGES"]
+    del config["CENSOR_MESSAGES"]
+
+    move_keys(config, "INFRACTIONS", "DM_ON_WARN")
+
+
+def v14(config):
+    if len(config["ANTI_SPAM"]) is 0:
+        config["ANTI_SPAM"] = {
+            "ENABLED": False,
+            "BUCKETS": [],
+            "EXEMPT_ROLES": [],
+            "EXEMPT_USERS": []
+        }
+
+
+def v15(config):
+    add_logging(config, 'CONFIG_CHANGES')
+
+
+def v16(config):
+    config["DASH_SECURITY"] = {
+        "ACCESS": 2,
+        "INFRACTION": 2,
+        "VIEW_CONFIG": 2,
+        "ALTER_CONFIG": 3
+    }
+    config["PERMISSIONS"] = {
+        "LVL4_ROLES": [],
+        "LVL4_USERS": [],
+        "ADMIN_USERS": [],
+        "MOD_USERS": [],
+        "TRUSTED_USERS": []
+    }
+    for s in ["ADMIN", "MOD", "TRUSTED"]:
+        key = f'{s}_ROLES'
+        config["PERMISSIONS"][key] = config["ROLES"][key]
+        del config["ROLES"][key]
+
+def v17(config):
+    config["CENSORING"]["ALLOW_TRUSTED_BYPASS"] = False
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
             info.extend(args)
 
+
+def nuke_keys(config, *keys):
+    for key in keys:
+        if key in config:
+            del config[key]
+
+
+def move_keys(config, section, *keys):
+    if section not in config:
+        config[section] = dict()
+    for key in keys:
+        if key in config:
+            config[section][key] = config[key]
+            del config[key]
+
+
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17]
+
 
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION
@@ -156,7 +286,6 @@ async def initialize(bot: commands.Bot):
         GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
         load_config(guild.id)
         validate_config(guild)
-
 
 
 def load_config(guild):
@@ -175,14 +304,16 @@ def load_config(guild):
         save(guild)
     Features.check_server(guild)
 
+
 def validate_config(guild):
-    for key in ["ADMIN_ROLES", "MOD_ROLES", "SELF_ROLES", "TRUSTED_ROLES"]:
+    for key in ["ADMIN_ROLES", "MOD_ROLES", "TRUSTED_ROLES"]:
         checklist(guild.id, key, guild.get_role)
+
 
 def checklist(guid, key, getter):
     changed = False
     tr = list()
-    cl = get_var(guid, key)
+    cl = get_var(guid, "PERMISSIONS", key)
     for c in cl:
         if getter(c) is None:
             tr.append(c)
@@ -190,14 +321,13 @@ def checklist(guid, key, getter):
     for r in tr:
         cl.remove(r)
     if changed:
-        set_var(guid, key, cl)
-
+        save(guid)
 
 
 def update_config(guild, config):
-    v = config["VERSION"]
     while config["VERSION"] < CONFIG_VERSION:
-        GearbotLogging.info(f"Upgrading config version from version {v} to {v+1}")
+        v = config["VERSION"]
+        GearbotLogging.info(f"Upgrading config version from version {v} to {v + 1}")
         d = f"config/backups/v{v}"
         if not os.path.isdir(d):
             os.makedirs(d)
@@ -209,17 +339,20 @@ def update_config(guild, config):
     return config
 
 
-def get_var(id, key):
+def get_var(id, section, key=None, default=None):
     if id is None:
         raise ValueError("Where is this coming from?")
     if not id in SERVER_CONFIGS.keys():
         GearbotLogging.info(f"Config entry requested before config was loaded for guild {id}, loading config for it")
         load_config(id)
-    return SERVER_CONFIGS[id][key]
+    s = SERVER_CONFIGS[id].get(section, {})
+    if key is not None:
+        s = s.get(key, default)
+    return s
 
 
-def set_var(id, key, value):
-    SERVER_CONFIGS[id][key] = value
+def set_var(id, cat, key, value):
+    SERVER_CONFIGS[id].get(cat, dict())[key] = value
     save(id)
     Features.check_server(id)
 
@@ -231,19 +364,24 @@ def save(id):
     Features.check_server(id)
 
 
-
-
-
 def save_master():
     global MASTER_CONFIG
     with open('config/master.json', 'w') as jsonfile:
         jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
 
+
+def load_persistent():
+    global PERSISTENT_LOADED, PERSISTENT
+    PERSISTENT = Utils.fetch_from_disk('persistent')
+    PERSISTENT_LOADED = True
+
+
 def get_persistent_var(key, default):
-    PERSISTENT = Utils.fetch_from_disk("persistent")
+    if not PERSISTENT_LOADED:
+        load_persistent()
     return PERSISTENT[key] if key in PERSISTENT else default
 
-def set_persistent_var(key,  value):
-    PERSISTENT = Utils.fetch_from_disk("persistent")
+
+def set_persistent_var(key, value):
     PERSISTENT[key] = value
     Utils.save_to_disk("persistent", PERSISTENT)

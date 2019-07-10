@@ -44,7 +44,7 @@ def translate(key, location, **kwargs):
     if lid is None:
         lang_key = "en_US"
     else:
-        lang_key = Configuration.get_var(lid, "LANG")
+        lang_key = Configuration.get_var(lid, "GENERAL", "LANG")
     translated = key
     if key not in LANGS[lang_key]:
         if key not in untranlatable:
@@ -72,6 +72,8 @@ def translate_by_code(key, code, **kwargs):
 
 
 async def upload():
+    t_info = Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY="", LOGIN="", WEBROOT=""))
+    if t_info["SOURCE"] == "DISABLED": return
     new = hashlib.md5(open(f"lang/en_US.json", 'rb').read()).hexdigest()
     old = Configuration.get_persistent_var('lang_hash', '')
     if old == new:

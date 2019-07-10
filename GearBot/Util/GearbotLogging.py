@@ -1,4 +1,5 @@
 import asyncio
+import io
 import logging
 import os
 import sys
@@ -90,6 +91,7 @@ LOG_TYPES = {
     'role_update_perm_revoked_by': log_type('ROLE_CHANGES', 'DELETE'),
     'manual_ban_log': log_type('MOD_ACTIONS', 'BAN'),
     'join_logging': log_type('JOIN_LOGS', 'JOIN'),
+    'join_logging_new': log_type('JOIN_LOGS', 'JOIN'),
     'leave_logging': log_type('JOIN_LOGS', 'LEAVE'),
     'manual_unban_log': log_type('MOD_ACTIONS', 'INNOCENT'),
     'own_nickname_changed': log_type('NAME_CHANGES', 'NICKTAG'),
@@ -143,7 +145,22 @@ LOG_TYPES = {
     'raid_ban_forbidden': log_type('RAID_LOGS', 'WARNING'),
     'raid_ban_unknown_error': log_type('RAID_LOGS', 'WARNING'),
     'shield_time_limit_reached': log_type('RAID_LOGS', 'WARNING'),
-    'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER')
+    'slowmode_log': log_type('CHANNEL_CHANGES', 'ALTER'),
+    'spam_violate': log_type('SPAM_VIOLATION', 'BAD_USER'),
+    "config_change": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_change_role_removed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_change_role_added": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_disabled": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_changed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_role_set": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_triggered": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_complete": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_setup_failed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_triggered": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_complete": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_mute_cleanup_failed": log_type('CONFIG_CHANGES', 'WRENCH'),
+    "config_dash_security_change": log_type('CONFIG_CHANGES', 'WRENCH')
+
 
 
 
@@ -268,9 +285,9 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
     remaining = None
     if key is None and embed is None and file is None:
         raise ValueError("What the heck is trying to log nothing?")
-    stamp = f"[``{datetime.strftime(datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'TIMEZONE'))), '%H:%M:%S')}``] " if can_stamp and Configuration.get_var(guild_id, "TIMESTAMPS") else ""
+    stamp = f"[``{datetime.strftime(datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))), '%H:%M:%S')}``] " if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS") else ""
     m = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
-    message = f"{stamp}{Utils.trim_message(m, 1984)}"
+    message = f"{stamp}{Utils.trim_message(m, 1984)}".replace("None", "", 1)
     if tag_on is not None:
         tag_on = tag_on.replace('@', '@\u200b')
         if message is None:
@@ -286,11 +303,21 @@ def log_to(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **
 
     for cid, logging_keys in channels.items():
         if info.category in logging_keys:
+            f = None
+            if file is not None:
+                buffer = file[0]
+                name = file[1]
+                buffer.seek(0)
+                b2 = io.BytesIO()
+                for line in buffer.readlines():
+                    b2.write(line)
+                b2.seek(0)
+                f = discord.File(b2, name)
             if remaining is None:
-                LOG_PUMP.receive(cid, (message, embed, file))
+                LOG_PUMP.receive(cid, (message, embed, f))
             else:
                 LOG_PUMP.receive(cid, (message, None, None))
-                LOG_PUMP.receive(cid, (tag_on, embed, file))
+                LOG_PUMP.receive(cid, (tag_on, embed, f))
 
 
 async def message_owner(bot, message):
@@ -342,6 +369,8 @@ class LogPump:
                                 break
                         try:
                             senders.append(channel.send(to_send if to_send != "" else None, embed=embed, file=file))
+                        except CancelledError:
+                            return
                         except Exception as e:
                             await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,
                                                                   cid=cid, todo=todo, to_send=to_send,
@@ -356,6 +385,8 @@ class LogPump:
                         await s
                     except discord.Forbidden:
                         pass
+                    except CancelledError:
+                        return
                     except Exception as e:
                         await log_error()
                         await TheRealGearBot.handle_exception("LOG PUMP", BOT, e,

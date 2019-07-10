@@ -67,4 +67,7 @@ class GearBot(AutoShardedBot):
     async def on_error(self, event, *args, **kwargs):
         await TheRealGearBot.on_error(self, event, *args, **kwargs)
 
+    async def on_guild_update(self, before, after):
+        await TheRealGearBot.on_guild_update(before, after)
+
     #### reloading

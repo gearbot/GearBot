@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+from aioredis import ReplyError
 from peewee import fn
 
 from Bot import GearBot
@@ -99,7 +100,10 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
             page = page.replace(f"<@{uid}>", name).replace(f"<@!{uid}>", name)
         page = f"{header}```md\n{get_header(longest_id, longest_name, longest_type, longest_timestamp, guild_id)}\n{page}```"
         GearbotLogging.debug(f"Finished assembling page {number} for key {key}")
-        await bot.redis_pool.lset(key, number, page)
+        try:
+            await bot.redis_pool.lset(key, number, page)
+        except ReplyError:
+            return # key expired while we where working on it
         pages[number] = page
         GearbotLogging.debug(f"Pushed page {number} for key {key} to redis")
         bot.dispatch("page_assembled", {

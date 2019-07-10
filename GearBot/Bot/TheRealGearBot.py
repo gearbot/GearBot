@@ -17,7 +17,7 @@ from discord.ext import commands
 from peewee import PeeweeException
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
-    server_info
+    server_info, DashConfig
 from database import DatabaseConnector
 
 
@@ -27,7 +27,7 @@ def prefix_callable(bot, message):
     if message.guild is None:
         prefixes.append('!') #use default ! prefix in DMs
     elif bot.STARTUP_COMPLETE:
-        prefixes.append(Configuration.get_var(message.guild.id, "PREFIX"))
+        prefixes.append(Configuration.get_var(message.guild.id, "GENERAL", "PREFIX"))
     return prefixes
 
 async def initialize(bot, startup=False):
@@ -76,6 +76,7 @@ async def initialize(bot, startup=False):
         await Translator.initialize(bot)
         bot.being_cleaned.clear()
         await Configuration.initialize(bot)
+        DashConfig.initialize(bot)
     except Exception as ex:
         #make sure we always unlock, even when something went wrong!
         bot.locked = False
@@ -108,9 +109,6 @@ async def on_ready(bot):
         for c in to_unload:
             bot.remove_command(c)
 
-        if Configuration.get_master_var("CROWDIN") is not None:
-            bot.loop.create_task(translation_task(bot))
-
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
         bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
@@ -129,20 +127,6 @@ async def keepDBalive(bot):
         await asyncio.sleep(3600)
 
 
-async def translation_task(bot):
-    await Translator.upload()
-    while not bot.is_closed():
-        try:
-            await Translator.update()
-        except Exception as ex:
-            await handle_exception("Translation task", bot, ex)
-
-        try:
-            await asyncio.sleep(6*60*60)
-        except asyncio.CancelledError:
-            pass # bot shutting down
-
-
 async def on_message(bot, message:Message):
     if message.author.bot:
         if message.author.id == bot.user.id:
@@ -157,7 +141,12 @@ async def on_message(bot, message:Message):
             try:
                 await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
             except Forbidden:
-                pass #closed DMs
+                pass  # closed DMs
+        elif ctx.author.id in Configuration.get_persistent_var("user_blacklist", []):
+            try:
+                await MessageUtils.send_to(ctx, "BAD_USER", "You have been globally blacklisted from using this bot due to abuse", translate=False)
+            except Forbidden:
+                pass  # closed DMs
         else:
             f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
             start = f()
@@ -166,7 +155,7 @@ async def on_message(bot, message:Message):
 
 
 async def on_guild_join(guild):
-    blocked = Configuration.get_persistent_var("blacklist", [])
+    blocked = Configuration.get_persistent_var("server_blacklist", [])
     if guild.id in blocked:
         GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
         try:
@@ -174,17 +163,36 @@ async def on_guild_join(guild):
         except Exception:
             pass
         await guild.leave()
+    elif guild.owner.id in Configuration.get_persistent_var("user_blacklist", []):
+        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner.id})) is blacklisted")
+        try:
+            await guild.owner.send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blacklisted due to bot abuse, so i left")
+        except Exception:
+            pass
+        await guild.leave()
     else:
         GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
         Configuration.load_config(guild.id)
         name = await Utils.clean(guild.name)
-        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info(guild))
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info_embed(guild))
 
 async def on_guild_remove(guild):
-    blocked = Configuration.get_persistent_var("blacklist", [])
-    if guild.id not in blocked:
+    blocked = Configuration.get_persistent_var("server_blacklist", [])
+    blocked_users = Configuration.get_persistent_var("user_blacklist", [])
+    if guild.id not in blocked and guild.owner.id not in blocked_users:
         GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
-        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info(guild))
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info_embed(guild))
+
+
+async def on_guild_update(before, after):
+    if after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
+        GearbotLogging.info(
+            f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blacklisted")
+        try:
+            await after.owner.send(f"Someone transferred {after.name} (``{after.id}``) to you, but you have been blacklisted due to bot abuse, so i left")
+        except Exception:
+            pass
+        await after.leave()
 
 class PostParseError(commands.BadArgument):
 
@@ -199,7 +207,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "PERM_DENIED_MESSAGE"):
+        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
             await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(error)

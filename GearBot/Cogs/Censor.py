@@ -6,11 +6,15 @@ from discord.ext import commands
 from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Permissioncheckers, Translator, Utils
+from Util import Configuration, GearbotLogging, Permissioncheckers, Utils
 from Util.Matchers import INVITE_MATCHER
 
 
 async def censor_invite(ctx, code, server_name):
+    # Allow for users with a trusted role, or trusted users, to post invite links
+    if Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(ctx.author):
+        return
+
     ctx.bot.data["message_deletes"].add(ctx.message.id)
     clean_message = await clean_content().convert(ctx, ctx.message.content)
     clean_name = Utils.clean_user(ctx.message.author)
@@ -36,14 +40,14 @@ class Censor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSOR_MESSAGES") or self.bot.user.id == message.author.id:
+        if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
         await self.censor_message(message)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
-        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSOR_MESSAGES"):
+        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED"):
             return
         permissions = channel.permissions_for(channel.guild.me)
         if permissions.read_messages and permissions.read_message_history:
@@ -63,9 +67,8 @@ class Censor(BaseCog):
         ctx = await self.bot.get_context(message)
         if Permissioncheckers.get_user_lvl(ctx) >= 2:
             return
-        blacklist = Configuration.get_var(message.guild.id, "WORD_BLACKLIST")
-        max_mentions = Configuration.get_var(message.guild.id, "MAX_MENTIONS")
-        guilds = Configuration.get_var(message.guild.id, "INVITE_WHITELIST")
+        blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
+        guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")
         content = message.content.replace('\\', '')
         decoded_content = parse.unquote(content)
         censored = False
@@ -100,19 +103,6 @@ class Censor(BaseCog):
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
                         GearbotLogging.log_to(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
-
-        mentions = len(message.mentions) + len(message.role_mentions)
-        if mentions > max_mentions > 4:
-            self.bot.data["forced_exits"].add(message.author.id)
-            reason = Translator.translate('autoban_too_many_mentions', message.guild.id, count=mentions)
-
-            if message.guild.me.guild_permissions.ban_members:
-                await message.guild.ban(message.author, reason=reason)
-
-            else:
-                self.bot.data["forced_exits"].remove(message.author.id)
-                GearbotLogging.log_to(message.guild.id, 'automod_ban_failed', user=message.author,
-                                                  user_id=message.author.id, reason=reason)
 
 
 def setup(bot):

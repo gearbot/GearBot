@@ -1,10 +1,10 @@
 import asyncio
-import math
 import os
 import re
 
 import aiohttp
 import discord
+import math
 from PIL import Image
 
 from Util import MessageUtils
@@ -192,8 +192,8 @@ class JumboGenerator:
 
     async def generate(self):
         try:
-            await asyncio.wait_for(self.prep(), timeout=20)
-            await asyncio.wait_for(self.build(), timeout=60)
+            await asyncio.wait_for(self.prep(), timeout=200)
+            await asyncio.wait_for(self.build(), timeout=600)
         except asyncio.TimeoutError:
             await MessageUtils.send_to(self.ctx, "WHAT", 'jumbo_timeout')
         else:

@@ -5,7 +5,7 @@ import typing
 from typing import Optional
 
 import discord
-from discord import Object, Emoji, Forbidden, NotFound
+from discord import Object, Emoji, Forbidden, NotFound, ActivityType
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
 
@@ -77,8 +77,13 @@ class Moderation(BaseCog):
 
     @staticmethod
     def _can_act(action, ctx, user, check_bot=True):
-        if not isinstance(user,  discord.Member):
+        if not isinstance(user, discord.Member):
             return True, None
+
+        # Check if they aren't here anymore so we don't error if they leave first
+        if user and user.top_role > ctx.guild.me.top_role:
+            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
+
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
             if ctx.me.top_role > user.top_role or not check_bot:
@@ -123,8 +128,8 @@ class Moderation(BaseCog):
                 return
 
         if self._can_act(f"role_{action}", ctx, user, check_bot=False):
-            role_list = Configuration.get_var(ctx.guild.id, "ROLE_LIST")
-            mode = Configuration.get_var(ctx.guild.id, "ROLE_WHITELIST")
+            role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
+            mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST")
             mode_name = "whitelist" if mode else "blacklist"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
@@ -269,10 +274,12 @@ class Moderation(BaseCog):
         await self._ban_command(ctx, user, reason, days)
 
     async def _ban_command(self, ctx, user, reason, days):
+        member = ctx.guild.get_member(user.id)
+
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("ban", ctx, user)
+        allowed, message = self._can_act("ban", ctx, member)
         if allowed:
             await self._ban(ctx, user, reason, True, days=days)
         else:
@@ -397,7 +404,7 @@ class Moderation(BaseCog):
             GearbotLogging.log_to(ctx.guild.id, 'softban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
-                                  
+
     @commands.command()
     @commands.guild_only()
     async def slowmode(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], duration: Duration):
@@ -516,7 +523,7 @@ class Moderation(BaseCog):
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
-        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
@@ -604,7 +611,7 @@ class Moderation(BaseCog):
         """unmute_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        roleid = Configuration.get_var(ctx.guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
         else:
@@ -647,6 +654,21 @@ class Moderation(BaseCog):
         if member is not None:
             status = str(member.status)
             status_emoji = Emoji.get_chat_emoji(status.upper())
+            if member.activity is not None:
+                listening_emoji = Emoji.get_chat_emoji("MUSIC")
+                watching_emoji = Emoji.get_chat_emoji("WATCHING")
+                game_emoji = Emoji.get_chat_emoji("GAMING")
+                streaming_emoji = Emoji.get_chat_emoji("STREAMING")
+                if member.activity.type == ActivityType.listening:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{listening_emoji} {Translator.translate('listening_to', ctx, song=member.activity.title)} {listening_emoji}")
+                elif member.activity.type == ActivityType.watching:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{watching_emoji} {Translator.translate('watching', ctx, name=member.activity.name)} {watching_emoji}")
+                elif member.activity.type == ActivityType.streaming:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{streaming_emoji} {Translator.translate('streaming', ctx, title=member.activity.name)} {streaming_emoji}")
+                elif member.activity.type == ActivityType.playing:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=f"{game_emoji} {Translator.translate('playing', ctx, game=member.activity.name)} {game_emoji}")
+                else:
+                    embed.add_field(name=Translator.translate("activity", ctx), value=Translator.translate("unknown_activity", ctx))
             embed.add_field(name=Translator.translate("status", ctx), value=f"{status_emoji} {Translator.translate(status, ctx)} {status_emoji}")
             embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick), inline=True)
 
@@ -678,7 +700,7 @@ class Moderation(BaseCog):
         """serverinfo_help"""
         if guild is None:
             guild = ctx.guild
-        embed = server_info.server_info(guild, ctx.guild)
+        embed = server_info.server_info_embed(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
@@ -699,7 +721,7 @@ class Moderation(BaseCog):
             return
         if channel is None:
             channel = ctx.message.channel
-        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = LoggedMessage.select().where(
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.channel == channel.id)).order_by(
@@ -714,7 +736,7 @@ class Moderation(BaseCog):
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
-        if Configuration.get_var(ctx.guild.id, "EDIT_LOGS"):
+        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = LoggedMessage.select().where(
                 (LoggedMessage.server == ctx.guild.id) & (LoggedMessage.author == user)).order_by(
@@ -808,6 +830,8 @@ class Moderation(BaseCog):
                 total += len(deleted)
             except discord.HTTPException:
                 failed.add(channel)
+            finally:
+                self.bot.loop.create_task(self.finish_cleaning(channel.id, ctx.guild.id))
         await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
 
 
@@ -850,7 +874,7 @@ class Moderation(BaseCog):
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         guild: discord.Guild = channel.guild
-        roleid = Configuration.get_var(guild.id, "MUTE_ROLE")
+        roleid = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if roleid is not 0:
             role = guild.get_role(roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
@@ -876,13 +900,16 @@ class Moderation(BaseCog):
                                   Infraction.guild_id == member.guild.id,
                                   Infraction.user_id == member.id)
         if i is not None:
-            roleid = Configuration.get_var(member.guild.id, "MUTE_ROLE")
+            roleid = Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE")
             if roleid is not 0:
                 role = member.guild.get_role(roleid)
                 if role is not None:
                     if member.guild.me.guild_permissions.manage_roles:
-                        await member.add_roles(role,
+                        try:
+                            await member.add_roles(role,
                                                reason=Translator.translate('mute_reapply_reason', member.guild.id))
+                        except NotFound:
+                            pass  # probably kicked out again by antiraid, nothing to do here
                         GearbotLogging.log_to(member.guild.id, 'mute_reapply_log', user=Utils.clean_user(member), user_id=member.id, inf=i.id)
                     else:
                         GearbotLogging.log_to(member.guild.id, 'mute_reapply_failed_log', inf=i.id)
@@ -922,7 +949,7 @@ class Moderation(BaseCog):
                 f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
             return self.end_infraction(infraction)
 
-        role = Configuration.get_var(guild.id, "MUTE_ROLE")
+        role = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         member = guild.get_member(infraction.user_id)
         role = guild.get_role(role)
         if role is None or member is None:

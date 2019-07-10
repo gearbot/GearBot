@@ -53,7 +53,9 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     if add:
         for i in range(10):
             if str(reaction) == str(Emoji.get_emoji(str(i+1))):
-                roles = Configuration.get_var(message.guild.id, "SELF_ROLES")
+                roles = Configuration.get_var(message.guild.id, "ROLES", "SELF_ROLES")
+                if (i + 1) > len(roles):
+                    return
                 role = message.channel.guild.get_role(roles[page_num*10 + i])
                 if role is None:
                     await Selfroles.validate_self_roles(bot, message.channel.guild)

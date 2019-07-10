@@ -1,34 +1,63 @@
 {
-  "VERSION": 9,
-  "LOG_CHANNELS": {},
-  "EDIT_LOGS": false,
-  "CENSOR_MESSAGES": false,
-  "WORD_BLACKLIST": [],
-  "MAX_MENTIONS": 0,
-  "EMBED_EDIT_LOGS": false,
-  "FUTURE_LOGS": false,
-  "ADMIN_ROLES": [],
-  "DEV_ROLE": 0,
-  "IGNORED_USERS": [],
-  "INVITE_WHITELIST": [],
-  "LANG": "en_US",
-  "MOD_ROLES": [],
-  "MUTE_ROLE": 0,
-  "PERM_DENIED_MESSAGE": true,
-  "PERM_OVERRIDES": {},
-  "PREFIX": "!",
-  "SELF_ROLES": [],
-  "TRUSTED_ROLES": [],
-  "TIMESTAMPS": true,
-  "DM_ON_WARN": false,
-  "ROLE_WHITELIST": true,
-  "ROLE_LIST": [],
-  "IGNORED_CHANNELS_CHANGES": [],
-  "IGNORED_CHANNELS_OTHER": [],
-  "TIMEZONE": "Europe/Brussels",
-  "RAID_HANDLING": {
-    "ENABLED": false,
-    "HANDLERS": [],
-    "INVITE": ""
-  }
+	"VERSION": 17,
+	"GENERAL": {
+		"LANG": "en_US",
+		"PERM_DENIED_MESSAGE": true,
+		"PREFIX": "!",
+		"TIMESTAMPS": true,
+		"NEW_USER_THRESHOLD": 86400,
+		"TIMEZONE": "Europe/Brussels"
+	},
+	"ROLES": {
+		"SELF_ROLES": [],
+		"ROLE_LIST": [],
+		"ROLE_WHITELIST": true,
+		"MUTE_ROLE": 0
+	},
+	"LOG_CHANNELS": {},
+	"MESSAGE_LOGS": {
+		"ENABLED": false,
+		"IGNORED_CHANNELS_CHANGES": [],
+		"IGNORED_CHANNELS_OTHER": [],
+		"IGNORED_USERS": [],
+		"EMBED": false
+	},
+	"CENSORING": {
+		"ENABLED": false,
+		"ALLOW_TRUSTED_BYPASS": false,
+		"WORD_BLACKLIST": [],
+		"INVITE_WHITELIST": []
+	},
+	"INFRACTIONS": {
+		"DM_ON_WARN": false
+	},
+	"PERM_OVERRIDES": {},
+	"RAID_HANDLING": {
+		"ENABLED": false,
+		"HANDLERS": [],
+		"INVITE": ""
+	},
+	"ANTI_SPAM": {
+		"CLEAN": false,
+		"ENABLED": false,
+		"EXEMPT_ROLES": [],
+		"EXEMPT_USERS": [],
+		"BUCKETS": []
+	},
+	"DASH_SECURITY": {
+		"ACCESS": 2,
+		"INFRACTION": 2,
+		"VIEW_CONFIG": 2,
+		"ALTER_CONFIG": 3
+	},
+	"PERMISSIONS": {
+		"LVL4_ROLES": [],
+		"LVL4_USERS":  [],
+		"ADMIN_ROLES": [],
+		"ADMIN_USERS": [],
+		"MOD_ROLES": [],
+		"MOD_USERS": [],
+		"TRUSTED_ROLES": [],
+		"TRUSTED_USERS": []
+	}
 }
