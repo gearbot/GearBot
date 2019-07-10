@@ -102,7 +102,11 @@ class DashLink(BaseCog):
             await GearbotLogging.bot_log("Failed to connect to the dash!")
 
     async def dash_monitor(self):
-        MAX_WARNINGS = Configuration.get_master_var("MAX_API_OUTAGE_WARNINGS", default=3)
+        DASH_OUTAGE_INFO: dict = Configuration.get_master_var("DASH_OUTAGE")
+        DASH_OUTAGE_CHANNEl = DASH_OUTAGE_INFO["dash_outage_channel"]
+        MAX_WARNINGS = DASH_OUTAGE_INFO["max_bot_outage_warnings"]
+        BOT_OUTAGE_PINGED_ROLES = DASH_OUTAGE_INFO["dash_outage_pinged_roles"]
+        
         while True:
             if (time.time() - self.last_dash_heartbeat[0]) > 5:
                 self.last_dash_heartbeat[1] += 1
@@ -113,14 +117,35 @@ class DashLink(BaseCog):
                     self.last_dash_heartbeat[2] += 1
                     self.last_dash_heartbeat[1] = 0
                     
-                    # The message needs to be in English as we have no ability to get the language key of the owner
-                    await GearbotLogging.message_owner(
-                        self.bot,
-                        f"I apologize master but it would appear that the API has gone down, please take a look when you can. This is warning {self.last_dash_heartbeat[2]}/{MAX_WARNINGS}"
-                    )
+                    if DASH_OUTAGE_CHANNEl:
+                        outage_message = DASH_OUTAGE_INFO["dash_outage_embed"]
+
+                        # Apply the timestamp
+                        outage_message["timestamp"] = datetime.now().isoformat()
+
+                        # Set the current warning count
+                        outage_message["fields"][0]["value"] = f"{self.last_dash_heartbeat[2]}/{MAX_WARNINGS}"
+
+                        # Set the color to the format Discord understands
+                        outage_message["color"] = int(outage_message["color"], 16)
+                            
+                        # Generate the custom message and role pings
+                        notify_message = DASH_OUTAGE_INFO["dash_outage_message"]
+                        if BOT_OUTAGE_PINGED_ROLES:
+                            pinged_roles = []
+                            for role_id in BOT_OUTAGE_PINGED_ROLES:
+                                pinged_roles.append(f"<@&{role_id}>")
+
+                            notify_message += f" Pinging: {', '.join(pinged_roles)}"
+
+                        try:
+                            outage_channel = self.bot.get_channel(DASH_OUTAGE_CHANNEl)
+                            await outage_channel.send(notify_message, embed=Embed.from_dict(outage_message))
+                        except Forbidden:
+                            print("We couldn't access the specified channel, the notification will not be sent!")
 
             # Wait a little bit longer so the dashboard has a chance to update before we check
-            await asyncio.sleep(65)
+            await asyncio.sleep(2)
 
     async def _handle(self, sender, message):
         try:

@@ -1,7 +1,6 @@
 {
   "LOGIN_TOKEN": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "BOT_LOG_CHANNEL": 365908831328403456,
-  "MAX_API_OUTAGE_WARNINGS": 3,
   "CROWDIN_KEY": null,
   "DATABASE_HOST": "localhost",
   "DATABASE_NAME": "gearbot",
@@ -32,5 +31,27 @@
     "AntiSpam"
   ],
   "DOCS": true,
-  "DISABLED_COMMANDS": []
+  "DISABLED_COMMANDS": [],
+  "DASH_OUTAGE": {
+      "max_bot_outage_warnings": 1,
+      "dash_outage_channel": 999999999,
+      "dash_outage_pinged_roles": [],
+      "dash_outage_message": "The Dashboard went down! Please look into it!",
+      "dash_outage_embed": {
+        "title": "Dashboard Outage Detected",
+        "timestamp": "",
+        "color": "FF0000",
+        "description": "The Dashboard is suspected to be down, it hasn't responded in over 3 minutes!",
+        "author": {
+          "name": "Gearbot Dashboard Monitor"
+        },
+        "fields": [
+          {
+            "name": "Alert Count",
+            "value": "{warnings_sent}/{MAX_BOT_OUTAGE_WARNINGS}",
+            "inline": true
+          }
+        ]
+    }
+  }
 }
