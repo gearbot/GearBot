@@ -428,7 +428,7 @@ class Moderation(BaseCog):
     
     @commands.command()
     @commands.guild_only()
-    async def verification(self, ctx: commands.Context, level: str, *, reason: str = None):
+    async def verification(self, ctx: commands.Context, level: str, *, reason: Reason = ""):
         """verification_help"""
         v1 = discord.VerificationLevel.__members__.get(level.lower())
         if v1 is not None:
@@ -438,12 +438,12 @@ class Moderation(BaseCog):
                 except discord.Forbidden:
                     await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
                 else:
-                    if reason is None:
-                        reason = ''
+                    if reason == "":
+                        reason = Translator.translate("no_reason", ctx.guild.id)
                     else:
-                        reason = f"with reason `{reason}`"
-                        GearbotLogging.log_to(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
-                        await MessageUtils.send_to(ctx, 'YES', "verification_set", level=v1, reason=reason)
+                        reason = f"with reason {reason}"
+                    GearbotLogging.log_to(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
+                    await MessageUtils.send_to(ctx, 'YES', "verification_set", level=v1, reason=reason)
 
     @commands.command()
     @commands.guild_only()
