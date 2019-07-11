@@ -92,7 +92,9 @@ class DashLink(BaseCog):
                  Configuration.get_master_var('REDIS_PORT', 6379)),
                 encoding="utf-8", db=0, maxsize=2)  # size 2: one send, one receive
             self.bot.loop.create_task(self._receiver())
-            self.bot.loop.create_task(self.dash_monitor())
+
+            if Configuration.get_master_var("DASH_OUTAGE")["outage_detection"]:
+                self.bot.loop.create_task(self.dash_monitor())
             
             # Store the token so the dashboard can notify the bot owner if the bot goes offline
 
