@@ -33,6 +33,7 @@
   "DOCS": true,
   "DISABLED_COMMANDS": [],
   "DASH_OUTAGE": {
+      "outage_detection": false,
       "max_bot_outage_warnings": 1,
       "dash_outage_channel": 999999999,
       "dash_outage_pinged_roles": [],
