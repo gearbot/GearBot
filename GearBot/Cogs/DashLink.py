@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from collections import OrderedDict
 from concurrent.futures import CancelledError
 
@@ -49,9 +50,10 @@ class DashLink(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         bot.loop.create_task(self.init())
-        self.redis_link = None
+        self.redis_link: aioredis.Redis = None
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
+            heartbeat = self.still_spinning,
             guild_perms=self.guild_perm_request,
             user_info=self.user_info_request,
             guild_info=self.guild_info_request,
@@ -61,9 +63,9 @@ class DashLink(BaseCog):
             setup_mute=self.setup_mute,
             cleanup_mute=self.cleanup_mute
         )
-        self.recieve_handlers = dict(
-
-        )
+        # The last time we received a heartbeat, the current attempt number, how many times we have notified the owner
+        self.last_dash_heartbeat = [time.time(), 0, 0]
+        self.recieve_handlers = dict()
         self.last_update = datetime.now()
         self.to_log = dict()
         self.update_message = None
@@ -90,9 +92,62 @@ class DashLink(BaseCog):
                  Configuration.get_master_var('REDIS_PORT', 6379)),
                 encoding="utf-8", db=0, maxsize=2)  # size 2: one send, one receive
             self.bot.loop.create_task(self._receiver())
+
+            if Configuration.get_master_var("DASH_OUTAGE")["outage_detection"]:
+                self.bot.loop.create_task(self.dash_monitor())
+            
+            # Store the token so the dashboard can notify the bot owner if the bot goes offline
+            await self.redis_link.set("bot_login_token", Configuration.get_master_var("LOGIN_TOKEN"))
+
             await self.redis_link.subscribe(self.receiver.channel("dash-bot-messages"))
         except OSError:
             await GearbotLogging.bot_log("Failed to connect to the dash!")
+
+    async def dash_monitor(self):
+        DASH_OUTAGE_INFO: dict = Configuration.get_master_var("DASH_OUTAGE")
+        DASH_OUTAGE_CHANNEl = DASH_OUTAGE_INFO["dash_outage_channel"]
+        MAX_WARNINGS = DASH_OUTAGE_INFO["max_bot_outage_warnings"]
+        BOT_OUTAGE_PINGED_ROLES = DASH_OUTAGE_INFO["dash_outage_pinged_roles"]
+        
+        while True:
+            if (time.time() - self.last_dash_heartbeat[0]) > 5:
+                self.last_dash_heartbeat[1] += 1
+
+                if self.last_dash_heartbeat[1] >= 3 and self.last_dash_heartbeat[2] < MAX_WARNINGS:
+                    print("The dashboard API keepalive hasn't responded in over 3 minutes!")
+                    
+                    self.last_dash_heartbeat[2] += 1
+                    self.last_dash_heartbeat[1] = 0
+                    
+                    if DASH_OUTAGE_CHANNEl:
+                        outage_message = DASH_OUTAGE_INFO["dash_outage_embed"]
+
+                        # Apply the timestamp
+                        outage_message["timestamp"] = datetime.now().isoformat()
+
+                        # Set the current warning count
+                        outage_message["fields"][0]["value"] = f"{self.last_dash_heartbeat[2]}/{MAX_WARNINGS}"
+
+                        # Set the color to the format Discord understands
+                        outage_message["color"] = int(outage_message["color"], 16)
+                            
+                        # Generate the custom message and role pings
+                        notify_message = DASH_OUTAGE_INFO["dash_outage_message"]
+                        if BOT_OUTAGE_PINGED_ROLES:
+                            pinged_roles = []
+                            for role_id in BOT_OUTAGE_PINGED_ROLES:
+                                pinged_roles.append(f"<@&{role_id}>")
+
+                            notify_message += f" Pinging: {', '.join(pinged_roles)}"
+
+                        try:
+                            outage_channel = self.bot.get_channel(DASH_OUTAGE_CHANNEl)
+                            await outage_channel.send(notify_message, embed=Embed.from_dict(outage_message))
+                        except Forbidden:
+                            print("We couldn't access the specified channel, the notification will not be sent!")
+
+            # Wait a little bit longer so the dashboard has a chance to update before we check
+            await asyncio.sleep(65)
 
     async def _handle(self, sender, message):
         try:
@@ -121,6 +176,13 @@ class DashLink(BaseCog):
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
             self.bot.loop.create_task(self._handle(sender, message))
+
+    async def still_spinning(self, _):
+        self.last_dash_heartbeat[0] = time.time()
+        self.last_dash_heartbeat[1] = 0
+        self.last_dash_heartbeat[2] = 0
+
+        return self.bot.latency
 
     async def user_info_request(self, message):
         user_id = message["user_id"]
