@@ -162,8 +162,8 @@ class AntiSpam(BaseCog):
         a.count += v.count
 
         # Punish and Clean
-        GearbotLogging.log_to(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
-                              check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention, punishment_type=t)
+        GearbotLogging.log_key(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
+                               check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention, punishment_type=t)
 
         await self.punishments[t](v)
 
@@ -190,16 +190,16 @@ class AntiSpam(BaseCog):
     async def warn_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
         i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Warn', reason)
-        GearbotLogging.log_to(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
-                              moderator=Utils.clean_user(v.guild.me), reason=reason,
-                              user_id=v.member.id, moderator_id=v.guild.me.id, inf=i.id)
+        GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
+                               moderator=Utils.clean_user(v.guild.me), reason=reason,
+                               user_id=v.member.id, moderator_id=v.guild.me.id, inf=i.id)
         try:
             dm_channel = await v.member.create_dm()
             await dm_channel.send(MessageUtils.assemble(dm_channel, 'WARNING', 'warning_dm',
                                                         server=v.member.guild.name) + f"```{reason}```")
         except Forbidden:
-            GearbotLogging.log_to(v.member.guild.id, 'warning_could_not_dm',
-                                  user=Utils.escape_markdown(v.member.name), userid=v.member.id)
+            GearbotLogging.log_key(v.member.guild.id, 'warning_could_not_dm',
+                                   user=Utils.escape_markdown(v.member.name), userid=v.member.id)
 
     async def mute_punishment(self, v: Violation):
         duration = v.bucket["PUNISHMENT"]["DURATION"]
@@ -214,30 +214,30 @@ class AntiSpam(BaseCog):
             try:
                 await v.member.add_roles(role, reason=reason)
             except Forbidden:
-                GearbotLogging.log_to(v.guild.id, 'mute_punishment_failure',
-                                      user=Utils.clean_user(v.member),
-                                      user_id=v.member.id,
-                                      duration=Utils.to_pretty_time(duration, v.guild.id),
-                                      reason=reason, inf=i.id)
+                GearbotLogging.log_key(v.guild.id, 'mute_punishment_failure',
+                                       user=Utils.clean_user(v.member),
+                                       user_id=v.member.id,
+                                       duration=Utils.to_pretty_time(duration, v.guild.id),
+                                       reason=reason, inf=i.id)
             else:
-                GearbotLogging.log_to(v.guild.id, 'mute_log',
-                                      user=Utils.clean_user(v.member),
-                                      user_id=v.member.id,
-                                      moderator=Utils.clean_user(v.guild.me),
-                                      moderator_id=v.guild.me.id,
-                                      duration=Utils.to_pretty_time(duration, v.guild.id),
-                                      reason=reason, inf=i.id)
+                GearbotLogging.log_key(v.guild.id, 'mute_log',
+                                       user=Utils.clean_user(v.member),
+                                       user_id=v.member.id,
+                                       moderator=Utils.clean_user(v.guild.me),
+                                       moderator_id=v.guild.me.id,
+                                       duration=Utils.to_pretty_time(duration, v.guild.id),
+                                       reason=reason, inf=i.id)
         else:
             i.end += datetime.timedelta(seconds=duration)
             i.reason += f'+ {reason}'
             i.save()
-            GearbotLogging.log_to(v.guild.id, 'mute_duration_extended_log',
-                                  user=Utils.clean_user(v.member),
-                                  user_id=v.member.id,
-                                  moderator=Utils.clean_user(v.guild.me),
-                                  moderator_id=v.guild.me.id,
-                                  duration=Utils.to_pretty_time(duration, v.guild.id),
-                                  reason=reason, inf_id=i.id, end=i.end)
+            GearbotLogging.log_key(v.guild.id, 'mute_duration_extended_log',
+                                   user=Utils.clean_user(v.member),
+                                   user_id=v.member.id,
+                                   moderator=Utils.clean_user(v.guild.me),
+                                   moderator_id=v.guild.me.id,
+                                   duration=Utils.to_pretty_time(duration, v.guild.id),
+                                   reason=reason, inf_id=i.id, end=i.end)
             await InfractionUtils.clear_cache(v.guild.id)
 
     async def kick_punishment(self, v: Violation):
@@ -248,13 +248,13 @@ class AntiSpam(BaseCog):
         try:
             await v.guild.kick(v.member, reason=reason)
         except Forbidden:
-            GearbotLogging.log_to(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
-                                  moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
-                                  reason=reason, inf=i.id)
+            GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                   moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
+                                   reason=reason, inf=i.id)
         else:
-            GearbotLogging.log_to(v.guild.id, 'kick_log', user=Utils.clean_user(v.member), user_id=v.member.id,
-                                  moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
-                                  reason=reason, inf=i.id)
+            GearbotLogging.log_key(v.guild.id, 'kick_log', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                   moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
+                                   reason=reason, inf=i.id)
 
     async def temp_ban_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
@@ -264,10 +264,10 @@ class AntiSpam(BaseCog):
         await v.guild.ban(v.member, reason=reason, delete_message_days=0)
         i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Tempban', reason,
                                            end=until)
-        GearbotLogging.log_to(v.guild.id, 'tempban_log', user=Utils.clean_user(v.member),
-                              user_id=v.member.id, moderator=Utils.clean_user(v.guild.me),
-                              moderator_id=v.guild.me.id, reason=reason,
-                              until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
+        GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(v.member),
+                               user_id=v.member.id, moderator=Utils.clean_user(v.guild.me),
+                               moderator_id=v.guild.me.id, reason=reason,
+                               until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
 
     async def ban_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
@@ -277,9 +277,9 @@ class AntiSpam(BaseCog):
             (Infraction.user_id == v.member.id) & (Infraction.type == "Unban") & (
                     Infraction.guild_id == v.guild.id)).execute()
         i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Ban', reason)
-        GearbotLogging.log_to(v.guild.id, 'ban_log', user=Utils.clean_user(v.member), user_id=v.member.id,
-                              moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
-                              reason=reason, inf=i.id)
+        GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(v.member), user_id=v.member.id,
+                               moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
+                               reason=reason, inf=i.id)
 
     @staticmethod
     def assemble_reason(v):

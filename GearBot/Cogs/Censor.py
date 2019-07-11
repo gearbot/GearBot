@@ -20,14 +20,14 @@ async def censor_invite(ctx, code, server_name):
     clean_name = Utils.clean_user(ctx.message.author)
     try:
         await ctx.message.delete()
-        GearbotLogging.log_to(ctx.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)
+        GearbotLogging.log_key(ctx.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)
     except discord.NotFound:
         # we failed? guess we lost the race, log anyways
-        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_fail', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
+        GearbotLogging.log_key(ctx.guild.id, 'invite_censor_fail', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
         if ctx.message.id in ctx.bot.data["message_deletes"]:
             ctx.bot.data["message_deletes"].remove(ctx.message.id)
     except discord.Forbidden:
-        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_forbidden', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
+        GearbotLogging.log_key(ctx.guild.id, 'invite_censor_forbidden', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
         if ctx.message.id in ctx.bot.data["message_deletes"]:
             ctx.bot.data["message_deletes"].remove(ctx.message.id)
 
@@ -99,10 +99,10 @@ class Censor(BaseCog):
                             pass  # lost the race with another bot?
                         else:
                             clean_message = await clean_content().convert(ctx, message.content)
-                            GearbotLogging.log_to(ctx.guild.id, 'censored_message', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)
+                            GearbotLogging.log_key(ctx.guild.id, 'censored_message', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
-                        GearbotLogging.log_to(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
+                        GearbotLogging.log_key(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
 
 
 def setup(bot):

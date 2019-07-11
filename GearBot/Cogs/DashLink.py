@@ -95,7 +95,6 @@ class DashLink(BaseCog):
             self.bot.loop.create_task(self.dash_monitor())
             
             # Store the token so the dashboard can notify the bot owner if the bot goes offline
-            await self.redis_link.set("bot_login_token", Configuration.get_master_var("LOGIN_TOKEN"))
 
             await self.redis_link.subscribe(self.receiver.channel("dash-bot-messages"))
         except OSError:
@@ -284,7 +283,7 @@ class DashLink(BaseCog):
             "user": Utils.clean_user(user),
             "user_id": user.id
         }
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_triggered", **parts)
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_triggered", **parts)
         failed = []
         for channel in guild.text_channels:
             try:
@@ -304,10 +303,10 @@ class DashLink(BaseCog):
                 failed.append(Translator.translate('voice_channel', guild.id, channel=channel.name))
 
         await asyncio.sleep(1)  # delay logging so the channel overrides can get querried and logged
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_complete", **parts)
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_complete", **parts)
         out = '\n'.join(failed)
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
-                              tag_on=None if len(failed) is 0 else f'```{out}```')
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
+                               tag_on=None if len(failed) is 0 else f'```{out}```')
 
     # crowdin
     async def crowdin_webhook(self, message):

@@ -96,7 +96,7 @@ class AntiRaid(BaseCog):
                 if member.guild.id not in self.raid_trackers:
                     # assign raid id, track raiders
                     raid = Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
-                    GearbotLogging.log_to(member.guild.id, 'raid_new', raid_id=raid.id)
+                    GearbotLogging.log_key(member.guild.id, 'raid_new', raid_id=raid.id)
                     # create trackers if needed
                     raider_ids = dict()
                     for raider in buckets[shield["id"]]:
@@ -134,7 +134,7 @@ class AntiRaid(BaseCog):
                 await self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
                 diff = abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
                 if diff > 60*60:
-                    GearbotLogging.log_to(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])
+                    GearbotLogging.log_key(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])
                     await self.terminate_shield(guild_id, handler, shield)
                     return
             except asyncio.TimeoutError:
@@ -148,7 +148,7 @@ class AntiRaid(BaseCog):
         del self.raid_trackers[guild_id]["SHIELDS"][shield["id"]]
         await handler.shield_terminated(self.bot, self.bot.get_guild(guild_id), self.raid_trackers[guild_id]["raid_id"], self.raid_trackers[guild_id]["raider_ids"], shield)
         if len(self.raid_trackers[guild_id]["SHIELDS"]) == 0:
-            GearbotLogging.log_to(guild_id, 'raid_terminated', raid_id=self.raid_trackers[guild_id]['raid_id'])
+            GearbotLogging.log_key(guild_id, 'raid_terminated', raid_id=self.raid_trackers[guild_id]['raid_id'])
             del self.raid_trackers[guild_id]
 
 

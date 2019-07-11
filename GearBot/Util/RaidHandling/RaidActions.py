@@ -9,7 +9,7 @@ from database import DatabaseConnector
 
 
 def log(gid, key, shield, **kwargs):
-    GearbotLogging.log_to(gid, key, shield_name=Utils.escape_markdown(shield["name"]), **kwargs)
+    GearbotLogging.log_key(gid, key, shield_name=Utils.escape_markdown(shield["name"]), **kwargs)
 
 
 class RaidAction(ABC):
@@ -36,13 +36,13 @@ class SendMessage(RaidAction):
                 await channel.send(data["message"].format(server_name=guild.name))
             else:
                 log(guild.id, 'raid_message_failed_missing_channel', shield, cid=data["channel"])
-                GearbotLogging.log_raw(guild.id, 'RAID_LOGS', data["message"].format(server_name=guild.name))
+                GearbotLogging.log_raw(guild.id, 'raid_message_failed_missing_channel', data["message"].format(server_name=guild.name))
         except Forbidden:
             log(guild.id, 'raid_message_failed_channel', shield, cid=data["channel"])
-            GearbotLogging.log_raw(guild.id, 'RAID_LOGS', data["message"].format(server_name=guild.name))
+            GearbotLogging.log_raw(guild.id, 'raid_message_failed_missing_channel', data["message"].format(server_name=guild.name))
         except Exception as ex:
             log(guild.id, 'raid_message_failed_channel_unknown_error', shield, cid=data["channel"])
-            GearbotLogging.log_raw(guild.id, 'RAID_LOGS', data["message"].format(server_name=guild.name))
+            GearbotLogging.log_raw(guild.id, 'raid_message_failed_missing_channel', data["message"].format(server_name=guild.name))
             await TheRealGearBot.handle_exception('RAID NOTIFICATION FAILURE', bot, ex)
 
     @property
@@ -75,7 +75,7 @@ class Mute(RaidAction):
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
         role = member.guild.get_role(Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE"))
         if role is None:
-            GearbotLogging.log_to(member.guild.id, 'raid_mute_failed_no_role')
+            GearbotLogging.log_key(member.guild.id, 'raid_mute_failed_no_role')
         else:
             duration = data["duration"]
             reason = f"Raider muted by raid shield {shield['name']} in raid {raid_id}"
@@ -122,10 +122,10 @@ class Kick(RaidAction):
             await TheRealGearBot.handle_exception('RAID KICK FAILURE', bot, ex)
         finally:
             i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
-            GearbotLogging.log_to(member.guild.id, 'kick_log',
-                                  user=Utils.clean_user(member), user_id=member.id,
-                                  moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
-                                  reason=reason, inf=i.id)
+            GearbotLogging.log_key(member.guild.id, 'kick_log',
+                                   user=Utils.clean_user(member), user_id=member.id,
+                                   moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
+                                   reason=reason, inf=i.id)
             DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
@@ -153,9 +153,9 @@ class Ban(RaidAction):
             await TheRealGearBot.handle_exception('RAID BAN FAILURE', bot, ex)
         finally:
             i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, "Ban", reason)
-            GearbotLogging.log_to(member.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
-                                  moderator=Utils.clean_user(bot.user), moderator_id=bot.user.id,
-                                  reason=reason, inf=i.id)
+            GearbotLogging.log_key(member.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
+                                   moderator=Utils.clean_user(bot.user), moderator_id=bot.user.id,
+                                   reason=reason, inf=i.id)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass

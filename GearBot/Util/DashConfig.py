@@ -176,7 +176,7 @@ def role_list_logger(t):
         for r in removed:
             role = guild.get_role(int(r))
             role_name = Utils.escape_markdown(role.name) if role is not None else r
-            GearbotLogging.log_to(
+            GearbotLogging.log_key(
                 guild.id, 
                 f"config_change_role_removed", 
                 role_name=role_name, role_id=r, type=t,
@@ -186,7 +186,7 @@ def role_list_logger(t):
         for r in added:
             role = guild.get_role(int(r))
             role_name = Utils.escape_markdown(role.name) if role is not None else r
-            GearbotLogging.log_to(
+            GearbotLogging.log_key(
                 guild.id,
                 f"config_change_role_added", 
                 role_name=role_name, 
@@ -231,14 +231,14 @@ def swap_mute_role(guild, old, new, parts):
         if old_role is not None:
             loop.create_task(role_remover(active_mutes, guild, old_role))
         if new != 0:
-            GearbotLogging.log_to(guild.id, "config_mute_role_changed", **parts)
+            GearbotLogging.log_key(guild.id, "config_mute_role_changed", **parts)
         else:
-            GearbotLogging.log_to(guild.id, "config_mute_role_disabled", **parts)
+            GearbotLogging.log_key(guild.id, "config_mute_role_disabled", **parts)
     if new != 0:
         if new_role is not None:
             loop.create_task(role_adder(active_mutes, guild, new_role))
         if old == 0:
-            GearbotLogging.log_to(guild.id, "config_mute_role_set", **parts)
+            GearbotLogging.log_key(guild.id, "config_mute_role_set", **parts)
 
 
 def self_role_updater(guild, old, new, parts):
@@ -248,7 +248,7 @@ def self_role_updater(guild, old, new, parts):
 
 def dash_perm_change_logger(t):
     def handler(guild, old, new, parts):
-        GearbotLogging.log_to(
+        GearbotLogging.log_key(
             guild.id, 
             f"config_dash_security_change",
             type=Translator.translate(f'config_dash_security_{t.lower()}', guild.id),
@@ -327,7 +327,7 @@ def update_config_section(guild, section, new_values, user):
         if section in SPECIAL_HANDLERS and k in SPECIAL_HANDLERS[section]:
             SPECIAL_HANDLERS[section][k](guild, old[k], modified_values[k], user_parts)
         else:
-            GearbotLogging.log_to(
+            GearbotLogging.log_key(
                 guild.id, 
                 "config_change",
                 option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
