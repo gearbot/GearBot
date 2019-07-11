@@ -299,8 +299,11 @@
   "mkick_confirmation": "Successfully kicked {count} people out.",
   "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):",
   "mban_confirm": "Are you sure you want to ban those people?",
+  "munban_confirm": "Are you sure you want to unban those people?",
   "mban_confirmation": "Successfully banned {count} people.",
+  "munban_confirmation": "Successfully unbanned {count} people.",
   "mass_failures_ban": "I was unable to ban the following users ({page_num}/{pages}):",
+  "mass_failures_unban": "I was unable to unban the following users ({page_num}/{pages}):",
   "processing": "Processing...",
   "already_blacklisted": "``{word}`` was already on the blacklist.",
   "entry_too_short": "Blacklist entries must be at least 3 chars.",
@@ -338,6 +341,7 @@
   "archive_channel_help": "Archive messages from a channel",
   "archive_user_help": "Archive messages from a user",
   "mban_help": "Bans multiple users with the same reason",
+  "munban_help": "Unbans multiple users with the same reason",
   "mkick_help": "Kicks multiple users with the same reason",
   "NaN": "Not a number",
   "number_too_small": "Number too small, must be at least {min}",
@@ -724,5 +728,6 @@
   "config_dash_security_access": "dashboard access",
   "config_dash_security_infractions": "infraction access",
   "config_dash_security_view_config": "seeing the configuration",
-  "config_dash_security_alter_config": "altering the configuration"
+  "config_dash_security_alter_config": "altering the configuration",
+  "ban_not_found": "Not banned"
 }

@@ -334,6 +334,19 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason, inf=i.id)
 
+    async def _unban(self, ctx, user, reason, confirm, days=0):
+        self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
+        await ctx.guild.unban(user, reason=Utils.trim_message(
+            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
+        Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
+                                              (Infraction.guild_id == ctx.guild.id)).execute()
+        i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Unban", reason)
+        GearbotLogging.log_to(ctx.guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author),
+                                moderator_id=ctx.author.id, reason=reason, inf=i.id)
+        if confirm:
+            await MessageUtils.send_to(ctx, "YES", "unban_confirmation", user=Utils.clean_user(user), user_id=user.id,
+                                         reason=reason, inf=i.id)
+
     @commands.guild_only()
     @commands.command()
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
@@ -373,6 +386,41 @@ class Moderation(BaseCog):
             await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
         else:
             await self.empty_list(ctx, "ban")
+
+    @commands.guild_only()
+    @commands.command()
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
+    async def munban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+        """munban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            valid = 0
+            failures = []
+            for t in targets:
+                try:
+                    user = await DiscordUser().convert(ctx, str(t))
+                except BadArgument as bad:
+                    failures.append(f"{t}: {bad}")
+                else:
+                    try:
+                        await self._unban(ctx, user, reason, False)
+                    except NotFound:
+                        ban_not_found = Translator.translate("ban_not_found", ctx)
+                        failures.append(f"{t}: {ban_not_found}")
+                    else:
+                        valid += 1
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="unban",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("munban_confirm", ctx), on_yes=yes)
+        else:
+            await self.empty_list(ctx, "unban")
 
     @staticmethod
     async def empty_list(ctx, action):
