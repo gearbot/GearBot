@@ -15,10 +15,11 @@ from discord.message import Message
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator, MessageUtils, \
     Permissioncheckers
+from Util.Matchers import MENTION_MATCHER, URL_MATCHER
 from Util.SpamBucket import SpamBucket
 from database.DatabaseConnector import Infraction
 
-MENTION_RE = re.compile("<@[!&]?\\d+>")
+
 
 
 class Violation:
@@ -49,7 +50,8 @@ class AntiSpam(BaseCog):
         self.generators = {
             "max_messages": lambda m: 1,
             "max_newlines": lambda m: len(m.content.split("\n")) - 1,
-            "max_mentions": lambda m: len(MENTION_RE.findall(m.content))
+            "max_mentions": lambda m: len(MENTION_MATCHER.findall(m.content)),
+            "max_links": lambda m: len(URL_MATCHER.findall(m.content))
         }
 
         self.punishments = {
