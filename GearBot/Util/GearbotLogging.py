@@ -85,7 +85,7 @@ LOGGING_INFO = {
             'mute_reapply_failed_log': 'WARNING',
         },
         'inf_delete_log': 'DELETE',
-
+        'verification_log': 'WRENCH',
         'kick_log': 'BOOT',
         'unmuted': 'INNOCENT',
         'tempban_lifted': 'INNOCENT',
