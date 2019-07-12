@@ -96,7 +96,7 @@ class AntiSpam(BaseCog):
 
     async def process_message(self, message: Message):
         # print(f'{datetime.datetime.now().isoformat()} - Processing message')
-        if self.is_exempt(message.guild.id, message.author):
+        if message.webhook_id is not None or self.is_exempt(message.guild.id, message.author):
             return
 
         # Use the discord's message timestamp to hopefully not trigger false positives
