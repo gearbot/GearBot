@@ -14,7 +14,7 @@ from Cogs.BaseCog import BaseCog
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils, Questions, server_info
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message, RangedIntBan
+    RangedInt, Message, RangedIntBan, VerificationLevel
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -476,21 +476,20 @@ class Moderation(BaseCog):
     
     @commands.command()
     @commands.guild_only()
-    async def verification(self, ctx: commands.Context, level: str, *, reason: Reason = ""):
+    async def verification(self, ctx: commands.Context, level: VerificationLevel, *, reason: Reason = ""):
         """verification_help"""
-        v1 = discord.VerificationLevel.__members__.get(level.lower())
-        if v1 is not None:
-            if ctx.guild.verification_level != v1:
-                try:
-                    await ctx.guild.edit(verification_level=v1, reason=reason)
-                except discord.Forbidden:
-                    await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
-                else:
-                    if reason == "":
-                        reason = Translator.translate("no_reason", ctx.guild.id)
-                    else:
-                        GearbotLogging.log_to(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
-                    await MessageUtils.send_to(ctx, 'YES', "verification_set", level=v1, reason=reason)
+        if reason == "":
+            reason = Translator.translate('no_reason', ctx)
+        if ctx.guild.verification_level != level:
+            try:
+                await ctx.guild.edit(verification_level=level, reason=reason)
+            except discord.Forbidden:
+                await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
+            else:
+                GearbotLogging.log_key(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, level=level, reason=reason)
+                await MessageUtils.send_to(ctx, 'YES', "verification_set", level=level)
+        else:
+            await MessageUtils.send_to(ctx, 'NO', 'verification_no_change', level=level)
 
     @commands.command()
     @commands.guild_only()

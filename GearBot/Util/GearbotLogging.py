@@ -33,206 +33,203 @@ log_type = namedtuple("Log_type", "config_key category emoji")
 todo = namedtuple("TODO", "message embed file")
 
 LOGGING_INFO = {
-    'RAID_LOGS': {
-        'state_changes': {
-            'raid_new': 'BAD_USER',
-            'raid_terminated': 'INNOCENT',
-            'raid_shield_triggered': 'BAD_USER',
-            'raid_shield_terminated': 'INNOCENT'
+    "CENSORED_MESSAGES": {
+        "censor_fail": {
+            "censor_message_failed": "WARNING",
+            "invite_censor_fail": "WARNING",
+            "invite_censor_forbidden": "WARNING"
         },
-        'failures': {
-            'raid_message_failed_missing_channel': 'WARNING',
-            'raid_message_failed_channel': 'WARNING',
-            'raid_message_failed_channel_unknown_error': 'WARNING',
-            'raid_message_user_not_found': 'WARNING',
-            'raid_message_user_forbidden': 'WARNING',
-            'raid_mute_forbidden': 'WARNING',
-            'raid_mute_unknown_error': 'WARNING',
-            'raid_kick_forbidden': 'WARNING',
-            'raid_kick_unknown_error': 'WARNING',
-            'raid_ban_forbidden': 'WARNING',
-            'raid_ban_unknown_error': 'WARNING',
-            'shield_time_limit_reached': 'WARNING',
-            'raid_mute_failed_no_role': 'BAD_USER',
-            'raid_message_failed': 'BAD_USER',
-            'raid_notification_failed': 'BAD_USER',
-            'raid_notification_forbidden': 'BAD_USER',
+        "censored": {
+            "censored_invite": "WARNING",
+            "censored_message": "WARNING"
         }
     },
-    'CENSORED_MESSAGES': {
-        'censored': {
-            'censored_message': 'WARNING',
-            'censored_invite': 'WARNING'
+    "CHANNEL_CHANGES": {
+        "channel_log": {
+            "channel_created": "CREATE",
+            "channel_created_by": "CREATE",
+            "channel_deleted": "DELETE",
+            "channel_deleted_by": "DELETE"
         },
-        'censor_fail': {
-            'censor_message_failed': 'WARNING',
-            'invite_censor_fail': 'WARNING',
-            'invite_censor_forbidden': 'WARNING'
-        }
-
+        "perm_overrides": {
+            "permission_override_added": "ALTER",
+            "permission_override_added_by": "ALTER",
+            "permission_override_added_role": "ALTER",
+            "permission_override_added_role_by": "ALTER",
+            "permission_override_removed": "ALTER",
+            "permission_override_removed_by": "ALTER",
+            "permission_override_removed_role": "ALTER",
+            "permission_override_removed_role_by": "ALTER",
+            "permission_override_update": "ALTER",
+            "permission_override_update_by": "ALTER",
+            "permission_override_update_role": "ALTER",
+            "permission_override_update_role_by": "ALTER"
+        },
+        "simple_change": {
+            "channel_update_simple": "ALTER",
+            "channel_update_simple_by": "ALTER"
+        },
+        "slowmode_log": "ALTER"
     },
-    'MOD_ACTIONS': {
-        'warning': {
-            'warning_added_modlog': 'WARNING',
-            'warning_could_not_dm': 'WARNING',
+    "CONFIG_CHANGES": {
+        "config_change": "WRENCH",
+        "config_dash_security_change": "WRENCH",
+        "mute_role_changes": {
+            "config_mute_cleanup_complete": "WRENCH",
+            "config_mute_cleanup_failed": "WRENCH",
+            "config_mute_cleanup_triggered": "WRENCH",
+            "config_mute_role_changed": "WRENCH",
+            "config_mute_role_disabled": "WRENCH",
+            "config_mute_role_set": "WRENCH",
+            "config_mute_setup_complete": "WRENCH",
+            "config_mute_setup_failed": "WRENCH",
+            "config_mute_setup_triggered": "WRENCH"
         },
-        'errors': {
-            'mute_role_already_removed': 'WARNING',
-            'unmute_missing_perms': 'WARNING',
-            'unmute_unknown_error': 'WARNING',
-            'tempban_expired_missing_perms': 'WARNING',
-            'tempban_already_lifted': 'WARNING',
-            'mute_reapply_failed_log': 'WARNING',
-        },
-        'inf_delete_log': 'DELETE',
-        'verification_log': 'WRENCH',
-        'kick_log': 'BOOT',
-        'unmuted': 'INNOCENT',
-        'tempban_lifted': 'INNOCENT',
-        'softban_log': 'BAN',
-        'forceban_log': 'BAN',
-        'mute_log': {
-            'mute_log': 'MUTE',
-            'mute_duration_extended_log': 'MUTE',
-            'mute_duration_added_log': 'MUTE',
-            'mute_duration_overwritten_log': 'MUTE',
-        },
-        'ban': {
-            'manual_ban_log': 'BAN',
-            'ban_log': 'BAN'
-        },
-        'unban': {
-            'unban_log': 'INNOCENT',
-            'manual_unban_log': 'INNOCENT'
-        },
-        'mute_reapply_log': 'BAD_USER',
-        'tempban_log': 'BAN',
-        'unmute_modlog': 'INNOCENT',
-
-    },
-    'CHANNEL_CHANGES': {
-        'simple_change': {
-            'channel_update_simple': 'ALTER',
-            'channel_update_simple_by': 'ALTER',
-        },
-        'channel_log': {
-            'channel_created_by': 'CREATE',
-            'channel_created': 'CREATE',
-            'channel_deleted_by': 'DELETE',
-            'channel_deleted': 'DELETE'
-        },
-        'perm_overrides': {
-            'permission_override_update': 'ALTER',
-            'permission_override_update_by': 'ALTER',
-            'permission_override_update_role': 'ALTER',
-            'permission_override_update_role_by': 'ALTER',
-            'permission_override_removed': 'ALTER',
-            'permission_override_removed_by': 'ALTER',
-            'permission_override_removed_role': 'ALTER',
-            'permission_override_removed_role_by': 'ALTER',
-            'permission_override_added': 'ALTER',
-            'permission_override_added_by': 'ALTER',
-            'permission_override_added_role': 'ALTER',
-            'permission_override_added_role_by': 'ALTER'
-        },
-        'slowmode_log': 'ALTER'
-    },
-    'ROLE_CHANGES': {
-        'simple_change': {
-            'role_update_simple': 'ALTER',
-            'role_update_simple_by': 'ALTER',
-        },
-        'role_log': {
-            'role_created_by': 'CREATE',
-            'role_created': 'CREATE',
-            'role_deleted_by': 'DELETE',
-            'role_deleted': 'DELETE',
-            'role_removed_by': 'ROLE_REMOVE',
-            'role_added_by': 'ROLE_ADD',
-            'role_removed': 'ROLE_REMOVE',
-            'role_added': 'ROLE_ADD',
-        },
-        'perm_update': {
-            'role_update_perm_added': 'ALTER',
-            'role_update_perm_added_by': 'ALTER',
-            'role_update_perm_revoked': 'DELETE',
-            'role_update_perm_revoked_by': 'DELETE',
+        "perm_role_changes": {
+            "config_change_role_added": "WRENCH",
+            "config_change_role_removed": "WRENCH"
         }
     },
-    'MISC': {
-        'command_used': 'WRENCH'
-    },
-    'TRAVEL_LOGS': {
-        'joins': {
-            'join_logging': 'JOIN',
-            'join_logging_new': 'JOIN'
+    "FUTURE_LOGS": {},
+    "MESSAGE_LOGS": {
+        "edit_logging": "EDIT",
+        "message_removed": "TRASH",
+        "pins": {
+            "message_pinned": "PIN",
+            "message_pinned_by": "PIN",
+            "message_unpinned": "PIN"
         },
-
-        'leave_logging': 'LEAVE',
+        "purged_log": "DELETE"
     },
-    'NAME_CHANGES': {
-        'nickname': {
-            'own_nickname_changed': 'NICKTAG',
-            'unknown_nickname_changed': 'NICKTAG',
-            'mod_nickname_changed': 'NICKTAG',
-            'unknown_nickname_added': 'NICKTAG',
-            'own_nickname_added': 'NICKTAG',
-            'mod_nickname_added': 'NICKTAG',
-            'own_nickname_removed': 'NICKTAG',
-            'mod_nickname_removed': 'NICKTAG',
-            'unknown_nickname_removed': 'NICKTAG'
+    "MISC": {
+        "command_used": "WRENCH"
+    },
+    "MOD_ACTIONS": {
+        "ban": {
+            "ban_log": "BAN",
+            "manual_ban_log": "BAN"
         },
-        'username_changed': 'NAMETAG',
-
-    },
-    'MESSAGE_LOGS': {
-        'message_removed': 'TRASH',
-        'edit_logging': 'EDIT',
-        'purged_log': 'DELETE',
-        'pins': {
-            'message_pinned': 'PIN',
-            'message_pinned_by': 'PIN',
-            'message_unpinned': 'PIN',
+        "errors": {
+            "mute_reapply_failed_log": "WARNING",
+            "mute_role_already_removed": "WARNING",
+            "tempban_already_lifted": "WARNING",
+            "tempban_expired_missing_perms": "WARNING",
+            "unmute_missing_perms": "WARNING",
+            "unmute_unknown_error": "WARNING"
+        },
+        "forceban_log": "BAN",
+        "inf_delete_log": "DELETE",
+        "kick_log": "BOOT",
+        "mute_log": {
+            "mute_duration_added_log": "MUTE",
+            "mute_duration_extended_log": "MUTE",
+            "mute_duration_overwritten_log": "MUTE",
+            "mute_log": "MUTE"
+        },
+        "mute_reapply_log": "BAD_USER",
+        "softban_log": "BAN",
+        "tempban_lifted": "INNOCENT",
+        "tempban_log": "BAN",
+        "unban": {
+            "manual_unban_log": "INNOCENT",
+            "unban_log": "INNOCENT"
+        },
+        "unmute_modlog": "INNOCENT",
+        "unmuted": "INNOCENT",
+        "verification_log": "WRENCH",
+        "warning": {
+            "warning_added_modlog": "WARNING",
+            "warning_could_not_dm": "WARNING"
         }
     },
-    'VOICE_CHANGES_DETAILED': {
-        'voice_change_deaf_true': 'VOICE',
-        'voice_change_deaf_false': 'VOICE',
-        'voice_change_mute_true': 'VOICE',
-        'voice_change_mute_false': 'VOICE',
-        'voice_change_self_mute_true': 'VOICE',
-        'voice_change_self_mute_false': 'VOICE',
-        'voice_change_self_deaf_true': 'VOICE',
-        'voice_change_self_deaf_false': 'VOICE',
-        'voice_change_afk_true': 'VOICE',
-        'voice_change_afk_false': 'VOICE',
-    },
-    'VOICE_CHANGES': {
-        'connected_to_voice': 'VOICE',
-        'disconnected_voice': 'VOICE',
-        'moved_voice': 'VOICE',
-    },
-    'SPAM_VIOLATION': {
-        'spam_violate': 'BAD_USER'
-    },
-    'CONFIG_CHANGES': {
-        "config_change": 'WRENCH',
-        'perm_role_changes': {
-            "config_change_role_removed": 'WRENCH',
-            "config_change_role_added": 'WRENCH',
+    "NAME_CHANGES": {
+        "nickname": {
+            "mod_nickname_added": "NICKTAG",
+            "mod_nickname_changed": "NICKTAG",
+            "mod_nickname_removed": "NICKTAG",
+            "own_nickname_added": "NICKTAG",
+            "own_nickname_changed": "NICKTAG",
+            "own_nickname_removed": "NICKTAG",
+            "unknown_nickname_added": "NICKTAG",
+            "unknown_nickname_changed": "NICKTAG",
+            "unknown_nickname_removed": "NICKTAG"
         },
-        'mute_role_changes': {
-            "config_mute_role_disabled": 'WRENCH',
-            "config_mute_role_changed": 'WRENCH',
-            "config_mute_role_set": 'WRENCH',
-            "config_mute_setup_triggered": 'WRENCH',
-            "config_mute_setup_complete": 'WRENCH',
-            "config_mute_setup_failed": 'WRENCH',
-            "config_mute_cleanup_triggered": 'WRENCH',
-            "config_mute_cleanup_complete": 'WRENCH',
-            "config_mute_cleanup_failed": 'WRENCH'
+        "username_changed": "NAMETAG"
+    },
+    "RAID_LOGS": {
+        "failures": {
+            "raid_ban_forbidden": "WARNING",
+            "raid_ban_unknown_error": "WARNING",
+            "raid_kick_forbidden": "WARNING",
+            "raid_kick_unknown_error": "WARNING",
+            "raid_message_failed": "BAD_USER",
+            "raid_message_failed_channel": "WARNING",
+            "raid_message_failed_channel_unknown_error": "WARNING",
+            "raid_message_failed_missing_channel": "WARNING",
+            "raid_message_user_forbidden": "WARNING",
+            "raid_message_user_not_found": "WARNING",
+            "raid_mute_failed_no_role": "BAD_USER",
+            "raid_mute_forbidden": "WARNING",
+            "raid_mute_unknown_error": "WARNING",
+            "raid_notification_failed": "BAD_USER",
+            "raid_notification_forbidden": "BAD_USER",
+            "shield_time_limit_reached": "WARNING"
         },
-        "config_dash_security_change": 'WRENCH',
+        "state_changes": {
+            "raid_new": "BAD_USER",
+            "raid_shield_terminated": "INNOCENT",
+            "raid_shield_triggered": "BAD_USER",
+            "raid_terminated": "INNOCENT"
+        }
+    },
+    "ROLE_CHANGES": {
+        "perm_update": {
+            "role_update_perm_added": "ALTER",
+            "role_update_perm_added_by": "ALTER",
+            "role_update_perm_revoked": "DELETE",
+            "role_update_perm_revoked_by": "DELETE"
+        },
+        "role_log": {
+            "role_added": "ROLE_ADD",
+            "role_added_by": "ROLE_ADD",
+            "role_created": "CREATE",
+            "role_created_by": "CREATE",
+            "role_deleted": "DELETE",
+            "role_deleted_by": "DELETE",
+            "role_removed": "ROLE_REMOVE",
+            "role_removed_by": "ROLE_REMOVE"
+        },
+        "simple_change": {
+            "role_update_simple": "ALTER",
+            "role_update_simple_by": "ALTER"
+        }
+    },
+    "SPAM_VIOLATION": {
+        "spam_violate": "BAD_USER"
+    },
+    "TRAVEL_LOGS": {
+        "joins": {
+            "join_logging": "JOIN",
+            "join_logging_new": "JOIN"
+        },
+        "leave_logging": "LEAVE"
+    },
+    "VOICE_CHANGES": {
+        "connected_to_voice": "VOICE",
+        "disconnected_voice": "VOICE",
+        "moved_voice": "VOICE"
+    },
+    "VOICE_CHANGES_DETAILED": {
+        "voice_change_afk_false": "VOICE",
+        "voice_change_afk_true": "VOICE",
+        "voice_change_deaf_false": "VOICE",
+        "voice_change_deaf_true": "VOICE",
+        "voice_change_mute_false": "VOICE",
+        "voice_change_mute_true": "VOICE",
+        "voice_change_self_deaf_false": "VOICE",
+        "voice_change_self_deaf_true": "VOICE",
+        "voice_change_self_mute_false": "VOICE",
+        "voice_change_self_mute_true": "VOICE"
     }
 }
 
@@ -359,7 +356,6 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
 
 
 def log_key(guild_id, key, embed=None, file=None, can_stamp=False, tag_on=None, **kwargs):
-    print("test")
     # logging category, emoji and
     info = LOG_TYPES[key]
 

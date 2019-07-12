@@ -73,10 +73,21 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
 
 
 class Serveradmin(BaseCog):
-
     LOGGING_TYPES = [
-        "EDIT_LOGS", "NAME_CHANGES", "ROLE_CHANGES", "CENSORED_MESSAGES", "JOIN_LOGS", "MOD_ACTIONS", "COMMAND_EXECUTED",
-        "CHANNEL_CHANGES", "VOICE_CHANGES", "VOICE_CHANGES_DETAILED", "FUTURE_LOGS", "SPAM_VIOLATION", "CONFIG_CHANGES", "RAID_LOGS"
+        "RAID_LOGS",
+        "CENSORED_MESSAGES",
+        "MOD_ACTIONS",
+        "CHANNEL_CHANGES",
+        "ROLE_CHANGES",
+        "MISC",
+        "TRAVEL_LOGS",
+        "NAME_CHANGES",
+        "MESSAGE_LOGS",
+        "VOICE_CHANGES_DETAILED",
+        "VOICE_CHANGES",
+        "SPAM_VIOLATION",
+        "CONFIG_CHANGES",
+        "FUTURE_LOGS"
     ]
 
     def __init__(self, bot):
