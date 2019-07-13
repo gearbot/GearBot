@@ -694,6 +694,8 @@
   "spam_max_newlines": "Too many newlines",
   "spam_max_mentions": "Too many mentions",
   "spam_max_duplicates": "Too many duplicates",
+  "spam_max_censored": "Got censored too often",
+  "spam_censored": "Got censored too often",
   "spam_infraction_reason": "Spam detected in {channel}: {friendly}",
   "slowmode_too_high": "You can only set a slowmode interval up to 6 hours",
   "slowmode_no_change": "The slowmode interval is already set to {duration} in {channel}",

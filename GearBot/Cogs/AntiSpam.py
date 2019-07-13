@@ -1,6 +1,8 @@
 import asyncio
 import datetime
 import re
+from asyncio.base_futures import CancelledError
+
 import time
 from collections import deque
 from weakref import WeakValueDictionary
@@ -12,6 +14,7 @@ from discord.guild import Guild
 from discord.member import Member
 from discord.message import Message
 
+from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator, MessageUtils, \
     Permissioncheckers
@@ -71,6 +74,12 @@ class AntiSpam(BaseCog):
         }
         self.extra_actions = WeakValueDictionary()
         self.processed = deque(maxlen=500)
+        self.censor_processed = deque(maxlen=50)
+        self.running = True
+        bot.loop.create_task(self.censor_detector())
+
+    def cog_unload(self):
+        self.running = False
 
     def get_extra_actions(self, key):
         if key not in self.extra_actions:
@@ -130,12 +139,14 @@ class AntiSpam(BaseCog):
             if t == "duplicates":
                 await self.check_duplicates(message, counter, bucket)
             else:
+                v = 0
                 if t in cache:
                     v = cache[t]
-                else:
+                elif t in self.generators:
                     v = self.generators[t](message)
                     cache[t] = v
-                await check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
+                if v is not 0:
+                    await check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
 
     async def check_duplicates(self, message: Message, count: int, bucket):
         rule = bucket["SIZE"]
@@ -282,6 +293,43 @@ class AntiSpam(BaseCog):
         GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(v.member), user_id=v.member.id,
                                moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                reason=reason, inf=i.id)
+
+
+    async def censor_detector(self):
+        # reciever taks for someone gets censored
+        while self.running:
+            try:
+                message = await self.bot.wait_for("user_censored")
+                # make sure our cog is still running so we don't handle it twice
+                if not self.running:
+                    return
+
+                # make sure anti-spam is enabled
+                cfg = Configuration.get_var(message.guild.id, "ANTI_SPAM")
+                if not cfg.get("ENABLED", False) or message.id in self.censor_processed:
+                    continue
+                buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
+                count = 0
+                for b in buckets:
+                    t = b["TYPE"]
+                    if t == "censored":
+                        msg_time = int(message.created_at.timestamp()) * 1000
+                        bucket = self.get_bucket(message.guild.id, f"censored:{count}", b, message.author.id)
+                        if bucket is not None and await bucket.check(message.author.id, msg_time, 1, f"{message.channel.id}-{message.id}"):
+                            count = await bucket.count(message.author.id, msg_time, expire=False)
+                            period = await bucket.size(message.author.id, msg_time, expire=False) / 1000
+                            self.bot.loop.create_task(
+                                self.violate(Violation("max_censored", message.guild, f"{Translator.translate('spam_max_censored', message)} ({count}/{period}s)",
+                                                       message.author,
+                                                       message.channel,
+                                                       await bucket.get(message.author.id, msg_time, expire=False),
+                                                       b, count)))
+
+            except CancelledError:
+                pass
+            except Exception as e:
+                await TheRealGearBot.handle_exception("censor detector", self.bot, e)
+
 
     @staticmethod
     def assemble_reason(v):
