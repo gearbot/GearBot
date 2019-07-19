@@ -124,11 +124,8 @@ class DashLink(BaseCog):
                         # Apply the timestamp
                         outage_message["timestamp"] = datetime.now().isoformat()
 
-                        # Set the current warning count
-                        outage_message["fields"][0]["value"] = f"{self.last_dash_heartbeat[2]}/{MAX_WARNINGS}"
-
                         # Set the color to the format Discord understands
-                        outage_message["color"] = int(outage_message["color"], 16)
+                        outage_message["color"] = outage_message["color"]
                             
                         # Generate the custom message and role pings
                         notify_message = DASH_OUTAGE_INFO["dash_outage_message"]
@@ -146,7 +143,7 @@ class DashLink(BaseCog):
                             print("We couldn't access the specified channel, the notification will not be sent!")
 
             # Wait a little bit longer so the dashboard has a chance to update before we check
-            await asyncio.sleep(65)
+            await asyncio.sleep(5)
 
     async def _handle(self, sender, message):
         try:

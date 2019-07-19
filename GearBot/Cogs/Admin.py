@@ -167,7 +167,7 @@ class Admin(BaseCog):
 
     @commands.command()
     async def pendingchanges(self, ctx):
-        await ctx.send(f'https://github.com/gearbot/GearBot/compare/{self.bot.version}..master')
+        await ctx.send(f'https://github.com/gearbot/GearBot/compare/{self.bot.version}...master')
 
 
 
