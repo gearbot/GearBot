@@ -44,7 +44,7 @@ class Censor(BaseCog):
                 message.author == message.guild.me:
             return
         ctx = await self.bot.get_context(message)
-        if Permissioncheckers.get_user_lvl(ctx) >= 2:
+        if Permissioncheckers.get_user_lvl(ctx.guild, ctx.author) >= 2:
             return
         blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
         guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")

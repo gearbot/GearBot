@@ -10,4 +10,4 @@ class BaseCog(commands.Cog):
         self.permissions=permissions
 
     async def cog_check (self, ctx):
-        return Permissioncheckers.check_permission(ctx)
+        return Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author)
