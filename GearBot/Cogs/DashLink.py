@@ -143,7 +143,7 @@ class DashLink(BaseCog):
                             print("We couldn't access the specified channel, the notification will not be sent!")
 
             # Wait a little bit longer so the dashboard has a chance to update before we check
-            await asyncio.sleep(5)
+            await asyncio.sleep(65)
 
     async def _handle(self, sender, message):
         try:
