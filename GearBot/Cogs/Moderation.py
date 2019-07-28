@@ -115,6 +115,7 @@ class Moderation(BaseCog):
     @nickname.command("add")
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_add(self, ctx, user: discord.Member, *, nick):
+        """mod_nickname_add_help"""
         try:
             await user.edit(nick=nick)
         except discord.HTTPException as ex:
@@ -125,6 +126,7 @@ class Moderation(BaseCog):
     @nickname.command("remove")
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_remove(self, ctx, user: discord.Member):
+        """mod_nickname_remove_help"""
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
             return
