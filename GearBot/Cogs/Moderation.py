@@ -117,11 +117,16 @@ class Moderation(BaseCog):
     async def nickname_add(self, ctx, user: discord.Member, *, nick):
         """mod_nickname_add_help"""
         try:
-            await user.edit(nick=nick)
+            if user is None:
+                await ctx.send("Not found.")
+            allowed, message = self._can_act("nickname_add", ctx, user)
+            if allowed:
+                await user.edit(nick=nick)
+                await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
         except discord.HTTPException as ex:
             await MessageUtils.send_to(ctx, "NO", "mod_nickname_too_long", user_id=user.id, user=Utils.clean_user(user))
         else:
-            await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
+            await MessageUtils.send_to(ctx, "NO", "nickname_add_unable", user_id=user.id, user=Utils.clean_user(user))
     
     @nickname.command("remove")
     @commands.bot_has_permissions(manage_nicknames=True)
@@ -130,9 +135,12 @@ class Moderation(BaseCog):
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
             return
-        else:
+        allowed, message = self._can_act("nickname_remove", ctx, user)
+        if allowed:
             await user.edit(nick=None)
             await MessageUtils.send_to(ctx, "YES", "mod_nickname_nuked", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await MessageUtils.send_to(ctx, "NO", "nickname_remove_unable", user_id=user.id, user=Utils.clean_user(user))
 
 
     @commands.group()

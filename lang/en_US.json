@@ -736,9 +736,11 @@
   "ban_not_found": "Not banned",
   "mod_nickname_help": "Base command for nickname.",
   "mod_nickname_update": "Successfully updated {user} (``{user_id}``)'s nickname to {nick}!",
-  "mod_nickname_too_long": "I was not able to change {user} (``{user_id}``)'s nickname, either I exceeded the 32 characters limit.",
+  "mod_nickname_too_long": "I was not able to change {user} (``{user_id}``)'s nickname, seems like I exceeded the 32 characters limit.",
   "mod_nickname_nuked": "I have removed {user} (``{user_id}``)'s nickname.",
   "mod_nickname_mia": "What nickname? {user} currently does not have a nickname.",
   "mod_nickname_add_help": "Adds or edits a user's nickname.",
-  "mod_nickname_remove_help": "Removes the user's nickname."
+  "mod_nickname_remove_help": "Removes the user's nickname.",
+  "nickname_remove_unable": "You do not have permission to remove {user}'s nickname.",
+  "nickname_add_unable": "You do not have permission to add or change change {user}'s nickname"
 }
