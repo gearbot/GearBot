@@ -742,5 +742,6 @@
   "mod_nickname_add_help": "Adds or edits a user's nickname.",
   "mod_nickname_remove_help": "Removes the user's nickname.",
   "nickname_remove_unable": "You do not have permission to remove {user}'s nickname.",
-  "nickname_add_unable": "You do not have permission to add or change change {user}'s nickname"
+  "nickname_add_unable": "You do not have permission to add or change change {user}'s nickname",
+  "nickname_user_not_found": "I was not able to find {user} (``{user_id}``) in the server."
 }

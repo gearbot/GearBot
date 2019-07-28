@@ -118,7 +118,7 @@ class Moderation(BaseCog):
         """mod_nickname_add_help"""
         try:
             if user is None:
-                await ctx.send("Not found.")
+                await MessageUtils.send_to(ctx, "NO", "nickname_user_not_found", user_id=user.id, user=Utils.clean_user(user))
             allowed, message = self._can_act("nickname_add", ctx, user)
             if allowed:
                 await user.edit(nick=nick)
