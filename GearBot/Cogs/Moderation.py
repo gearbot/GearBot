@@ -103,6 +103,34 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
         else:
             await MessageUtils.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
+    
+    @commands.group(aliases=["nick"])
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname(self, ctx: commands.Context):
+        """mod_nickname_help"""
+        if ctx.subcommand_passed is None:
+            await ctx.invoke(self.bot.get_command("help"), query="nickname")
+    
+    @nickname.command("add")
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname_add(self, ctx, user: discord.Member, *, nick):
+        try:
+            await user.edit(nick=nick)
+        except discord.HTTPException as ex:
+            await MessageUtils.send_to(ctx, "NO", "mod_nickname_too_long", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
+    
+    @nickname.command("remove")
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname_remove(self, ctx, user: discord.Member):
+        if user.nick is None:
+            await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
+            return
+        else:
+            await user.edit(nick=None)
+            await MessageUtils.send_to(ctx, "YES", "mod_nickname_nuked", user_id=user.id, user=Utils.clean_user(user))
 
 
     @commands.group()
