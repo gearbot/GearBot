@@ -112,7 +112,7 @@ class Moderation(BaseCog):
         if ctx.subcommand_passed is None:
             await ctx.invoke(self.bot.get_command("help"), query="nickname")
     
-    @nickname.command("add")
+    @nickname.command(aliases=["add", "set"])
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_add(self, ctx, user: discord.Member, *, nick):
         """mod_nickname_add_help"""
@@ -123,8 +123,10 @@ class Moderation(BaseCog):
             if allowed:
                 await user.edit(nick=nick)
                 await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
+                return
         except discord.HTTPException as ex:
             await MessageUtils.send_to(ctx, "NO", "mod_nickname_too_long", user_id=user.id, user=Utils.clean_user(user))
+            return
         else:
             await MessageUtils.send_to(ctx, "NO", "nickname_add_unable", user_id=user.id, user=Utils.clean_user(user))
     
