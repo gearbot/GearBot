@@ -33,6 +33,7 @@ def server_info_embed(guild, request_guild=None):
         value=str(len(guild.text_channels) + len(guild.voice_channels)),
         inline=True
     )
+
     embed.add_field(
         name=Translator.translate('created_at', request_guild),
         value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
@@ -43,7 +44,11 @@ def server_info_embed(guild, request_guild=None):
         value=guild_features,
         inline=True
     )
-
+     embed.add_field(
+        name=Translator.translate('categories', request_guild),
+        value=str(len(guild.categories)),
+        inline=True
+    )
     if guild.icon_url_as() != "":
         embed.add_field(
             name=Translator.translate('server_icon', request_guild),
