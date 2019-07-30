@@ -10,27 +10,6 @@ from Util import Configuration, GearbotLogging, Permissioncheckers, Utils
 from Util.Matchers import INVITE_MATCHER
 
 
-async def censor_invite(ctx, code, server_name):
-    # Allow for users with a trusted role, or trusted users, to post invite links
-    if Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(ctx.author):
-        return
-
-    ctx.bot.data["message_deletes"].add(ctx.message.id)
-    clean_message = await clean_content().convert(ctx, ctx.message.content)
-    clean_name = Utils.clean_user(ctx.message.author)
-    try:
-        await ctx.message.delete()
-        GearbotLogging.log_to(ctx.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message, server_name=server_name, user_id=ctx.message.author.id, channel=ctx.message.channel.mention)
-    except discord.NotFound:
-        # we failed? guess we lost the race, log anyways
-        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_fail', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
-        if ctx.message.id in ctx.bot.data["message_deletes"]:
-            ctx.bot.data["message_deletes"].remove(ctx.message.id)
-    except discord.Forbidden:
-        GearbotLogging.log_to(ctx.guild.id, 'invite_censor_forbidden', user=clean_name, code = code, message = clean_message, server_name = server_name, user_id = ctx.message.author.id, channel = ctx.message.channel.mention)
-        if ctx.message.id in ctx.bot.data["message_deletes"]:
-            ctx.bot.data["message_deletes"].remove(ctx.message.id)
-
 
 
 class Censor(BaseCog):
@@ -65,7 +44,7 @@ class Censor(BaseCog):
                 message.author == message.guild.me:
             return
         ctx = await self.bot.get_context(message)
-        if Permissioncheckers.get_user_lvl(ctx) >= 2:
+        if Permissioncheckers.get_user_lvl(ctx.guild, ctx.author) >= 2:
             return
         blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
         guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")
@@ -78,13 +57,13 @@ class Censor(BaseCog):
                 try:
                     invite: discord.Invite = await self.bot.fetch_invite(code)
                 except discord.NotFound:
-                    await censor_invite(ctx, code, "INVALID INVITE")
+                    await self.censor_invite(ctx, code, "INVALID INVITE")
                 except KeyError:
-                    await censor_invite(ctx, code, "DM group")
+                    await self.censor_invite(ctx, code, "DM group")
                     censored = True
                 else:
                     if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != message.guild.id):
-                        await censor_invite(ctx, code, invite.guild.name)
+                        await self.censor_invite(ctx, code, invite.guild.name)
                         censored = True
 
         if not censored:
@@ -96,13 +75,45 @@ class Censor(BaseCog):
                             self.bot.data["message_deletes"].add(message.id)
                             await message.delete()
                         except discord.NotFound as ex:
-                            pass  # lost the race with another bot?
+                            break  # lost the race with another bot?
                         else:
                             clean_message = await clean_content().convert(ctx, message.content)
-                            GearbotLogging.log_to(ctx.guild.id, 'censored_message', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)
+                            GearbotLogging.log_key(ctx.guild.id, 'censored_message', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, channel=message.channel.mention)
+                            self.bot.dispatch("user_censored", ctx.message)
+                            break
                     else:
                         clean_message = await clean_content().convert(ctx, message.content)
-                        GearbotLogging.log_to(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
+                        GearbotLogging.log_key(ctx.guild.id, 'censor_message_failed', user=message.author, user_id=message.author.id, message=clean_message, sequence=bad, link=message.jump_url)
+                        self.bot.dispatch("user_censored", ctx.message)
+
+    async def censor_invite(self, ctx, code, server_name):
+        # Allow for users with a trusted role, or trusted users, to post invite links
+        if Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(
+                ctx.author):
+            return
+
+        ctx.bot.data["message_deletes"].add(ctx.message.id)
+        clean_message = await clean_content().convert(ctx, ctx.message.content)
+        clean_name = Utils.clean_user(ctx.message.author)
+        try:
+            await ctx.message.delete()
+            GearbotLogging.log_key(ctx.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message,
+                                   server_name=server_name, user_id=ctx.message.author.id,
+                                   channel=ctx.message.channel.mention)
+        except discord.NotFound:
+            # we failed? guess we lost the race, log anyways
+            GearbotLogging.log_key(ctx.guild.id, 'invite_censor_fail', user=clean_name, code=code,
+                                   message=clean_message, server_name=server_name, user_id=ctx.message.author.id,
+                                   channel=ctx.message.channel.mention)
+            if ctx.message.id in ctx.bot.data["message_deletes"]:
+                ctx.bot.data["message_deletes"].remove(ctx.message.id)
+        except discord.Forbidden:
+            GearbotLogging.log_key(ctx.guild.id, 'invite_censor_forbidden', user=clean_name, code=code,
+                                   message=clean_message, server_name=server_name, user_id=ctx.message.author.id,
+                                   channel=ctx.message.channel.mention)
+            if ctx.message.id in ctx.bot.data["message_deletes"]:
+                ctx.bot.data["message_deletes"].remove(ctx.message.id)
+        self.bot.dispatch("user_censored", ctx.message)
 
 
 def setup(bot):

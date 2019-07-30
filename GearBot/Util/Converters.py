@@ -1,3 +1,4 @@
+import discord
 from discord import NotFound, Forbidden, HTTPException
 from discord.ext.commands import UserConverter, BadArgument, Converter
 
@@ -10,7 +11,8 @@ from database.DatabaseConnector import LoggedMessage, Infraction
 
 class TranslatedBadArgument(BadArgument):
     def __init__(self, key, ctx, arg=None, **kwargs):
-        super().__init__(Translator.translate(key, ctx, arg=Utils.trim_message(Utils.clean_name(str(arg)), 1000), **kwargs))
+        super().__init__(
+            Translator.translate(key, ctx, arg=Utils.trim_message(Utils.clean_name(str(arg)), 1000), **kwargs))
 
 
 class BannedMember(Converter):
@@ -60,9 +62,11 @@ class ApexPlatform(Converter):
             raise TranslatedBadArgument("apexstats_invalid_platform", ctx)
         return platformid
 
+
 class UserID(Converter):
     async def convert(self, ctx, argument):
         return (await DiscordUser().convert(ctx, argument)).id
+
 
 class Reason(Converter):
     async def convert(self, ctx, argument):
@@ -72,7 +76,6 @@ class Reason(Converter):
         if len(argument) > 1800:
             raise TranslatedBadArgument('reason_too_long', ctx)
         return argument
-
 
 
 class PotentialID(Converter):
@@ -310,6 +313,7 @@ class ServerInfraction(Converter):
         else:
             return infraction
 
+
 class DurationHolder:
 
     def __init__(self, length, unit=None) -> None:
@@ -372,6 +376,7 @@ class DurationIdentifier(Converter):
             raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
         return argument
 
+
 class EmojiName(Converter):
     async def convert(self, ctx, argument):
         if len(argument) < 2 or len(argument) > 32:
@@ -381,3 +386,11 @@ class EmojiName(Converter):
         if " " in argument:
             raise TranslatedBadArgument('emoji_name_space', ctx, argument)
         return argument
+
+
+class VerificationLevel(Converter):
+    async def convert(self, ctx, argument):
+        level = discord.VerificationLevel.__members__.get(argument.lower())
+        if level is None:
+            raise TranslatedBadArgument('unknown_verification_level', ctx)
+        return level

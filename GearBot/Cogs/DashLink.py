@@ -59,9 +59,10 @@ class DashLink(BaseCog):
             guild_info=self.guild_info_request,
             get_config_section=self.get_config_section,
             update_config_section=self.update_config_section,
-            languages=self.languages,
+            replace_config_section=self.replace_config_section,
             setup_mute=self.setup_mute,
-            cleanup_mute=self.cleanup_mute
+            cleanup_mute=self.cleanup_mute,
+            cache_info=self.cache_info
         )
         # The last time we received a heartbeat, the current attempt number, how many times we have notified the owner
         self.last_dash_heartbeat = [time.time(), 0, 0]
@@ -95,11 +96,13 @@ class DashLink(BaseCog):
 
             if Configuration.get_master_var("DASH_OUTAGE")["outage_detection"]:
                 self.bot.loop.create_task(self.dash_monitor())
-            
-            # Store the token so the dashboard can notify the bot owner if the bot goes offline
-            await self.redis_link.set("bot_login_token", Configuration.get_master_var("LOGIN_TOKEN"))
 
             await self.redis_link.subscribe(self.receiver.channel("dash-bot-messages"))
+            await self.redis_link.publish_json("bot-dash-messages", {
+                'type': 'cache_info',
+                'info': await self.cache_info()
+            })
+
         except OSError:
             await GearbotLogging.bot_log("Failed to connect to the dash!")
 
@@ -125,11 +128,8 @@ class DashLink(BaseCog):
                         # Apply the timestamp
                         outage_message["timestamp"] = datetime.now().isoformat()
 
-                        # Set the current warning count
-                        outage_message["fields"][0]["value"] = f"{self.last_dash_heartbeat[2]}/{MAX_WARNINGS}"
-
                         # Set the color to the format Discord understands
-                        outage_message["color"] = int(outage_message["color"], 16)
+                        outage_message["color"] = outage_message["color"]
                             
                         # Generate the custom message and role pings
                         notify_message = DASH_OUTAGE_INFO["dash_outage_message"]
@@ -144,7 +144,7 @@ class DashLink(BaseCog):
                             outage_channel = self.bot.get_channel(DASH_OUTAGE_CHANNEl)
                             await outage_channel.send(notify_message, embed=Embed.from_dict(outage_message))
                         except Forbidden:
-                            print("We couldn't access the specified channel, the notification will not be sent!")
+                            GearbotLogging.error("We couldn't access the specified channel, the notification will not be sent!")
 
             # Wait a little bit longer so the dashboard has a chance to update before we check
             await asyncio.sleep(65)
@@ -237,7 +237,7 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.ACCESS)
     async def guild_info_request(self, message):
-        info = server_info.server_info_raw(self.bot.get_guild(message["guild_id"]))
+        info = server_info.server_info_raw(self.bot, self.bot.get_guild(message["guild_id"]))
         info["user_perms"] = self.get_guild_perms(message["guild_id"], int(message["user_id"]))
         info["user_level"] = Permissioncheckers.user_lvl(self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])))
         return info
@@ -258,8 +258,22 @@ class DashLink(BaseCog):
             self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"]))
         )
 
-    async def languages(self, message):
-        return Translator.LANG_NAMES
+    @needs_perm(DASH_PERMS.ALTER_CONFIG)
+    async def replace_config_section(self, message):
+        return DashConfig.update_config_section(
+            self.bot.get_guild(message["guild_id"]),
+            message["section"],
+            message["modified_values"],
+            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])),
+            replace=True
+        )
+
+    async def cache_info(self, message=None):
+        return {
+            'languages': Translator.LANG_NAMES,
+            'logging': {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}
+        }
+
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def setup_mute(self, message):
@@ -279,6 +293,10 @@ class DashLink(BaseCog):
         role = guild.get_role(int(message["role_id"]))
         if role is None:
             raise ValidationException(dict(role_id="Not a valid id"))
+        if role.id == guild.id:
+            raise ValidationException(dict(role_id="The @everyone role can't be used for muting people"))
+        if role.managed:
+            raise ValidationException(dict(role_id="Managed roles can not be assigned to users and thus won't work for muting people"))
         user = await Utils.get_user(message["user_id"])
         parts = {
             "role_name": Utils.escape_markdown(role.name),
@@ -286,7 +304,7 @@ class DashLink(BaseCog):
             "user": Utils.clean_user(user),
             "user_id": user.id
         }
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_triggered", **parts)
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_triggered", **parts)
         failed = []
         for channel in guild.text_channels:
             try:
@@ -306,10 +324,10 @@ class DashLink(BaseCog):
                 failed.append(Translator.translate('voice_channel', guild.id, channel=channel.name))
 
         await asyncio.sleep(1)  # delay logging so the channel overrides can get querried and logged
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_complete", **parts)
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_complete", **parts)
         out = '\n'.join(failed)
-        GearbotLogging.log_to(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
-                              tag_on=None if len(failed) is 0 else f'```{out}```')
+        GearbotLogging.log_key(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
+                               tag_on=None if len(failed) is 0 else f'```{out}```')
 
     # crowdin
     async def crowdin_webhook(self, message):

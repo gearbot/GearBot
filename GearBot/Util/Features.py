@@ -6,7 +6,7 @@ LOG_MAP = dict()
 def check_server(guild_id):
     enabled = set()
     for cid, info in Configuration.get_var(guild_id, "LOG_CHANNELS").items():
-        enabled.update(info)
+        enabled.update(info["CATEGORIES"])
     LOG_MAP[guild_id] = enabled
 
 

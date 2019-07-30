@@ -66,31 +66,26 @@ def bc_only():
     return commands.check(predicate)
 
 
-def check_permission(ctx: commands.Context):
-    if ctx.guild is None:
-        return 0 >= get_required(ctx, ctx.cog.permissions)
+def check_permission(command_object, guild, member):
+    if guild is None:
+        return 0 >= get_required(command_object, command_object.cog.permissions)
     else:
-        overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
-        cog_name = type(ctx.cog).__name__
+        overrides = Configuration.get_var(guild.id, "PERM_OVERRIDES")
+        cog_name = type(command_object.cog).__name__
         required = -1
         if cog_name in overrides:
-            required = get_required(ctx, overrides[cog_name])
+            required = get_required(command_object, overrides[cog_name])
         if required == -1:
-            required = get_required(ctx, ctx.cog.permissions)
-        return get_user_lvl(ctx) >= (ctx.cog.permissions["required"] if required == -1 else required)
+            required = get_required(command_object, command_object.cog.permissions)
+        return get_user_lvl(guild, member, command_object) >= (command_object.cog.permissions["required"] if required == -1 else required)
 
 
-def get_command_pieces(ctx):
-    parts = (ctx.message.content[len(ctx.prefix):] if ctx.prefix is not None else ctx.message.content).split(" ")
-    command_object = None
-    while len(parts) > 0 and command_object is None:
-        command_object = ctx.bot.get_command(" ".join(parts))
-        parts.pop(len(parts) - 1)
+def get_command_pieces(command_object):
     return command_object.qualified_name.lower().split(" ") if command_object is not None else []
 
 
-def get_required(ctx, perm_dict):
-    return get_perm_dict(get_command_pieces(ctx), perm_dict)["required"]
+def get_required(command_object, perm_dict):
+    return get_perm_dict(get_command_pieces(command_object), perm_dict)["required"]
 
 
 def get_perm_dict(pieces, perm_dict, strict=False):
@@ -109,27 +104,28 @@ def get_perm_dict(pieces, perm_dict, strict=False):
     return perm_dict
 
 
-def get_user_lvl(ctx: commands.Context):
-    if is_server_owner(ctx):
+def get_user_lvl(guild, member, command_object=None):
+    if guild.owner.id == member.id:
         return 5
 
-    if is_lvl4(ctx.author):
+    if is_lvl4(member):
         return 4
 
-    cog_name = type(ctx.cog).__name__
-    overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
-    if cog_name in overrides:
-        target = overrides[cog_name]
-        pieces = get_command_pieces(ctx)
-        while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
-            target = target["commands"][pieces.pop(0)]
-            if ctx.author.id in target["people"]:
-                return 4
-    if is_admin(ctx.author):
+    if command_object is not None:
+        cog_name = type(command_object.cog).__name__
+        overrides = Configuration.get_var(guild.id, "PERM_OVERRIDES")
+        if cog_name in overrides:
+            target = overrides[cog_name]
+            pieces = get_command_pieces(command_object)
+            while len(pieces) > 0 and "commands" in target and pieces[0] in target["commands"]:
+                target = target["commands"][pieces.pop(0)]
+                if member.id in target["people"]:
+                    return 4
+    if is_admin(member):
         return 3
-    if is_mod(ctx.author):
+    if is_mod(member):
         return 2
-    if is_trusted(ctx.author):
+    if is_trusted(member):
         return 1
     return 0
 

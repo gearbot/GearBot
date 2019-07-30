@@ -60,7 +60,6 @@ class Reload(BaseCog):
         trackers = None
         if antiraid is not None:
             trackers = antiraid.raid_trackers
-        GearbotLogging.LOG_PUMP.running = False
         untranslatable = Translator.untranlatable
         importlib.reload(Reloader)
         for c in Reloader.components:

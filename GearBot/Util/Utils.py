@@ -104,7 +104,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
 
 def escape_markdown(text):
     text = str(text)
-    for c in ["\\", "`", "*", "_", "~", "|", "{"]:
+    for c in ["\\", "`", "*", "_", "~", "|", "{", ">"]:
         text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 

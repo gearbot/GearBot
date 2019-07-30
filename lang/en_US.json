@@ -272,8 +272,6 @@
   "logs_already_disabled_channel": "The following logging types were already disabled for {channel}: ",
   "command_used": "{user} (``{user_id}``) used a command in {channel}:",
   "purge_fail_not_found": "Whoops, something went wrong there, I tried purging a message but Discord said it was already removed, do you have another bot in here who also responded to that purge command?",
-  "autoban_too_many_mentions": "[AUTOBAN] Spam message with {count} mentions",
-  "automod_ban_failed": "[AUTOBAN FAILURE] AUTOBAN was triggered for {user} (``{user_id}``) but I don't have the BAN_MEMBERS permission required to actually ban them! Ban reason: ``{reason}``",
   "censored_message": "Censored message by {user} (``{user_id}``) in {channel}, blacklisted char sequence ``{sequence}`` is not allowed.\n```{message}```",
   "censor_message_failed": "Failed to censor a message by {user} (``{user_id}``), blacklisted char sequence `{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
   "censor_trusted_bypass": "Censor Trusted Bypass has been {status}",
@@ -696,6 +694,8 @@
   "spam_max_newlines": "Too many newlines",
   "spam_max_mentions": "Too many mentions",
   "spam_max_duplicates": "Too many duplicates",
+  "spam_max_censored": "Got censored too often",
+  "spam_censored": "Got censored too often",
   "spam_infraction_reason": "Spam detected in {channel}: {friendly}",
   "slowmode_too_high": "You can only set a slowmode interval up to 6 hours",
   "slowmode_no_change": "The slowmode interval is already set to {duration} in {channel}",
@@ -744,4 +744,15 @@
   "nickname_remove_unable": "You do not have permission to remove {user}'s nickname.",
   "nickname_add_unable": "You do not have permission to add or change change {user}'s nickname",
   "nickname_user_not_found": "I was not able to find {user} (``{user_id}``) in the server."
+  "unknown_verification_level": "Unknown verification level",
+  "verification_no_change": "The server verification is already at {level}",
+  "logging_channel_removed": "A logging channel was removed by **{user}** (``{user_id}``): {channel} (``{channel_id}``). It was logging the following {count, plural, one {category} other {categories}}: ``{categories}``",
+  "logging_channel_removed_with_disabled": "A logging channel was removed by **{user}** (``{user_id}``): {channel} (``{channel_id}``). It was logging the following {count, plural, one {category} other {categories}}: ``{categories}`` and had the following {key_count, plural, one {key} other {keys}} disabled: ``{keys}``",
+  "logging_channel_added": "A logging channel was added by **{user}** (``{user_id}``): {channel} (``{channel_id}``) to log the following {count, plural, one {category} other {categories}}: ``{categories}``",
+  "logging_channel_added_with_disabled": "A logging channel was added by **{user}** (``{user_id}``): {channel} (``{channel_id}``) to log the following {count, plural, one {category} other {categories}}: ``{categories}`` and has the following {key_count, plural, one {key} other {keys}} disabled: ``{keys}``",
+  "logging_category_added": "{count, plural, one {A logging category was} other {The following logging categories were}} added to {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
+  "logging_category_removed": "{count, plural, one {A logging category was} other {The following logging categories were}} removed from {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
+  "logging_key_disabled": "{count, plural, one {A logging key was} other {The following logging keys were}} disabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{disabled}``",
+  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``"
+
 }
