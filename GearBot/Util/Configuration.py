@@ -4,6 +4,7 @@ MASTER_LOADED = False
 PERSISTENT_LOADED = False
 CONFIG_VERSION = 0
 PERSISTENT = dict()
+TEMPLATE = dict()
 
 
 # Ugly but this prevents import loop errors
@@ -36,7 +37,7 @@ import os
 
 from discord.ext import commands
 
-from Util import GearbotLogging, Utils, Features, Translator
+from Util import GearbotLogging, Utils, Features
 
 
 def initial_migration(config):
@@ -301,15 +302,18 @@ def move_keys(config, section, *keys):
             config[section][key] = config[key]
             del config[key]
 
+def v20(config):
+    config["SERVER_LINKS"] = []
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20]
 
 BOT = None
 async def initialize(bot: commands.Bot):
-    global CONFIG_VERSION, BOT
+    global CONFIG_VERSION, BOT, TEMPLATE
     BOT = bot
-    CONFIG_VERSION = Utils.fetch_from_disk("config/template")["VERSION"]
+    TEMPLATE = Utils.fetch_from_disk("config/template")
+    CONFIG_VERSION = TEMPLATE["VERSION"]
     GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")
     GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
     for guild in bot.guilds:
@@ -387,6 +391,11 @@ def get_var(id, section, key=None, default=None):
 
 def set_var(id, cat, key, value):
     SERVER_CONFIGS[id].get(cat, dict())[key] = value
+    save(id)
+    Features.check_server(id)
+
+def set_cat(id, cat, value):
+    SERVER_CONFIGS[id][cat] = value
     save(id)
     Features.check_server(id)
 

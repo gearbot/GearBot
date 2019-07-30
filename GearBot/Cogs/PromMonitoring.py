@@ -40,7 +40,7 @@ class PromMonitoring(BaseCog):
         (m.own_message_raw_count if message.author.id == self.bot.user.id else m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
 
     async def create_site(self):
-        await asyncio.sleep(5)
+        await asyncio.sleep(15)
         metrics_app = web.Application()
         metrics_app.add_routes([web.get("/metrics", self.serve_metrics)])
 

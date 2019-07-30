@@ -735,5 +735,14 @@
   "verification_set": "The server's verification level has been set to {level}",
   "ban_not_found": "Not banned",
   "unknown_verification_level": "Unknown verification level",
-  "verification_no_change": "The server verification is already at {level}"
+  "verification_no_change": "The server verification is already at {level}",
+  "logging_channel_removed": "A logging channel was removed by **{user}** (``{user_id}``): {channel} (``{channel_id}``). It was logging the following {count, plural, one {category} other {categories}}: ``{categories}``",
+  "logging_channel_removed_with_disabled": "A logging channel was removed by **{user}** (``{user_id}``): {channel} (``{channel_id}``). It was logging the following {count, plural, one {category} other {categories}}: ``{categories}`` and had the following {key_count, plural, one {key} other {keys}} disabled: ``{keys}``",
+  "logging_channel_added": "A logging channel was added by **{user}** (``{user_id}``): {channel} (``{channel_id}``) to log the following {count, plural, one {category} other {categories}}: ``{categories}``",
+  "logging_channel_added_with_disabled": "A logging channel was added by **{user}** (``{user_id}``): {channel} (``{channel_id}``) to log the following {count, plural, one {category} other {categories}}: ``{categories}`` and has the following {key_count, plural, one {key} other {keys}} disabled: ``{keys}``",
+  "logging_category_added": "{count, plural, one {A logging category was} other {The following logging categories were}} added to {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
+  "logging_category_removed": "{count, plural, one {A logging category was} other {The following logging categories were}} removed from {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
+  "logging_key_disabled": "{count, plural, one {A logging key was} other {The following logging keys were}} disabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{disabled}``",
+  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``"
+
 }

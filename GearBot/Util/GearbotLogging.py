@@ -88,6 +88,16 @@ LOGGING_INFO = {
         "perm_role_changes": {
             "config_change_role_added": "WRENCH",
             "config_change_role_removed": "WRENCH"
+        },
+        "logging_change": {
+            "logging_channel_removed": "WRENCH",
+            "logging_channel_removed_with_disabled": "WRENCH",
+            "logging_channel_added": "WRENCH",
+            "logging_channel_added_with_disabled": "WRENCH",
+            "logging_category_added": "WRENCH",
+            "logging_category_removed": "WRENCH",
+            "logging_key_disabled": "WRENCH",
+            "logging_key_enabled": "WRENCH"
         }
     },
     "FUTURE_LOGS": {},
@@ -208,7 +218,7 @@ LOGGING_INFO = {
         "spam_violate": "BAD_USER"
     },
     "TRAVEL_LOGS": {
-        "joins": {
+        "join_logging": {
             "join_logging": "JOIN",
             "join_logging_new": "JOIN"
         },

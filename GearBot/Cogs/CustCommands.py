@@ -93,7 +93,7 @@ class CustCommands(BaseCog):
                     await ctx.send(Translator.translate('custom_command_not_updating', ctx.guild.id))
                 await Confirmation.confirm(ctx, Translator.translate('custom_command_override_confirmation', ctx.guild.id), on_yes=yes , on_no=no)
 
-    @command.command()
+    @command.command(aliases=["del", "delete"])
     @commands.guild_only()
     async def remove(self, ctx:commands.Context, trigger:str):
         """command_remove_help"""
@@ -108,9 +108,9 @@ class CustCommands(BaseCog):
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_not_found', ctx.guild.id, trigger=trigger)}")
 
-    @command.command()
+    @command.command(aliases=["edit", "set"])
     @commands.guild_only()
-    async def update (self, ctx:commands.Context, trigger:str, *, reply:str = None):
+    async def update(self, ctx:commands.Context, trigger:str, *, reply:str = None):
         """command_update_help"""
         trigger = trigger.lower()
         trigger = await Utils.clean(trigger)

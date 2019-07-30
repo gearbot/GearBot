@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 
-from Util import Translator, Emoji, Utils, Permissioncheckers
+from Util import Translator, Emoji, Utils, Configuration
 
 
 def server_info_embed(guild, request_guild=None):
@@ -83,11 +83,13 @@ def server_info_embed(guild, request_guild=None):
     return embed
 
 
-def server_info_raw(guild):
+def server_info_raw(bot, guild):
     statuses = dict(online=0, idle=0, dnd=0, offline=0)
     for m in guild.members:
         statuses[str(m.status)] += 1
-
+    extra = dict()
+    for g in Configuration.get_var(guild.id, "SERVER_LINKS"):
+        extra.update(**{str(k): v for k, v in get_server_channels(bot.get_guild(g)).items()})
     server_info = dict(
         name=guild.name,
         id=str(guild.id),  # send as string, js can't deal with it otherwise
@@ -97,7 +99,8 @@ def server_info_raw(guild):
             "name": Utils.clean_user(guild.owner)
         },
         members=guild.member_count,
-        text_channels=len(guild.text_channels),
+        text_channels= get_server_channels(guild),
+        additional_text_channels= extra,
         voice_channels=len(guild.voice_channels),
         creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
         age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
@@ -110,7 +113,7 @@ def server_info_raw(guild):
                 "members": len(r.members),
                 "is_admin": r.permissions.administrator,
                 "is_mod": r.permissions.ban_members,
-                "can_be_self_role": not r.managed and guild.me.top_role > r and r.id != guild.id
+                "can_be_self_role": not r.managed and guild.me.top_role > r and r.id != guild.id,
             } for r in guild.roles},
         emojis=[
             {
@@ -123,6 +126,14 @@ def server_info_raw(guild):
 
     return server_info
 
+
+def get_server_channels(guild):
+    return {
+        c.id: {
+                'name': c.name,
+                'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
+            } for c in guild.text_channels
+    }
 
 def time_difference(begin, end, location):
     diff = begin - end
