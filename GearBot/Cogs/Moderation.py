@@ -103,6 +103,46 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
         else:
             await MessageUtils.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
+    
+    @commands.group(aliases=["nick"])
+    @commands.guild_only()
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname(self, ctx: commands.Context):
+        """mod_nickname_help"""
+        if ctx.subcommand_passed is None:
+            await ctx.invoke(self.bot.get_command("help"), query="nickname")
+    
+    @nickname.command(aliases=["add", "set"])
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname_add(self, ctx, user: discord.Member, *, nick):
+        """mod_nickname_add_help"""
+        try:
+            if user is None:
+                await MessageUtils.send_to(ctx, "NO", "nickname_user_not_found", user_id=user.id, user=Utils.clean_user(user))
+            allowed, message = self._can_act("nickname_add", ctx, user)
+            if allowed:
+                await user.edit(nick=nick)
+                await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
+                return
+        except discord.HTTPException as ex:
+            await MessageUtils.send_to(ctx, "NO", "mod_nickname_too_long", user_id=user.id, user=Utils.clean_user(user))
+            return
+        else:
+            await MessageUtils.send_to(ctx, "NO", "nickname_add_unable", user_id=user.id, user=Utils.clean_user(user))
+    
+    @nickname.command("remove")
+    @commands.bot_has_permissions(manage_nicknames=True)
+    async def nickname_remove(self, ctx, user: discord.Member):
+        """mod_nickname_remove_help"""
+        if user.nick is None:
+            await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
+            return
+        allowed, message = self._can_act("nickname_remove", ctx, user)
+        if allowed:
+            await user.edit(nick=None)
+            await MessageUtils.send_to(ctx, "YES", "mod_nickname_nuked", user_id=user.id, user=Utils.clean_user(user))
+        else:
+            await MessageUtils.send_to(ctx, "NO", "nickname_remove_unable", user_id=user.id, user=Utils.clean_user(user))
 
 
     @commands.group()
