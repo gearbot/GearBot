@@ -147,7 +147,7 @@ def log_validator(guild, key, value, preview, *_):
     channel = BOT.get_channel(int(key))
     if channel is None:
         return 'unknown channel'
-    if channel.guild != guild or channel.guild.id not in Configuration.get_var(guild.id, "SERVER_LINKS"):
+    if channel.guild != guild and channel.guild.id not in Configuration.get_var(guild.id, "SERVER_LINKS"):
         return 'you can not log to this guild'
     perms = channel.permissions_for(guild.me)
     required = ['send_messages', 'embed_links', 'attach_files']
