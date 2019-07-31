@@ -338,7 +338,7 @@ class ModLog(BaseCog):
         # nickname changes
         if Features.is_logged(guild.id, "NAME_CHANGES"):
             if (before.nick != after.nick and
-                    after.nick != before.nick) or f'{before.guild.id}-{before.id}' in self.bot.data['nickname_changes']:
+                    after.nick != before.nick) and f'{before.guild.id}-{before.id}' not in self.bot.data['nickname_changes']:
                 name = Utils.clean_user(after)
                 before_clean = "" if before.nick is None else Utils.clean_name(before.nick)
                 after_clean = "" if after.nick is None else Utils.clean_name(after.nick)
