@@ -145,8 +145,15 @@ class Moderation(BaseCog):
             return
         allowed, message = self._can_act("nickname", ctx, user)
         if allowed:
+            self.bot.data['nickname_changes'].add(f'{user.guild.id}-{user.id}')
             await user.edit(nick=None)
             await MessageUtils.send_to(ctx, "YES", "mod_nickname_nuked", user_id=user.id, user=Utils.clean_user(user))
+            name = Utils.clean_user(user)
+            before_clean = Utils.clean_name(user.nick)
+            mod_name = Utils.clean_name(ctx.author)
+            GearbotLogging.log_key(ctx.guild.id, 'mod_nickname_removed', user=name, user_id=user.id,
+                                   before=before_clean, moderator=mod_name,
+                                   moderator_id=ctx.author.id)
         else:
             await MessageUtils.send_to(ctx, "NO", "nickname_remove_unable", user_id=user.id, user=Utils.clean_user(user))
 
