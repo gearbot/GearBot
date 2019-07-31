@@ -143,7 +143,7 @@ class ModLog(BaseCog):
                 if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
                                     value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
-                GearbotLogging.log_raw(guild.id, "EDIT_LOGS", embed=embed)
+                GearbotLogging.log_raw(guild.id, "message_removed", embed=embed)
             else:
                 if type_string is None:
                     if len(message.content) != 0:
