@@ -285,7 +285,7 @@ class Serveradmin(BaseCog):
                     desc += f"{k}: {lvl} ({Translator.translate(f'perm_lvl_{lvl}', ctx)})\n"
             if desc == "":
                 desc = Translator.translate('no_overrides', ctx)
-            embed = discord.Embed(color=6008770, title=Translator.translate('configure_cog_overrides', ctx), description=desc)
+            embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
     @configure_cog_overrides.command(name="add")
