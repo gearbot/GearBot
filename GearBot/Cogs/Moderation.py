@@ -155,7 +155,7 @@ class Moderation(BaseCog):
                                    before=before_clean, moderator=mod_name,
                                    moderator_id=ctx.author.id)
         else:
-            await MessageUtils.send_to(ctx, "NO", "nickname_remove_unable", user_id=user.id, user=Utils.clean_user(user))
+            await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
 
     @commands.group()
