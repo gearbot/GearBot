@@ -14,7 +14,7 @@ from Cogs.BaseCog import BaseCog
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils, Questions, server_info
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message, RangedIntBan, VerificationLevel
+    RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -87,10 +87,7 @@ class Moderation(BaseCog):
 
         if ((ctx.author != user and user != ctx.bot.user and ctx.author.top_role > user.top_role) or (
                 ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner:
-            if ctx.me.top_role > user.top_role or not check_bot:
-                return True, None
-            else:
-                return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
+            return True, None
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
 
@@ -112,32 +109,41 @@ class Moderation(BaseCog):
         if ctx.subcommand_passed is None:
             await ctx.invoke(self.bot.get_command("help"), query="nickname")
     
-    @nickname.command("add", aliases=["set"])
+    @nickname.command("add", aliases=["set", "update"])
     @commands.bot_has_permissions(manage_nicknames=True)
-    async def nickname_add(self, ctx, user: discord.Member, *, nick):
+    async def nickname_add(self, ctx, user: discord.Member, *, nick:Nickname):
         """mod_nickname_add_help"""
         try:
-            if user is None:
-                await MessageUtils.send_to(ctx, "NO", "nickname_user_not_found", user_id=user.id, user=Utils.clean_user(user))
-            allowed, message = self._can_act("nickname_add", ctx, user)
+            allowed, message = self._can_act("nickname", ctx, user)
             if allowed:
+                self.bot.data['nickname_changes'].add(f'{user.guild.id}-{user.id}')
+                if user.nick is None:
+                    type = "added"
+                else:
+                    type = "changed"
                 await user.edit(nick=nick)
-                await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user_id=user.id, user=Utils.clean_user(user), nick=nick)
-                return
+                await MessageUtils.send_to(ctx, "YES", "mod_nickname_update", user=Utils.clean_user(user), nick=nick)
+
+                name = Utils.clean_user(user)
+                before_clean = "" if user.nick is None else Utils.clean_name(user.nick)
+                after_clean = Utils.clean_name(nick)
+                mod_name = Utils.clean_name(ctx.author)
+                GearbotLogging.log_key(ctx.guild.id, f'mod_nickname_{type}', user=name, user_id=user.id,
+                                       before=before_clean, after=after_clean, moderator=mod_name, moderator_id=ctx.author.id)
+
+            else:
+                await MessageUtils.send_to(ctx, "NO", message, translate=False)
         except discord.HTTPException as ex:
-            await MessageUtils.send_to(ctx, "NO", "mod_nickname_too_long", user_id=user.id, user=Utils.clean_user(user))
-            return
-        else:
-            await MessageUtils.send_to(ctx, "NO", "nickname_add_unable", user_id=user.id, user=Utils.clean_user(user))
-    
-    @nickname.command("remove", aliases=["clear", "nuke"])
+            await MessageUtils.send_to(ctx, "NO", "mod_nickname_other_error", user_id=user.id, user=Utils.clean_user(user), error=ex.text)
+
+    @nickname.command("remove", aliases=["clear", "nuke", "reset"])
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_remove(self, ctx, user: discord.Member):
         """mod_nickname_remove_help"""
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
             return
-        allowed, message = self._can_act("nickname_remove", ctx, user)
+        allowed, message = self._can_act("nickname", ctx, user)
         if allowed:
             await user.edit(nick=None)
             await MessageUtils.send_to(ctx, "YES", "mod_nickname_nuked", user_id=user.id, user=Utils.clean_user(user))

@@ -46,7 +46,8 @@ async def initialize(bot, startup=False):
         bot.data = {
             "forced_exits": set(),
             "unbans": set(),
-            "message_deletes": set()
+            "message_deletes": set(),
+            "nickname_changes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
         if startup:

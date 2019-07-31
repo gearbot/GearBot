@@ -394,3 +394,9 @@ class VerificationLevel(Converter):
         if level is None:
             raise TranslatedBadArgument('unknown_verification_level', ctx)
         return level
+
+class Nickname(Converter):
+    async def convert(self, ctx, argument):
+        if len(argument) > 32:
+            raise TranslatedBadArgument('nickname_too_long', ctx)
+        return argument
