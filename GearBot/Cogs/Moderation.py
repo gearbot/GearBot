@@ -112,7 +112,7 @@ class Moderation(BaseCog):
         if ctx.subcommand_passed is None:
             await ctx.invoke(self.bot.get_command("help"), query="nickname")
     
-    @nickname.command(aliases=["add", "set"])
+    @nickname.command("add", aliases=["set"])
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_add(self, ctx, user: discord.Member, *, nick):
         """mod_nickname_add_help"""
@@ -130,7 +130,7 @@ class Moderation(BaseCog):
         else:
             await MessageUtils.send_to(ctx, "NO", "nickname_add_unable", user_id=user.id, user=Utils.clean_user(user))
     
-    @nickname.command("remove")
+    @nickname.command("remove", aliases=["clear", "nuke"])
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname_remove(self, ctx, user: discord.Member):
         """mod_nickname_remove_help"""
@@ -226,7 +226,7 @@ class Moderation(BaseCog):
                                          user_id=user.id, reason=reason, inf=i.id)
 
     @commands.guild_only()
-    @commands.command("mkick")
+    @commands.command("mkick", aliases=["👢👢"])
     @commands.bot_has_permissions(kick_members=True, add_reactions=True)
     async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mkick_help"""
@@ -389,7 +389,7 @@ class Moderation(BaseCog):
                                          reason=reason, inf=i.id)
 
     @commands.guild_only()
-    @commands.command()
+    @commands.command(aliases=["🚪🚪"])
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def mban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mban_help"""
