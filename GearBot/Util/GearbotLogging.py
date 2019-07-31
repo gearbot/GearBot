@@ -1,4 +1,3 @@
-import asyncio
 import io
 import logging
 import os
@@ -26,7 +25,6 @@ DISCORD_LOGGER = logging.getLogger('discord')
 BOT_LOG_CHANNEL: discord.TextChannel = None
 STARTUP_ERRORS = []
 BOT: commands.AutoShardedBot = None
-LOG_PUMP = None
 LOG_ERRORS = 0
 
 log_type = namedtuple("Log_type", "config_key category emoji")
@@ -291,7 +289,7 @@ def init_logger():
 
 
 async def initialize(bot: commands.Bot, channelID):
-    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS, LOG_PUMP
+    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
@@ -441,7 +439,7 @@ async def log_task(guild_id, target):
                 return
             # pull message from queue
             todo = LOG_QUEUE[target].get(block=False)
-            if (len(to_send) + len(todo.message)) > 1998:
+            if (len(to_send) + len(todo.message) if todo.message is not None else 0) > 1998:
                 # too large,
                 await channel.send(to_send)
                 to_send = todo.message
