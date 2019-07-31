@@ -732,7 +732,7 @@
   "verification_help": "Changes the Verification Level",
   "verification_no_perms": "Unable to set the requested verification level, I do not have the required permissions.",
   "verification_log": "{user} (``{user_id}``) set the verification level to {level} for ``{reason}``",
-  "verification_set": "The server's verification level has been set to {level} for ``{reason}``",
+  "verification_set": "The server's verification level has been set to {level}",
   "ban_not_found": "Not banned",
   "mod_nickname_help": "Base command for nickname.",
   "mod_nickname_update": "Successfully set the nickname for {user} to {nick}!",
