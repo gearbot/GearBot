@@ -337,12 +337,13 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True)
     async def tempban(self, ctx: commands.Context, user: DiscordUser, duration: Duration, *, reason: Reason = ""):
         """tempban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
         if duration.unit is None:
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
+
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
 
         member = ctx.guild.get_member(user.id)
         if member is not None:
@@ -629,12 +630,12 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
         if duration.unit is None:
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
