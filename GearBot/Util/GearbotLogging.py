@@ -363,7 +363,7 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
     log_to(guild_id, targets, message, embed, file, None)
 
 
-def log_key(guild_id, key, embed=None, file=None, can_stamp=False, tag_on=None, **kwargs):
+def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **kwargs):
     # logging category, emoji and
     info = LOG_TYPES[key]
 
