@@ -129,7 +129,7 @@ def server_info_raw(bot, guild):
 
 def get_server_channels(guild):
     return {
-        c.id: {
+        str(c.id): {
                 'name': c.name,
                 'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
             } for c in guild.text_channels
