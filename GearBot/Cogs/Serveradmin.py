@@ -506,7 +506,7 @@ class Serveradmin(BaseCog):
             channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
             if len(channels) > 0:
                 for cid, info in channels.items():
-                    embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, info))
+                    embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, info["CATEGORIES"]))
 
                 await ctx.send(embed=embed)
 
@@ -536,7 +536,7 @@ class Serveradmin(BaseCog):
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
            channels[cid] = []
-        info = channels[cid]
+        info = channels[cid]["CATEGORIES"]
         added = []
         ignored = []
         message = ""
@@ -579,7 +579,7 @@ class Serveradmin(BaseCog):
         if cid not in channels:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=f'<{cid}>')}")
         else:
-            info = channels[cid]
+            info = channels[cid]["CATEGORIES"]
             removed = []
             ignored = []
             unable = []

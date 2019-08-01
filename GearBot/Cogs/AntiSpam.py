@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import re
 from asyncio.base_futures import CancelledError
 
 import time
