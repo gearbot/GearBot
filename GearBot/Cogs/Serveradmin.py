@@ -535,7 +535,10 @@ class Serveradmin(BaseCog):
         cid = str(channel.id)
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
-           channels[cid] = []
+           channels[cid] = {
+               "CATEGORIES": [],
+               "DISABLED_KEYS": []
+           }
         info = channels[cid]["CATEGORIES"]
         added = []
         ignored = []
