@@ -139,57 +139,56 @@ def perm_range_check(lower, upper, other_min=None):
 def log_validator(guild, key, value, preview, *_):
     # make sure it's a dict
     if not isinstance(value, dict):
-        return "must be a dict"
+        return "Must be a dict"
 
     # validate channel itself
     if not is_numeric(key):
-        return "invalid channel id"
+        return "Invalid channel id"
     channel = BOT.get_channel(int(key))
     if channel is None:
-        return 'unknown channel'
+        return "Unknown channel"
     if channel.guild != guild and channel.guild.id not in Configuration.get_var(guild.id, "SERVER_LINKS"):
-        return 'you can not log to this guild'
+        return "You can not log to this guild"
     perms = channel.permissions_for(guild.me)
-    required = ['send_messages', 'embed_links', 'attach_files']
+    required = ["send_messages", "embed_links", "attach_files"]
     missing = [r for r in required if not getattr(perms, r)]
     if len(missing) is not 0:
-        return 'missing the following permission(s): {}'.format(', '.join(missing))
+        return "Missing the following permission(s): {}".format(", ".join(missing))
 
     # validate subsections
-    required = ['CATEGORIES', 'DISABLED_KEYS']
+    required = ["CATEGORIES", "DISABLED_KEYS"]
     missing = [r for r in required if r not in value]
     if len(missing) is not 0:
-        return 'missing required attribute(s): {}'.format(', '.join(missing))
+        return "Missing the required attribute(s): {}".format(", ".join(missing))
 
     # make sure we are not getting extra junk
     excess = [k for k in value if k not in required]
     if len(excess) is not 0:
-        return 'unknown attribute(s): {}'.format(', '.join(excess))
+        return "Unknown attribute(s): {}".format(", ".join(excess))
 
     # validate categories
-    cats = value['CATEGORIES']
+    cats = value["CATEGORIES"]
 
     if not isinstance(cats, list):
         return "CATEGORIES must be a list"
 
     if len(cats) is 0:
-        return 'CATEGORIES can not be empty'
+        return "CATEGORIES can not be empty"
 
     unknown_cats = [cat for cat in cats if cat not in GearbotLogging.LOGGING_INFO]
     if len(unknown_cats) is not 0:
-        return 'invalid value(s) found in CATEGORIES: {}'.format(', '.join(unknown_cats))
+        return "Invalid value(s) found in CATEGORIES: {}".format(", ".join(unknown_cats))
 
     # find unknown disabled keys
-    disabled = value['DISABLED_KEYS']
-    unknown_keys = [d for d in disabled if d not in [item for sublist in [subkey for subkey in
-                                                                          {k: list(v.keys()) for k, v in
-                                                                           GearbotLogging.LOGGING_INFO.items()}.values()]
-                                                     for item in sublist]]
+    disabled = value["DISABLED_KEYS"]
+    unknown_keys = [d for d in disabled if d not in 
+            [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}.values()]
+        for item in sublist]
+    ]
     if len(unknown_keys) is not 0:
-        return 'unknown logging key(s) in DISABLED_KEYS: {}'.format(', '.join(unknown_keys))
+        return "Unknown logging key(s) in DISABLED_KEYS: {}".format(", ".join(unknown_keys))
 
     # check if they didn't disable all subkeys
-
     for cat, keys in GearbotLogging.LOGGING_INFO.items():
         if cat in cats and cat != "FUTURE_LOGS":
             has_logging = False
@@ -198,16 +197,17 @@ def log_validator(guild, key, value, preview, *_):
                     has_logging = True
                     break
             if not has_logging:
-                return f'the {cat} category was enabled but all it\'s subkeys where disabled, please leave at least one subkey enabled or remove the category from the CATEGORIES list'
+                return f"The {cat} category was enabled but all of it's subkeys where disabled, please leave at least one subkey enabled or remove the category from the CATEGORIES list"
 
     # check for disabled keys where the category isn't even enabled
-    keys = [d for d in disabled if d not in [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in
-                                                                                        GearbotLogging.LOGGING_INFO.items()
-                                                                                        if k in cats}.values()] for item
-                                             in sublist]]
+    keys = [d for d in disabled if d not in [item for sublist in 
+        [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
+        if k in cats}.values()] 
+        for item in sublist]
+    ]
     if len(keys) is not 0:
-        return 'the following key(s) are disable but the category they belong to isn\'t activated: '.format(
-            ', '.join(keys))
+        return "The following key(s) are disabled but the category they belong to isn't activated: ".format(
+            ", ".join(keys))
 
     return True
 
@@ -329,9 +329,9 @@ def dash_perm_change_logger(t):
         GearbotLogging.log_key(
             guild.id,
             f"config_dash_security_change",
-            type=Translator.translate(f'config_dash_security_{t.lower()}', guild.id),
-            old=Translator.translate(f'perm_lvl_{old}', guild.id),
-            new=Translator.translate(f'perm_lvl_{new}', guild.id), **parts
+            type=Translator.translate(f"config_dash_security_{t.lower()}", guild.id),
+            old=Translator.translate(f"perm_lvl_{old}", guild.id),
+            new=Translator.translate(f"perm_lvl_{new}", guild.id), **parts
         )
 
     return handler
@@ -340,57 +340,81 @@ def dash_perm_change_logger(t):
 def log_channel_logger(key, guild, old, new, parts):
     # info about the channel
     parts.update({
-        'channel': f'<#{key}>',
-        'channel_id': key
+        "channel": f"<#{key}>",
+        "channel_id": key
     })
+
     if new is None:
         # new channel
         parts.update({
-            'count': len(old["CATEGORIES"]),
-            'categories': ', '.join(old["CATEGORIES"]),
-            'key_count': len(old["DISABLED_KEYS"]),
-            'keys': ', '.join(old["DISABLED_KEYS"]),
+            "count": len(old["CATEGORIES"]),
+            "categories": ", ".join(old["CATEGORIES"]),
+            "key_count": len(old["DISABLED_KEYS"]),
+            "keys": ", ".join(old["DISABLED_KEYS"]),
         })
-        GearbotLogging.log_key(guild.id, f'logging_channel_removed{"_with_disabled" if parts["key_count"] > 0 else ""}',
-                               **parts)
+        GearbotLogging.log_key(
+            guild.id, 
+            f'logging_channel_removed{"_with_disabled" if parts["key_count"] > 0 else ""}',
+            **parts
+        )
     elif old is None:
         # removed channel
         parts.update({
-            'count': len(new["CATEGORIES"]),
-            'categories': ', '.join(new["CATEGORIES"]),
-            'key_count': len(new["DISABLED_KEYS"]),
-            'keys': ', '.join(new["DISABLED_KEYS"]),
+            "count": len(new["CATEGORIES"]),
+            "categories": ", ".join(new["CATEGORIES"]),
+            "key_count": len(new["DISABLED_KEYS"]),
+            "keys": ", ".join(new["DISABLED_KEYS"]),
         })
-        GearbotLogging.log_key(guild.id, f'logging_channel_added{"_with_disabled" if parts["key_count"] > 0 else ""}',
-                               **parts)
+        GearbotLogging.log_key(
+            guild.id, 
+            f'logging_channel_added{"_with_disabled" if parts["key_count"] > 0 else ""}',
+            **parts
+        )
     else:
         # added categories
-        new_cats = set(new['CATEGORIES']) - set(old['CATEGORIES'])
+        new_cats = set(new["CATEGORIES"]) - set(old["CATEGORIES"])
         if len(new_cats) > 0:
-            GearbotLogging.log_key(guild.id, 'logging_category_added', **parts, count=len(new_cats),
-                                   categories=', '.join(new_cats))
+            GearbotLogging.log_key(
+                guild.id, "logging_category_added",
+                **parts, count=len(new_cats),
+                categories=", ".join(new_cats)
+            )
+
         # removed categories
-        removed_cats = set(old['CATEGORIES']) - set(new['CATEGORIES'])
+        removed_cats = set(old["CATEGORIES"]) - set(new["CATEGORIES"])
         if len(removed_cats) > 0:
-            GearbotLogging.log_key(guild.id, 'logging_category_removed', **parts, count=len(removed_cats),
-                                   categories=', '.join(removed_cats))
+            GearbotLogging.log_key(
+                guild.id, 
+                "logging_category_removed", 
+                **parts, 
+                count=len(removed_cats),
+                categories=", ".join(removed_cats)
+            )
 
         # added disabled keys
-        disabled_keys = set(new['DISABLED_KEYS']) - set(old['DISABLED_KEYS'])
+        disabled_keys = set(new["DISABLED_KEYS"]) - set(old["DISABLED_KEYS"])
         if len(disabled_keys) > 0:
-            GearbotLogging.log_key(guild.id, 'logging_key_disabled', **parts, count=len(disabled_keys),
-                                   disabled=', '.join(disabled_keys))
+            GearbotLogging.log_key(
+                guild.id, 
+                "logging_key_disabled", 
+                **parts, 
+                count=len(disabled_keys),
+                disabled=", ".join(disabled_keys)
+            )
 
-        # removed disabled keys, but only those who's category is still active
-        enabled_keys = set(old['DISABLED_KEYS']) - set(new['DISABLED_KEYS']) - set([item for sublist in
-                                                                                    [subkey for subkey in
-                                                                                     {k: list(v.keys()) for k, v in
-                                                                                      GearbotLogging.LOGGING_INFO.items()
-                                                                                      if k in removed_cats}.values()]
-                                                                                    for item in sublist])
+        # removed disabled keys, but only those who"s category is still active
+        enabled_keys = set(old["DISABLED_KEYS"]) - set(new["DISABLED_KEYS"]) - set(
+            [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
+                if k in removed_cats}.values()]
+            for item in sublist]
+        )
         if len(enabled_keys) > 0:
-            GearbotLogging.log_key(guild.id, 'logging_key_enabled', **parts, count=len(enabled_keys),
-                                   enabled=', '.join(enabled_keys))
+            GearbotLogging.log_key(
+                guild.id, 
+                "logging_key_enabled", 
+                **parts, count=len(enabled_keys),
+                enabled=", ".join(enabled_keys)
+            )
 
 
 SPECIAL_HANDLERS = {
@@ -415,6 +439,8 @@ SPECIAL_HANDLERS = {
 
 
 def is_numeric(value):
+    if type(value) == bool:
+        return False
     try:
         int(value)
         return True
@@ -423,10 +449,13 @@ def is_numeric(value):
 
 
 def convert_back(target):
-    if isinstance(target, list):
-        return [convert_back(t) for t in target]
+    # We check a lot of strings, put this first
+    if type(target) == str:
+        return target
     elif isinstance(target, dict):
         return {k: convert_back(v) for k, v in target.items()}
+    elif isinstance(target, list):
+        return [convert_back(t) for t in target]
     elif is_numeric(target):
         return int(target)
     else:

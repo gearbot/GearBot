@@ -277,8 +277,12 @@ class DashLink(BaseCog):
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def setup_mute(self, message):
-        await self.override_handler(message, "setup", dict(send_messages=False, add_reactions=False),
-                                    dict(speak=False, connect=False))
+        await self.override_handler(
+            message, 
+            "setup", 
+            dict(send_messages=False, add_reactions=False),
+            dict(speak=False, connect=False)
+        )
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def cleanup_mute(self, message):
@@ -324,10 +328,20 @@ class DashLink(BaseCog):
                 failed.append(Translator.translate('voice_channel', guild.id, channel=channel.name))
 
         await asyncio.sleep(1)  # delay logging so the channel overrides can get querried and logged
-        GearbotLogging.log_key(guild.id, f"config_mute_{t}_complete", **parts)
+        GearbotLogging.log_key(
+            guild.id, 
+            f"config_mute_{t}_complete", 
+            **parts
+        )
+
         out = '\n'.join(failed)
-        GearbotLogging.log_key(guild.id, f"config_mute_{t}_failed", **parts, count=len(failed),
-                               tag_on=None if len(failed) is 0 else f'```{out}```')
+        GearbotLogging.log_key(
+            guild.id, 
+            f"config_mute_{t}_failed", 
+            **parts, 
+            count=len(failed),
+            tag_on=None if len(failed) is 0 else f'```{out}```'
+        )
 
     # crowdin
     async def crowdin_webhook(self, message):
@@ -340,9 +354,13 @@ class DashLink(BaseCog):
             self.to_log[code] = 0
         self.to_log[code] += 1
 
-        embed = Embed(color=Color(0x1183f6), timestamp=datetime.utcfromtimestamp(time.time()),
-                      description=f"**Live translation update summary!**\n" + '\n'.join(
-                          f"{Translator.LANG_NAMES[code]} : {count}" for code, count in self.to_log.items()))
+        embed = Embed(
+            color=Color(0x1183f6), 
+            timestamp=datetime.utcfromtimestamp(time.time()),
+            description=f"**Live translation update summary!**\n" + '\n'.join(
+                f"{Translator.LANG_NAMES[code]} : {count}" for code, count in self.to_log.items()
+            )
+        )
         if self.update_message is None:
             self.update_message = await Translator.get_translator_log_channel()(embed=embed)
         else:
