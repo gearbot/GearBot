@@ -72,7 +72,7 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
     return output
 
 
-class Serveradmin(BaseCog):
+class ServerAdmin(BaseCog):
     LOGGING_TYPES = [
         "RAID_LOGS",
         "CENSORED_MESSAGES",
@@ -988,4 +988,4 @@ class Serveradmin(BaseCog):
 
 
 def setup(bot):
-    bot.add_cog(Serveradmin(bot))
+    bot.add_cog(ServerAdmin(bot))
