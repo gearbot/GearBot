@@ -21,17 +21,8 @@ from database.DatabaseConnector import LoggedMessage, Infraction
 class Moderation(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 2,
-            "max": 6,
-            "required": 2,
-            "commands": {
-                "userinfo": {"required": 2, "min": 0, "max": 6},
-                "serverinfo": {"required": 2, "min": 0, "max": 6},
-                "roles": {"required": 2, "min": 0, "max": 6},
-                "verification": {"required": 3, "min": 2, "max": 6},
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.timed_actions())

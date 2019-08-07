@@ -14,12 +14,8 @@ from Util.JumboGenerator import JumboGenerator
 class Fun(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         to_remove = {
             "CAT_KEY": "cat",
             "DOG_KEY": "dog",

@@ -13,12 +13,8 @@ from Util import GearbotLogging, Pages, VersionInfo, Translator
 class Minecraft(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         self.cf_cache = dict()
         self.fetching = []
         self.running = True

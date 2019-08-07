@@ -15,13 +15,8 @@ from database.DatabaseConnector import Reminder, ReminderStatus
 class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
