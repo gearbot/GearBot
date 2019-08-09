@@ -389,7 +389,7 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason, inf=i.id)
 
-    async def _unban(self, ctx, user, reason, confirm, days=0):
+    async def _unban(self, ctx, user, reason, confirm):
         self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.unban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
@@ -464,6 +464,9 @@ class Moderation(BaseCog):
                         await self._unban(ctx, user, reason, False)
                     except NotFound:
                         ban_not_found = Translator.translate("ban_not_found", ctx)
+                        failures.append(f"{t}: {ban_not_found}")
+                    except Forbidden:
+                        ban_not_found = Translator.translate("unban_forbidden", ctx)
                         failures.append(f"{t}: {ban_not_found}")
                     else:
                         valid += 1

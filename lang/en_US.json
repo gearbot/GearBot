@@ -753,6 +753,6 @@
   "logging_category_added": "{count, plural, one {A logging category was} other {The following logging categories were}} added to {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
   "logging_category_removed": "{count, plural, one {A logging category was} other {The following logging categories were}} removed from {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
   "logging_key_disabled": "{count, plural, one {A logging key was} other {The following logging keys were}} disabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{disabled}``",
-  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``"
-
+  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``",
+	"unban_forbidden": "Unable to unban people who are on this server and are above me"
 }
