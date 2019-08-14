@@ -41,7 +41,7 @@ While transparency is always a good thing, when another user's data is potential
 3. No automated scanning tools are permitted for testing.
 4. If you encounter another user's data or server, do not interact with it or attempt any modifications. Stop and report the issue immediately!
 5. No testing issues on a instance of GearBot you don't own without proper permission. Get permission first or run your own instance.
-6. If you are caught violating any of the above rules, you will be banned from the program for for the indefinite future and access to GearBot (the public instance) can be revoked.
+6. If you are caught violating any of the above rules, you will be banned from the program for the indefinite future and access to GearBot (the public instance) can be revoked.
 
 ## Scope and Impact
 
