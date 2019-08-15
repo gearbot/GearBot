@@ -7,6 +7,11 @@ PERSISTENT = dict()
 TEMPLATE = dict()
 
 
+def save_master():
+    global MASTER_CONFIG
+    with open('config/master.json', 'w') as jsonfile:
+        jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
+
 # Ugly but this prevents import loop errors
 def load_master():
     global MASTER_CONFIG, MASTER_LOADED
@@ -408,10 +413,7 @@ def save(id):
     Features.check_server(id)
 
 
-def save_master():
-    global MASTER_CONFIG
-    with open('config/master.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
+
 
 
 def load_persistent():
