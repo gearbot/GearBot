@@ -68,6 +68,9 @@ BACKUPS = {
     "WOOD": "⚙",
     "WRENCH": "🔧",
     "YES": "✅",
+    "CHANNEL": "#️⃣",
+    "VOICECHANNEL": "🔈",
+    "CATEGORY": "🔽",
 }
 
 
