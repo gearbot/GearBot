@@ -19,18 +19,11 @@ def server_info_embed(guild, request_guild=None):
     embed.add_field(name=Translator.translate('members', request_guild), value=guild.member_count, inline=True)
 
     embed.add_field(
-        name=Translator.translate('text_channels', request_guild),
-        value=str(len(guild.text_channels)),
-        inline=True
-    )
-    embed.add_field(
-        name=Translator.translate('voice_channels', request_guild),
-        value=str(len(guild.voice_channels)),
-        inline=True
-    )
-    embed.add_field(
-        name=Translator.translate('total_channel', request_guild),
-        value=str(len(guild.text_channels) + len(guild.voice_channels)),
+        name=Translator.translate('channels', request_guild),
+        value=f"Emoji.get_chat_emoji("CHANNEL") {Translator.translate('text_channels', ctx)}: {str(len(guild.text_channels))}\n
+        Emoji.get_chat_emoji("VOICECHANNEL") {Translator.translate('voice_channels', ctx)}: {str(len(guild.voice_channels))}\n
+        Emoji.get_chat_emoji("CATEGORY") {Translator.translate('categories', ctx)}: {str(len(guild.categories))}\n
+        {Translator.translate('total_channel', ctx)}: {str(len(guild.text_channels) + len(guild.voice_channels))}"
         inline=True
     )
     embed.add_field(
@@ -43,7 +36,6 @@ def server_info_embed(guild, request_guild=None):
         value=guild_features,
         inline=True
     )
-
     if guild.icon_url_as() != "":
         embed.add_field(
             name=Translator.translate('server_icon', request_guild),
