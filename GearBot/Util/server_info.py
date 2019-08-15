@@ -20,10 +20,10 @@ def server_info_embed(guild, request_guild=None):
 
     embed.add_field(
         name=Translator.translate('channels', request_guild),
-        value=f"Emoji.get_chat_emoji("CHANNEL") {Translator.translate('text_channels', ctx)}: {str(len(guild.text_channels))}\n
-        Emoji.get_chat_emoji("VOICECHANNEL") {Translator.translate('voice_channels', ctx)}: {str(len(guild.voice_channels))}\n
-        Emoji.get_chat_emoji("CATEGORY") {Translator.translate('categories', ctx)}: {str(len(guild.categories))}\n
-        {Translator.translate('total_channel', ctx)}: {str(len(guild.text_channels) + len(guild.voice_channels))}"
+        value=f"{Emoji.get_chat_emoji('CATEGORY')} {Translator.translate('categories', request_guild)}: {str(len(guild.categories))}\n"
+              f"{Emoji.get_chat_emoji('CHANNEL')} {Translator.translate('text_channels', request_guild)}: {str(len(guild.text_channels))}\n"
+              f"{Emoji.get_chat_emoji('VOICE')} {Translator.translate('voice_channels', request_guild)}: {str(len(guild.voice_channels))}\n"
+              f"{Translator.translate('total_channel', request_guild)}: {str(len(guild.text_channels) + len(guild.voice_channels))}",
         inline=True
     )
     embed.add_field(
@@ -91,8 +91,8 @@ def server_info_raw(bot, guild):
             "name": Utils.clean_user(guild.owner)
         },
         members=guild.member_count,
-        text_channels= get_server_channels(guild),
-        additional_text_channels= extra,
+        text_channels=get_server_channels(guild),
+        additional_text_channels=extra,
         voice_channels=len(guild.voice_channels),
         creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
         age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
@@ -122,10 +122,12 @@ def server_info_raw(bot, guild):
 def get_server_channels(guild):
     return {
         str(c.id): {
-                'name': c.name,
-                'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
-            } for c in guild.text_channels
+            'name': c.name,
+            'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(
+                c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
+        } for c in guild.text_channels
     }
+
 
 def time_difference(begin, end, location):
     diff = begin - end
