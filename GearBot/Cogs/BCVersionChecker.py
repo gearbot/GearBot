@@ -17,7 +17,7 @@ from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration,
 class BCVersionChecker(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}

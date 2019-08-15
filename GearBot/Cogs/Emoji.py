@@ -13,7 +13,7 @@ from Util.Converters import EmojiName
 class Emoji(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
 

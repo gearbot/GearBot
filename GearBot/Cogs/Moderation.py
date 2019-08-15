@@ -21,7 +21,7 @@ from database.DatabaseConnector import LoggedMessage, Infraction
 class Moderation(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.running = True
         self.handling = set()

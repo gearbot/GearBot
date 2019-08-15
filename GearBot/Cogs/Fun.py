@@ -14,7 +14,7 @@ from Util.JumboGenerator import JumboGenerator
 class Fun(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         to_remove = {
             "CAT_KEY": "cat",

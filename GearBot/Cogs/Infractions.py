@@ -13,9 +13,6 @@ from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
 
 class Infractions(BaseCog):
 
-    def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
-
     @commands.guild_only()
     @commands.command()
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: Reason):

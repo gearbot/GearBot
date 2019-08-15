@@ -32,7 +32,6 @@
   "help_title": "GearBot help {page_num}/{pages}",
 
   "warning_added": "Warning for {user} added (``#{inf}``)",
-  "channels": "Channels",
   "warning_added_modlog": "{user} (``{user_id}``) has been warned by {moderator} (``{moderator_id}``) for ``{reason}`` (``#{inf}``)",
   "warning_not_allowed": "You are not allowed to warn {user}.",
 
@@ -303,7 +302,6 @@
   "tempban_confirmation": "{user} (``{user_id}``) has been temp-banned until {until} for ``{reason}`` (``#{inf}``)",
   "emoji": "Server emoji",
   "unknown_channel": "The specified channel doesn't exist, you either gave me an invalid channel ID or it was deleted.",
-  "categories": "Categories",
   "not_banned": "This person isn't currently banned",
   "user_conversion_failed": "Unable to convert '{arg}' to a user",
   "no_potential_id": "'{arg}' isn't a potential userid",
@@ -675,6 +673,6 @@
   "logging_category_added": "{count, plural, one {A logging category was} other {The following logging categories were}} added to {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
   "logging_category_removed": "{count, plural, one {A logging category was} other {The following logging categories were}} removed from {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{categories}``",
   "logging_key_disabled": "{count, plural, one {A logging key was} other {The following logging keys were}} disabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{disabled}``",
-  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``",
-	"unban_forbidden": "Unable to unban people who are on this server and are above me"
+  "logging_key_enabled": "{count, plural, one {A logging key was} other {The following logging keys were}} enabled for {channel} (``{channel_id}``) by **{user}** (``{user_id}``): ``{enabled}``"
+
 }

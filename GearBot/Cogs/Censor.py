@@ -14,9 +14,6 @@ from Util.Matchers import INVITE_MATCHER
 
 class Censor(BaseCog):
 
-    def __init__(self, bot):
-        super().__init__(bot)
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:

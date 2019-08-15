@@ -9,7 +9,7 @@ from database.DatabaseConnector import CustomCommand
 class CustCommands(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())

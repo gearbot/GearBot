@@ -13,7 +13,7 @@ from Util import GearbotLogging, Pages, VersionInfo, Translator
 class Minecraft(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.cf_cache = dict()
         self.fetching = []

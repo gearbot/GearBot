@@ -12,8 +12,9 @@ from database.DatabaseConnector import Raid, Raider
 
 
 class AntiRaid(BaseCog):
+
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.raid_trackers = dict()
         self.timers = {

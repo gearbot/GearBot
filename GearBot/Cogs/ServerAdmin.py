@@ -91,7 +91,7 @@ class ServerAdmin(BaseCog):
     ]
 
     def __init__(self, bot):
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         bot.to_cache = []
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)

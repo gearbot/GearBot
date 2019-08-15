@@ -5,12 +5,10 @@ from Util import Permissioncheckers
 
 
 class BaseCog(commands.Cog):
-    def __init__(self, bot, perms_class=None):
-        self.bot:GearBot = bot
-        self.permissions = perms_class
-
-        if perms_class != None:
-            self.permissions = cog_permissions[perms_class]
+    def __init__(self, bot):
+        self.bot: GearBot = bot
+        name = self.__class__.__name__
+        self.permissions = cog_permissions[name] if name in cog_permissions else None
 
     async def cog_check (self, ctx):
         return Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author)

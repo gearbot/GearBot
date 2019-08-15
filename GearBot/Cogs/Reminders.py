@@ -15,7 +15,7 @@ from database.DatabaseConnector import Reminder, ReminderStatus
 class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        super().__init__(bot, self.__class__.__name__)
+        super().__init__(bot)
 
         self.running = True
         self.handling = set()
