@@ -499,7 +499,7 @@ class ModLog(BaseCog):
                             key = "permission_override_update"
 
                             def finder(e):
-                                if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id:
+                                if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id and target in after.overwrites:
                                     before_allowed, before_denied = override.pair()
                                     after_allowed, after_denied = after.overwrites[target].pair()
                                     has_allow = hasattr(e.before, "allow")

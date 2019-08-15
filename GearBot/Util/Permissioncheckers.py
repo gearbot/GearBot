@@ -105,7 +105,7 @@ def get_perm_dict(pieces, perm_dict, strict=False):
 
 
 def get_user_lvl(guild, member, command_object=None):
-    if guild.owner.id == member.id:
+    if guild.owner is not None and guild.owner.id == member.id:
         return 5
 
     if is_lvl4(member):

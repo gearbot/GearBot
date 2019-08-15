@@ -500,6 +500,7 @@ class Serveradmin(BaseCog):
 
     @configure.group()
     @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     async def logging(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(color=6008770, title=Translator.translate('log_channels', ctx))

@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 
 from aioredis import ReplyError
+from discord import NotFound
 from peewee import fn
 
 from Bot import GearBot
@@ -152,12 +153,16 @@ async def inf_update(message, query, fields, amount, page_num):
             page_num = count-1
         page = await bot.redis_pool.lindex(key, page_num)
     name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
-    await message.edit(content=f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}")
-    if count > 1:
-        left = Emoji.get_emoji('LEFT')
-        if not any(left == r.emoji and r.me for r in message.reactions):
-            await message.add_reaction(Emoji.get_emoji('LEFT'))
-            await message.add_reaction(Emoji.get_emoji('RIGHT'))
+    try:
+        await message.edit(content=f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}")
+        if count > 1:
+            left = Emoji.get_emoji('LEFT')
+            if not any(left == r.emoji and r.me for r in message.reactions):
+                await message.add_reaction(Emoji.get_emoji('LEFT'))
+                await message.add_reaction(Emoji.get_emoji('RIGHT'))
+    except NotFound:
+        pass
+
 
     parts = {
         "page_num": page_num,

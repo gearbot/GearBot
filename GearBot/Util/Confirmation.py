@@ -1,6 +1,7 @@
 import asyncio
 
 import discord
+from discord import NotFound
 from discord.ext import commands
 
 from Util import Emoji, MessageUtils
@@ -26,7 +27,10 @@ async def confirm(ctx: commands.Context, text, timeout=30, on_yes=None, on_no=No
     try:
         reaction, user = await ctx.bot.wait_for('reaction_add', timeout=timeout, check=check)
     except asyncio.TimeoutError:
-        await message.delete()
+        try:
+            await message.delete()
+        except NotFound:
+            pass # someone deleted it
         await MessageUtils.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
         return
     if reaction.emoji == yes and on_yes is not None:
