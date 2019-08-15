@@ -151,7 +151,6 @@ async def on_message(bot, message:Message):
             f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
             start = f()
             await bot.invoke(ctx)
-            bot.metrics.bot_command_timing.labels(command_name=ctx.command.qualified_name).observe((f() - start) / 1000000)
 
 
 async def on_guild_join(guild):
