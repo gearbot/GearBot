@@ -13,25 +13,8 @@ from Util.Converters import EmojiName
 class Emoji(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 2,
-            "max": 6,
-            "required": 3,
-            "commands": {
-                "emoji": {
-                    "min": 2,
-                    "max": 6,
-                    "required": 3,
-                    "commands": {
-                        "list": {
-                            "min": 0,
-                            "max": 6,
-                            "required": 3
-                        }
-                    }
-                }
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
 
     def cog_unload(self):

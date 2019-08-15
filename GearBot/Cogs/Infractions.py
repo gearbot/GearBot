@@ -14,21 +14,7 @@ from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
 class Infractions(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 2,
-            "max": 6,
-            "required": 2,
-            "commands": {
-                "inf": {
-                    "required": 2,
-                    "min": 2,
-                    "max": 6,
-                    "commands": {
-                        "delete": {"required": 5, "min": 2, "max": 6}
-                    }
-                }
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
 
     @commands.guild_only()
     @commands.command()

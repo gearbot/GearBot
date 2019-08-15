@@ -87,7 +87,7 @@ def server_info_raw(bot, guild):
         id=str(guild.id),  # send as string, js can't deal with it otherwise
         server_icon=str(guild.icon_url_as(size=256)),
         owner={
-            "id": guild.owner.id,
+            "id": str(guild.owner.id),
             "name": Utils.clean_user(guild.owner)
         },
         members=guild.member_count,
@@ -134,10 +134,10 @@ def time_difference(begin, end, location):
     minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
     hours, minutes = divmod(minutes, 60)
     if diff.days > 0:
-        return Translator.translate('days', location, amount=diff.days)
+        return Translator.translate("days", location, amount=diff.days)
     else:
         return Translator.translate(
-            'hours',
+            "hours",
             location,
             hours=hours,
             minutes=minutes

@@ -72,7 +72,7 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
     return output
 
 
-class Serveradmin(BaseCog):
+class ServerAdmin(BaseCog):
     LOGGING_TYPES = [
         "RAID_LOGS",
         "CENSORED_MESSAGES",
@@ -91,21 +91,8 @@ class Serveradmin(BaseCog):
     ]
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 3,
-            "max": 5,
-            "required": 3,
-            "commands": {
-                "configure": {
-                    "min": 3,
-                    "max": 5,
-                    "required": 3,
-                    "commands": {
-                        "lvl4": {"required": 5, "min": 4, "max": 6}
-                    }
-                }
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         bot.to_cache = []
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
 
@@ -992,4 +979,4 @@ class Serveradmin(BaseCog):
 
 
 def setup(bot):
-    bot.add_cog(Serveradmin(bot))
+    bot.add_cog(ServerAdmin(bot))

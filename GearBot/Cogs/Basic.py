@@ -18,12 +18,8 @@ from database.DatabaseConnector import LoggedAttachment
 class Basic(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         Pages.register("help", self.init_help, self.update_help)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())

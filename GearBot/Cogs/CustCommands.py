@@ -9,23 +9,8 @@ from database.DatabaseConnector import CustomCommand
 class CustCommands(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {
-                "commands": {
-                    "required": 0,
-                    "min": 0,
-                    "max": 6,
-                    "commands": {
-                        "create": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                        "remove": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                        "update": {"required": 2, "min": 2, "max": 6, "commands": {}},
-                    }
-                }
-            }
-        })
+        super().__init__(bot, self.__class__.__name__)
+
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
