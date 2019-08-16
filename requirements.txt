@@ -9,4 +9,3 @@ pytz==2019.1
 pyseeyou==1.0.0
 ruamel.yaml==0.15.94
 prometheus_client==0.7.1
-ujson==1.35

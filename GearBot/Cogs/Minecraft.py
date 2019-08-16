@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-import ujson
+import json
 from collections import OrderedDict
 
 import aiohttp
@@ -53,7 +53,7 @@ class Minecraft(BaseCog):
         session: aiohttp.ClientSession = self.bot.aiosession
         async with session.get(f"https://api.cfwidget.com/mc-mods/minecraft/{project_name}") as reply:
             if reply.status is 200:  # all good, we can parse it
-                parsed = ujson.loads(await reply.text())
+                parsed = json.loads(await reply.text())
                 p_type = parsed["type"]
                 info = {
                     "title": parsed["title"],

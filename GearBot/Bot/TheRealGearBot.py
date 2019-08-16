@@ -1,5 +1,5 @@
 import asyncio
-import ujson
+import json
 import os
 import signal
 import sys
@@ -289,7 +289,7 @@ async def handle_database_error(bot):
                 async with aiohttp.ClientSession(headers={'Content-Type': 'application/json',
                                                           'Authorization': f'Bearer {Configuration.get_master_var("DO_TOKEN")}'}) as session:
                     await session.post(f'https://api.digitalocean.com/v2/droplets/{Configuration.get_master_var("DO_ID")}/actions',
-                                            data=ujson.dumps(data), timeout=30)
+                                            data=json.dumps(data), timeout=30)
                 time.sleep(60)
 
             else:

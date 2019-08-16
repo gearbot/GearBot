@@ -1,6 +1,6 @@
 import asyncio
 import hashlib
-import ujson
+import json
 import threading
 
 from ruamel.yaml import YAML
@@ -130,7 +130,7 @@ async def update_lang(lang, retry=True):
     GearbotLogging.info(f"Updating {lang} ({LANG_NAMES[lang]}) file...")
     async with BOT.aiosession.get(download_link) as response:
         content = await response.text()
-        content = ujson.loads(content)
+        content = json.loads(content)
         if "success" in content:
             if retry:
                 GearbotLogging.warn(f"Failed to update {lang} ({LANG_NAMES[lang]}), trying again in 3 seconds")

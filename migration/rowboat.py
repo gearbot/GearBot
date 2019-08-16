@@ -1,4 +1,4 @@
-import ujson
+import json
 import math
 import time
 from datetime import datetime
@@ -10,7 +10,7 @@ from peewee import PrimaryKeyField, Model, BigIntegerField, CharField, Timestamp
 def fetch_from_disk(filename, alternative=None):
     try:
         with open(f"{filename}.json") as file:
-            return ujson.load(file)
+            return json.load(file)
     except FileNotFoundError:
         if alternative is not None:
             fetch_from_disk(alternative)

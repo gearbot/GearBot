@@ -1,10 +1,10 @@
 import asyncio
-import ujson
 import json
 import os
 import subprocess
 from collections import namedtuple, OrderedDict
 from datetime import datetime
+from json import JSONDecodeError
 from subprocess import Popen
 
 import discord
@@ -25,11 +25,11 @@ def initialize(actual_bot):
 def fetch_from_disk(filename, alternative=None):
     try:
         with open(f"{filename}.json", encoding="UTF-8") as file:
-            return ujson.load(file)
+            return json.load(file)
     except FileNotFoundError:
         if alternative is not None:
             return fetch_from_disk(alternative)
-    except KeyError:
+    except JSONDecodeError:
         if alternative is not None:
             return fetch_from_disk(alternative)
     return dict()
