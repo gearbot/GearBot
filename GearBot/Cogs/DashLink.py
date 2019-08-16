@@ -1,5 +1,5 @@
 import asyncio
-import json
+import ujson
 import time
 from collections import OrderedDict
 from concurrent.futures import CancelledError
@@ -174,7 +174,7 @@ class DashLink(BaseCog):
             await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
 
     async def _receiver(self):
-        async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
+        async for sender, message in self.receiver.iter(encoding='utf-8', decoder=ujson.loads):
             self.bot.loop.create_task(self._handle(sender, message))
 
     async def still_spinning(self, _):

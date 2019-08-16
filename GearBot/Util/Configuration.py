@@ -17,7 +17,7 @@ def load_master():
     global MASTER_CONFIG, MASTER_LOADED
     try:
         with open('config/master.json', 'r') as jsonfile:
-            MASTER_CONFIG = json.load(jsonfile)
+            MASTER_CONFIG = ujson.load(jsonfile)
             if "Serveradmin" in MASTER_CONFIG["COGS"]:
                 MASTER_CONFIG["COGS"].remove("Serveradmin")
                 MASTER_CONFIG["COGS"].append("ServerAdmin")
@@ -41,6 +41,7 @@ def get_master_var(key, default=None):
     return MASTER_CONFIG[key]
 
 
+import ujson
 import json
 import os
 
