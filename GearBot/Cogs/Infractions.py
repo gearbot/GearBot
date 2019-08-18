@@ -104,7 +104,7 @@ class Infractions(BaseCog):
         infraction.reason = reason
         infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_updated', id=infraction.id)
-        await InfractionUtils.clear_cache(ctx.guild.id)
+        InfractionUtils.clear_cache(ctx.guild.id)
 
     @inf.command(aliases=["del", "remove"])
     async def delete(self, ctx: commands.Context, infraction: ServerInfraction):
@@ -119,7 +119,7 @@ class Infractions(BaseCog):
             GearbotLogging.log_key(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target),
                                    target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason,
                                    user=Utils.clean_user(ctx.author), user_id=ctx.author.id)
-            await InfractionUtils.clear_cache(ctx.guild.id)
+            InfractionUtils.clear_cache(ctx.guild.id)
 
         await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id,reason=reason)}", on_yes=yes)
 
@@ -129,7 +129,7 @@ class Infractions(BaseCog):
         infraction.mod_id = ctx.author.id
         infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_claimed', inf_id=infraction.id)
-        await InfractionUtils.clear_cache(ctx.guild.id)
+        InfractionUtils.clear_cache(ctx.guild.id)
 
     IMAGE_MATCHER = re.compile(
         r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',

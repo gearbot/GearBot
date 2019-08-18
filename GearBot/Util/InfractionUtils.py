@@ -1,3 +1,4 @@
+import asyncio
 import re
 from datetime import datetime
 
@@ -21,11 +22,22 @@ def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=Tru
     bot.loop.create_task(clear_cache(guild_id))
     return i
 
-async def clear_cache(guild_id):
-    if bot.redis_pool is not None:
-        todo = await inf_cleaner(guild_id, reset_cache=True)
-        for view in sorted(todo, key=lambda l: l[0], reverse=True):
-            await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+cleaners = dict()
+
+def clear_cache(guild_id):
+    if guild_id in cleaners:
+        cleaners[guild_id].cancel()
+    cleaners[guild_id] = bot.loop.create_task(cleaner(guild_id))
+
+
+
+async def cleaner(guild_id):
+    # sleep a bit first, we're not in a rush
+    await asyncio.sleep(5)
+    todo = await inf_cleaner(guild_id, reset_cache=True)
+    for view in sorted(todo, key=lambda l: l[0], reverse=True):
+        await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+    del cleaners[guild_id]
 
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)

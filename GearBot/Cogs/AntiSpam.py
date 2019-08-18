@@ -250,7 +250,7 @@ class AntiSpam(BaseCog):
                                    moderator_id=v.guild.me.id,
                                    duration=Utils.to_pretty_time(duration, v.guild.id),
                                    reason=reason, inf_id=i.id, end=i.end)
-            await InfractionUtils.clear_cache(v.guild.id)
+            InfractionUtils.clear_cache(v.guild.id)
 
     async def kick_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
