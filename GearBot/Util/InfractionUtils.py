@@ -19,7 +19,7 @@ def initialize(gearbot):
 def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
     i = Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
                       start=datetime.now(), end=end, active=active)
-    bot.loop.create_task(clear_cache(guild_id))
+    clear_cache(guild_id)
     return i
 
 cleaners = dict()
