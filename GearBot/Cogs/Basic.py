@@ -98,11 +98,12 @@ class Basic(BaseCog):
                                           timestamp=message.created_at)
                     if message.content is None or message.content == "":
                         if attachment is not None:
+                            url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
                             if attachment.isImage:
-                                embed.set_image(url=attachment.url)
+                                embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                value=attachment.url)
+                                                value=url)
                     else:
                         description = message.content
                         embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
@@ -110,11 +111,12 @@ class Basic(BaseCog):
                         embed.add_field(name="​",
                                         value=f"[Jump to message]({message.jump_url})")
                         if attachment is not None:
+                            url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
                             if attachment.isImage:
-                                embed.set_image(url=attachment.url)
+                                embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                value=attachment.url)
+                                                value=url)
                     user = message.author
                     embed.set_author(name=user.name, icon_url=user.avatar_url)
                     embed.set_footer(

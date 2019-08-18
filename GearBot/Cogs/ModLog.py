@@ -63,7 +63,7 @@ class ModLog(BaseCog):
                                              channel=channel.id, server=channel.guild.id,
                                              type=message_type)
                         for a in message.attachments:
-                            LoggedAttachment.create(id=a.id, url=a.proxy_url,
+                            LoggedAttachment.create(id=a.id, name=a.filename,
                                                     isImage=(a.width is not None or a.width is 0),
                                                     messageid=message.id)
                         newCount = newCount + 1
@@ -142,7 +142,7 @@ class ModLog(BaseCog):
                 embed.set_footer(text=Translator.translate('sent_in', guild, channel=channel.name))
                 if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
-                                    value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
+                                    value='\n'.join(Utils.assemble_attachment(channel.id, attachment.id, attachment.name) for attachment in message.attachments))
                 GearbotLogging.log_raw(guild.id, "message_removed", embed=embed)
             else:
                 if type_string is None:
@@ -155,7 +155,7 @@ class ModLog(BaseCog):
                 count = 1
                 multiple_attachments = len(message.attachments) > 1
                 for attachment in message.attachments:
-                    attachment_url = attachment.url if hasattr(attachment, 'url') else attachment
+                    attachment_url = Utils.assemble_attachment(channel.id, attachment.id, attachment.name)
                     if multiple_attachments:
                         attachment_str = Translator.translate('attachment_item', guild, num=count, attachment=attachment_url)
                     else:

@@ -23,7 +23,7 @@ async def pack_messages(messages):
     out = ""
     for message in messages:
         name = await Utils.username(message.author, clean=False)
-        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))}\r\n"
+        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
 async def ship_messages(ctx, messages, t, filename="Message archive"):

@@ -19,7 +19,7 @@ def insert_message(message):
                                    channel=message.channel.id, server=message.guild.id,
                                    type=message_type, pinned=message.pinned)
         for a in message.attachments:
-            LoggedAttachment.create(id=a.id, url=a.proxy_url,
+            LoggedAttachment.create(id=a.id, name=a.filename,
                                        isImage=(a.width is not None or a.width is 0),
                                        messageid=message.id)
     except IntegrityError:

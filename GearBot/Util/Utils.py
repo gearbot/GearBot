@@ -242,3 +242,8 @@ def to_pretty_time(seconds, guild_id):
         if seconds == 0:
             break
     return duration.strip()
+
+
+
+def assemble_attachment(channel, aid, name):
+    return f"https://media.discordapp.net/attachments/{channel}/{aid}/{name}"
