@@ -379,7 +379,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, *
         return
 
     message = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
-    message = Utils.trim_message(message, 2000)
+
     if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
         s = datetime.strftime(
             datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
@@ -394,6 +394,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, *
         message = f"{message} {tag_on}"
         tag_on = None
 
+    message = Utils.trim_message(message, 2000)
     # queuing up
     log_to(guild_id, targets, message, embed, file, tag_on)
 
