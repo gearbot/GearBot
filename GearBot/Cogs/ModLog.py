@@ -467,7 +467,7 @@ class ModLog(BaseCog):
         await self.handle_simple_changes(before, after, "channel_update_simple",
                                          AuditLogAction.channel_update,
                                          ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate",
-                                          "user_limit"])
+                                          "user_limit", "type"])
 
         # checking overrides
 
