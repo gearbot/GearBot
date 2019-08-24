@@ -27,14 +27,14 @@ async def get_message_data(bot, message_id):
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
     return message
 
-async def insert_message(bot, message):
+async def insert_message(bot, message, redis=True):
     message_type = message.type
     if message_type == MessageType.default:
         message_type = None
     else:
         if not isinstance(message_type, int):
             message_type = message_type.value
-    if is_cache_enabled(bot):
+    if redis and is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
                          channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((f"{str(a.id)}/{str(a.filename)}" for a in message.attachments)))
