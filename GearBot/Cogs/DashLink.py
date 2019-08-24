@@ -284,7 +284,7 @@ class DashLink(BaseCog):
             message,
             "setup",
             dict(send_messages=False, add_reactions=False),
-            dict(speak=False, connect=False)
+            dict(speak=False, connect=False, stream=False)
         )
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
