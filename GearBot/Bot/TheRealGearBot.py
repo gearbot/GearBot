@@ -229,7 +229,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         await handle_database_error(bot)
 
     else:
-        await handle_exception("Command execution failed", bot, error.original, ctx=ctx)
+        await handle_exception("Command execution failed", bot, error.original if hasattr(error, "original") else error, ctx=ctx)
         # notify caller
         e = Emoji.get_chat_emoji('BUG')
         if ctx.channel.permissions_for(ctx.me).send_messages:
