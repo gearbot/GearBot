@@ -209,7 +209,7 @@ class ModLog(BaseCog):
             after = event.data["content"]
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
-            if not (hasUser and user.id in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") or (hasUser and user.id == channel.guild.me.id)):
+            if hasUser and user.id not in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") and user.id != channel.guild.me.id:
                 GearbotLogging.log_key(channel.guild.id, 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = discord.Embed()
