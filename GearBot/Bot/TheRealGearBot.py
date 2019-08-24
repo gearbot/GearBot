@@ -185,7 +185,7 @@ async def on_guild_remove(guild):
 
 
 async def on_guild_update(before, after):
-    if after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
+    if after.owner is not None and after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
         GearbotLogging.info(
             f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blacklisted")
         try:
