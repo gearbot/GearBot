@@ -37,12 +37,12 @@ class Basic(BaseCog):
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
         minutes, seconds = divmod(remainder, 60)
-        tacos = "{:,}".format(round(self.bot.eaten))
-        user_messages = "{:,}".format(self.bot.user_messages)
-        bot_messages = "{:,}".format(self.bot.bot_messages)
-        self_messages = "{:,}".format(self.bot.self_messages)
-        total = "{:,}".format(sum(len(guild.members) for guild in self.bot.guilds))
-        unique = "{:,}".format(len(self.bot.users))
+        tacos = str(round(self.bot.eaten))
+        user_messages = str(self.bot.user_messages)
+        bot_messages = str(self.bot.bot_messages)
+        self_messages = str(self.bot.self_messages)
+        total = str(sum(len(guild.members) for guild in self.bot.guilds))
+        unique = str(len(self.bot.users))
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
                               description=
@@ -248,11 +248,26 @@ class Basic(BaseCog):
             Configuration.save(role.guild.id)
 
     async def taco_eater(self):
-        """A person can eat a taco every 5 mins, we run every 5s"""
+        """A person can eat a taco every 5 mins, we run every 15s"""
         GearbotLogging.info("Time to start munching on some 🌮")
         while self.running:
-            self.bot.eaten += len(self.bot.users) / 60
-            await asyncio.sleep(5)
+            self.bot.eaten += len(self.bot.users) / 20
+
+            # update stats in redis
+            await self.bot.redis_pool.hmset_dict("botstats", {
+                "start_time": str(self.bot.start_time),
+                "user_mesages": str(self.bot.user_messages),
+                "bot_messages": str(self.bot.bot_messages),
+                "own_messages": str(self.bot.self_messages),
+                "total_members": str(sum(len(guild.members) for guild in self.bot.guilds)),
+                "unique_members": str(len(self.bot.users)),
+                "taco_count": str(round(self.bot.eaten)),
+                "random_number": random.randint(0, 5000),
+                "commands_executed": str(self.bot.commandCount),
+                "custom_commands_executed": str(self.bot.custom_command_count)
+            })
+
+            await asyncio.sleep(15)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
     async def selfrole_updater(self):

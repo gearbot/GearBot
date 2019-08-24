@@ -53,6 +53,10 @@ class DashLink(BaseCog):
         self.redis_link: aioredis.Redis = None
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
+            question=self.question
+
+        )
+        self.question_handlers = dict(
             heartbeat = self.still_spinning,
             guild_perms=self.guild_perm_request,
             user_info=self.user_info_request,
@@ -66,14 +70,13 @@ class DashLink(BaseCog):
         )
         # The last time we received a heartbeat, the current attempt number, how many times we have notified the owner
         self.last_dash_heartbeat = [time.time(), 0, 0]
-        self.recieve_handlers = dict()
         self.last_update = datetime.now()
         self.to_log = dict()
         self.update_message = None
 
         if Configuration.get_master_var("TRANSLATIONS", dict(SOURCE="SITE", CHANNEL=0, KEY="", LOGIN="", WEBROOT=""))[
             "SOURCE"] == 'CROWDIN':
-            self.recieve_handlers["crowdin_webhook"] = self.crowdin_webhook
+            self.handlers["crowdin_webhook"] = self.crowdin_webhook
         self.task = self._receiver()
 
     def cog_unload(self):
@@ -100,7 +103,7 @@ class DashLink(BaseCog):
             await self.redis_link.subscribe(self.receiver.channel("dash-bot-messages"))
             await self.redis_link.publish_json("bot-dash-messages", {
                 'type': 'cache_info',
-                'info': await self.cache_info()
+                'message': await self.cache_info()
             })
 
         except OSError:
@@ -111,17 +114,17 @@ class DashLink(BaseCog):
         DASH_OUTAGE_CHANNEl = DASH_OUTAGE_INFO["dash_outage_channel"]
         MAX_WARNINGS = DASH_OUTAGE_INFO["max_bot_outage_warnings"]
         BOT_OUTAGE_PINGED_ROLES = DASH_OUTAGE_INFO["dash_outage_pinged_roles"]
-        
+
         while True:
             if (time.time() - self.last_dash_heartbeat[0]) > 5:
                 self.last_dash_heartbeat[1] += 1
 
                 if self.last_dash_heartbeat[1] >= 3 and self.last_dash_heartbeat[2] < MAX_WARNINGS:
                     print("The dashboard API keepalive hasn't responded in over 3 minutes!")
-                    
+
                     self.last_dash_heartbeat[2] += 1
                     self.last_dash_heartbeat[1] = 0
-                    
+
                     if DASH_OUTAGE_CHANNEl:
                         outage_message = DASH_OUTAGE_INFO["dash_outage_embed"]
 
@@ -130,7 +133,7 @@ class DashLink(BaseCog):
 
                         # Set the color to the format Discord understands
                         outage_message["color"] = outage_message["color"]
-                            
+
                         # Generate the custom message and role pings
                         notify_message = DASH_OUTAGE_INFO["dash_outage_message"]
                         if BOT_OUTAGE_PINGED_ROLES:
@@ -144,34 +147,34 @@ class DashLink(BaseCog):
                             outage_channel = self.bot.get_channel(DASH_OUTAGE_CHANNEl)
                             await outage_channel.send(notify_message, embed=Embed.from_dict(outage_message))
                         except Forbidden:
-                            GearbotLogging.error("We couldn't access the specified channel, the notification will not be sent!")
+                            GearbotLogging.error(
+                                "We couldn't access the specified channel, the notification will not be sent!")
 
             # Wait a little bit longer so the dashboard has a chance to update before we check
             await asyncio.sleep(65)
 
     async def _handle(self, sender, message):
         try:
-            if message["type"] in self.recieve_handlers.keys():
-                await self.recieve_handlers[message["type"]](message)
-            else:
-                try:
-                    reply = dict(reply=await self.handlers[message["type"]](message), uid=message["uid"],
-                                 state="OK")
-                except UnauthorizedException:
-                    reply = dict(uid=message["uid"], state="Unauthorized")
-                except ValidationException as ex:
-                    reply = dict(uid=message["uid"], state="Bad Request", errors=ex.errors)
-                except CancelledError:
-                    return
-                except Exception as ex:
-                    reply = dict(uid=message["uid"], state="Failed")
-                    await self.redis_link.publish_json("bot-dash-messages", reply)
-                    raise ex
-                await self.redis_link.publish_json("bot-dash-messages", reply)
+            await self.handlers[message["type"]](message["message"])
         except CancelledError:
             return
         except Exception as e:
             await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
+
+    async def question(self, message):
+        try:
+            reply = dict(reply=await self.question_handlers[message["type"]](message["data"]), state="OK", uid=message["uid"])
+        except UnauthorizedException:
+            reply = dict(uid=message["uid"], state="Unauthorized")
+        except ValidationException as ex:
+            reply = dict(uid=message["uid"], state="Bad Request", errors=ex.errors)
+        except CancelledError:
+            return
+        except Exception as ex:
+            reply = dict(uid=message["uid"], state="Failed")
+            await self.redis_link.publish_json("bot-dash-messages", reply)
+            raise ex
+        await self.redis_link.publish_json("bot-dash-messages", dict(type="reply",  message=reply))
 
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
@@ -239,7 +242,8 @@ class DashLink(BaseCog):
     async def guild_info_request(self, message):
         info = server_info.server_info_raw(self.bot, self.bot.get_guild(message["guild_id"]))
         info["user_perms"] = self.get_guild_perms(message["guild_id"], int(message["user_id"]))
-        info["user_level"] = Permissioncheckers.user_lvl(self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])))
+        info["user_level"] = Permissioncheckers.user_lvl(
+            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])))
         return info
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
@@ -274,12 +278,11 @@ class DashLink(BaseCog):
             'logging': {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}
         }
 
-
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
     async def setup_mute(self, message):
         await self.override_handler(
-            message, 
-            "setup", 
+            message,
+            "setup",
             dict(send_messages=False, add_reactions=False),
             dict(speak=False, connect=False)
         )
@@ -300,7 +303,8 @@ class DashLink(BaseCog):
         if role.id == guild.id:
             raise ValidationException(dict(role_id="The @everyone role can't be used for muting people"))
         if role.managed:
-            raise ValidationException(dict(role_id="Managed roles can not be assigned to users and thus won't work for muting people"))
+            raise ValidationException(
+                dict(role_id="Managed roles can not be assigned to users and thus won't work for muting people"))
         user = await Utils.get_user(message["user_id"])
         parts = {
             "role_name": Utils.escape_markdown(role.name),
@@ -313,7 +317,8 @@ class DashLink(BaseCog):
         for channel in guild.text_channels:
             try:
                 if text is None:
-                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), overwrite=None)
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id),
+                                                  overwrite=None)
                 else:
                     await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), **text)
             except Forbidden as ex:
@@ -321,7 +326,8 @@ class DashLink(BaseCog):
         for channel in guild.voice_channels:
             try:
                 if voice is None:
-                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), overwrite=None)
+                    await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id),
+                                                  overwrite=None)
                 else:
                     await channel.set_permissions(role, reason=Translator.translate(f'mute_{t}', guild.id), **voice)
             except Forbidden as ex:
@@ -329,16 +335,16 @@ class DashLink(BaseCog):
 
         await asyncio.sleep(1)  # delay logging so the channel overrides can get querried and logged
         GearbotLogging.log_key(
-            guild.id, 
-            f"config_mute_{t}_complete", 
+            guild.id,
+            f"config_mute_{t}_complete",
             **parts
         )
 
         out = '\n'.join(failed)
         GearbotLogging.log_key(
-            guild.id, 
-            f"config_mute_{t}_failed", 
-            **parts, 
+            guild.id,
+            f"config_mute_{t}_failed",
+            **parts,
             count=len(failed),
             tag_on=None if len(failed) is 0 else f'```{out}```'
         )
@@ -355,7 +361,7 @@ class DashLink(BaseCog):
         self.to_log[code] += 1
 
         embed = Embed(
-            color=Color(0x1183f6), 
+            color=Color(0x1183f6),
             timestamp=datetime.utcfromtimestamp(time.time()),
             description=f"**Live translation update summary!**\n" + '\n'.join(
                 f"{Translator.LANG_NAMES[code]} : {count}" for code, count in self.to_log.items()

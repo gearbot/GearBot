@@ -131,7 +131,8 @@ async def on_message(bot, message:Message):
     if message.author.bot:
         if message.author.id == bot.user.id:
             bot.self_messages += 1
-        bot.bot_messages += 1
+        else:
+            bot.bot_messages += 1
         return
     ctx: commands.Context = await bot.get_context(message)
     bot.user_messages += 1
