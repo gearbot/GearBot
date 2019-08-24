@@ -246,7 +246,7 @@ class ModLog(BaseCog):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
                     if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(
-                            time.time() - 30):
+                             time.time() - 30):
                         break
                     if entry.target == member:
                         if entry.reason is None:
@@ -533,7 +533,7 @@ class ModLog(BaseCog):
             parts = dict(channel=Utils.escape_markdown(after), channel_id=after.id, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
             def finder(e):
-                if e.target.id == after.id and e.extra.id == target.id:
+                if e.target.id == after.id and e.extra.id == target.id and target in after.overwrites:
                     after_allowed, after_denied = after.overwrites[target].pair()
                     has_allow = hasattr(e.after, "allow")
                     has_deny = hasattr(e.after, "deny")
