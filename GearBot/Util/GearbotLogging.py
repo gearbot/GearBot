@@ -440,12 +440,12 @@ async def log_task(guild_id, target):
                 return
             # pull message from queue
             todo = LOG_QUEUE[target].get(block=False)
-            if (len(to_send) + len(todo.message) if todo.message is not None else 0) > 1998:
-                # too large,
+            if (len(to_send) + len(todo.message) if todo.message is not None else 0) < 2000:
+                to_send = f'{to_send}\n{todo.message if todo.message is not None else ""}'
+            else:
+                # too large, send it out
                 await channel.send(to_send)
                 to_send = todo.message
-            else:
-                to_send = f'{to_send}\n{todo.message if todo.message is not None else ""}'
             if todo.embed is not None or todo.file is not None or LOG_QUEUE[target].empty():
                 await channel.send(to_send, embed=todo.embed, file=todo.file)
                 to_send = ""
