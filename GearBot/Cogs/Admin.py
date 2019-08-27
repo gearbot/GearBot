@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update
 from Util.Converters import UserID, Guild, DiscordUser
 
 
@@ -33,13 +33,9 @@ class Admin(BaseCog):
 
     @commands.command(hidden=True)
     async def upgrade(self, ctx):
-        await ctx.send(f"{Emoji.get_chat_emoji('WRENCH')} I'll be right back with new gears! {Emoji.get_chat_emoji('WOOD')} {Emoji.get_chat_emoji('STONE')} {Emoji.get_chat_emoji('IRON')} {Emoji.get_chat_emoji('GOLD')} {Emoji.get_chat_emoji('DIAMOND')}")
-        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Upgrade initiated by {ctx.author.name}")
-        GearbotLogging.info(f"Upgrade initiated by {ctx.author.name}")
-        file = open("upgradeRequest", "w")
-        file.write("upgrade requested")
-        file.close()
-        await self.bot.logout()
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('WRENCH')} I'll be right back with new gears! {Emoji.get_chat_emoji('WOOD')} {Emoji.get_chat_emoji('STONE')} {Emoji.get_chat_emoji('IRON')} {Emoji.get_chat_emoji('GOLD')} {Emoji.get_chat_emoji('DIAMOND')}")
+        await Update.upgrade(ctx.author.name, self.bot)
 
 
 

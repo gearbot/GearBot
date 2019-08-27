@@ -77,7 +77,7 @@ class Moderation(BaseCog):
             return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
 
         if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
-                ctx.guild.owner == ctx.author and ctx.author != user)) and user != ctx.guild.owner and user != ctx.bot.user:
+                ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
             return True, None
         else:
             return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)

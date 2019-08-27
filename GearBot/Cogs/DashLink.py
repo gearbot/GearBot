@@ -13,7 +13,7 @@ from discord import Embed, Color, Forbidden
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers
+from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers, Update
 from Util.DashConfig import ValidationException
 
 
@@ -53,8 +53,8 @@ class DashLink(BaseCog):
         self.redis_link: aioredis.Redis = None
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
-            question=self.question
-
+            question=self.question,
+            update=self.update
         )
         self.question_handlers = dict(
             heartbeat = self.still_spinning,
@@ -373,6 +373,15 @@ class DashLink(BaseCog):
             await self.update_message.edit(embed=embed)
 
         self.last_update = datetime.now()
+
+    async def update(self, message):
+        t = message["type"]
+        if t == "update":
+            await Update.update("whoever just pushed to master", self.bot)
+        elif t == "upgrade":
+            await Update.upgrade("whoever just pushed to master", self.bot)
+        else:
+            raise RuntimeError("UNKNOWN UPDATE MESSAGE, IS SOMEONE MESSING WITH IT?")
 
 
 def setup(bot):
