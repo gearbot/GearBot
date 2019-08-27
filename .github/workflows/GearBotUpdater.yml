@@ -1,0 +1,12 @@
+on:
+  push:
+    branches:
+      - master
+name: GearBot Updater
+jobs:
+  deploy:
+    name: GearBot Updater
+    runs-on: ubuntu-latest
+    steps:
+    - name: Determine update type
+      uses: gearbot/update-action@master
