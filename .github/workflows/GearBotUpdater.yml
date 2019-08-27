@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - dev
+      - master
 name: GearBot Updater
 jobs:
   deploy:
@@ -25,7 +25,7 @@ jobs:
       - name: Send discord notification
         uses: AEnterprise/discord-webhook@master
         env:
-          DATA: '{"embeds": [{"description": "[A new GearBot version is has been deployed!]()", "color": 48895, "image": { "url": "https://media1.tenor.com/images/15ae412a294bf128f6ba7e60aa0ea8e1/tenor.gif"}}]}'
+          DATA: '{"embeds": [{"description": "[A new GearBot version has been deployed!]()", "color": 48895, "image": { "url": "https://media1.tenor.com/images/15ae412a294bf128f6ba7e60aa0ea8e1/tenor.gif"}}]}'
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
 
