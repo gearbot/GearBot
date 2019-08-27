@@ -8,5 +8,24 @@ jobs:
     name: GearBot Updater
     runs-on: ubuntu-latest
     steps:
-    - name: Determine update type
-      uses: gearbot/update-action@master
+      - name: Determine update type
+        uses: gearbot/update-action@master
+      - name: Send discord notification
+        uses: AEnterprise/discord-webhook@master
+        env:
+          DATA: '{"embeds": [{"description": "[A new GearBot version is being deployed! Update strategy: _UPDATE_STRATEGY_]()", "color": 48895, "image": { "url": "https://media1.tenor.com/images/38a49ebdc78794c0317d0778e430a2d8/tenor.gif"}}]}'
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PLACEHOLDER_KEY: '_UPDATE_STRATEGY_'
+      - name: Trigger update
+        uses: AEnterprise/discord-webhook@master
+        env:
+          DATA: '{"key": "${{ secrets.UPDATE_KEY }}","type": "_UPDATE_STRATEGY_"}'
+          DISCORD_WEBHOOK: ${{ secrets.UPDATE_URL }}
+          PLACEHOLDER_KEY: '_UPDATE_STRATEGY_'
+      - name: Send discord notification
+        uses: AEnterprise/discord-webhook@master
+        env:
+          DATA: '{"embeds": [{"description": "[A new GearBot version is has been deployed!]()", "color": 48895, "image": { "url": "https://media1.tenor.com/images/15ae412a294bf128f6ba7e60aa0ea8e1/tenor.gif"}}]}'
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+

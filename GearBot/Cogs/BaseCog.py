@@ -147,7 +147,7 @@ cog_permissions = {
         "required": 3,
         "commands": {
             "configure": {
-                "min": 3,
+                "min": 2,
                 "max": 5,
                 "required": 3,
                 "commands": {
