@@ -1,4 +1,5 @@
 from Bot import TheRealGearBot
+from Cogs import BaseCog
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
     VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils, Enums, \
     Matchers, Questions, Selfroles, ReactionManager, server_info, DashConfig, Update
@@ -34,5 +35,6 @@ components = [
     DBUtils,
     server_info,
     DashConfig,
-    Update
+    Update,
+    BaseCog
 ]
