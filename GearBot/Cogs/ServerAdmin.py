@@ -36,7 +36,7 @@ async def add_item(ctx, item, item_type, list_name="roles", config_section="PERM
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
 
 
-async def remove_item(ctx, item, item_type, config_section="PERMISSIONS", list_name="roles"):
+async def remove_item(ctx, item, item_type, list_name="roles", config_section="PERMISSIONS"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
@@ -257,7 +257,7 @@ class ServerAdmin(BaseCog):
 
     @ignored_users.command(name="remove")
     async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
-        await remove_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
+        await remove_item(ctx, user, "ignored", list_name="users", config_section="MESSAGE_LOGS")
 
 
     @configure.group("cog_overrides")
