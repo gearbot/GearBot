@@ -507,7 +507,7 @@ def update_config_section(guild, section, new_values, user, replace=False):
         Configuration.set_cat(guild.id, section, modified_values)
     else:
         guild_config.update(**modified_values)
-    Configuration.save(guild.id)
+        Configuration.save(guild.id)
 
     for k, v in modified_values.items():
         o = old[k] if k in old else None
@@ -523,7 +523,7 @@ def update_config_section(guild, section, new_values, user, replace=False):
                 guild.id,
                 "config_change",
                 option_name=Translator.translate(f"config_{section}_{k}".lower(), guild),
-                old=old, new=new, **user_parts
+                old=o, new=new, **user_parts
             )
 
     if replace:

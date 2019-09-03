@@ -25,6 +25,8 @@ class GearBot(AutoShardedBot):
     being_cleaned = dict()
     metrics_reg = CollectorRegistry()
     version = ""
+    dash_guild_users = set()
+    dash_guild_watchers = dict()
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)

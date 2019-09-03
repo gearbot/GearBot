@@ -85,7 +85,7 @@ def server_info_raw(bot, guild):
     server_info = dict(
         name=guild.name,
         id=str(guild.id),  # send as string, js can't deal with it otherwise
-        server_icon=str(guild.icon_url_as(size=256)),
+        icon=str(guild.icon),
         owner={
             "id": str(guild.owner.id),
             "name": Utils.clean_user(guild.owner)

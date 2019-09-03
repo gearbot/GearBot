@@ -7,13 +7,6 @@ create table customcommand
     index (serverid)
 );
 
-create table user
-(
-    userid        bigint primary key not null,
-    name          varchar(32)        not null,
-    discriminator smallint           not null
-);
-
 
 create table loggedmessage
 (
@@ -64,13 +57,20 @@ create table reminder
     index (user_id)
 );
 
+create table userinfo
+(
+    id       bigint primary key not null,
+    api_token     varchar(100)       not null,
+    refresh_token varchar(100)       not null,
+    expires_at    datetime           not null,
+    unique (api_token)
+);
+
 create table dashsession
 (
-    token varchar(50) primary key not null,
-    user_id bigint not null,
-    api_token varchar(100) not null,
-    refresh_token varchar(100) not null,
-    expires_at datetime not null,
-    index(user_id)
+    id      varchar(50) primary key not null, #i'd name this token, but tortoise said no
+    user_id    bigint                  not null references userinfo (id),
+    expires_at datetime                not null,
+    index (user_id)
 )
 

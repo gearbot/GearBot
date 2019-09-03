@@ -70,10 +70,10 @@ class Moderation(BaseCog):
     @staticmethod
     def _can_act(action, ctx, user, check_bot=True):
         if not isinstance(user, discord.Member):
-            return True, None
+            return False, None
 
         # Check if they aren't here anymore so we don't error if they leave first
-        if user and user.top_role > ctx.guild.me.top_role:
+        if user.top_role > ctx.guild.me.top_role:
             return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
 
         if ((ctx.author != user and ctx.author.top_role > user.top_role) or (

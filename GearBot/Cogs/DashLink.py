@@ -1,7 +1,5 @@
 import asyncio
 import json
-import time
-from collections import OrderedDict
 from concurrent.futures import CancelledError
 
 import time
@@ -10,27 +8,29 @@ from datetime import datetime
 import aioredis
 from aioredis.pubsub import Receiver
 from discord import Embed, Color, Forbidden
+from discord.ext import commands
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers, Update
+from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers, Update, \
+    DashUtils
 from Util.DashConfig import ValidationException
+from Util.DashUtils import DASH_PERMS, get_guild_perms
 
 
-class DASH_PERMS:
-    ACCESS = (1 << 0)
-    VIEW_INFRACTIONS = (1 << 1)
-    VIEW_CONFIG = (1 << 2)
-    ALTER_CONFIG = (1 << 3)
+def get_info(message):
+    return int(message["guild_id"]), int(message["user_id"])
 
 
 def needs_perm(mask):
     def decorator(f):
         def wrap(self, message, *args, **kwargs):
-            guid = message["guild_id"]
-            user_id = message["user_id"]
+            guild_id, user_id = get_info(message)
 
-            perms = self.get_guild_perms(guid, int(user_id))
+            guild = self.bot.get_guild(guild_id)
+            if guild is None:
+                raise UnauthorizedException()
+            perms = get_guild_perms(guild.get_member(user_id))
 
             if perms & mask is 0:
                 raise UnauthorizedException()
@@ -54,19 +54,22 @@ class DashLink(BaseCog):
         self.receiver = Receiver(loop=bot.loop)
         self.handlers = dict(
             question=self.question,
-            update=self.update
+            update=self.update,
+            user_guilds=self.user_guilds,
+            user_guilds_end=self.user_guilds_end,
+            guild_info_watch=self.guild_info_watch,
+            guild_info_watch_end=self.guild_info_watch_end
         )
         self.question_handlers = dict(
-            heartbeat = self.still_spinning,
-            guild_perms=self.guild_perm_request,
+            heartbeat=self.still_spinning,
             user_info=self.user_info_request,
-            guild_info=self.guild_info_request,
-            get_config_section=self.get_config_section,
-            update_config_section=self.update_config_section,
-            replace_config_section=self.replace_config_section,
+            get_guild_settings=self.get_guild_settings,
+            save_guild_settings=self.save_guild_settings,
+            replace_guild_settings=self.replace_guild_settings,
             setup_mute=self.setup_mute,
             cleanup_mute=self.cleanup_mute,
-            cache_info=self.cache_info
+            cache_info=self.cache_info,
+            guild_user_perms=self.guild_user_perms
         )
         # The last time we received a heartbeat, the current attempt number, how many times we have notified the owner
         self.last_dash_heartbeat = [time.time(), 0, 0]
@@ -161,9 +164,13 @@ class DashLink(BaseCog):
         except Exception as e:
             await TheRealGearBot.handle_exception("Dash message handling", self.bot, e, None, None, None, message)
 
+    async def send_to_dash(self, channel, **kwargs):
+        await self.redis_link.publish_json("bot-dash-messages", dict(type=channel, message=kwargs))
+
     async def question(self, message):
         try:
-            reply = dict(reply=await self.question_handlers[message["type"]](message["data"]), state="OK", uid=message["uid"])
+            reply = dict(reply=await self.question_handlers[message["type"]](message["data"]), state="OK",
+                         uid=message["uid"])
         except UnauthorizedException:
             reply = dict(uid=message["uid"], state="Unauthorized")
         except ValidationException as ex:
@@ -172,9 +179,9 @@ class DashLink(BaseCog):
             return
         except Exception as ex:
             reply = dict(uid=message["uid"], state="Failed")
-            await self.redis_link.publish_json("bot-dash-messages", reply)
+            await self.send_to_dash("reply", **reply)
             raise ex
-        await self.redis_link.publish_json("bot-dash-messages", dict(type="reply",  message=reply))
+        await self.send_to_dash("reply", **reply)
 
     async def _receiver(self):
         async for sender, message in self.receiver.iter(encoding='utf-8', decoder=json.loads):
@@ -200,75 +207,76 @@ class DashLink(BaseCog):
 
         return return_info
 
-    async def guild_perm_request(self, message):
-        info = dict()
-        for guild in self.bot.guilds:
-            guid = guild.id
-            permission = self.get_guild_perms(guid, int(message["user_id"]))
-            if permission > 0:
-                info[str(guid)] = {
-                    "id": str(guid),
-                    "name": guild.name,
-                    "permissions": permission,
-                    "icon": str(guild.icon_url_as(size=256))
-                }
+    async def user_guilds(self, message):
+        user_id = int(message["user_id"])
+        self.bot.dash_guild_users.add(user_id)
+        self.redis_link.publish_json("bot-dash-messages", dict(type="guild_add", message=dict(user_id=user_id,
+                                                                                              guilds=DashUtils.get_user_guilds(
+                                                                                                  self.bot, user_id))))
 
-        return OrderedDict(sorted(info.items()))
+    async def user_guilds_end(self, message):
+        user_id = int(message["user_id"])
+        self.bot.dash_guild_users.remove(user_id)
 
-    def get_guild_perms(self, guild_id, user_id):
-        guild = self.bot.get_guild(guild_id)
+    async def guild_user_perms(self, message):
+        guild = self.bot.get_guild(int(message["guild_id"]))
         if guild is None:
             return 0
-        member = guild.get_member(user_id)
-        if member is None:
-            return 0
-
-        mappings = {
-            "ACCESS": DASH_PERMS.ACCESS,
-            "INFRACTION": DASH_PERMS.VIEW_INFRACTIONS,
-            "VIEW_CONFIG": DASH_PERMS.VIEW_CONFIG,
-            "ALTER_CONFIG": DASH_PERMS.ALTER_CONFIG
-        }
-
-        permission = 0
-        user_lvl = Permissioncheckers.user_lvl(member)
-        for k, v in mappings.items():
-            if user_lvl >= Configuration.get_var(guild_id, "DASH_SECURITY", k):
-                permission |= v
-
-        return permission
+        return DashUtils.get_guild_perms(guild.get_member(int(message["user_id"])))
 
     @needs_perm(DASH_PERMS.ACCESS)
-    async def guild_info_request(self, message):
-        info = server_info.server_info_raw(self.bot, self.bot.get_guild(message["guild_id"]))
-        info["user_perms"] = self.get_guild_perms(message["guild_id"], int(message["user_id"]))
-        info["user_level"] = Permissioncheckers.user_lvl(
-            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])))
-        return info
+    async def guild_info_watch(self, message):
+        # start tracking info
+        guild_id, user_id = get_info(message)
+        if guild_id not in self.bot.dash_guild_watchers:
+            self.bot.dash_guild_watchers[guild_id] = set()
+        self.bot.dash_guild_watchers[guild_id].add(user_id)
+        await self.send_guild_info(self.bot.get_guild(guild_id).get_member(user_id))
+
+    async def guild_info_watch_end(self, message):
+        guild_id, user_id = get_info(message)
+        if guild_id in self.bot.dash_guild_watchers:
+            users = self.bot.dash_guild_watchers[guild_id]
+            users.remove(user_id)
+            if len(users) is 0:
+                del self.bot.dash_guild_watchers[guild_id]
+
+    async def send_guild_info_update_to_all(self, guild):
+        if guild.id in self.bot.dash_guild_watchers:
+            for user in self.bot.dash_guild_watchers[guild.id]:
+                await self.send_guild_info(guild.get_member(user))
+
+    async def send_guild_info(self, member):
+        await self.send_to_dash("guild_update", user_id=member.id, guild_id=member.guild.id,
+                                info=DashUtils.assemble_guild_info(self.bot, member))
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
-    async def get_config_section(self, message):
-        section = Configuration.get_var(message["guild_id"], message["section"])
+    async def get_guild_settings(self, message):
+        section = Configuration.get_var(int(message["guild_id"]), message["section"])
         section = {k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) else str(
             v) if isinstance(v, int) and not isinstance(v, bool) else v for k, v in section.items()}
         return section
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
-    async def update_config_section(self, message):
+    async def save_guild_settings(self, message):
+        guild_id, user_id = get_info(message)
+        guild = self.bot.get_guild(guild_id)
         return DashConfig.update_config_section(
-            self.bot.get_guild(message["guild_id"]),
+            guild,
             message["section"],
             message["modified_values"],
-            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"]))
+            guild.get_member(user_id)
         )
 
     @needs_perm(DASH_PERMS.ALTER_CONFIG)
-    async def replace_config_section(self, message):
+    async def replace_guild_settings(self, message):
+        guild_id, user_id = get_info(message)
+        guild = self.bot.get_guild(guild_id)
         return DashConfig.update_config_section(
-            self.bot.get_guild(message["guild_id"]),
+            guild,
             message["section"],
             message["modified_values"],
-            self.bot.get_guild(message["guild_id"]).get_member(int(message["user_id"])),
+            guild.get_member(user_id),
             replace=True
         )
 
@@ -382,6 +390,72 @@ class DashLink(BaseCog):
             await Update.upgrade("whoever just pushed to master", self.bot)
         else:
             raise RuntimeError("UNKNOWN UPDATE MESSAGE, IS SOMEONE MESSING WITH IT?")
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        for user in self.bot.dash_guild_users:
+            member = guild.get_member(user)
+            if member is not None:
+                permission = DashUtils.get_guild_perms(member)
+                if permission > 0:
+                    await self.send_to_dash("guild_add", user_id=user, guilds={
+                        str(guild.id): {
+                            "id": str(guild.id),
+                            "name": guild.name,
+                            "permissions": permission,
+                            "icon": guild.icon
+                        }})
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        for user in self.bot.dash_guild_users:
+            member = guild.get_member(user)
+            if member is not None:
+                permission = DashUtils.get_guild_perms(member)
+                if permission > 0:
+                    await self.send_to_dash("guild_remove", user_id=user, guild=str(guild.id))
+
+    @commands.Cog.listener()
+    async def on_guild_update(self, before, after):
+        for user in self.bot.dash_guild_users:
+            member = after.get_member(user)
+            if member is not None:
+                old = DashUtils.get_guild_perms(member)
+                new = DashUtils.get_guild_perms(member)
+                if old != new:
+                    await self._notify_user(member, old, new, after)
+                elif before.name != after.name or before.icon != after.icon:
+                    await self._notify_user(member, 0, 15, after)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if after.id in self.bot.dash_guild_users:
+            old = DashUtils.get_guild_perms(before)
+            new = DashUtils.get_guild_perms(after)
+            await self._notify_user(after, old, new, before.guild)
+
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before, after):
+        for user in self.bot.dash_guild_users:
+            member = after.guild.get_member(user)
+            if member is not None and after in member.roles:
+                new = DashUtils.get_guild_perms(member)
+                await self._notify_user(member, 0 if new is not 0 else 15, new, after.guild)
+
+    @commands.Cog.listener()
+    async def _notify_user(self, user, old, new, guild):
+        if old != new:
+            if new is not 0:
+                await self.send_to_dash("guild_add", user_id=user.id, guilds={
+                    str(guild.id): {
+                        "id": str(guild.id),
+                        "name": guild.name,
+                        "permissions": new,
+                        "icon": guild.icon
+                    }
+                })
+        if new is 0 and old is not 0:
+            await self.send_to_dash("guild_remove", user_id=user.id, guild=str(guild.id))
 
 
 def setup(bot):
