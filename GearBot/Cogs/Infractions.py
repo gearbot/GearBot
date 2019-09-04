@@ -83,7 +83,7 @@ class Infractions(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mwarn_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "warn")
+            await Utils.empty_list(ctx, "warn")
 
 
     @commands.guild_only()

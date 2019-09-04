@@ -256,7 +256,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "kick")
+            await Utils.empty_list(ctx, "kick")
 
     @staticmethod
     async def _mass_failures_init(ctx, action, failures):
@@ -425,7 +425,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "ban")
+            await Utils.empty_list(ctx, "ban")
 
     @commands.guild_only()
     @commands.command()
@@ -463,7 +463,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("munban_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "unban")
+            await Utils.empty_list(ctx, "unban")
     
     @commands.guild_only()
     @commands.command(aliases=["mcb"])
@@ -503,7 +503,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mcleanban_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "ban")
+            await Utils.empty_list(ctx, "ban")
 
     @commands.command(aliases=["softban"])
     @commands.guild_only()
