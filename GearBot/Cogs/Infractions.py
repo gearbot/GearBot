@@ -9,6 +9,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages
+from Util.Utils import _can_act, empty_list
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
 
 
@@ -68,7 +69,7 @@ class Infractions(BaseCog):
                 except BadArgument as bad:
                     failures.append(f"{t}: {bad}")
                 else:
-                    allowed, message = self._can_act("warn", ctx, member)
+                    allowed, message = await Utils._can_act("warn", ctx, member)
                     if allowed:
                         i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                         valid += 1
@@ -206,33 +207,5 @@ class Infractions(BaseCog):
             embed.set_image(url=images[0])
         await ctx.send(embed=embed)
     
-    @staticmethod
-    async def empty_list(ctx, action):
-        message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
-        await asyncio.sleep(3)
-        message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
-        await asyncio.sleep(3)
-        await message.edit(content=Translator.translate('intimidation', ctx))
-        await message2.delete()
-    
-    @staticmethod
-    def _can_act(action, ctx, user, check_bot=True):
-        if not isinstance(user, discord.Member):
-            return False, None
-
-        # Check if they aren't here anymore so we don't error if they leave first
-        if user.top_role > ctx.guild.me.top_role:
-            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
-
-        if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
-                ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
-            return True, None
-        if user.bot:
-            return False, Translator.translate("cant_warn_bot", ctx.guild.id, user=user)
-
-        else:
-            return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-
-
 def setup(bot):
     bot.add_cog(Infractions(bot))

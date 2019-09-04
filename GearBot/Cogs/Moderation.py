@@ -67,21 +67,6 @@ class Moderation(BaseCog):
         data = {"mode": mode} if mode != "hierarchy" else {}
         await Pages.create_new(self.bot, "roles", ctx, **data)
 
-    @staticmethod
-    def _can_act(action, ctx, user, check_bot=True):
-        if not isinstance(user, discord.Member):
-            return False, None
-
-        # Check if they aren't here anymore so we don't error if they leave first
-        if user.top_role > ctx.guild.me.top_role:
-            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
-
-        if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
-                ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
-            return True, None
-        else:
-            return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-
     @commands.command()
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
@@ -105,7 +90,7 @@ class Moderation(BaseCog):
     async def nickname_add(self, ctx, user: discord.Member, *, nick:Nickname):
         """mod_nickname_add_help"""
         try:
-            allowed, message = self._can_act("nickname", ctx, user)
+            allowed, message = await Utils._can_act("nickname", ctx, user)
             if allowed:
                 self.bot.data['nickname_changes'].add(f'{user.guild.id}-{user.id}')
                 if user.nick is None:
@@ -134,7 +119,7 @@ class Moderation(BaseCog):
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
             return
-        allowed, message = self._can_act("nickname", ctx, user)
+        allowed, message = await Utils._can_act("nickname", ctx, user)
         if allowed:
             self.bot.data["nickname_changes"].add(f"{user.guild.id}-{user.id}")
 
@@ -181,7 +166,7 @@ class Moderation(BaseCog):
                 await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role.replace("@", "@\u200b"))
                 return
 
-        if self._can_act(f"role_{action}", ctx, user, check_bot=False):
+        if await Utils._can_act(f"role_{action}", ctx, user, check_bot=False):
             role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
             mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST")
             mode_name = "whitelist" if mode else "blacklist"
@@ -217,7 +202,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("kick", ctx, user)
+        allowed, message = await Utils._can_act("kick", ctx, user)
 
         if allowed:
             await self._kick(ctx, user, reason, True)
@@ -256,7 +241,7 @@ class Moderation(BaseCog):
                 except BadArgument as bad:
                     failures.append(f"{t}: {bad}")
                 else:
-                    allowed, message = self._can_act("kick", ctx, member)
+                    allowed, message = await Utils._can_act("kick", ctx, member)
                     if allowed:
                         await self._kick(ctx, member, reason, False)
                         valid += 1
@@ -291,7 +276,7 @@ class Moderation(BaseCog):
         """bean_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        allowed, message = self._can_act("bean", ctx, user)
+        allowed, message = await Utils._can_act("bean", ctx, user)
         if allowed:
             await MessageUtils.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
             try :
@@ -333,7 +318,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("ban", ctx, member)
+        allowed, message = await Utils._can_act("ban", ctx, member)
         if allowed:
             await self._ban(ctx, user, reason, True, days=days)
         else:
@@ -354,7 +339,7 @@ class Moderation(BaseCog):
 
         member = ctx.guild.get_member(user.id)
         if member is not None:
-            allowed, message = self._can_act("ban", ctx, member)
+            allowed, message = await Utils._can_act("ban", ctx, member)
         else:
             allowed = True
         if allowed:
@@ -426,7 +411,7 @@ class Moderation(BaseCog):
                         await self._ban(ctx, user, reason, False)
                         valid += 1
                 else:
-                    allowed, message = self._can_act("ban", ctx, member)
+                    allowed, message = await Utils._can_act("ban", ctx, member)
                     if allowed:
                         await self._ban(ctx, member, reason, False)
                         valid += 1
@@ -504,7 +489,7 @@ class Moderation(BaseCog):
                         await self._ban(ctx, user, reason, True, days=days)
                         valid += 1
                 else:
-                    allowed, message = self._can_act("ban", ctx, member)
+                    allowed, message = await Utils._can_act("ban", ctx, member)
                     if allowed:
                         await self._ban(ctx, member, reason, True, days=days)
                         valid += 1
@@ -520,15 +505,6 @@ class Moderation(BaseCog):
         else:
             await self.empty_list(ctx, "ban")
 
-    @staticmethod
-    async def empty_list(ctx, action):
-        message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
-        await asyncio.sleep(3)
-        message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
-        await asyncio.sleep(3)
-        await message.edit(content=Translator.translate('intimidation', ctx))
-        await message2.delete()
-
     @commands.command(aliases=["softban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
@@ -537,7 +513,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("softban", ctx, user)
+        allowed, message = await Utils._can_act("softban", ctx, user)
         if allowed:
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")

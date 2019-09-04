@@ -11,7 +11,7 @@ import discord
 import math
 from discord import NotFound
 
-from Util import GearbotLogging, Translator
+from Util import GearbotLogging, Translator, Emoji
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
@@ -51,8 +51,31 @@ def trim_message(message, limit):
         return message
     return f"{message[:limit-4]}..."
 
+async def empty_list(ctx, action):
+    message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
+    await asyncio.sleep(3)
+    message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
+    await asyncio.sleep(3)
+    await message.edit(content=Translator.translate('intimidation', ctx))
+    await message2.delete()
 
 
+async def _can_act(action, ctx, user, check_bot=True, action_bot=True):
+    if not isinstance(user, discord.Member):
+        return False, None
+
+    # Check if they aren't here anymore so we don't error if they leave first
+    if user.top_role > ctx.guild.me.top_role:
+        return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=clean_user(user))
+
+    if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
+            ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
+        return True, None
+    if user.bot:
+        return False, Translator.translate("cant_warn_bot", ctx.guild.id, user=user)
+
+    else:
+        return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True):
     text = str(text)
