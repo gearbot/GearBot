@@ -479,6 +479,46 @@ class Moderation(BaseCog):
             await Confirmation.confirm(ctx, Translator.translate("munban_confirm", ctx), on_yes=yes)
         else:
             await self.empty_list(ctx, "unban")
+    
+    @commands.guild_only()
+    @commands.command(aliases=["mcb"])
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
+    async def mcleanban(self, ctx, targets: Greedy[PotentialID], days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
+        """mcleanban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+        
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            valid = 0
+            failures = []
+            for t in targets:
+                try:
+                    member = await MemberConverter().convert(ctx, str(t))
+                except BadArgument:
+                    try:
+                        user = await DiscordUser().convert(ctx, str(t))
+                    except BadArgument as bad:
+                        failures.append(f"{t}: {bad}")
+                    else:
+                        await self._ban(ctx, user, reason, True, days=days)
+                        valid += 1
+                else:
+                    allowed, message = self._can_act("ban", ctx, member)
+                    if allowed:
+                        await self._ban(ctx, member, reason, True, days=days)
+                        valid += 1
+                    else:
+                        failures.append(f"{t}: {message}")
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "mcleanban_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mcleanban_confirm", ctx), on_yes=yes)
+        else:
+            await self.empty_list(ctx, "ban")
 
     @staticmethod
     async def empty_list(ctx, action):
