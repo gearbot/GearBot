@@ -78,13 +78,13 @@ class Censor(BaseCog):
 
             if not censored and len(word_blacklist) > 0:
                 if ctx.guild.id not in self.regexes:
-                    regex = re.compile(r"\b" + '|'.join(re.escape(word) for word in word_blacklist) + r"\b", re.IGNORECASE)
+                    regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_blacklist) + r")\b", re.IGNORECASE)
                     self.regexes[ctx.guild.id] = regex
                 else:
                     regex = self.regexes[ctx.guild.id]
-                match = regex.match(message.content)
-                if match is not None:
-                    await self.censor_message(message, match.string, "_word")
+                match = regex.findall(message.content)
+                if len(match):
+                    await self.censor_message(message, match[0], "_word")
 
 
     async def censor_message(self, message, bad, key=""):
