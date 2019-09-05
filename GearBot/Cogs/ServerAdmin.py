@@ -95,6 +95,7 @@ class ServerAdmin(BaseCog):
 
         bot.to_cache = []
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
+        Pages.register("word_blacklist", self._word_blacklist_init, self._word_blacklist_update)
 
 
 
@@ -863,19 +864,19 @@ class ServerAdmin(BaseCog):
 
     @staticmethod
     async def _blacklist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
         return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
 
     @staticmethod
     async def _blacklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
         return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
     @blacklist.command("add")
     async def blacklist_add(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
         if word.lower() in blacklist:
             await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
@@ -887,6 +888,47 @@ class ServerAdmin(BaseCog):
 
     @blacklist.command("remove")
     async def blacklist_remove(self, ctx, *, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
+        if word not in blacklist:
+            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
+        else:
+            blacklist.remove(word)
+            await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @configure.group()
+    async def word_blacklist(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await Pages.create_new(self.bot, "word_blacklist", ctx)
+
+    @staticmethod
+    async def _word_blacklist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+            pages) > 1
+
+    @staticmethod
+    async def _word_blacklist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate(
+            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+
+    @word_blacklist.command("add")
+    async def word_blacklist_add(self, ctx, *, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
+        if word.lower() in blacklist:
+            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
+        elif len(word) < 3:
+            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
+        else:
+            blacklist.append(word.lower())
+            await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @word_blacklist.command("remove")
+    async def word_blacklist_remove(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
         if word not in blacklist:
             await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)

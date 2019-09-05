@@ -34,12 +34,14 @@ LOGGING_INFO = {
     "CENSORED_MESSAGES": {
         "censor_fail": {
             "censor_message_failed": "WARNING",
+            "censor_message_failed_word": "WARNING",
             "invite_censor_fail": "WARNING",
             "invite_censor_forbidden": "WARNING"
         },
         "censored": {
             "censored_invite": "WARNING",
-            "censored_message": "WARNING"
+            "censored_message": "WARNING",
+            "censored_message_word": "WARNING"
         }
     },
     "CHANNEL_CHANGES": {
