@@ -926,6 +926,8 @@ class ServerAdmin(BaseCog):
             blacklist.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Censor").regexes:
+                del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
     @word_blacklist.command("remove")
     async def word_blacklist_remove(self, ctx, *, word: str):
@@ -936,6 +938,8 @@ class ServerAdmin(BaseCog):
             blacklist.remove(word)
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Censor").regexes:
+                del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
 
     @configure.group()
