@@ -761,5 +761,7 @@
   "verification_help": "Changes the Verification Level",
   "mod_nickname_help": "Base command for nickname.",
   "mod_nickname_add_help": "Adds or edits a user's nickname.",
-  "mod_nickname_remove_help": "Removes the user's nickname."
+  "mod_nickname_remove_help": "Removes the user's nickname.",
+  "too_many_roles": "Too many roles to show",
+  "too_many_many_roles": "An absolute ridiculous amount of roles"
 }
