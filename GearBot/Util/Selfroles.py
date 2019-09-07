@@ -50,6 +50,10 @@ async def update_reactions(message, page, has_multiple):
     if not has_right and has_multiple:
         await message.add_reaction(right)
 
+    has_left = any(left == r.emoji and r.me for r in message.reactions)
+    if has_left and has_multiple:
+        await message.remove_reaction(left, message.channel.guild.me)
+
 
 
 async def self_cleaner(bot, guild_id):
