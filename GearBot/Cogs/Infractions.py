@@ -82,6 +82,8 @@ class Infractions(BaseCog):
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mwarn_confirm", ctx), on_yes=yes)
+        if len(targets) > 10: 
+            return await ctx.send("Sorry, you cannot warn more than 10 people at the same time."
         else:
             await Utils.empty_list(ctx, "warn")
 
