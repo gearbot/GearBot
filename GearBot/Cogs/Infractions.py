@@ -1,14 +1,16 @@
+import asyncio
 import re
 import typing
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
-    Confirmation, MessageUtils, ReactionManager
-from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
+    Confirmation, MessageUtils, ReactionManager, Pages
+from Util.Utils import _can_act, empty_list
+from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
 
 
 class Infractions(BaseCog):
@@ -48,6 +50,41 @@ class Infractions(BaseCog):
                                                userid=member.id)
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
+    
+    @commands.guild_only()
+    @commands.command()
+    @commands.bot_has_permissions(add_reactions=True)
+    async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+        """mwarn_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            valid = 0
+            failures = []
+            for t in targets:
+                try:
+                    member = await MemberConverter().convert(ctx, str(t))
+                except BadArgument as bad:
+                    failures.append(f"{t}: {bad}")
+                else:
+                    allowed, message = await Utils._can_act("warn", ctx, member)
+                    if allowed:
+                        i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
+                        valid += 1
+                    else:
+                        failures.append(f"{t}: {message}")
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "mwarn_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mwarn_confirm", ctx), on_yes=yes)
+        else:
+            await Utils.empty_list(ctx, "warn")
+
 
     @commands.guild_only()
     @commands.group(aliases=["infraction", "infractions"])
@@ -169,7 +206,6 @@ class Infractions(BaseCog):
         if len(images) > 0:
             embed.set_image(url=images[0])
         await ctx.send(embed=embed)
-
-
+    
 def setup(bot):
     bot.add_cog(Infractions(bot))
