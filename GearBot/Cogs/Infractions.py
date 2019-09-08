@@ -63,23 +63,29 @@ class Infractions(BaseCog):
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
+            filtered = []
             for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "WHAT", "mwarn_duplicates", t=t)
+            for f in filtered:
                 try:
                     member = await MemberConverter().convert(ctx, str(t))
                 except BadArgument as bad:
-                    failures.append(f"{t}: {bad}")
+                    failures.append(f"{f}: {bad}")
                 else:
                     allowed, message = await Utils._can_act("warn", ctx, member)
                     if allowed:
                         i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                         valid += 1
                     else:
-                        failures.append(f"{t}: {message}")
+                        failures.append(f"{f}: {message}")
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mwarn_confirmation", count=valid)
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
-                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+                                    failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 10: 
             await MessageUtils.send_to(ctx, "NO", "mwarn_too_many_people")
             return
