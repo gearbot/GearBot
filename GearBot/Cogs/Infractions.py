@@ -80,10 +80,11 @@ class Infractions(BaseCog):
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 10: 
+            await MessageUtils.send_to(ctx, "NO", "mwarn_too_many_people")
+            return
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mwarn_confirm", ctx), on_yes=yes)
-        if len(targets) > 10: 
-            return await ctx.send("Sorry, you cannot warn more than 10 people at the same time."
         else:
             await Utils.empty_list(ctx, "warn")
 
