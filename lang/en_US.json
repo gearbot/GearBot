@@ -277,6 +277,7 @@
   "mkick_confirm": "Are you sure you want to kick those people?",
   "mkick_confirmation": "Successfully kicked {count} people out.",
   "mwarn_confirm": "Are you sure you want to warn those people?",
+  "mwarn_too_many_people": "Sorry, you cannot warn more than 10 people.", 
   "mwarn_confirmation": "Successfully warned {count} people.",
   "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):",
   "mass_failures_warn": "I was unable to warn the following users ({page_num}/{pages}):",
