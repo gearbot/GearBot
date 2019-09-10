@@ -235,18 +235,24 @@ class Moderation(BaseCog):
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
+            filtered = []
             for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "NO", "mkick_duplicates", t=t)
+            for f in filtered:
                 try:
-                    member = await MemberConverter().convert(ctx, str(t))
+                    member = await MemberConverter().convert(ctx, str(f))
                 except BadArgument as bad:
-                    failures.append(f"{t}: {bad}")
+                    failures.append(f"{f}: {bad}")
                 else:
                     allowed, message = await Utils._can_act("kick", ctx, member)
                     if allowed:
                         await self._kick(ctx, member, reason, False)
                         valid += 1
                     else:
-                        failures.append(f"{t}: {message}")
+                        failures.append(f"{f}: {message}")
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=valid)
             if len(failures) > 0:
@@ -399,14 +405,20 @@ class Moderation(BaseCog):
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
+            filtered = []
             for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "NO", "mban_duplicates", t=t)
+            for f in filtered:
                 try:
-                    member = await MemberConverter().convert(ctx, str(t))
+                    member = await MemberConverter().convert(ctx, str(f))
                 except BadArgument:
                     try:
-                        user = await DiscordUser().convert(ctx, str(t))
+                        user = await DiscordUser().convert(ctx, str(f))
                     except BadArgument as bad:
-                        failures.append(f"{t}: {bad}")
+                        failures.append(f"{f}: {bad}")
                     else:
                         await self._ban(ctx, user, reason, False)
                         valid += 1
@@ -416,7 +428,7 @@ class Moderation(BaseCog):
                         await self._ban(ctx, member, reason, False)
                         valid += 1
                     else:
-                        failures.append(f"{t}: {message}")
+                        failures.append(f"{f}: {message}")
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=valid)
             if len(failures) > 0:
@@ -439,20 +451,26 @@ class Moderation(BaseCog):
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
+            filtered = []
             for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "NO", "munban_duplicates", t=t)
+            for f in filtered:
                 try:
-                    user = await DiscordUser().convert(ctx, str(t))
+                    user = await DiscordUser().convert(ctx, str(f))
                 except BadArgument as bad:
-                    failures.append(f"{t}: {bad}")
+                    failures.append(f"{f}: {bad}")
                 else:
                     try:
                         await self._unban(ctx, user, reason, False)
                     except NotFound:
                         ban_not_found = Translator.translate("ban_not_found", ctx)
-                        failures.append(f"{t}: {ban_not_found}")
+                        failures.append(f"{f}: {ban_not_found}")
                     except Forbidden:
                         ban_not_found = Translator.translate("unban_forbidden", ctx)
-                        failures.append(f"{t}: {ban_not_found}")
+                        failures.append(f"{f}: {ban_not_found}")
                     else:
                         valid += 1
             await pmessage.delete()
@@ -477,14 +495,20 @@ class Moderation(BaseCog):
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             valid = 0
             failures = []
+            filtered = []
             for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "NO", "mcleanban_duplicates", t=t)
+            for f in filtered:
                 try:
-                    member = await MemberConverter().convert(ctx, str(t))
+                    member = await MemberConverter().convert(ctx, str(f))
                 except BadArgument:
                     try:
-                        user = await DiscordUser().convert(ctx, str(t))
+                        user = await DiscordUser().convert(ctx, str(f))
                     except BadArgument as bad:
-                        failures.append(f"{t}: {bad}")
+                        failures.append(f"{f}: {bad}")
                     else:
                         await self._ban(ctx, user, reason, True, days=days)
                         valid += 1
@@ -494,7 +518,7 @@ class Moderation(BaseCog):
                         await self._ban(ctx, member, reason, True, days=days)
                         valid += 1
                     else:
-                        failures.append(f"{t}: {message}")
+                        failures.append(f"{f}: {message}")
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mcleanban_confirmation", count=valid)
             if len(failures) > 0:

@@ -68,10 +68,10 @@ class Infractions(BaseCog):
                 if t not in filtered: 
                     filtered.append(t)
                 else:
-                    await MessageUtils.send_to(ctx, "WHAT", "mwarn_duplicates", t=t)
+                    await MessageUtils.send_to(ctx, "NO", "mwarn_duplicates", t=t)
             for f in filtered:
                 try:
-                    member = await MemberConverter().convert(ctx, str(t))
+                    member = await MemberConverter().convert(ctx, str(f))
                 except BadArgument as bad:
                     failures.append(f"{f}: {bad}")
                 else:
