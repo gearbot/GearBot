@@ -1,5 +1,5 @@
 discord.py==1.2.3
-peewee==3.10.0
+peewee==3.11.0
 Pillow==6.1.0
 PyMySQL==0.9.3
 requests==2.22.0
