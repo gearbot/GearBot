@@ -158,9 +158,9 @@ class AntiSpam(BaseCog):
         if await spam_bucket.check(full_content, t, 1, f"{message.channel.id}-{message.id}"):
             count = await spam_bucket.count(full_content, t, expire=False)
             period = await spam_bucket.size(message.author.id, t, expire=False) / 1000
-            str = Translator.translate('spam_max_duplicates', message)
+            st = Translator.translate('spam_max_duplicates', message)
             self.bot.loop.create_task(self.violate(Violation("max_duplicates", message.guild,
-                                                             f"{str} ({count}/{period}s)",
+                                                             f"{st} ({count}/{period}s)",
                                                              message.author, message.channel,
                                                              await spam_bucket.get(full_content, t, expire=False),
                                                              bucket, count)))
