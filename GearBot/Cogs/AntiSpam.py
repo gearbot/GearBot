@@ -150,18 +150,19 @@ class AntiSpam(BaseCog):
     async def check_duplicates(self, message: Message, count: int, bucket):
         rule = bucket["SIZE"]
         key = f"{message.guild.id}-{message.author.id}-{bucket['TYPE']}"
+        full_content = message.content + "\n".join(str(a) for a in message.attachments)
         spam_bucket = SpamBucket(self.bot.redis_pool,
                                  f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"],
                                  rule["PERIOD"], self.get_extra_actions(key))
         t = int(message.created_at.timestamp()) * 1000
-        if await spam_bucket.check(message.content, t, 1, f"{message.channel.id}-{message.id}"):
-            count = await spam_bucket.count(message.content, t, expire=False)
+        if await spam_bucket.check(full_content, t, 1, f"{message.channel.id}-{message.id}"):
+            count = await spam_bucket.count(full_content, t, expire=False)
             period = await spam_bucket.size(message.author.id, t, expire=False) / 1000
             str = Translator.translate('spam_max_duplicates', message)
             self.bot.loop.create_task(self.violate(Violation("max_duplicates", message.guild,
                                                              f"{str} ({count}/{period}s)",
                                                              message.author, message.channel,
-                                                             await spam_bucket.get(message.content, t, expire=False),
+                                                             await spam_bucket.get(full_content, t, expire=False),
                                                              bucket, count)))
 
     async def violate(self, v: Violation):
