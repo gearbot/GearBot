@@ -882,8 +882,12 @@ class Moderation(BaseCog):
     async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_user_help"""
         if len(users) is 0:
-            await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            m = await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
+            await MessageUtils.cleanup_message("Moderation_clean", m)
+            return
         await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
 
     @clean.command("bots")
     @commands.guild_only()
@@ -891,12 +895,14 @@ class Moderation(BaseCog):
     async def clean_bots(self, ctx, amount: RangedInt(1) = 50):
         """clean_bots_help"""
         await self._clean(ctx, amount, lambda m: m.author.bot)
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
 
     @clean.command("all")
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
     async def clean_all(self, ctx, amount: RangedInt(1, 5000)):
         """clean_all_help"""
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
         await self._clean(ctx, amount, lambda m: True, check_amount=amount)
 
     @clean.command("last")
@@ -907,6 +913,7 @@ class Moderation(BaseCog):
         if duration.unit is None:
             duration.unit = excess
         until = datetime.datetime.utcfromtimestamp(time.time() - duration.to_seconds(ctx))
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
         await self._clean(ctx, 5000, lambda m: True, after=until)
 
     @clean.command("until")
@@ -914,6 +921,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(manage_messages=True)
     async def clean_until(self, ctx, message:Message(local_only=True)):
         """clean_until_help"""
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
         await self._clean(ctx, 5000, lambda m: True, after=Object(message.id-1))
 
     @clean.command("between")
@@ -923,6 +931,7 @@ class Moderation(BaseCog):
         """clean_between_help"""
         a = min(start.id, end.id)
         b = max(start.id, end.id)
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
         await self._clean(ctx, 5000, lambda m: True , before=Object(b+1), after=Object(a+1))
 
     @clean.command("everywhere")
@@ -931,12 +940,16 @@ class Moderation(BaseCog):
     async def clean_everywhere(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_everywhere_help"""
         if len(users) is 0:
-            await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            m = await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            await MessageUtils.cleanup_message("Moderation_clean", m)
+            return
         total = 0
         if any(channel.id in self.bot.being_cleaned for channel in ctx.guild.text_channels):
-            await MessageUtils.send_to(ctx, "NO", "already_cleaning")
+            m = await MessageUtils.send_to(ctx, "NO", "already_cleaning")
+            await MessageUtils.cleanup_message("Moderation_clean", m)
             return
         self.bot.being_cleaned[ctx.channel.id] = set()
+        await MessageUtils.cleanup_message("Moderation_clean", ctx.message)
         message = await MessageUtils.send_to(ctx, "REFRESH", "processing")
         failed = set()
         for channel in ctx.guild.text_channels:
@@ -955,13 +968,15 @@ class Moderation(BaseCog):
                 failed.add(channel)
             finally:
                 self.bot.loop.create_task(self.finish_cleaning(channel.id, ctx.guild.id))
-        await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
+        m = await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total, channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
+        await MessageUtils.cleanup_message("Moderation_clean", message)
 
 
     async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
         counter = 0
         if ctx.channel.id in self.bot.being_cleaned:
-            await MessageUtils.send_to(ctx, "NO", "already_cleaning")
+            m = await MessageUtils.send_to(ctx, "NO", "already_cleaning")
+            await MessageUtils.cleanup_message("Moderation_clean", m)
             return
         self.bot.being_cleaned[ctx.channel.id] = set()
         message = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -978,11 +993,13 @@ class Moderation(BaseCog):
                 # sleep for a sec just in case the other bot is still purging so we don't get removed as well
                 await asyncio.sleep(1)
                 try:
-                    await MessageUtils.try_edit(message, 'NO', 'purge_fail_not_found')
+                    m = await MessageUtils.try_edit(message, 'NO', 'purge_fail_not_found')
+                    await MessageUtils.cleanup_message("Moderation_clean", m)
                 except discord.NotFound:
                     pass  # sometimes people remove channels mid purge
             else:
                 await MessageUtils.try_edit(message, "YES", "purge_confirmation", count=len(deleted))
+                await MessageUtils.cleanup_message("Moderation_clean", message)
         except Exception as ex:
             self.bot.loop.create_task(self.finish_cleaning(ctx.channel.id, ctx.guild.id))
             raise ex

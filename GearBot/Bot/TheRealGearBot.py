@@ -77,6 +77,7 @@ async def initialize(bot, startup=False):
         bot.being_cleaned.clear()
         await Configuration.initialize(bot)
         DashConfig.initialize(bot)
+        MessageUtils.initialize(bot)
     except Exception as ex:
         #make sure we always unlock, even when something went wrong!
         bot.locked = False

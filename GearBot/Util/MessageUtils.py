@@ -2,14 +2,22 @@ import collections
 import time
 from collections import namedtuple
 from datetime import datetime
+import asyncio
 
 from discord import Object, HTTPException, MessageType
 
-from Util import Translator, Emoji, Archive
+from Util import Translator, Emoji, Archive, Configuration
 from database import DBUtils
 from database.DatabaseConnector import LoggedMessage
 
+
+def initialize(gearbot):
+    global bot
+    bot = gearbot
+
+
 Message = namedtuple("Message", "messageid author content channel server attachments type pinned")
+
 
 def is_cache_enabled(bot):
     return bot.redis_pool is not None
@@ -77,6 +85,22 @@ async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
         return await message.edit(content=f'{Emoji.get_chat_emoji(emoji)} {translated}', embed=embed)
     except HTTPException:
         return await send_to(message.channel, emoji, string_name, embed=embed, **kwargs)
+
+
+async def cleanup_message(name, message, actual_cleanup=False, wait_time=0):
+    if actual_cleanup:
+        await asyncio.sleep(wait_time)
+        await message.delete()
+    settings = Configuration.get_var(message.guild.id, "MSG_AUTO_DELETE").get(name, None)
+    if settings is None:
+        return
+    if settings["delete_self"]:
+        if bot.user.id == message.author.id:
+            asyncio.run_coroutine_threadsafe(cleanup_message(name, message, True, settings["wait_time"]), bot.loop)
+            return
+    if settings["delete_user"]:
+        if bot.user.id != message.author.id:
+            asyncio.run_coroutine_threadsafe(cleanup_message(name, message, True, settings["wait_time"]), bot.loop)
 
 
 def day_difference(a, b, location):

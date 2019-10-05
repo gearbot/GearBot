@@ -1,5 +1,5 @@
 {
-	"VERSION": 22,
+	"VERSION": 23,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -61,5 +61,6 @@
 		"TRUSTED_ROLES": [],
 		"TRUSTED_USERS": []
 	},
-	"SERVER_LINKS": []
+	"SERVER_LINKS": [],
+	"MSG_AUTO_DELETE": {}
 }
