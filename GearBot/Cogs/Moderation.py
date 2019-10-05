@@ -15,6 +15,7 @@ from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, E
     Archive, Confirmation, MessageUtils, Questions, server_info
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
+from Util.Permissioncheckers import bot_has_guild_permission
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -676,8 +677,8 @@ class Moderation(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'unban_log', user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
 
     @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
+    @bot_has_guild_permission(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
