@@ -10,7 +10,7 @@ class ActionFailed(Exception):
         self.message = message
 
 
-async def act(ctx, name, target, handler, allow_bots=True, require_on_server=True, send_message=True, **kwargs):
+async def act(ctx, name, target, handler, allow_bots=True, require_on_server=True, send_message=True, check_bot_ability=True, **kwargs):
     user = ctx.guild.get_member(target)
     if user is None:
         if require_on_server:
@@ -22,7 +22,7 @@ async def act(ctx, name, target, handler, allow_bots=True, require_on_server=Tru
             user = ctx.bot.get_user(target)
     if user is None:
         return False, "Unknown user"
-    allowed, message = can_act(name, ctx, user, require_on_server=require_on_server, action_bot=allow_bots)
+    allowed, message = can_act(name, ctx, user, require_on_server=require_on_server, action_bot=allow_bots, check_bot_ability=check_bot_ability)
     if allowed:
         try:
             await handler(ctx, user, **kwargs)
@@ -55,11 +55,11 @@ async def mass_action(ctx, name, targets, handler, allow_duplicates=False, allow
     return failed
 
 
-def can_act(action, ctx, user, require_on_server=True, action_bot=True):
+def can_act(action, ctx, user, require_on_server=True, action_bot=True, check_bot_ability=True):
     if not isinstance(user, Member) and require_on_server:
         return False, Translator.translate("user_not_on_server", ctx.guild.id)
 
-    if user.top_role > ctx.guild.me.top_role:
+    if user.top_role > ctx.guild.me.top_role and check_bot_ability:
         return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
 
     if ((ctx.author != user and ctx.author.top_role > user.top_role) or (

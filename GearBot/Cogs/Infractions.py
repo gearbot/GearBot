@@ -53,7 +53,7 @@ class Infractions(BaseCog):
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
 
-        await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason)
+        await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason, check_bot_ability=False)
 
     @commands.guild_only()
     @commands.command()
