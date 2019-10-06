@@ -276,9 +276,9 @@
   "mkick_confirmation": "Successfully kicked {count} people out.",
   "mkick_duplicates": "I was not able to kick the following due to the duplicates:\n``{t}``",
   "mwarn_confirm": "Are you sure you want to warn those people?",
-  "mwarn_too_many_people": "Sorry, you cannot warn more than 10 people.", 
-  "mwarn_duplicates": "I was not able to warn the following due to the duplicates:\n``{t}``",
+  "mass_action_too_many_people": "Sorry, but you can only action {max} people at the same time this way.",
   "mwarn_confirmation": "Successfully warned {count} people.",
+  "mass_action_duplicate": "This person was listed more then once. Assuming this was a copy paste error and ignoring.",
   "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):",
   "mass_failures_warn": "I was unable to warn the following users ({page_num}/{pages}):",
   "mban_confirm": "Are you sure you want to ban those people?",
@@ -772,5 +772,7 @@
   "verification_help": "Changes the Verification Level",
   "mod_nickname_help": "Base command for nickname.",
   "mod_nickname_add_help": "Adds or edits a user's nickname.",
-  "mod_nickname_remove_help": "Removes the user's nickname."
+  "mod_nickname_remove_help": "Removes the user's nickname.",
+  "user_not_on_server": "This user is not on the server",
+  "unban_unable": "This user is on the server so can't be unbanned"
 }

@@ -144,6 +144,7 @@ def user_lvl(member):
         return 1
     return 0
 
+
 def bot_has_guild_permission(**kwargs):
     async def predicate(ctx):
         if ctx.guild is None:
