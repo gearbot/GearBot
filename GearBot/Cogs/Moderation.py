@@ -204,7 +204,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        await Actions.act(ctx, "kick", user, self._kick, reason=reason, message=True)
+        await Actions.act(ctx, "kick", user.id, self._kick, reason=reason, message=True)
 
     async def _kick(self, ctx, user, reason, message):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
