@@ -204,7 +204,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        await Actions.act(ctx, "kick", user, self._kick, reason=reason, confirm=True)
+        await Actions.act(ctx, "kick", user, self._kick, reason=reason, message=True)
 
     async def _kick(self, ctx, user, reason, message):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
@@ -231,7 +231,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, confirm=False, message=False)
+            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
