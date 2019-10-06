@@ -7,7 +7,7 @@ from typing import Optional
 import discord
 from discord import Object, Emoji, Forbidden, NotFound, ActivityType
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter
+from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -975,6 +975,8 @@ class Moderation(BaseCog):
                 return match
             try:
                 deleted = await ctx.channel.purge(limit=min(amount * 5, 5000) if check_amount is None else check_amount, check=check, before=ctx.message if before is None else before, after=after)
+            except Forbidden:
+                raise MissingPermissions("manage_messages")  # no clue how we got here, but we did
             except discord.NotFound:
                 # sleep for a sec just in case the other bot is still purging so we don't get removed as well
                 await asyncio.sleep(1)
