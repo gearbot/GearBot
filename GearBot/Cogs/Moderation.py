@@ -12,9 +12,11 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConve
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, MessageUtils, Questions, server_info
+    Archive, Confirmation, MessageUtils, Questions, server_info, Actions
+from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
+from Util.Permissioncheckers import bot_has_guild_permission
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -67,21 +69,6 @@ class Moderation(BaseCog):
         data = {"mode": mode} if mode != "hierarchy" else {}
         await Pages.create_new(self.bot, "roles", ctx, **data)
 
-    @staticmethod
-    def _can_act(action, ctx, user, check_bot=True):
-        if not isinstance(user, discord.Member):
-            return False, None
-
-        # Check if they aren't here anymore so we don't error if they leave first
-        if user.top_role > ctx.guild.me.top_role:
-            return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
-
-        if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
-                ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
-            return True, None
-        else:
-            return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
-
     @commands.command()
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
@@ -105,7 +92,7 @@ class Moderation(BaseCog):
     async def nickname_add(self, ctx, user: discord.Member, *, nick:Nickname):
         """mod_nickname_add_help"""
         try:
-            allowed, message = self._can_act("nickname", ctx, user)
+            allowed, message = Actions.can_act("nickname", ctx, user)
             if allowed:
                 self.bot.data['nickname_changes'].add(f'{user.guild.id}-{user.id}')
                 if user.nick is None:
@@ -134,7 +121,7 @@ class Moderation(BaseCog):
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
             return
-        allowed, message = self._can_act("nickname", ctx, user)
+        allowed, message = Actions.can_act("nickname", ctx, user)
         if allowed:
             self.bot.data["nickname_changes"].add(f"{user.guild.id}-{user.id}")
 
@@ -181,7 +168,7 @@ class Moderation(BaseCog):
                 await MessageUtils.send_to(ctx, "NO", "role_no_matches", name=role.replace("@", "@\u200b"))
                 return
 
-        if self._can_act(f"role_{action}", ctx, user, check_bot=False):
+        if Actions.can_act(f"role_{action}", ctx, user):
             role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
             mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST")
             mode_name = "whitelist" if mode else "blacklist"
@@ -217,14 +204,9 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("kick", ctx, user)
+        await Actions.act(ctx, "kick", user, self._kick, reason=reason, confirm=True)
 
-        if allowed:
-            await self._kick(ctx, user, reason, True)
-        else:
-            await MessageUtils.send_to(ctx, "NO", message, translate=False)
-
-    async def _kick(self, ctx, user, reason, confirm):
+    async def _kick(self, ctx, user, reason, message):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.kick(user,
                              reason=Utils.trim_message(
@@ -234,9 +216,9 @@ class Moderation(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'kick_log', user=Utils.clean_user(user), user_id=user.id,
                                moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                reason=reason, inf=i.id)
-        if confirm:
+        if message:
             await MessageUtils.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
-                                         user_id=user.id, reason=reason, inf=i.id)
+                                       user_id=user.id, reason=reason, inf=i.id)
 
     @commands.guild_only()
     @commands.command("mkick", aliases=["👢👢"])
@@ -246,24 +228,12 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
+
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            valid = 0
-            failures = []
-            for t in targets:
-                try:
-                    member = await MemberConverter().convert(ctx, str(t))
-                except BadArgument as bad:
-                    failures.append(f"{t}: {bad}")
-                else:
-                    allowed, message = self._can_act("kick", ctx, member)
-                    if allowed:
-                        await self._kick(ctx, member, reason, False)
-                        valid += 1
-                    else:
-                        failures.append(f"{t}: {message}")
+            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, confirm=False, message=False)
             await pmessage.delete()
-            await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=valid)
+            await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="kick",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
@@ -271,7 +241,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mkick_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "kick")
+            await Utils.empty_list(ctx, "kick")
 
     @staticmethod
     async def _mass_failures_init(ctx, action, failures):
@@ -291,7 +261,7 @@ class Moderation(BaseCog):
         """bean_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-        allowed, message = self._can_act("bean", ctx, user)
+        allowed, message = Actions.can_act("bean", ctx, user)
         if allowed:
             await MessageUtils.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
             try :
@@ -333,7 +303,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("ban", ctx, member)
+        allowed, message = Actions.can_act("ban", ctx, member)
         if allowed:
             await self._ban(ctx, user, reason, True, days=days)
         else:
@@ -354,7 +324,7 @@ class Moderation(BaseCog):
 
         member = ctx.guild.get_member(user.id)
         if member is not None:
-            allowed, message = self._can_act("ban", ctx, member)
+            allowed, message = Actions.can_act("ban", ctx, member)
         else:
             allowed = True
         if allowed:
@@ -391,13 +361,21 @@ class Moderation(BaseCog):
 
     async def _unban(self, ctx, user, reason, confirm):
         self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
-        await ctx.guild.unban(user, reason=Utils.trim_message(
-            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
-        Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
-                                              (Infraction.guild_id == ctx.guild.id)).execute()
-        i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Unban", reason)
-        GearbotLogging.log_key(ctx.guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author),
-                                moderator_id=ctx.author.id, reason=reason, inf=i.id)
+        try:
+            await ctx.guild.unban(user, reason=Utils.trim_message(
+                f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
+        except NotFound:
+            ban_not_found = Translator.translate("ban_not_found", ctx)
+            raise ActionFailed(f"{ban_not_found}")
+        except Forbidden:
+            ban_not_found = Translator.translate("unban_forbidden", ctx)
+            raise ActionFailed(f"{ban_not_found}")
+        else:
+            Infraction.update(active=False).where((Infraction.user_id == user.id) & ((Infraction.type == "Ban") | (Infraction.type == "Tempban")) &
+                                                  (Infraction.guild_id == ctx.guild.id)).execute()
+            i = InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Unban", reason)
+            GearbotLogging.log_key(ctx.guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author),
+                                    moderator_id=ctx.author.id, reason=reason, inf=i.id)
         if confirm:
             await MessageUtils.send_to(ctx, "YES", "unban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason, inf=i.id)
@@ -412,35 +390,16 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            valid = 0
-            failures = []
-            for t in targets:
-                try:
-                    member = await MemberConverter().convert(ctx, str(t))
-                except BadArgument:
-                    try:
-                        user = await DiscordUser().convert(ctx, str(t))
-                    except BadArgument as bad:
-                        failures.append(f"{t}: {bad}")
-                    else:
-                        await self._ban(ctx, user, reason, False)
-                        valid += 1
-                else:
-                    allowed, message = self._can_act("ban", ctx, member)
-                    if allowed:
-                        await self._ban(ctx, member, reason, False)
-                        valid += 1
-                    else:
-                        failures.append(f"{t}: {message}")
+            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False)
             await pmessage.delete()
-            await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=valid)
+            await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "ban")
+            await Utils.empty_list(ctx, "ban")
 
     @commands.guild_only()
     @commands.command()
@@ -452,42 +411,62 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            valid = 0
-            failures = []
-            for t in targets:
-                try:
-                    user = await DiscordUser().convert(ctx, str(t))
-                except BadArgument as bad:
-                    failures.append(f"{t}: {bad}")
-                else:
-                    try:
-                        await self._unban(ctx, user, reason, False)
-                    except NotFound:
-                        ban_not_found = Translator.translate("ban_not_found", ctx)
-                        failures.append(f"{t}: {ban_not_found}")
-                    except Forbidden:
-                        ban_not_found = Translator.translate("unban_forbidden", ctx)
-                        failures.append(f"{t}: {ban_not_found}")
-                    else:
-                        valid += 1
+            failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason, require_on_server=False, confirm=False)
             await pmessage.delete()
-            await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=valid)
+            await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="unban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("munban_confirm", ctx), on_yes=yes)
         else:
-            await self.empty_list(ctx, "unban")
-
-    @staticmethod
-    async def empty_list(ctx, action):
-        message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
-        await asyncio.sleep(3)
-        message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
-        await asyncio.sleep(3)
-        await message.edit(content=Translator.translate('intimidation', ctx))
-        await message2.delete()
+            await Utils.empty_list(ctx, "unban")
+    
+    @commands.guild_only()
+    @commands.command(aliases=["mcb"])
+    @commands.bot_has_permissions(ban_members=True, add_reactions=True)
+    async def mcleanban(self, ctx, targets: Greedy[PotentialID], days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
+        """mcleanban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+        
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            valid = 0
+            failures = []
+            filtered = []
+            for t in targets:
+                if t not in filtered: 
+                    filtered.append(t)
+                else:
+                    await MessageUtils.send_to(ctx, "NO", "mcleanban_duplicates", t=t)
+            for f in filtered:
+                try:
+                    member = await MemberConverter().convert(ctx, str(f))
+                except BadArgument:
+                    try:
+                        user = await DiscordUser().convert(ctx, str(f))
+                    except BadArgument as bad:
+                        failures.append(f"{f}: {bad}")
+                    else:
+                        await self._ban(ctx, user, reason, True, days=days)
+                        valid += 1
+                else:
+                    allowed, message = Actions.can_act("ban", ctx, member)
+                    if allowed:
+                        await self._ban(ctx, member, reason, True, days=days)
+                        valid += 1
+                    else:
+                        failures.append(f"{f}: {message}")
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "mcleanban_confirmation", count=valid)
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mcleanban_confirm", ctx), on_yes=yes)
+        else:
+            await Utils.empty_list(ctx, "ban")
 
     @commands.command(aliases=["softban"])
     @commands.guild_only()
@@ -497,7 +476,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        allowed, message = self._can_act("softban", ctx, user)
+        allowed, message = Actions.can_act("softban", ctx, user)
         if allowed:
             self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
             self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
@@ -636,8 +615,8 @@ class Moderation(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'unban_log', user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
 
     @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
+    @bot_has_guild_permission(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
