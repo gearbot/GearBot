@@ -22,19 +22,18 @@ async def act(ctx, name, target, handler, allow_bots=True, require_on_server=Tru
             user = ctx.bot.get_user(target)
     if user is None:
         return False, "Unknown user"
-    else:
-        allowed, message = can_act(name, ctx, user, require_on_server=require_on_server, action_bot=allow_bots)
-        if allowed:
-            try:
-                await handler(ctx, user, **kwargs)
-                return True, None
-            except ActionFailed as ex:
-                return False, ex.message
+    allowed, message = can_act(name, ctx, user, require_on_server=require_on_server, action_bot=allow_bots)
+    if allowed:
+        try:
+            await handler(ctx, user, **kwargs)
+            return True, None
+        except ActionFailed as ex:
+            return False, ex.message
 
-        else:
-            if send_message:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {message}")
-            return False, message
+    else:
+        if send_message:
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {message}")
+        return False, message
 
 
 async def mass_action(ctx, name, targets, handler, allow_duplicates=False, allow_bots=True, max_targets=None, require_on_server=True, **kwargs):
@@ -69,5 +68,4 @@ def can_act(action, ctx, user, require_on_server=True, action_bot=True):
     if user.bot and not action_bot:
         return False, Translator.translate(f"cant_{action}_bot", ctx.guild.id, user=user)
 
-    else:
-        return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
+    return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
