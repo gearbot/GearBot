@@ -3,10 +3,6 @@ import hashlib
 import json
 import threading
 
-from ruamel.yaml import YAML
-
-yaml = YAML()
-
 import urllib.parse
 import requests
 from parsimonious import ParseError, VisitationError

@@ -294,6 +294,15 @@ def v20(config):
     config["SERVER_LINKS"] = []
 
 
+def v21(config):
+    config["CENSORING"]["TOKEN_BLACKLIST"] = config["CENSORING"]["WORD_BLACKLIST"]
+    config["CENSORING"]["WORD_BLACKLIST"] = []
+
+def v22(config):
+    if "Serveradmin" in config["PERM_OVERRIDES"]:
+        config["PERM_OVERRIDES"]["ServerAdmin"] =config["PERM_OVERRIDES"]["Serveradmin"]
+        del config["PERM_OVERRIDES"]["Serveradmin"]
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info:
@@ -316,7 +325,7 @@ def move_keys(config, section, *keys):
 
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22]
 
 BOT = None
 

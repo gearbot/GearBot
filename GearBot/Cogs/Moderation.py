@@ -775,14 +775,14 @@ class Moderation(BaseCog):
             embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick), inline=True)
 
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
-            if len(role_list) > 0:
-                member_roles = Pages.paginate(" ".join(role_list))
+            if len(role_list) > 60:
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_many_roles', ctx))
+            elif len(role_list) > 40:
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_roles', ctx))
+            elif len(role_list) > 0:
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=" ".join(role_list))
             else:
-                member_roles = [Translator.translate("no_roles", ctx)]
-            embed.add_field(name=Translator.translate('all_roles', ctx), value=member_roles[0])
-            if len(member_roles) > 1:
-                for p in member_roles[1:]:
-                    embed.add_field(name=Translator.translate("more_roles", ctx), value=p)
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate("no_roles", ctx))
 
             embed.add_field(name=Translator.translate('joined_at', ctx),
                             value=f"{(ctx.message.created_at - member.joined_at).days} days ago (``{member.joined_at}``)",

@@ -150,7 +150,7 @@ class Infractions(BaseCog):
             infraction.delete_instance()
             await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
             GearbotLogging.log_key(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target),
-                                   target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason,
+                                   target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id if mod is not None else 0, reason=reason,
                                    user=Utils.clean_user(ctx.author), user_id=ctx.author.id)
             InfractionUtils.clear_cache(ctx.guild.id)
 

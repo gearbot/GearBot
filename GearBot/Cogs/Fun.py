@@ -56,7 +56,7 @@ class Fun(BaseCog):
         key = Configuration.get_master_var("DOG_KEY", "")
         future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
-        embed = discord.Embed(description=fact_json["fact"])
+        embed = discord.Embed(description=fact_json["content"])
         if key != "":
             embed.set_image(url=dog_json[0]["url"])
         await ctx.send(embed=embed)
@@ -70,7 +70,7 @@ class Fun(BaseCog):
         key = Configuration.get_master_var("CAT_KEY", "")
         future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
-        embed = discord.Embed(description=fact_json["fact"])
+        embed = discord.Embed(description=fact_json["content"])
         if key != "":
             embed.set_image(url=cat_json[0]["url"])
         await ctx.send(embed=embed)

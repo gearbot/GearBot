@@ -264,7 +264,8 @@ class Basic(BaseCog):
                 "taco_count": str(round(self.bot.eaten)),
                 "random_number": random.randint(0, 5000),
                 "commands_executed": str(self.bot.commandCount),
-                "custom_commands_executed": str(self.bot.custom_command_count)
+                "custom_commands_executed": str(self.bot.custom_command_count),
+                "guilds": len(self.bot.guilds)
             })
 
             await asyncio.sleep(15)

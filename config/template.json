@@ -1,5 +1,5 @@
 {
-	"VERSION": 20,
+	"VERSION": 22,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -26,6 +26,7 @@
 		"ENABLED": false,
 		"ALLOW_TRUSTED_BYPASS": false,
 		"WORD_BLACKLIST": [],
+		"TOKEN_BLACKLIST": [],
 		"INVITE_WHITELIST": []
 	},
 	"INFRACTIONS": {
