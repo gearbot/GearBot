@@ -819,6 +819,7 @@ class Moderation(BaseCog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["server"])
+    @commands.bot_has_permissions(embed_links=True)
     async def serverinfo(self, ctx, guild: Guild = None):
         """serverinfo_help"""
         if guild is None:
