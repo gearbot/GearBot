@@ -596,7 +596,7 @@
   "apexstats_key_SeasonDamage": "Season 1 Damage",
   "apexstats_key_RankScore": "Rank Score",
   "apexstats_key_TimesPlacedtop3": "Times Placed Top 3",
-  "apexstats_key_Season2Wins": "Season 2 Wins"
+  "apexstats_key_Season2Wins": "Season 2 Wins",
   "invite_censor_forbidden": "Tried to censor message by {user} (``{user_id}``) in {channel}, invite code ``{code}`` to `{server_name}` is not allowed, but it seems I am missing permission to remove the message\n```{message}```",
   "inf_unmute": "{mod} unmuted {user}",
   "help_page_default_perm": "Default permission requirement",
