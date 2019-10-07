@@ -63,8 +63,9 @@ async def gen_commands_list(bot, ctx, list):
 async def gen_cog_help(bot, ctx, cog):
     commands, longest = await cog_commands(bot, ctx, cog)
     output = f'- {cog}\n'
-    for command_name, info in commands.items():
-        output += command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
+    if commands is not None:
+        for command_name, info in commands.items():
+            output += command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
     return [output]
 
 async def gen_command_help(bot, ctx, command):

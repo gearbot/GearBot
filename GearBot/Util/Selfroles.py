@@ -1,4 +1,4 @@
-from discord import Embed, Colour
+from discord import Embed, Colour, Forbidden
 
 from Util import Configuration, Pages, Translator, ReactionManager, Emoji
 
@@ -10,17 +10,19 @@ def validate_self_roles(bot, guild):
         Configuration.set_var(guild.id, "ROLES", "SELF_ROLES", set(roles) - to_remove)
         bot.dispatch("self_roles_update", guild.id)
 
+
 async def create_self_roles(bot, ctx):
     # create and send
     pages = gen_role_pages(ctx.guild)
     embed = Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
-                                   page_count=len(pages)), colour=Colour(0xbffdd), description=pages[0])
+                                             page_count=len(pages)), colour=Colour(0xbffdd), description=pages[0])
     message = await ctx.send(embed=embed)
     # track in redis
     pipe = bot.redis_pool.pipeline()
     pipe.sadd(f"self_role:{ctx.guild.id}", message.id)
-    pipe.expire(f"self_role:{ctx.guild.id}", 60*60*24*7)
-    bot.loop.create_task(ReactionManager.register(bot, message.id, ctx.channel.id, "self_role", duration=60*60*24*7, pipe=pipe))
+    pipe.expire(f"self_role:{ctx.guild.id}", 60 * 60 * 24 * 7)
+    bot.loop.create_task(
+        ReactionManager.register(bot, message.id, ctx.channel.id, "self_role", duration=60 * 60 * 24 * 7, pipe=pipe))
     bot.loop.create_task(update_reactions(message, pages[0], len(pages) > 1))
 
     # cleanup
@@ -34,26 +36,28 @@ async def update_reactions(message, page, has_multiple):
     # add numbered reactions
     needed = int(len(page.splitlines()) / 2)
     added = False
-    for i in range(10):
-        reaction = Emoji.get_emoji(str(i+1))
-        if i < needed:
-            added = True
-            await message.add_reaction(reaction)
-        elif any(reaction == r.emoji and r.me for r in message.reactions):
-            await message.remove_reaction(reaction, message.channel.guild.me)
+    try:
+        for i in range(10):
+            reaction = Emoji.get_emoji(str(i + 1))
+            if i < needed:
+                added = True
+                await message.add_reaction(reaction)
+            elif any(reaction == r.emoji and r.me for r in message.reactions):
+                await message.remove_reaction(reaction, message.channel.guild.me)
 
-    right = Emoji.get_emoji("RIGHT")
-    has_right = any(right == r.emoji and r.me for r in message.reactions)
-    if added and has_right:
-        await message.remove_reaction(right, message.channel.guild.me)
-        has_right = False
-    if not has_right and has_multiple:
-        await message.add_reaction(right)
+        right = Emoji.get_emoji("RIGHT")
+        has_right = any(right == r.emoji and r.me for r in message.reactions)
+        if added and has_right:
+            await message.remove_reaction(right, message.channel.guild.me)
+            has_right = False
+        if not has_right and has_multiple:
+            await message.add_reaction(right)
 
-    has_left = any(left == r.emoji and r.me for r in message.reactions)
-    if has_left and has_multiple:
-        await message.remove_reaction(left, message.channel.guild.me)
-
+        has_left = any(left == r.emoji and r.me for r in message.reactions)
+        if has_left and has_multiple:
+            await message.remove_reaction(left, message.channel.guild.me)
+    except Forbidden:
+        pass  # we lost access
 
 
 async def self_cleaner(bot, guild_id):
