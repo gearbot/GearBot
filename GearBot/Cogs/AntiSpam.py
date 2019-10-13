@@ -53,7 +53,8 @@ class AntiSpam(BaseCog):
             "max_messages": lambda m: 1,
             "max_newlines": lambda m: len(m.content.split("\n")) - 1,
             "max_mentions": lambda m: len(MENTION_MATCHER.findall(m.content)),
-            "max_links": lambda m: len(URL_MATCHER.findall(m.content))
+            "max_links": lambda m: len(URL_MATCHER.findall(m.content)),
+            "max_attachments": lambda m: len(m.attachments)
         }
 
         self.punishments = {
