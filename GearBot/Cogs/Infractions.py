@@ -243,5 +243,6 @@ class Infractions(BaseCog):
             embed.set_image(url=images[0])
         await ctx.send(embed=embed)
 
+
 def setup(bot):
     bot.add_cog(Infractions(bot))
