@@ -46,7 +46,10 @@ async def update(bot, message, action, user, **kwargs):
                 except (NotFound, Forbidden):
                     pass
             text, embed, info = await page_handlers[subtype]["update"](ctx, message, int(page_num), action, kwargs)
-            await message.edit(content=text, embed=embed)
+            try:
+                await message.edit(content=text, embed=embed)
+            except (NotFound, Forbidden):
+                pass  # weird shit but happens sometimes
             return info
         return
 

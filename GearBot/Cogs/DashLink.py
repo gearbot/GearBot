@@ -359,7 +359,7 @@ class DashLink(BaseCog):
 
     # crowdin
     async def crowdin_webhook(self, message):
-        code = message["info"]["language"]
+        code = message["language"]
         await Translator.update_lang(code)
         if (datetime.now() - self.last_update).seconds > 5 * 60:
             self.update_message = None

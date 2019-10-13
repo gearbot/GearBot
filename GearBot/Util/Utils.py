@@ -60,22 +60,7 @@ async def empty_list(ctx, action):
     await message2.delete()
 
 
-async def _can_act(action, ctx, user, check_bot=True, action_bot=True):
-    if not isinstance(user, discord.Member):
-        return False, None
 
-    # Check if they aren't here anymore so we don't error if they leave first
-    if user.top_role > ctx.guild.me.top_role:
-        return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=clean_user(user))
-
-    if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
-            ctx.guild.owner == ctx.author)) and user != ctx.guild.owner and user != ctx.bot.user and ctx.author != user:
-        return True, None
-    if user.bot:
-        return False, Translator.translate("cant_warn_bot", ctx.guild.id, user=user)
-
-    else:
-        return False, Translator.translate(f'{action}_not_allowed', ctx.guild.id, user=user)
 
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True):
     text = str(text)

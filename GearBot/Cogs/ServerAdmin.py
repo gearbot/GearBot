@@ -189,7 +189,7 @@ class ServerAdmin(BaseCog):
         if len(failed) > 0:
             message = f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_setup_failures', ctx, role=role.mention)}\n"
             for fail in failed:
-                if len(message) + len(fail) > 2048:
+                if len(message) + len(fail) > 2000:
                     await ctx.send(message)
                     message = ""
                 message = message + fail
