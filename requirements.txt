@@ -4,7 +4,7 @@ Pillow==6.2.0
 PyMySQL==0.9.3
 requests==2.22.0
 aioredis==1.3.0
-sentry-sdk==0.12.3
+sentry-sdk==0.13.0
 pytz==2019.3
 pyseeyou==1.0.0
 prometheus_client==0.7.1
