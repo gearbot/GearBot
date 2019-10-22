@@ -334,7 +334,7 @@ class DurationHolder:
         if unit == 'd' or unit == 'day':
             length = length * 24
             unit = 'h'
-        if unit == 'h' or unit == 'hour':
+        if unit == 'h' or unit == 'hour' or unit == 'hr':
             length = length * 60
             unit = 'm'
         if unit == 'm' or unit == 'minute':
