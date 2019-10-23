@@ -253,7 +253,7 @@ class ModLog(BaseCog):
                             reason = Translator.translate("no_reason", member.guild.id)
                         else:
                             reason = entry.reason
-                        i = InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
+                        i = await InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
                                                        active=False)
                         GearbotLogging.log_key(member.guild.id, 'kick_log', user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason, inf=i.id)
                         return
@@ -287,10 +287,10 @@ class ModLog(BaseCog):
                 reason = Translator.translate("no_reason", guild.id)
             else:
                 reason = log.reason
-            i = InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
+            i = await InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
             GearbotLogging.log_key(guild.id, 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(log.user), moderator_id=log.user.id, reason=reason, inf=i.id)
         else:
-            i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
+            i = await InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
             GearbotLogging.log_key(guild.id, 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id)
 
     @commands.Cog.listener()
@@ -311,13 +311,13 @@ class ModLog(BaseCog):
             # this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
             log = await self.find_log(guild, AuditLogAction.unban, lambda e: e.target == user and e.created_at > limit)
         if log is not None:
-            i = InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual unban")
+            i = await InfractionUtils.add_infraction(guild.id, user.id, log.user.id, "Unban", "Manual unban")
             GearbotLogging.log_key(guild.id, 'unban_log', user=Utils.clean_user(user), user_id=user.id,
                                    moderator=log.user, moderator_id=log.user.id, reason='Manual unban', inf=i.id)
 
 
         else:
-            i = InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
+            i = await InfractionUtils.add_infraction(guild.id, user.id, 0, "Unban", "Manual ban")
             GearbotLogging.log_key(guild.id, 'manual_unban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id)
 
     @commands.Cog.listener()

@@ -8,7 +8,7 @@ from discord.ext import commands
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, MessageUtils
 from Util.RaidHandling.RaidShield import RaidShield
-from database.DatabaseConnector import Raid, Raider
+from database.Models import Raider, Raid
 
 
 class AntiRaid(BaseCog):
@@ -79,7 +79,7 @@ class AntiRaid(BaseCog):
             if member.guild.id in self.raid_trackers and shield["id"] in self.raid_trackers[member.guild.id]["SHIELDS"]:
                 h = self.raid_trackers[member.guild.id]["SHIELDS"][shield["id"]]
                 if member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
-                    r = Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
+                    r = await Raider.create(raid=self.raid_trackers[member.guild.id]["raid_id"], user_id=member.id, joined_at=member.joined_at)
                     self.raid_trackers[member.guild.id]["raider_ids"][member.id] = r.id
                 await h.handle_raider(self.bot, member, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
                 continue
@@ -92,7 +92,7 @@ class AntiRaid(BaseCog):
                 #TRIGGERED
                 if member.guild.id not in self.raid_trackers:
                     # assign raid id, track raiders
-                    raid = Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
+                    raid = await Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
                     GearbotLogging.log_key(member.guild.id, 'raid_new', raid_id=raid.id)
                     # create trackers if needed
                     raider_ids = dict()

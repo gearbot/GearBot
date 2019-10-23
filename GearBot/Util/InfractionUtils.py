@@ -4,31 +4,34 @@ from datetime import datetime
 
 from aioredis import ReplyError
 from discord import NotFound
-from peewee import fn
+from tortoise.query_utils import Q
 
 from Bot import GearBot
 from Util import Pages, Utils, Translator, GearbotLogging, Emoji, ReactionManager
-from database.DatabaseConnector import Infraction
+from database.Models import Infraction
 
-bot:GearBot = None
+bot: GearBot = None
+
 
 def initialize(gearbot):
     global bot
     bot = gearbot
 
-def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
-    i = Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
-                      start=datetime.now(), end=end, active=active)
+
+async def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
+    i = await Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
+                          start=datetime.now(), end=end, active=active)
     clear_cache(guild_id)
     return i
 
+
 cleaners = dict()
+
 
 def clear_cache(guild_id):
     if guild_id in cleaners:
         cleaners[guild_id].cancel()
     cleaners[guild_id] = bot.loop.create_task(cleaner(guild_id))
-
 
 
 async def cleaner(guild_id):
@@ -39,18 +42,27 @@ async def cleaner(guild_id):
         await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
     del cleaners[guild_id]
 
+
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
-    if query == "":
-        infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
-    else:
-        infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
-                ("[user]" in fields and isinstance(query, int) and Infraction.user_id == query) |
-                ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
-                ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
-            Infraction.id.desc()).limit(int(amount))
+    queryset = Infraction.filter(guild_id=guild_id)
+    if query != "":
+        filters = list()
+        if "[user]" in fields and isinstance(query, int):
+            filters.append(Q(user_id=query))
+        if "[mod]" in filters and isinstance(query, int):
+            filters.append(Q(mod_id=query))
+        if "[reason]" in filters:
+            filters.append(Q(reason__icontains=query))
+
+        if len(filters) > 0:
+            queryset = queryset.filter(Q(*filters, join_type=Q.OR))
+
+    queryset = queryset.order_by("-id").limit(amount)
+    results = await queryset
+
     longest_type = 4
-    longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', guild_id))
+    longest_id = len(str(results[0].id)) if len(results) > 0 else len(Translator.translate('id', guild_id))
     longest_timestamp = max(len(Translator.translate('timestamp', guild_id)), 19)
     types = dict()
     for inf in infs:
@@ -65,7 +77,9 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     title = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', guild_id, name=name, page_num=100, pages=100)}\n```md\n\n```"
     page_header = get_header(longest_id, 37, longest_type, longest_timestamp, guild_id)
     mcount = 2000 - len(header) - len(page_header) - len(title)
-    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
+    out = "\n".join(
+        f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}"
+        for inf in infs)
     pages = Pages.paginate(out, max_chars=mcount)
     if bot.redis_pool is not None:
         GearbotLogging.debug(f"Pushing placeholders for {key}")
@@ -73,12 +87,17 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
         for page in pages:
             pipe.lpush(key, "---NO PAGE YET---")
         await pipe.execute()
-    bot.loop.create_task(update_pages(guild_id, query, fields, amount, pages, requested, longest_id, longest_type, longest_timestamp, header))
+    bot.loop.create_task(
+        update_pages(guild_id, query, fields, amount, pages, requested, longest_id, longest_type, longest_timestamp,
+                     header))
     return len(pages)
+
 
 ID_MATCHER = re.compile("<@!?([0-9]+\s*)>")
 
-async def update_pages(guild_id, query, fields, amount, pages, start, longest_id, longest_type, longest_timestamp, header):
+
+async def update_pages(guild_id, query, fields, amount, pages, start, longest_id, longest_type, longest_timestamp,
+                       header):
     key = get_key(guild_id, query, fields, amount)
     count = len(pages)
     if start >= count:
@@ -93,16 +112,17 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
         if upper == len(pages):
             upper = 0
         order.append(upper)
-        upper+=1
+        upper += 1
         if len(order) == len(pages):
             break
         if lower == -1:
-            lower = len(pages)-1
+            lower = len(pages) - 1
         order.append(lower)
         lower -= 1
     GearbotLogging.debug(f"Updating pages for {key}, ordering: {order}")
     for number in order:
-        longest_name = max(len(Translator.translate('moderator', guild_id)), len(Translator.translate('user', guild_id)))
+        longest_name = max(len(Translator.translate('moderator', guild_id)),
+                           len(Translator.translate('user', guild_id)))
         page = pages[number]
         found = set(ID_MATCHER.findall(page))
         for uid in found:
@@ -116,7 +136,7 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
         try:
             await bot.redis_pool.lset(key, number, page)
         except ReplyError:
-            return # key expired while we where working on it
+            return  # key expired while we where working on it
         pages[number] = page
         GearbotLogging.debug(f"Pushed page {number} for key {key} to redis")
         bot.dispatch("page_assembled", {
@@ -133,7 +153,7 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
 
 
 def get_header(longest_id, longest_user, longest_type, longest_timestamp, guild_id):
-    text = f"{Utils.pad(Translator.translate('id', guild_id), longest_id)} | {Utils.pad(Translator.translate('user', guild_id), longest_user )} | {Utils.pad(Translator.translate('moderator', guild_id),longest_user)} | {Utils.pad(Translator.translate('timestamp', guild_id), longest_timestamp)} | {Utils.pad(Translator.translate('type', guild_id), longest_type)} | {Translator.translate('reason', guild_id)}\n"
+    text = f"{Utils.pad(Translator.translate('id', guild_id), longest_id)} | {Utils.pad(Translator.translate('user', guild_id), longest_user)} | {Utils.pad(Translator.translate('moderator', guild_id), longest_user)} | {Utils.pad(Translator.translate('timestamp', guild_id), longest_timestamp)} | {Utils.pad(Translator.translate('type', guild_id), longest_type)} | {Translator.translate('reason', guild_id)}\n"
     return text + ("-" * len(text))
 
 
@@ -143,6 +163,7 @@ def get_key(guild_id, query, fields, amount):
         key += f"{'_'.join(fields)}"
     key += f"_{amount}"
     return key
+
 
 async def inf_update(message, query, fields, amount, page_num):
     if str(query).isnumeric():
@@ -157,13 +178,14 @@ async def inf_update(message, query, fields, amount, page_num):
         if page_num >= count:
             page_num = 0
         elif page_num < 0:
-            page_num = count-1
-        page = (await bot.wait_for("page_assembled", check=lambda l: l["key"] == key and l["page_num"] == page_num))["page"]
+            page_num = count - 1
+        page = (await bot.wait_for("page_assembled", check=lambda l: l["key"] == key and l["page_num"] == page_num))[
+            "page"]
     else:
         if page_num >= count:
             page_num = 0
         elif page_num < 0:
-            page_num = count-1
+            page_num = count - 1
         page = await bot.redis_pool.lindex(key, page_num)
     name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
     new = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}"
@@ -177,7 +199,6 @@ async def inf_update(message, query, fields, amount, page_num):
                     await message.add_reaction(Emoji.get_emoji('RIGHT'))
         except NotFound:
             pass
-
 
     parts = {
         "page_num": page_num,

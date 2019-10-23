@@ -3,7 +3,7 @@ import asyncio
 from pytz import UnknownTimeZoneError, timezone
 
 from Util import GearbotLogging, Utils, Translator, Configuration, Permissioncheckers
-from database.DatabaseConnector import Infraction
+from database.Models import Infraction
 
 BOT = None
 
@@ -181,10 +181,11 @@ def log_validator(guild, key, value, preview, *_):
 
     # find unknown disabled keys
     disabled = value["DISABLED_KEYS"]
-    unknown_keys = [d for d in disabled if d not in 
-            [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}.values()]
-        for item in sublist]
-    ]
+    unknown_keys = [d for d in disabled if d not in
+                    [item for sublist in
+                     [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}.values()]
+                     for item in sublist]
+                    ]
     if len(unknown_keys) is not 0:
         return "Unknown logging key(s) in DISABLED_KEYS: {}".format(", ".join(unknown_keys))
 
@@ -200,11 +201,12 @@ def log_validator(guild, key, value, preview, *_):
                 return f"The {cat} category was enabled but all of it's subkeys where disabled, please leave at least one subkey enabled or remove the category from the CATEGORIES list"
 
     # check for disabled keys where the category isn't even enabled
-    keys = [d for d in disabled if d not in [item for sublist in 
-        [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
-        if k in cats}.values()] 
-        for item in sublist]
-    ]
+    keys = [d for d in disabled if d not in [item for sublist in
+                                             [subkey for subkey in
+                                              {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
+                                               if k in cats}.values()]
+                                             for item in sublist]
+            ]
     if len(keys) is not 0:
         return "The following key(s) are disabled but the category they belong to isn't activated: ".format(
             ", ".join(keys))
@@ -290,8 +292,7 @@ async def role_adder(active_mutes, guild, role):
 
 
 def swap_mute_role(guild, old, new, parts):
-    active_mutes = Infraction.select().where(
-        (Infraction.type == "Mute") & (Infraction.guild_id == guild.id) & Infraction.active)
+    active_mutes = Infraction.filter(type="Mute", guild_id=guild.id, active=True)
 
     loop = asyncio.get_running_loop()
 
@@ -353,7 +354,7 @@ def log_channel_logger(key, guild, old, new, parts):
             "keys": ", ".join(old["DISABLED_KEYS"]),
         })
         GearbotLogging.log_key(
-            guild.id, 
+            guild.id,
             f'logging_channel_removed{"_with_disabled" if parts["key_count"] > 0 else ""}',
             **parts
         )
@@ -366,7 +367,7 @@ def log_channel_logger(key, guild, old, new, parts):
             "keys": ", ".join(new["DISABLED_KEYS"]),
         })
         GearbotLogging.log_key(
-            guild.id, 
+            guild.id,
             f'logging_channel_added{"_with_disabled" if parts["key_count"] > 0 else ""}',
             **parts
         )
@@ -384,9 +385,9 @@ def log_channel_logger(key, guild, old, new, parts):
         removed_cats = set(old["CATEGORIES"]) - set(new["CATEGORIES"])
         if len(removed_cats) > 0:
             GearbotLogging.log_key(
-                guild.id, 
-                "logging_category_removed", 
-                **parts, 
+                guild.id,
+                "logging_category_removed",
+                **parts,
                 count=len(removed_cats),
                 categories=", ".join(removed_cats)
             )
@@ -395,23 +396,24 @@ def log_channel_logger(key, guild, old, new, parts):
         disabled_keys = set(new["DISABLED_KEYS"]) - set(old["DISABLED_KEYS"])
         if len(disabled_keys) > 0:
             GearbotLogging.log_key(
-                guild.id, 
-                "logging_key_disabled", 
-                **parts, 
+                guild.id,
+                "logging_key_disabled",
+                **parts,
                 count=len(disabled_keys),
                 disabled=", ".join(disabled_keys)
             )
 
         # removed disabled keys, but only those who"s category is still active
         enabled_keys = set(old["DISABLED_KEYS"]) - set(new["DISABLED_KEYS"]) - set(
-            [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
-                if k in removed_cats}.values()]
-            for item in sublist]
+            [item for sublist in
+             [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()
+                                    if k in removed_cats}.values()]
+             for item in sublist]
         )
         if len(enabled_keys) > 0:
             GearbotLogging.log_key(
-                guild.id, 
-                "logging_key_enabled", 
+                guild.id,
+                "logging_key_enabled",
                 **parts, count=len(enabled_keys),
                 enabled=", ".join(enabled_keys)
             )

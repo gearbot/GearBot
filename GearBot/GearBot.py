@@ -3,18 +3,19 @@ from argparse import ArgumentParser
 
 from Bot import TheRealGearBot
 from Bot.GearBot import GearBot
-from Util import Configuration, GearbotLogging
 
 
 def prefix_callable(bot, message):
     return TheRealGearBot.prefix_callable(bot, message)
 
-gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True, max_messages = 100) #100 is the min for some reason
 
+gearbot: GearBot = None
 
-
+from Util import Configuration, GearbotLogging
 
 if __name__ == '__main__':
+    gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True,
+              max_messages=100)  # 100 is the min for some reason
     parser = ArgumentParser()
     parser.add_argument("--token", help="Specify your Discord token")
 
@@ -35,4 +36,3 @@ if __name__ == '__main__':
     GearbotLogging.info("GearBot shutting down, cleaning up")
     gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
-

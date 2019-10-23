@@ -1,7 +1,5 @@
-import asyncio
 import datetime
 import io
-import os
 
 import discord
 

@@ -4,11 +4,11 @@ from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator,
     VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils, Enums, \
     Matchers, Questions, Selfroles, ReactionManager, server_info, DashConfig, Update, DashUtils, Actions
 from Util.RaidHandling import RaidActions, RaidShield
-from database import DatabaseConnector, DBUtils
+from database import DBUtils, Models
 
 components = [
     Configuration,
-    DatabaseConnector,
+    Models,
     GearbotLogging,
     Permissioncheckers,
     Utils,

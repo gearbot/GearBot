@@ -12,7 +12,6 @@ from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, 
     MessageUtils, Selfroles, ReactionManager
 from Util.Converters import Message, DiscordUser
 from Util.Matchers import NUMBER_MATCHER
-from database.DatabaseConnector import LoggedAttachment
 
 
 class Basic(BaseCog):
@@ -91,7 +90,8 @@ class Basic(BaseCog):
                     await MessageUtils.send_to(ctx, 'NO', 'quote_nsfw_refused')
                 else:
                     attachment = None
-                    attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
+
+                    attachments = message.attachments
                     if len(attachments) == 1:
                         attachment = attachments[0]
                     embed = discord.Embed(colour=discord.Color(0xd5fff),

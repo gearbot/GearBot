@@ -70,7 +70,7 @@ class Admin(BaseCog):
         if code.startswith('```'):
             code = "\n".join(code.split("\n")[1:-1])
 
-        out = io.StringIO()
+        out = io.StringIO()p
 
         to_compile = f'async def func():\n{textwrap.indent(code, "  ")}'
 

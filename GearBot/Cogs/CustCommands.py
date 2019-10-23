@@ -3,8 +3,6 @@ from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils
-from database.DatabaseConnector import CustomCommand
-
 
 class CustCommands(BaseCog):
 

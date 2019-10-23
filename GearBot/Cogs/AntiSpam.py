@@ -19,9 +19,7 @@ from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translat
     Permissioncheckers
 from Util.Matchers import MENTION_MATCHER, URL_MATCHER
 from Util.SpamBucket import SpamBucket
-from database.DatabaseConnector import Infraction
-
-
+from database.Models import Infraction
 
 
 class Violation:
@@ -65,13 +63,6 @@ class AntiSpam(BaseCog):
             "ban": self.ban_punishment
         }
 
-        self.seriousness = {
-            "warn": 1,
-            "mute": 2,
-            "kick": 3,
-            "temp_ban": 4,
-            "ban": 5
-        }
         self.extra_actions = WeakValueDictionary()
         self.processed = deque(maxlen=500)
         self.censor_processed = deque(maxlen=50)
@@ -203,7 +194,7 @@ class AntiSpam(BaseCog):
 
     async def warn_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
-        i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Warn', reason)
+        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Warn', reason)
         GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
                                moderator=Utils.clean_user(v.guild.me), reason=reason,
                                user_id=v.member.id, moderator_id=v.guild.me.id, inf=i.id)
@@ -220,10 +211,9 @@ class AntiSpam(BaseCog):
         until = time.time() + duration
         reason = self.assemble_reason(v)
         role = AntiSpam._get_mute_role(v.guild)
-        i = Infraction.get_or_none((Infraction.user_id == v.member.id) & (Infraction.type == "Mute") & (
-                Infraction.guild_id == v.member.guild.id) & Infraction.active)
+        i = await Infraction.get(user_id=v.member.id, type="Mute", guild_id=v.member.guild.id, active=True)
         if i is None:
-            i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Mute', reason,
+            i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Mute', reason,
                                                end=until)
             try:
                 await v.member.add_roles(role, reason=reason)
@@ -256,13 +246,14 @@ class AntiSpam(BaseCog):
 
     async def kick_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
-        i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Kick', reason,
-                                           active=False)
+        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Kick', reason,
+                                                 active=False)
         self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
         try:
             await v.guild.kick(v.member, reason=reason)
         except Forbidden:
-            GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
+            GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member),
+                                   user_id=v.member.id,
                                    moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                    reason=reason, inf=i.id)
         else:
@@ -276,8 +267,8 @@ class AntiSpam(BaseCog):
         until = time.time() + duration
         self.bot.data["forced_exists"].add(f"{v.guild.id}-{v.member.id}")
         await v.guild.ban(v.member, reason=reason, delete_message_days=0)
-        i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Tempban', reason,
-                                           end=until)
+        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Tempban', reason,
+                                                 end=until)
         GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(v.member),
                                user_id=v.member.id, moderator=Utils.clean_user(v.guild.me),
                                moderator_id=v.guild.me.id, reason=reason,
@@ -287,14 +278,11 @@ class AntiSpam(BaseCog):
         reason = self.assemble_reason(v)
         self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
         await v.guild.ban(v.member, reason=reason, delete_message_days=0)
-        Infraction.update(active=False).where(
-            (Infraction.user_id == v.member.id) & (Infraction.type == "Unban") & (
-                    Infraction.guild_id == v.guild.id)).execute()
-        i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Ban', reason)
+        await Infraction.filter(user_id=v.member.id, type="Unban", guild_id=v.guild.id).update(active=False)
+        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Ban', reason)
         GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(v.member), user_id=v.member.id,
                                moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                reason=reason, inf=i.id)
-
 
     async def censor_detector(self):
         # reciever taks for someone gets censored
@@ -316,11 +304,13 @@ class AntiSpam(BaseCog):
                     if t == "censored":
                         msg_time = int(message.created_at.timestamp()) * 1000
                         bucket = self.get_bucket(message.guild.id, f"censored:{count}", b, message.author.id)
-                        if bucket is not None and await bucket.check(message.author.id, msg_time, 1, f"{message.channel.id}-{message.id}"):
+                        if bucket is not None and await bucket.check(message.author.id, msg_time, 1,
+                                                                     f"{message.channel.id}-{message.id}"):
                             count = await bucket.count(message.author.id, msg_time, expire=False)
                             period = await bucket.size(message.author.id, msg_time, expire=False) / 1000
                             self.bot.loop.create_task(
-                                self.violate(Violation("max_censored", message.guild, f"{Translator.translate('spam_max_censored', message)} ({count}/{period}s)",
+                                self.violate(Violation("max_censored", message.guild,
+                                                       f"{Translator.translate('spam_max_censored', message)} ({count}/{period}s)",
                                                        message.author,
                                                        message.channel,
                                                        await bucket.get(message.author.id, msg_time, expire=False),
@@ -330,7 +320,6 @@ class AntiSpam(BaseCog):
                 pass
             except Exception as e:
                 await TheRealGearBot.handle_exception("censor detector", self.bot, e)
-
 
     @staticmethod
     def assemble_reason(v):

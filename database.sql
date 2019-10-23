@@ -10,7 +10,7 @@ create table customcommand
 
 create table loggedmessage
 (
-    messageid bigint primary key                       not null,
+    id bigint primary key                       not null,
     content   varchar(2000) collate utf8mb4_general_ci null,
     author    bigint                                   not null,
     channel   bigint                                   not null,
@@ -28,7 +28,7 @@ create table loggedattachment
     id        bigint primary key not null,
     name      varchar(100)       not null,
     isImage   bool               not null,
-    messageid bigint references loggedmessage (messageid),
+    messageid bigint references loggedmessage (id),
     index (messageid)
 );
 
@@ -38,7 +38,12 @@ create table infraction
     guild_id bigint                   not null,
     user_id  bigint                   not null,
     mod_id   bigint                   not null,
-    type     varchar(10)              not null
+    type     enum('Ban', 'Forced ban', 'Kick', 'Mute', 'Softban', 'Tempban', 'Unban', 'Unmute', 'Warn', 'Temprole')             not null,
+    reason   varchar(2000) not null ,
+    start   datetime not null ,
+    end     datetime null,
+    active bool
+
 );
 
 

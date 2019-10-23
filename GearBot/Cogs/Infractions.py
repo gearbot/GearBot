@@ -16,7 +16,7 @@ class Infractions(BaseCog):
 
     @staticmethod
     async def _warn(ctx, target, *, reason, message=True):
-        i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
+        i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
         name = Utils.clean_user(target)
         if message:
             await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
@@ -102,7 +102,7 @@ class Infractions(BaseCog):
                 else:
                     allowed, message = await Utils._can_act("warn", ctx, member)
                     if allowed:
-                        i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
+                        i = await InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
                         valid += 1
                     else:
                         failures.append(f"{t}: {message}")

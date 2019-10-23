@@ -298,9 +298,10 @@ def v21(config):
     config["CENSORING"]["TOKEN_BLACKLIST"] = config["CENSORING"]["WORD_BLACKLIST"]
     config["CENSORING"]["WORD_BLACKLIST"] = []
 
+
 def v22(config):
     if "Serveradmin" in config["PERM_OVERRIDES"]:
-        config["PERM_OVERRIDES"]["ServerAdmin"] =config["PERM_OVERRIDES"]["Serveradmin"]
+        config["PERM_OVERRIDES"]["ServerAdmin"] = config["PERM_OVERRIDES"]["Serveradmin"]
         del config["PERM_OVERRIDES"]["Serveradmin"]
 
 def add_logging(config, *args):
