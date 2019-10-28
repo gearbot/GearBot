@@ -87,25 +87,23 @@ async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
         return await send_to(message.channel, emoji, string_name, embed=embed, **kwargs)
 
 
-async def cleanup_message(name, message, actual_cleanup=False, wait_time=0):
-    if actual_cleanup:
-        await asyncio.sleep(wait_time)
-        await message.delete()
+async def cleanup_message(name, message):
     settings = Configuration.get_var(message.guild.id, "MSG_AUTO_DELETE").get(name, None)
     if settings is None:
         return
-    if settings["delete_self"]:
-        if bot.user.id == message.author.id:
-            asyncio.run_coroutine_threadsafe(cleanup_message(name, message, True, settings["wait_time"]), bot.loop)
-            return
-    if settings["delete_user"]:
-        if bot.user.id != message.author.id:
-            asyncio.run_coroutine_threadsafe(cleanup_message(name, message, True, settings["wait_time"]), bot.loop)
+    if settings["delete"]:
+        bot.loop.create_task(sleep_and_delete(message, settings["wait_time"]))
+
+
+async def sleep_and_delete(message, wait_time):
+    await asyncio.sleep(wait_time)
+    await message.delete()
 
 
 def day_difference(a, b, location):
     diff = a - b
     return Translator.translate('days_ago', location, days=diff.days, date=a)
+
 
 def construct_jumplink(guild_id, channel_id, message_id):
     return f"https://discordapp.com/channels/{guild_id}/{channel_id}/{message_id}"
