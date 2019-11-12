@@ -78,6 +78,26 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
         else:
             await MessageUtils.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
+    @commands.command()
+    @commands.guild_only()
+    async def search(self, ctx, *, search: str):
+        """search_help"""
+        names = []
+        for user in ctx.guild.members:
+            if search.lower() in user.name.lower() and not user.bot:
+                names.append(f"{user} - ({user.id})")
+        if len(names) > 0:
+            newline = "\n"
+            await MessageUtils.send_to(ctx, "YES", "search_found")
+            return
+        if len(names) > 6:
+            #This would be where we add reactions to browse as needed. This will prevent from the 2k characters limit.
+            newline = "\n"
+            message = await MessageUtils.send_to(ctx, "YES", "search_found")
+        if len(names) == 0:
+            await MessageUtils.send_to(ctx, "NO", "search_not_found")
+            return
+
     
     @commands.group(aliases=["nick"])
     @commands.guild_only()
