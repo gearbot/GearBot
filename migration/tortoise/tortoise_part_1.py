@@ -3,14 +3,13 @@ import json
 
 from tortoise import run_async, Tortoise
 
-from Util import Configuration
-from migration.tortoise import InfractionMigration
+from InfractionModels import InfractionMigration
 
 
 async def prep():
     await Tortoise.init(
-        db_url=Configuration.get_master_var("DATABASE"),
-        modules={'models': ['migration.tortoise.InfractionMigration']}
+        db_url="mysql://gearbot:password@localhost:3306/gearbot?minsize=1&maxsize=10",
+        modules={'models': ['InfractionModels']}
     )
     print("Collecting infractions for migration...")
     converted = {i.id: dict(start=datetime.utcfromtimestamp(i.start).isoformat(),

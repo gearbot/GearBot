@@ -84,6 +84,7 @@ async def init():
         db_url=Configuration.get_master_var("DATABASE"),
         modules={'models': ['database.Models']}
     )
+    await Tortoise.generate_schemas()
     GearbotLogging.info("Database initialized")
 
 

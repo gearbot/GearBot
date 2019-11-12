@@ -13,7 +13,7 @@ from discord.ext import commands
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers, Update, \
-    DashUtils
+    DashUtils, InfractionUtils
 from Util.DashConfig import ValidationException
 from Util.DashUtils import DASH_PERMS, get_guild_perms
 
@@ -58,7 +58,8 @@ class DashLink(BaseCog):
             user_guilds=self.user_guilds,
             user_guilds_end=self.user_guilds_end,
             guild_info_watch=self.guild_info_watch,
-            guild_info_watch_end=self.guild_info_watch_end
+            guild_info_watch_end=self.guild_info_watch_end,
+            usernames_request=self.usernames_request
         )
         self.question_handlers = dict(
             heartbeat=self.still_spinning,
@@ -69,7 +70,9 @@ class DashLink(BaseCog):
             setup_mute=self.setup_mute,
             cleanup_mute=self.cleanup_mute,
             cache_info=self.cache_info,
-            guild_user_perms=self.guild_user_perms
+            guild_user_perms=self.guild_user_perms,
+            get_user_guilds=self.get_user_guilds,
+            get_guild_info=self.get_guild_info,
         )
         # The last time we received a heartbeat, the current attempt number, how many times we have notified the owner
         self.last_dash_heartbeat = [time.time(), 0, 0]
@@ -210,9 +213,9 @@ class DashLink(BaseCog):
     async def user_guilds(self, message):
         user_id = int(message["user_id"])
         self.bot.dash_guild_users.add(user_id)
-        self.redis_link.publish_json("bot-dash-messages", dict(type="guild_add", message=dict(user_id=user_id,
-                                                                                              guilds=DashUtils.get_user_guilds(
-                                                                                                  self.bot, user_id))))
+
+    async def get_user_guilds(self, message):
+        return DashUtils.get_user_guilds(self.bot, message["user_id"])
 
     async def user_guilds_end(self, message):
         user_id = int(message["user_id"])
@@ -225,13 +228,17 @@ class DashLink(BaseCog):
         return DashUtils.get_guild_perms(guild.get_member(int(message["user_id"])))
 
     @needs_perm(DASH_PERMS.ACCESS)
+    async def get_guild_info(self, message):
+        guild_id, user_id = get_info(message)
+        return DashUtils.assemble_guild_info(self.bot, self.bot.get_guild(guild_id).get_member(user_id))
+
+    @needs_perm(DASH_PERMS.ACCESS)
     async def guild_info_watch(self, message):
         # start tracking info
         guild_id, user_id = get_info(message)
         if guild_id not in self.bot.dash_guild_watchers:
             self.bot.dash_guild_watchers[guild_id] = set()
         self.bot.dash_guild_watchers[guild_id].add(user_id)
-        await self.send_guild_info(self.bot.get_guild(guild_id).get_member(user_id))
 
     async def guild_info_watch_end(self, message):
         guild_id, user_id = get_info(message)
@@ -356,6 +363,39 @@ class DashLink(BaseCog):
             count=len(failed),
             tag_on=None if len(failed) is 0 else f'```{out}```'
         )
+
+    async def usernames_request(self, message):
+        names = dict()
+        todo = message["ids"].copy()
+        # find all in the bot cache and back to
+        for uid in message["ids"]:
+            user = self.bot.get_user(int(uid))
+            if user is not None:
+                names[uid] = str(user)
+                todo.remove(uid)
+        # send those already, reset list
+        if len(names) > 0:
+            await self.send_to_dash("usernames", uid=message["uid"], names=names)
+            names = dict()
+
+        # check if we have any of these already in redis manually so we can do a batch, much faster then one by one
+        pipeline = self.bot.redis_pool.pipeline()
+        last_todo = todo.copy()
+        for uid in todo:
+            pipeline.hgetall(f"users:{uid}")
+        results = await pipeline.execute()
+        for result in results:
+            if len(result) is not 0:
+                uid = result["id"]
+                names[uid] = f'{result["name"]}#{result["discriminator"]}'
+                last_todo.remove(uid)
+        if len(names) > 0:
+            await self.send_to_dash("usernames", uid=message["uid"], names=names)
+
+        for uid in last_todo:
+            await self.send_to_dash("usernames", uid=message["uid"], names={uid: await Utils.username(uid, redis=False, clean=False)})
+
+
 
     # crowdin
     async def crowdin_webhook(self, message):

@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+
 import discord
 from discord import NotFound, Forbidden, HTTPException
 from discord.ext.commands import UserConverter, BadArgument, Converter
@@ -396,8 +398,17 @@ class VerificationLevel(Converter):
             raise TranslatedBadArgument('unknown_verification_level', ctx)
         return level
 
+
 class Nickname(Converter):
     async def convert(self, ctx, argument):
         if len(argument) > 32:
             raise TranslatedBadArgument('nickname_too_long', ctx)
         return argument
+
+def arguments(**kwargs):
+    async def parse(ctx, arg):
+        parser = ArgumentParser()
+        for name, type in kwargs.items():
+            parser.add_argument(name, type=type)
+        return parser.parse_known_args(arg)
+    return parse

@@ -1,3 +1,4 @@
+import argparse
 import re
 import typing
 
@@ -8,6 +9,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
+from Util.Arguments import ArgumentParser
 
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
 
@@ -53,7 +55,8 @@ class Infractions(BaseCog):
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
 
-        await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason, check_bot_ability=False)
+        await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason,
+                          check_bot_ability=False)
 
     @commands.guild_only()
     @commands.command()
@@ -111,6 +114,7 @@ class Infractions(BaseCog):
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+
         if len(targets) > 10:
             await MessageUtils.send_to(ctx, "NO", "mwarn_too_many_people")
             return
@@ -119,7 +123,6 @@ class Infractions(BaseCog):
         else:
             await Utils.empty_list(ctx, "warn")
 
-
     @commands.guild_only()
     @commands.group(aliases=["infraction", "infractions"])
     async def inf(self, ctx: commands.Context):
@@ -127,46 +130,71 @@ class Infractions(BaseCog):
         pass
 
     @inf.command()
-    async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
-                     query: typing.Union[UserID, str] = ""):
-        """inf_search_help"""
-        if fields is None or len(fields) is 0:
-            fields = ["[user]", "[mod]", "[reason]"]
-        if isinstance(query, str):
-            parts = query.split(" ")
-            try:
-                amount = int(parts[-1])
-                if len(parts) is 2:
-                    try:
-                        query = int(parts[0])
-                    except ValueError:
-                        try:
-                            query = await UserID().convert(ctx, parts[0])
-                        except BadArgument:
-                            query = parts[0]
+    async def search(self, ctx, *, requested: str = ""):
+        parser = ArgumentParser()
+        parser.add_argument("-q", "--query", type=str, nargs=argparse.ZERO_OR_MORE)
 
-                else:
-                    query = (" ".join(parts[:-1])).strip()
-            except ValueError:
-                amount = 100
-            else:
-                if 1 < amount > 500:
-                    if query == "":
-                        query = amount
-                    else:
-                        query = f"{query} {amount}"
-                    amount = 100
-        else:
-            amount = 100
-        # inform user we are working on it
-        message = await MessageUtils.send_to(ctx, 'SEARCH', 'inf_search_compiling')
-        parts = await InfractionUtils.inf_update(message, query, fields, amount, 0)
-        await ReactionManager.register(self.bot, message.id, message.channel.id, "inf_search", **parts)
-        pipe = self.bot.redis_pool.pipeline()
-        pipe.sadd(f"inf_track:{ctx.guild.id}", message.id)
-        pipe.expire(f"inf_track:{ctx.guild.id}", 60 * 60 * 24)
-        await pipe.execute()
-        self.bot.loop.create_task(InfractionUtils.inf_cleaner(ctx.guild.id))
+        # mobile or desktop but not both
+        mobile = parser.add_mutually_exclusive_group(required=False)
+        mobile.add_argument("-m", '--mobile', dest='mode', action='store_const', const="mobile")
+        mobile.add_argument("-d", '--desktop', dest='mode', action='store_const', const="desktop")
+        mobile.add_argument("-e", '--embed', dest='mode', action='store_const', const="embed")
+        # default to whatever the user is on according to discord
+        parser.set_defaults(mobile="mobile" if ctx.author.is_on_mobile() else "desktop")
+
+        # anything we don't know what the heck to do with
+        parser.add_argument("remaining", nargs=argparse.REMAINDER)
+        if not requested.startswith("-") and requested != "":
+            requested = f"-q {requested}"
+        try:
+            args = parser.parse_args(requested.split())
+            requested
+            await InfractionUtils.get_infraction_info(user_id=args.query[0], guild_id=ctx.guild.id)
+        except ValueError as ex:
+            await ctx.send(ex)  # todo: figure out a way to make this translatable
+
+    # @inf.command()
+    # async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
+    #                  query: typing.Union[UserID, str] = ""):
+    #     """inf_search_help"""
+    #     if fields is None or len(fields) is 0:
+    #         fields = ["[user]", "[mod]", "[reason]"]
+    #     if isinstance(query, str):
+    #         parts = query.split(" ")
+    #         try:
+    #             amount = int(parts[-1])
+    #             if len(parts) is 2:
+    #                 try:
+    #                     query = int(parts[0])
+    #                 except ValueError:
+    #                     try:
+    #                         query = await UserID().convert(ctx, parts[0])
+    #                     except BadArgument:
+    #                         query = parts[0]
+    #
+    #             else:
+    #                 query = (" ".join(parts[:-1])).strip()
+    #         except ValueError:
+    #             amount = 100
+    #         else:
+    #             if 1 < amount > 500:
+    #                 if query == "":
+    #                     query = amount
+    #                 else:
+    #                     query = f"{query} {amount}"
+    #                 amount = 100
+    #     else:
+    #         amount = 100
+    #     # inform user we are working on it
+    #     message = await MessageUtils.send_to(ctx, 'SEARCH', 'inf_search_compiling')
+    #     mobile = ctx.author.is_on_mobile()
+    #     parts = await InfractionUtils.inf_update(message, query, fields, amount, 0)
+    #     await ReactionManager.register(self.bot, message.id, message.channel.id, "inf_search", **parts)
+    #     pipe = self.bot.redis_pool.pipeline()
+    #     pipe.sadd(f"inf_track:{ctx.guild.id}", message.id)
+    #     pipe.expire(f"inf_track:{ctx.guild.id}", 60 * 60 * 24)
+    #     await pipe.execute()
+    #     self.bot.loop.create_task(InfractionUtils.inf_cleaner(ctx.guild.id))
 
     @inf.command()
     async def update(self, ctx: commands.Context, infraction: ServerInfraction, *, reason: Reason):
@@ -188,7 +216,8 @@ class Infractions(BaseCog):
             infraction.delete_instance()
             await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
             GearbotLogging.log_key(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target),
-                                   target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id if mod is not None else 0, reason=reason,
+                                   target_id=target.id, mod=Utils.clean_user(mod),
+                                   mod_id=mod.id if mod is not None else 0, reason=reason,
                                    user=Utils.clean_user(ctx.author), user_id=ctx.author.id)
             InfractionUtils.clear_cache(ctx.guild.id)
 
