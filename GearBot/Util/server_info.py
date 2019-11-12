@@ -19,18 +19,11 @@ def server_info_embed(guild, request_guild=None):
     embed.add_field(name=Translator.translate('members', request_guild), value=guild.member_count, inline=True)
 
     embed.add_field(
-        name=Translator.translate('text_channels', request_guild),
-        value=str(len(guild.text_channels)),
-        inline=True
-    )
-    embed.add_field(
-        name=Translator.translate('voice_channels', request_guild),
-        value=str(len(guild.voice_channels)),
-        inline=True
-    )
-    embed.add_field(
-        name=Translator.translate('total_channel', request_guild),
-        value=str(len(guild.text_channels) + len(guild.voice_channels)),
+        name=Translator.translate('channels', request_guild),
+        value=f"{Emoji.get_chat_emoji('CATEGORY')} {Translator.translate('categories', request_guild)}: {str(len(guild.categories))}\n"
+              f"{Emoji.get_chat_emoji('CHANNEL')} {Translator.translate('text_channels', request_guild)}: {str(len(guild.text_channels))}\n"
+              f"{Emoji.get_chat_emoji('VOICE')} {Translator.translate('voice_channels', request_guild)}: {str(len(guild.voice_channels))}\n"
+              f"{Translator.translate('total_channel', request_guild)}: {str(len(guild.text_channels) + len(guild.voice_channels))}",
         inline=True
     )
     embed.add_field(
@@ -43,7 +36,6 @@ def server_info_embed(guild, request_guild=None):
         value=guild_features,
         inline=True
     )
-
     if guild.icon_url_as() != "":
         embed.add_field(
             name=Translator.translate('server_icon', request_guild),
@@ -93,14 +85,14 @@ def server_info_raw(bot, guild):
     server_info = dict(
         name=guild.name,
         id=str(guild.id),  # send as string, js can't deal with it otherwise
-        server_icon=str(guild.icon_url_as(size=256)),
+        icon=str(guild.icon),
         owner={
-            "id": guild.owner.id,
+            "id": str(guild.owner.id),
             "name": Utils.clean_user(guild.owner)
         },
         members=guild.member_count,
-        text_channels= get_server_channels(guild),
-        additional_text_channels= extra,
+        text_channels=get_server_channels(guild),
+        additional_text_channels=extra,
         voice_channels=len(guild.voice_channels),
         creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
         age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
@@ -129,21 +121,23 @@ def server_info_raw(bot, guild):
 
 def get_server_channels(guild):
     return {
-        c.id: {
-                'name': c.name,
-                'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
-            } for c in guild.text_channels
+        str(c.id): {
+            'name': c.name,
+            'can_log': c.permissions_for(c.guild.me).send_messages and c.permissions_for(
+                c.guild.me).attach_files and c.permissions_for(c.guild.me).embed_links
+        } for c in guild.text_channels
     }
+
 
 def time_difference(begin, end, location):
     diff = begin - end
     minutes, seconds = divmod(diff.days * 86400 + diff.seconds, 60)
     hours, minutes = divmod(minutes, 60)
     if diff.days > 0:
-        return Translator.translate('days', location, amount=diff.days)
+        return Translator.translate("days", location, amount=diff.days)
     else:
         return Translator.translate(
-            'hours',
+            "hours",
             location,
             hours=hours,
             minutes=minutes

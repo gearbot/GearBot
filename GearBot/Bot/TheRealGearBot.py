@@ -46,7 +46,8 @@ async def initialize(bot, startup=False):
         bot.data = {
             "forced_exits": set(),
             "unbans": set(),
-            "message_deletes": set()
+            "message_deletes": set(),
+            "nickname_changes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
         if startup:
@@ -130,7 +131,8 @@ async def on_message(bot, message:Message):
     if message.author.bot:
         if message.author.id == bot.user.id:
             bot.self_messages += 1
-        bot.bot_messages += 1
+        else:
+            bot.bot_messages += 1
         return
     ctx: commands.Context = await bot.get_context(message)
     bot.user_messages += 1
@@ -150,7 +152,6 @@ async def on_message(bot, message:Message):
             f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
             start = f()
             await bot.invoke(ctx)
-            bot.metrics.bot_command_timing.labels(command_name=ctx.command.qualified_name).observe((f() - start) / 1000000)
 
 
 async def on_guild_join(guild):
@@ -184,7 +185,7 @@ async def on_guild_remove(guild):
 
 
 async def on_guild_update(before, after):
-    if after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
+    if after.owner is not None and after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
         GearbotLogging.info(
             f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blacklisted")
         try:
@@ -228,10 +229,11 @@ async def on_command_error(bot, ctx: commands.Context, error):
         await handle_database_error(bot)
 
     else:
-        await handle_exception("Command execution failed", bot, error.original, ctx=ctx)
+        await handle_exception("Command execution failed", bot, error.original if hasattr(error, "original") else error, ctx=ctx)
         # notify caller
         e = Emoji.get_chat_emoji('BUG')
-        await ctx.send(f"{e} Something went wrong while executing that command {e}")
+        if ctx.channel.permissions_for(ctx.me).send_messages:
+            await ctx.send(f"{e} Something went wrong while executing that command {e}")
 
 
 

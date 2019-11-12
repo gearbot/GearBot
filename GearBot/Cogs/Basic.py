@@ -18,12 +18,8 @@ from database.DatabaseConnector import LoggedAttachment
 class Basic(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot)
+
         Pages.register("help", self.init_help, self.update_help)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
@@ -41,12 +37,12 @@ class Basic(BaseCog):
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
         minutes, seconds = divmod(remainder, 60)
-        tacos = "{:,}".format(round(self.bot.eaten))
-        user_messages = "{:,}".format(self.bot.user_messages)
-        bot_messages = "{:,}".format(self.bot.bot_messages)
-        self_messages = "{:,}".format(self.bot.self_messages)
-        total = "{:,}".format(sum(len(guild.members) for guild in self.bot.guilds))
-        unique = "{:,}".format(len(self.bot.users))
+        tacos = str(round(self.bot.eaten))
+        user_messages = str(self.bot.user_messages)
+        bot_messages = str(self.bot.bot_messages)
+        self_messages = str(self.bot.self_messages)
+        total = str(sum(len(guild.members) for guild in self.bot.guilds))
+        unique = str(len(self.bot.users))
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
                               description=
@@ -102,11 +98,12 @@ class Basic(BaseCog):
                                           timestamp=message.created_at)
                     if message.content is None or message.content == "":
                         if attachment is not None:
+                            url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
                             if attachment.isImage:
-                                embed.set_image(url=attachment.url)
+                                embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                value=attachment.url)
+                                                value=url)
                     else:
                         description = message.content
                         embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
@@ -114,11 +111,12 @@ class Basic(BaseCog):
                         embed.add_field(name="​",
                                         value=f"[Jump to message]({message.jump_url})")
                         if attachment is not None:
+                            url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
                             if attachment.isImage:
-                                embed.set_image(url=attachment.url)
+                                embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
-                                                value=attachment.url)
+                                                value=url)
                     user = message.author
                     embed.set_author(name=user.name, icon_url=user.avatar_url)
                     embed.set_footer(
@@ -250,11 +248,27 @@ class Basic(BaseCog):
             Configuration.save(role.guild.id)
 
     async def taco_eater(self):
-        """A person can eat a taco every 5 mins, we run every 5s"""
+        """A person can eat a taco every 5 mins, we run every 15s"""
         GearbotLogging.info("Time to start munching on some 🌮")
         while self.running:
-            self.bot.eaten += len(self.bot.users) / 60
-            await asyncio.sleep(5)
+            self.bot.eaten += len(self.bot.users) / 20
+
+            # update stats in redis
+            await self.bot.redis_pool.hmset_dict("botstats", {
+                "start_time": str(self.bot.start_time),
+                "user_mesages": str(self.bot.user_messages),
+                "bot_messages": str(self.bot.bot_messages),
+                "own_messages": str(self.bot.self_messages),
+                "total_members": str(sum(len(guild.members) for guild in self.bot.guilds)),
+                "unique_members": str(len(self.bot.users)),
+                "taco_count": str(round(self.bot.eaten)),
+                "random_number": random.randint(0, 5000),
+                "commands_executed": str(self.bot.commandCount),
+                "custom_commands_executed": str(self.bot.custom_command_count),
+                "guilds": len(self.bot.guilds)
+            })
+
+            await asyncio.sleep(15)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
 
     async def selfrole_updater(self):

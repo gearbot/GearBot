@@ -35,7 +35,6 @@ class PromMonitoring(BaseCog):
             guild_id = message.guild.id if message.guild is not None else 0
         ).inc()
 
-        m.messages_to_length.observe(len(message.content))
 
         (m.own_message_raw_count if message.author.id == self.bot.user.id else m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
 

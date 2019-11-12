@@ -1,70 +1,86 @@
+import asyncio
 import re
 import typing
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
-    Confirmation, MessageUtils, ReactionManager
-from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction
+    Confirmation, MessageUtils, ReactionManager, Pages, Actions
+from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
 
 
 class Infractions(BaseCog):
 
-    def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 2,
-            "max": 6,
-            "required": 2,
-            "commands": {
-                "inf": {
-                    "required": 2,
-                    "min": 2,
-                    "max": 6,
-                    "commands": {
-                        "delete": {"required": 5, "min": 3, "max": 6}
-                    }
-                }
-            }
-        })
+    @staticmethod
+    async def _warn(ctx, target, *, reason, message=True):
+        i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
+        name = Utils.clean_user(target)
+        if message:
+            await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
+        aname = Utils.clean_user(ctx.author)
+        GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
+                               user_id=target.id, moderator_id=ctx.author.id, inf=i.id)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN"):
+            try:
+                dm_channel = await target.create_dm()
+                await dm_channel.send(
+                    f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+            except discord.Forbidden:
+                GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                       userid=target.id)
 
     @commands.guild_only()
     @commands.command()
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: Reason):
         """warn_help"""
-        if ctx.author != member and (ctx.author.top_role > member.top_role or ctx.guild.owner == ctx.author):
-            if member.id == self.bot.user.id:
-                async def yes():
-                    channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
-                    if channel is not None:
-                        await channel.send(f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
-                        await MessageUtils.send_to(ctx, 'YES', 'feedback_submitted')
+        # don't allow warning GearBot, get some feedback about issues instead
+        if member.id == self.bot.user.id:
 
-                message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
-                await Confirmation.confirm(ctx, message, on_yes=yes)
-            else:
-                if member.bot:
-                    await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
-                    return
+            async def yes():
+                channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
+                if channel is not None:
+                    await channel.send(
+                        f"[`{ctx.message.created_at.strftime('%c')}`] {ctx.message.author} (`{ctx.message.author.id}`) submitted feedback: {reason}")
+                    await MessageUtils.send_to(ctx, 'YES', 'feedback_submitted')
 
-                i = InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Warn", reason)
-                name = Utils.clean_user(member)
-                await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
-                aname = Utils.clean_user(ctx.author)
-                GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
-                                       user_id=member.id, moderator_id=ctx.author.id, inf=i.id)
-                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN"):
-                    try:
-                        dm_channel = await member.create_dm()
-                        await dm_channel.send(
-                            f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-                    except discord.Forbidden:
-                        GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
-                                               userid=member.id)
+            message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
+            await Confirmation.confirm(ctx, message, on_yes=yes)
+
+        if member.bot:
+            await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
+            return
+
+        await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason, check_bot_ability=False)
+
+    @commands.guild_only()
+    @commands.command()
+    @commands.bot_has_permissions(add_reactions=True)
+    async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+        """mwarn_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            failures = await Actions.mass_action(ctx, "warning", targets, self._warn, max_targets=10, allow_bots=False,
+                                                 message=False, reason=reason)
+
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "mwarn_confirmation", count=len(targets) - len(failures))
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+
+        if len(targets) > 10:
+            await MessageUtils.send_to(ctx, "NO", "mwarn_too_many_people")
+            return
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("mwarn_confirm", ctx), on_yes=yes)
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('warning_not_allowed', ctx.guild.id, user=member)}")
+            await Utils.empty_list(ctx, "warn")
 
     @commands.guild_only()
     @commands.group(aliases=["infraction", "infractions"])
@@ -121,7 +137,7 @@ class Infractions(BaseCog):
         infraction.reason = reason
         infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_updated', id=infraction.id)
-        await InfractionUtils.clear_cache(ctx.guild.id)
+        InfractionUtils.clear_cache(ctx.guild.id)
 
     @inf.command(aliases=["del", "remove"])
     async def delete(self, ctx: commands.Context, infraction: ServerInfraction):
@@ -134,11 +150,13 @@ class Infractions(BaseCog):
             infraction.delete_instance()
             await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
             GearbotLogging.log_key(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target),
-                                   target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id, reason=reason,
+                                   target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id if mod is not None else 0, reason=reason,
                                    user=Utils.clean_user(ctx.author), user_id=ctx.author.id)
-            await InfractionUtils.clear_cache(ctx.guild.id)
+            InfractionUtils.clear_cache(ctx.guild.id)
 
-        await Confirmation.confirm(ctx, text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id,reason=reason)}", on_yes=yes)
+        await Confirmation.confirm(ctx,
+                                   text=f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('inf_delete_confirmation', ctx.guild.id, id=infraction.id, user=Utils.clean_user(target), user_id=target.id, reason=reason)}",
+                                   on_yes=yes)
 
     @inf.command('claim')
     async def claim(self, ctx, infraction: ServerInfraction):
@@ -146,7 +164,7 @@ class Infractions(BaseCog):
         infraction.mod_id = ctx.author.id
         infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_claimed', inf_id=infraction.id)
-        await InfractionUtils.clear_cache(ctx.guild.id)
+        InfractionUtils.clear_cache(ctx.guild.id)
 
     IMAGE_MATCHER = re.compile(
         r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',

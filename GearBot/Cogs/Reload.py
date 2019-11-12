@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils
+from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils, Update
 
 
 class Reload(BaseCog):
@@ -53,44 +53,10 @@ class Reload(BaseCog):
 
     @commands.command(hidden=True)
     async def hotreload(self, ctx:commands.Context):
-        message = await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Hot reload in progress...")
         ctx_message = await ctx.send(f"{Emoji.get_chat_emoji('REFRESH')}  Hot reload in progress...")
-        GearbotLogging.info("Initiating hot reload")
-        antiraid = self.bot.get_cog('AntiRaid')
-        trackers = None
-        if antiraid is not None:
-            trackers = antiraid.raid_trackers
-        untranslatable = Translator.untranlatable
-        importlib.reload(Reloader)
-        for c in Reloader.components:
-            importlib.reload(c)
-        Translator.untranlatable = untranslatable
-        GearbotLogging.info("Reloading all cogs...")
-        temp = []
-        for cog in self.bot.cogs:
-            temp.append(cog)
-        for cog in temp:
-            self.bot.unload_extension(f"Cogs.{cog}")
-            GearbotLogging.info(f'{cog} has been unloaded.')
-            self.bot.load_extension(f"Cogs.{cog}")
-            GearbotLogging.info(f'{cog} has been loaded.')
-        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
-        for c in to_unload:
-            self.bot.remove_command(c)
-
-        antiraid = self.bot.get_cog('AntiRaid')
-        if antiraid is not None and trackers is not None:
-            antiraid.raid_trackers = trackers
-
-        await TheRealGearBot.initialize(self.bot)
-        c = await Utils.get_commit()
-        GearbotLogging.info(f"Hot reload complete, now running on {c}")
-        m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete, now running on {c}"
-        self.bot.version = c
-        await message.edit(content=m)
+        await Update.update(ctx.author.name, self.bot)
+        m = f"{Emoji.get_chat_emoji('YES')} Hot reload complete, now running on {self.bot.version}"
         await ctx_message.edit(content=m)
-        self.bot.hot_reloading = False
-        await Translator.upload()
 
     @commands.command()
     async def update_site(self, ctx):

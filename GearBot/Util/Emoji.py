@@ -21,6 +21,8 @@ BACKUPS = {
     "BEAN": "🌱",
     "BOOT": "👢",
     "BUG": "🐛",
+    "CATEGORY": "📚",
+    "CHANNEL": "📝",
     "CLOCK": "⏰",
     "CREATE": "🔨",
     "DELETE": "⛏",
@@ -67,7 +69,7 @@ BACKUPS = {
     "WINK": "😉",
     "WOOD": "⚙",
     "WRENCH": "🔧",
-    "YES": "✅",
+    "YES": "✅"
 }
 
 

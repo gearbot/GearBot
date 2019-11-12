@@ -25,6 +25,8 @@ class GearBot(AutoShardedBot):
     being_cleaned = dict()
     metrics_reg = CollectorRegistry()
     version = ""
+    dash_guild_users = set()
+    dash_guild_watchers = dict()
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
@@ -33,11 +35,7 @@ class GearBot(AutoShardedBot):
     def dispatch(self, event_name, *args, **kwargs):
         if "socket" not in event_name not in ["message_edit"]:
             self.metrics.bot_event_counts.labels(event_name=event_name).inc()
-        with self.metrics.bot_event_progress.labels(event_name=event_name).track_inprogress():
-            f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
-            start = f()
-            super().dispatch(event_name, *args, **kwargs)
-            self.metrics.bot_event_timing.labels(event_name=event_name).observe((f() - start) / 1000000)
+        super().dispatch(event_name, *args, **kwargs)
 
     async def _run_event(self, coro, event_name, *args, **kwargs):
         """

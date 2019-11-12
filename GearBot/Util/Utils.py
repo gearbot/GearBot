@@ -11,7 +11,7 @@ import discord
 import math
 from discord import NotFound
 
-from Util import GearbotLogging, Translator
+from Util import GearbotLogging, Translator, Emoji
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
@@ -47,9 +47,17 @@ async def cleanExit(bot, trigger):
 
 
 def trim_message(message, limit):
-    if len(message) < limit - 3:
+    if len(message) < limit - 4:
         return message
-    return f"{message[:limit-3]}..."
+    return f"{message[:limit-4]}..."
+
+async def empty_list(ctx, action):
+    message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
+    await asyncio.sleep(3)
+    message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
+    await asyncio.sleep(3)
+    await message.edit(content=Translator.translate('intimidation', ctx))
+    await message2.delete()
 
 
 
@@ -242,3 +250,8 @@ def to_pretty_time(seconds, guild_id):
         if seconds == 0:
             break
     return duration.strip()
+
+
+
+def assemble_attachment(channel, aid, name):
+    return f"https://media.discordapp.net/attachments/{channel}/{aid}/{name}"

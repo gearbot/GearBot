@@ -1,4 +1,3 @@
-import asyncio
 import io
 import logging
 import os
@@ -26,7 +25,6 @@ DISCORD_LOGGER = logging.getLogger('discord')
 BOT_LOG_CHANNEL: discord.TextChannel = None
 STARTUP_ERRORS = []
 BOT: commands.AutoShardedBot = None
-LOG_PUMP = None
 LOG_ERRORS = 0
 
 log_type = namedtuple("Log_type", "config_key category emoji")
@@ -36,12 +34,14 @@ LOGGING_INFO = {
     "CENSORED_MESSAGES": {
         "censor_fail": {
             "censor_message_failed": "WARNING",
+            "censor_message_failed_word": "WARNING",
             "invite_censor_fail": "WARNING",
             "invite_censor_forbidden": "WARNING"
         },
         "censored": {
             "censored_invite": "WARNING",
-            "censored_message": "WARNING"
+            "censored_message": "WARNING",
+            "censored_message_word": "WARNING"
         }
     },
     "CHANNEL_CHANGES": {
@@ -291,7 +291,7 @@ def init_logger():
 
 
 async def initialize(bot: commands.Bot, channelID):
-    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS, LOG_PUMP
+    global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS
     BOT = bot
     BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
@@ -362,10 +362,10 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
     # no targets? no logging
     if len(targets) is 0:
         return
-    log_to(guild_id, targets, message, embed, file, None)
+    log_to(guild_id, targets, Utils.trim_message(message, 2000) if message is not None else None, embed, file, None)
 
 
-def log_key(guild_id, key, embed=None, file=None, can_stamp=False, tag_on=None, **kwargs):
+def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **kwargs):
     # logging category, emoji and
     info = LOG_TYPES[key]
 
@@ -381,7 +381,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=False, tag_on=None, 
         return
 
     message = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
-    message = Utils.trim_message(message, 2000)
+
     if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
         s = datetime.strftime(
             datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
@@ -396,6 +396,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=False, tag_on=None, 
         message = f"{message} {tag_on}"
         tag_on = None
 
+    message = Utils.trim_message(message, 2000)
     # queuing up
     log_to(guild_id, targets, message, embed, file, tag_on)
 
@@ -441,12 +442,12 @@ async def log_task(guild_id, target):
                 return
             # pull message from queue
             todo = LOG_QUEUE[target].get(block=False)
-            if (len(to_send) + len(todo.message)) > 1998:
-                # too large,
+            if (len(to_send) + len(todo.message) if todo.message is not None else 0) < 2000:
+                to_send = f'{to_send}\n{todo.message if todo.message is not None else ""}'
+            else:
+                # too large, send it out
                 await channel.send(to_send)
                 to_send = todo.message
-            else:
-                to_send = f'{to_send}\n{todo.message}'
             if todo.embed is not None or todo.file is not None or LOG_QUEUE[target].empty():
                 await channel.send(to_send, embed=todo.embed, file=todo.file)
                 to_send = ""

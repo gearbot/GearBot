@@ -10,4 +10,4 @@ JUMP_LINK_MATCHER = re.compile(r"https://(?:canary|ptb)?\.?discordapp.com/channe
 MODIFIER_MATCHER = re.compile(r"^\[(.*):(.*)\]$")
 NUMBER_MATCHER = re.compile(r"\d+")
 START_WITH_NUMBER_MATCHER = re.compile(r"^(\d+)")
-INVITE_MATCHER = re.compile(r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[dot\])(?:gg|io|me|li)|discordapp\.com/invite)/+((?:(?!https?)[\w\d-])+)", flags=re.IGNORECASE)
+INVITE_MATCHER = re.compile(r"(?:https?://)?(?:www\.)?(?:discord(?:\.| |\[?\(?\"?'?dot'?\"?\)?\]?)?(?:gg|io|me|li)|discordapp\.com/invite)/+((?:(?!https?)[\w\d-])+)", flags=re.IGNORECASE)

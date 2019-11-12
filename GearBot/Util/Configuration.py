@@ -7,12 +7,22 @@ PERSISTENT = dict()
 TEMPLATE = dict()
 
 
+def save_master():
+    global MASTER_CONFIG
+    with open('config/master.json', 'w') as jsonfile:
+        jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
+
+
 # Ugly but this prevents import loop errors
 def load_master():
     global MASTER_CONFIG, MASTER_LOADED
     try:
         with open('config/master.json', 'r') as jsonfile:
             MASTER_CONFIG = json.load(jsonfile)
+            if "Serveradmin" in MASTER_CONFIG["COGS"]:
+                MASTER_CONFIG["COGS"].remove("Serveradmin")
+                MASTER_CONFIG["COGS"].append("ServerAdmin")
+                save_master()
             MASTER_LOADED = True
     except FileNotFoundError:
         GearbotLogging.error("Unable to load config, running with defaults.")
@@ -280,7 +290,18 @@ def v19(config):
         logging_keys["CATEGORIES"] = [*new_cats]
 
 
+def v20(config):
+    config["SERVER_LINKS"] = []
 
+
+def v21(config):
+    config["CENSORING"]["TOKEN_BLACKLIST"] = config["CENSORING"]["WORD_BLACKLIST"]
+    config["CENSORING"]["WORD_BLACKLIST"] = []
+
+def v22(config):
+    if "Serveradmin" in config["PERM_OVERRIDES"]:
+        config["PERM_OVERRIDES"]["ServerAdmin"] =config["PERM_OVERRIDES"]["Serveradmin"]
+        del config["PERM_OVERRIDES"]["Serveradmin"]
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
@@ -302,13 +323,13 @@ def move_keys(config, section, *keys):
             config[section][key] = config[key]
             del config[key]
 
-def v20(config):
-    config["SERVER_LINKS"] = []
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22]
 
 BOT = None
+
+
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION, BOT, TEMPLATE
     BOT = bot
@@ -394,6 +415,7 @@ def set_var(id, cat, key, value):
     save(id)
     Features.check_server(id)
 
+
 def set_cat(id, cat, value):
     SERVER_CONFIGS[id][cat] = value
     save(id)
@@ -405,12 +427,6 @@ def save(id):
     with open(f'config/{id}.json', 'w') as jsonfile:
         jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
     Features.check_server(id)
-
-
-def save_master():
-    global MASTER_CONFIG
-    with open('config/master.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(MASTER_CONFIG, indent=4, skipkeys=True, sort_keys=True)))
 
 
 def load_persistent():

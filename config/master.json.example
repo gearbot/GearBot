@@ -16,7 +16,7 @@
     "Basic",
     "Admin",
     "Moderation",
-    "Serveradmin",
+    "ServerAdmin",
     "ModLog",
     "CustCommands",
     "BCVersionChecker",

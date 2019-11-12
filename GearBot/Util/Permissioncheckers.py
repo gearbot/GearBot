@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord.ext.commands import NoPrivateMessage, BotMissingPermissions
 
 from Util import Configuration
 
@@ -105,7 +106,7 @@ def get_perm_dict(pieces, perm_dict, strict=False):
 
 
 def get_user_lvl(guild, member, command_object=None):
-    if guild.owner.id == member.id:
+    if guild.owner is not None and guild.owner.id == member.id:
         return 5
 
     if is_lvl4(member):
@@ -142,3 +143,20 @@ def user_lvl(member):
     if is_trusted(member):
         return 1
     return 0
+
+
+def bot_has_guild_permission(**kwargs):
+    async def predicate(ctx):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
+
+        permissions = ctx.guild.me.guild_permissions
+        missing = [perm for perm, value in kwargs.items() if getattr(permissions, perm, None) != value]
+
+        if not missing:
+            return True
+
+        raise BotMissingPermissions(missing)
+
+    return commands.check(predicate)
+

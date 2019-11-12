@@ -36,7 +36,7 @@ async def add_item(ctx, item, item_type, list_name="roles", config_section="PERM
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate(f'{item_type}_{sname}_added', ctx, item=item.name)}")
 
 
-async def remove_item(ctx, item, item_type, config_section="PERMISSIONS", list_name="roles"):
+async def remove_item(ctx, item, item_type, list_name="roles", config_section="PERMISSIONS"):
     target = f"{item_type}_{list_name}".upper()
     roles = Configuration.get_var(ctx.guild.id, config_section, target)
     sname = list_name[:-1] if list_name[-1:] == "s" else list_name
@@ -72,7 +72,7 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
     return output
 
 
-class Serveradmin(BaseCog):
+class ServerAdmin(BaseCog):
     LOGGING_TYPES = [
         "RAID_LOGS",
         "CENSORED_MESSAGES",
@@ -91,23 +91,11 @@ class Serveradmin(BaseCog):
     ]
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 3,
-            "max": 5,
-            "required": 3,
-            "commands": {
-                "configure": {
-                    "min": 3,
-                    "max": 5,
-                    "required": 3,
-                    "commands": {
-                        "lvl4": {"required": 5, "min": 4, "max": 6}
-                    }
-                }
-            }
-        })
+        super().__init__(bot)
+
         bot.to_cache = []
         Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
+        Pages.register("word_blacklist", self._word_blacklist_init, self._word_blacklist_update)
 
 
 
@@ -201,7 +189,7 @@ class Serveradmin(BaseCog):
         if len(failed) > 0:
             message = f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_setup_failures', ctx, role=role.mention)}\n"
             for fail in failed:
-                if len(message) + len(fail) > 2048:
+                if len(message) + len(fail) > 2000:
                     await ctx.send(message)
                     message = ""
                 message = message + fail
@@ -270,7 +258,7 @@ class Serveradmin(BaseCog):
 
     @ignored_users.command(name="remove")
     async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
-        await remove_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
+        await remove_item(ctx, user, "ignored", list_name="users", config_section="MESSAGE_LOGS")
 
 
     @configure.group("cog_overrides")
@@ -285,7 +273,7 @@ class Serveradmin(BaseCog):
                     desc += f"{k}: {lvl} ({Translator.translate(f'perm_lvl_{lvl}', ctx)})\n"
             if desc == "":
                 desc = Translator.translate('no_overrides', ctx)
-            embed = discord.Embed(color=6008770, title=Translator.translate('configure_cog_overrides', ctx), description=desc)
+            embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
     @configure_cog_overrides.command(name="add")
@@ -500,13 +488,14 @@ class Serveradmin(BaseCog):
 
     @configure.group()
     @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     async def logging(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(color=6008770, title=Translator.translate('log_channels', ctx))
             channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
             if len(channels) > 0:
                 for cid, info in channels.items():
-                    embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, info))
+                    embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, info["CATEGORIES"]))
 
                 await ctx.send(embed=embed)
 
@@ -535,8 +524,11 @@ class Serveradmin(BaseCog):
         cid = str(channel.id)
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
-           channels[cid] = []
-        info = channels[cid]
+           channels[cid] = {
+               "CATEGORIES": [],
+               "DISABLED_KEYS": []
+           }
+        info = channels[cid]["CATEGORIES"]
         added = []
         ignored = []
         message = ""
@@ -557,7 +549,7 @@ class Serveradmin(BaseCog):
             message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
         embed = discord.Embed(color=6008770)
-        embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]))
+        embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]["CATEGORIES"]))
         await ctx.send(message, embed=embed)
         Configuration.save(ctx.guild.id)
 
@@ -579,7 +571,7 @@ class Serveradmin(BaseCog):
         if cid not in channels:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=f'<{cid}>')}")
         else:
-            info = channels[cid]
+            info = channels[cid]["CATEGORIES"]
             removed = []
             ignored = []
             unable = []
@@ -608,7 +600,7 @@ class Serveradmin(BaseCog):
 
             if len(info) > 0:
                 embed = discord.Embed(color=6008770)
-                embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, channels[cid]))
+                embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, channels[cid]["CATEGORIES"]))
             else:
                 embed=None
             await ctx.send(message, embed=embed)
@@ -872,19 +864,19 @@ class Serveradmin(BaseCog):
 
     @staticmethod
     async def _blacklist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
         return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
 
     @staticmethod
     async def _blacklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
         return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
     @blacklist.command("add")
     async def blacklist_add(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
         if word.lower() in blacklist:
             await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
         elif len(word) < 3:
@@ -896,6 +888,49 @@ class Serveradmin(BaseCog):
 
     @blacklist.command("remove")
     async def blacklist_remove(self, ctx, *, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
+        if word not in blacklist:
+            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
+        else:
+            blacklist.remove(word)
+            await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @configure.group()
+    async def word_blacklist(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await Pages.create_new(self.bot, "word_blacklist", ctx)
+
+    @staticmethod
+    async def _word_blacklist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+            pages) > 1
+
+    @staticmethod
+    async def _word_blacklist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate(
+            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_BLACKLIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+
+    @word_blacklist.command("add")
+    async def word_blacklist_add(self, ctx, *, word: str):
+        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
+        if word.lower() in blacklist:
+            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
+        elif len(word) < 3:
+            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
+        else:
+            blacklist.append(word.lower())
+            await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
+            Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Censor").regexes:
+                del self.bot.get_cog("Censor").regexes[ctx.guild.id]
+
+    @word_blacklist.command("remove")
+    async def word_blacklist_remove(self, ctx, *, word: str):
         blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
         if word not in blacklist:
             await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
@@ -903,6 +938,8 @@ class Serveradmin(BaseCog):
             blacklist.remove(word)
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Censor").regexes:
+                del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
 
     @configure.group()
@@ -988,4 +1025,4 @@ class Serveradmin(BaseCog):
 
 
 def setup(bot):
-    bot.add_cog(Serveradmin(bot))
+    bot.add_cog(ServerAdmin(bot))

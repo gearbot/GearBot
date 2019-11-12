@@ -155,5 +155,5 @@ async def remove_reaction(message, reaction, user):
         return
     try:
         await message.remove_reaction(reaction, user)
-    except Forbidden:
+    except (Forbidden, NotFound):
         pass

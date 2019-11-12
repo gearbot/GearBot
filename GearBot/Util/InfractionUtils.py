@@ -1,7 +1,9 @@
+import asyncio
 import re
 from datetime import datetime
 
 from aioredis import ReplyError
+from discord import NotFound
 from peewee import fn
 
 from Bot import GearBot
@@ -17,14 +19,25 @@ def initialize(gearbot):
 def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
     i = Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
                       start=datetime.now(), end=end, active=active)
-    bot.loop.create_task(clear_cache(guild_id))
+    clear_cache(guild_id)
     return i
 
-async def clear_cache(guild_id):
-    if bot.redis_pool is not None:
-        todo = await inf_cleaner(guild_id, reset_cache=True)
-        for view in sorted(todo, key=lambda l: l[0], reverse=True):
-            await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+cleaners = dict()
+
+def clear_cache(guild_id):
+    if guild_id in cleaners:
+        cleaners[guild_id].cancel()
+    cleaners[guild_id] = bot.loop.create_task(cleaner(guild_id))
+
+
+
+async def cleaner(guild_id):
+    # sleep a bit first, we're not in a rush
+    await asyncio.sleep(5)
+    todo = await inf_cleaner(guild_id, reset_cache=True)
+    for view in sorted(todo, key=lambda l: l[0], reverse=True):
+        await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+    del cleaners[guild_id]
 
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
@@ -135,6 +148,7 @@ async def inf_update(message, query, fields, amount, page_num):
     if str(query).isnumeric():
         query = int(query)
     guild_id = message.channel.guild.id
+    old = message.content
     key = get_key(guild_id, query, fields, amount)
     # do we have pages?
     count = await bot.redis_pool.llen(key)
@@ -152,12 +166,18 @@ async def inf_update(message, query, fields, amount, page_num):
             page_num = count-1
         page = await bot.redis_pool.lindex(key, page_num)
     name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
-    await message.edit(content=f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}")
-    if count > 1:
-        left = Emoji.get_emoji('LEFT')
-        if not any(left == r.emoji and r.me for r in message.reactions):
-            await message.add_reaction(Emoji.get_emoji('LEFT'))
-            await message.add_reaction(Emoji.get_emoji('RIGHT'))
+    new = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}"
+    if old != new:
+        try:
+            await message.edit(content=new)
+            if count > 1:
+                left = Emoji.get_emoji('LEFT')
+                if not any(left == r.emoji and r.me for r in message.reactions):
+                    await message.add_reaction(Emoji.get_emoji('LEFT'))
+                    await message.add_reaction(Emoji.get_emoji('RIGHT'))
+        except NotFound:
+            pass
+
 
     parts = {
         "page_num": page_num,

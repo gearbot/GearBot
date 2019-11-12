@@ -10,7 +10,6 @@ class PromMonitors:
             "guild_id"
         ])
 
-        self.messages_to_length = prom.Histogram("messages_to_length", "Keeps track of what messages were what length")
 
         self.user_message_raw_count = prom.Counter("user_message_raw_count", "Raw count of how many messages we have seen from users")
         self.bot_message_raw_count = prom.Counter("bot_message_raw_count",
@@ -26,25 +25,18 @@ class PromMonitors:
         self.bot_users_unique = prom.Gauge("bot_users_unique", "How many unique users the bot can see")
         self.bot_users_unique.set_function(lambda : len(bot.users))
 
-        self.bot_event_progress = prom.Gauge("bot_event_progress", "How many events are being processed", ["event_name"])
-        self.bot_event_timing = prom.Histogram("bot_event_timing", "How long events took to process", ["event_name"])
         self.bot_event_counts = prom.Counter("bot_event_counts", "How much each event occurred", ["event_name"])
-        self.bot_command_timing = prom.Histogram("bot_command_timing", "How long commands took to run", ["command_name"])
 
         self.bot_latency = prom.Gauge("bot_latency", "Current bot latency")
         self.bot_latency.set_function(lambda : bot.latency)
 
         bot.metrics_reg.register(self.command_counter)
         bot.metrics_reg.register(self.guild_messages)
-        bot.metrics_reg.register(self.messages_to_length)
         bot.metrics_reg.register(self.user_message_raw_count)
         bot.metrics_reg.register(self.bot_message_raw_count)
         bot.metrics_reg.register(self.bot_guilds)
         bot.metrics_reg.register(self.bot_users)
         bot.metrics_reg.register(self.bot_users_unique)
-        bot.metrics_reg.register(self.bot_event_progress)
-        bot.metrics_reg.register(self.bot_event_timing)
         bot.metrics_reg.register(self.bot_event_counts)
-        bot.metrics_reg.register(self.bot_command_timing)
         bot.metrics_reg.register(self.own_message_raw_count)
         bot.metrics_reg.register(self.bot_latency)

@@ -12,13 +12,10 @@ from database.DatabaseConnector import Raid, Raider
 
 
 class AntiRaid(BaseCog):
+
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 2,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot)
+
         self.raid_trackers = dict()
         self.timers = {
             "fixed": self.fixed_time,
@@ -99,26 +96,38 @@ class AntiRaid(BaseCog):
                     GearbotLogging.log_key(member.guild.id, 'raid_new', raid_id=raid.id)
                     # create trackers if needed
                     raider_ids = dict()
+                    terminator = self.bot.loop.create_task(self.terminator(member.guild.id))
+                    self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids,
+                                                               triggered=set(), terminator=terminator, timers=[])
                     for raider in buckets[shield["id"]]:
                         if member.guild.id not in self.raid_trackers or member.id not in self.raid_trackers[member.guild.id]["raider_ids"]:
                             r = Raider.create(raid=raid, user_id=raider.id, joined_at=raider.joined_at)
                             raider_ids[member.id] = r.id
 
-                    self.raid_trackers[member.guild.id] = dict(raid_id=raid.id, SHIELDS=dict(), raider_ids=raider_ids, triggered=set())
-
-                #assign the handler and call execute initial actions
+                # assign the handler and call execute initial actions
                 h = RaidShield(shield)
                 self.raid_trackers[member.guild.id]["SHIELDS"][shield["id"]] = h
                 self.raid_trackers[member.guild.id]["triggered"].add(shield["id"])
                 await h.raid_detected(self.bot, member.guild, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
 
                 # create background terminator
-                self.bot.loop.create_task(
+                timer = self.bot.loop.create_task(
                     self.timers[shield["duration"]["type"]](member.guild.id, h, shield, shield["duration"]))
+                self.raid_trackers[member.guild.id]["timers"].append(timer)
 
                 # deal with them
                 for raider in buckets[shield["id"]]:
                     await h.handle_raider(self.bot, raider, self.raid_trackers[member.guild.id]["raid_id"], self.raid_trackers[member.guild.id]["raider_ids"], shield)
+
+
+    async def terminator(self, guild_id):
+        await asyncio.sleep(10*60)
+        if guild_id in self.raid_trackers:
+            GearbotLogging.log_key(guild_id, "raid_timelimit_exceeded")
+            info = self.raid_trackers[guild_id]
+            del self.raid_trackers[self.raid_trackers]
+            for t in info["timers"]:
+                t.cancel()
 
 
 
@@ -133,7 +142,7 @@ class AntiRaid(BaseCog):
             try:
                 await self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
                 diff = abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
-                if diff > 60*60:
+                if diff > 15*60:
                     GearbotLogging.log_key(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])
                     await self.terminate_shield(guild_id, handler, shield)
                     return
@@ -149,6 +158,7 @@ class AntiRaid(BaseCog):
         await handler.shield_terminated(self.bot, self.bot.get_guild(guild_id), self.raid_trackers[guild_id]["raid_id"], self.raid_trackers[guild_id]["raider_ids"], shield)
         if len(self.raid_trackers[guild_id]["SHIELDS"]) == 0:
             GearbotLogging.log_key(guild_id, 'raid_terminated', raid_id=self.raid_trackers[guild_id]['raid_id'])
+            self.raid_trackers[guild_id]["terminator"].cancel()
             del self.raid_trackers[guild_id]
 
 

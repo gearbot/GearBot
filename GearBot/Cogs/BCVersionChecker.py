@@ -17,12 +17,8 @@ from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration,
 class BCVersionChecker(BaseCog):
 
     def __init__(self, bot):
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {}
-        })
+        super().__init__(bot)
+
         self.BC_VERSION_LIST = {}
         self.BCC_VERSION_LIST = {}
         self.running = True

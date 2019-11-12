@@ -53,19 +53,7 @@ class ModLog(BaseCog):
                     logged = LoggedMessage.get_or_none(messageid=message.id)
                     fetch_times.append(time.perf_counter() - fetch)
                     if logged is None:
-                        message_type = message.type
-                        if message_type == MessageType.default:
-                            message_type = None
-                        else:
-                            message_type = message_type.value
-                        LoggedMessage.create(messageid=message.id, author=message.author.id,
-                                             content=message.content,
-                                             channel=channel.id, server=channel.guild.id,
-                                             type=message_type)
-                        for a in message.attachments:
-                            LoggedAttachment.create(id=a.id, url=a.proxy_url,
-                                                    isImage=(a.width is not None or a.width is 0),
-                                                    messageid=message.id)
+                        await MessageUtils.insert_message(self.bot, message, redis=False)
                         newCount = newCount + 1
                     elif message.edited_at is not None:
                         if logged.content != message.content:
@@ -142,8 +130,8 @@ class ModLog(BaseCog):
                 embed.set_footer(text=Translator.translate('sent_in', guild, channel=channel.name))
                 if len(message.attachments) > 0:
                     embed.add_field(name=Translator.translate('attachment_link', guild),
-                                    value='\n'.join(attachment.url if hasattr(attachment, 'url') else attachment for attachment in message.attachments))
-                GearbotLogging.log_raw(guild.id, "EDIT_LOGS", embed=embed)
+                                    value='\n'.join(Utils.assemble_attachment(channel.id, attachment.id, attachment.name) for attachment in message.attachments))
+                GearbotLogging.log_raw(guild.id, "message_removed", embed=embed)
             else:
                 if type_string is None:
                     if len(message.content) != 0:
@@ -155,7 +143,7 @@ class ModLog(BaseCog):
                 count = 1
                 multiple_attachments = len(message.attachments) > 1
                 for attachment in message.attachments:
-                    attachment_url = attachment.url if hasattr(attachment, 'url') else attachment
+                    attachment_url = Utils.assemble_attachment(channel.id, attachment.id, attachment.name)
                     if multiple_attachments:
                         attachment_str = Translator.translate('attachment_item', guild, num=count, attachment=attachment_url)
                     else:
@@ -209,7 +197,7 @@ class ModLog(BaseCog):
             after = event.data["content"]
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
-            if not (hasUser and user.id in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") or user.id == channel.guild.me.id):
+            if hasUser and user.id not in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") and user.id != channel.guild.me.id:
                 GearbotLogging.log_key(channel.guild.id, 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention)
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = discord.Embed()
@@ -232,7 +220,7 @@ class ModLog(BaseCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if Features.is_logged(member.guild.id, "TRAVEL_LOGS"):
-            dif = (datetime.datetime.utcnow() - member.created_at)
+            dif = (datetime.datetime.utcfromtimestamp(time.time()) - member.created_at)
             new_user_threshold = Configuration.get_var(member.guild.id, "GENERAL", "NEW_USER_THRESHOLD")
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
@@ -258,7 +246,7 @@ class ModLog(BaseCog):
             try:
                 async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
                     if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(
-                            time.time() - 30):
+                             time.time() - 30):
                         break
                     if entry.target == member:
                         if entry.reason is None:
@@ -338,7 +326,7 @@ class ModLog(BaseCog):
         # nickname changes
         if Features.is_logged(guild.id, "NAME_CHANGES"):
             if (before.nick != after.nick and
-                    after.nick != before.nick):
+                    after.nick != before.nick) and f'{before.guild.id}-{before.id}' not in self.bot.data['nickname_changes']:
                 name = Utils.clean_user(after)
                 before_clean = "" if before.nick is None else Utils.clean_name(before.nick)
                 after_clean = "" if after.nick is None else Utils.clean_name(after.nick)
@@ -479,7 +467,7 @@ class ModLog(BaseCog):
         await self.handle_simple_changes(before, after, "channel_update_simple",
                                          AuditLogAction.channel_update,
                                          ["name", "category", "nsfw", "slowmode_delay", "topic", "bitrate",
-                                          "user_limit"])
+                                          "user_limit", "type"])
 
         # checking overrides
 
@@ -499,7 +487,7 @@ class ModLog(BaseCog):
                             key = "permission_override_update"
 
                             def finder(e):
-                                if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id:
+                                if e.target.id == after.id and e.target.id == after.id and e.extra.id == target.id and target in after.overwrites:
                                     before_allowed, before_denied = override.pair()
                                     after_allowed, after_denied = after.overwrites[target].pair()
                                     has_allow = hasattr(e.before, "allow")
@@ -545,7 +533,7 @@ class ModLog(BaseCog):
             parts = dict(channel=Utils.escape_markdown(after), channel_id=after.id, target_name=Utils.escape_markdown(str(target)), target_id=target.id)
 
             def finder(e):
-                if e.target.id == after.id and e.extra.id == target.id:
+                if e.target.id == after.id and e.extra.id == target.id and target in after.overwrites:
                     after_allowed, after_denied = after.overwrites[target].pair()
                     has_allow = hasattr(e.after, "allow")
                     has_deny = hasattr(e.after, "deny")

@@ -2,7 +2,7 @@ import asyncio
 import time
 from datetime import datetime
 
-from discord import Embed, User, NotFound, Forbidden
+from discord import Embed, User, NotFound, Forbidden, DMChannel
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -15,13 +15,8 @@ from database.DatabaseConnector import Reminder, ReminderStatus
 class Reminders(BaseCog):
 
     def __init__(self, bot) -> None:
-        super().__init__(bot, {
-            "min": 0,
-            "max": 6,
-            "required": 0,
-            "commands": {
-            }
-        })
+        super().__init__(bot)
+
         self.running = True
         self.handling = set()
         self.bot.loop.create_task(self.delivery_service())
@@ -128,12 +123,12 @@ class Reminders(BaseCog):
             send_time = datetime.utcfromtimestamp(package.send.timestamp())
             parts = {
                 "date": send_time.strftime('%c'),
-                "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) else location.guild.id),
+                "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) or isinstance(location, DMChannel) else location.guild.id),
                 "now_date": now.strftime('%c'),
                 "jump_link": jumplink_available,
                 "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
             }
-            parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) else location, **parts)
+            parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) or isinstance(location, DMChannel) else location, **parts)
             content = f"```\n{package.to_remind}\n```"
             try:
                 if len(parcel) + len(content) < 2000:
