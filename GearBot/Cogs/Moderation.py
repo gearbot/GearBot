@@ -82,17 +82,22 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.guild_only()
     async def search(self, ctx, *, search: str):
-        """Searches for the users in the server."""
-        #TODO: Consider the 2,000 character limit
+        """search_help"""
         names = []
-        for i in ctx.guild.members:
-            if search.lower() in i.name.lower() and not i.bot:
-                names.append(f"{i} ({i.id})")
+        for user in ctx.guild.members:
+            if search.lower() in user.name.lower() and not user.bot:
+                names.append(f"{user} - ({user.id})")
         if len(names) > 0:
-            text = "\n"
-            raise CommandSuccess(f"Found the following users for your query:\n```{sanitize(str(text.join(names)))}```")
+            newline = "\n"
+            await MessageUtils.send_to(ctx, "YES", "search_found", names=Pages.paginate("\n".join(names)))
+            return
+        if len(names) > 6:
+            #This would be where we add reactions to browse as needed. This will prevent from the 2k characters limit.
+            newline = "\n"
+            message = await MessageUtils.send_to(ctx, "YES", "search_found", names=Pages.paginate("\n".join(names)))
         if len(names) == 0:
-            raise CommandFail(f"No users found for query ``{sanitize(str(search))}``")
+            await MessageUtils.send_to(ctx, "NO", "search_not_found", search=search)
+            return
 
     
     @commands.group(aliases=["nick"])
