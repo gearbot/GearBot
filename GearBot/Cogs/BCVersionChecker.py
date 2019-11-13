@@ -10,11 +10,11 @@ import discord
 from discord import Embed, File
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji, Pages
 
 
-class BCVersionChecker(BaseCog):
+class BCVersionChecker(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -11,7 +11,7 @@ from discord import Embed, Color, Forbidden
 from discord.ext import commands
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, GearbotLogging, Translator, DashConfig, Utils, Update, DashUtils
 from Util.DashConfig import ValidationException
 from Util.DashUtils import DASH_PERMS, get_guild_perms
@@ -44,7 +44,7 @@ class UnauthorizedException(Exception):
     pass
 
 
-class DashLink(BaseCog):
+class DashLink(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

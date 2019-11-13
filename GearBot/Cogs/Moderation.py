@@ -11,7 +11,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConve
 from tortoise.query_utils import Q
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils, Questions, server_info, Actions
 from Util.Actions import ActionFailed
@@ -21,7 +21,7 @@ from Util.Permissioncheckers import bot_has_guild_permission
 from database.Models import Infraction
 
 
-class Moderation(BaseCog):
+class Moderation(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

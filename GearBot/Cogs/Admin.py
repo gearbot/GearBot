@@ -6,12 +6,12 @@ import traceback
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update
 from Util.Converters import UserID, Guild, DiscordUser
 
 
-class Admin(BaseCog):
+class Admin(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

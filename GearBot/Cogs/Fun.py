@@ -5,13 +5,13 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, MessageUtils, Translator, Utils
 from Util.Converters import ApexPlatform
 from Util.JumboGenerator import JumboGenerator
 
 
-class Fun(BaseCog):
+class Fun(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -5,13 +5,13 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, GearbotLogging, MessageUtils
 from Util.RaidHandling.RaidShield import RaidShield
 from database.Models import Raider, Raid
 
 
-class AntiRaid(BaseCog):
+class AntiRaid(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

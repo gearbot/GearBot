@@ -6,13 +6,13 @@ from discord import Embed, User, NotFound, Forbidden, DMChannel
 from discord.ext import commands
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus
 
 
-class Reminders(BaseCog):
+class Reminders(Gear):
 
     def __init__(self, bot) -> None:
         super().__init__(bot)

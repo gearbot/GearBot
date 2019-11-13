@@ -5,10 +5,10 @@ from aiohttp import web
 from discord.ext import commands
 from prometheus_client.exposition import generate_latest
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 
 
-class PromMonitoring(BaseCog):
+class PromMonitoring(Gear):
 
 
     def __init__(self, bot):

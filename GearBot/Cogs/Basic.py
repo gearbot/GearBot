@@ -7,14 +7,14 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
     MessageUtils, Selfroles, ReactionManager
 from Util.Converters import Message, DiscordUser
 from Util.Matchers import NUMBER_MATCHER
 
 
-class Basic(BaseCog):
+class Basic(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

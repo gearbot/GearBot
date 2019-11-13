@@ -6,11 +6,11 @@ from collections import OrderedDict
 import aiohttp
 import discord
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import GearbotLogging, Pages, VersionInfo, Translator
 
 
-class Minecraft(BaseCog):
+class Minecraft(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

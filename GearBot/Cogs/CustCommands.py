@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils
 
-class CustCommands(BaseCog):
+class CustCommands(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

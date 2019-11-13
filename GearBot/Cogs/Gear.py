@@ -4,7 +4,7 @@ from Bot.GearBot import GearBot
 from Util import Permissioncheckers
 
 
-class BaseCog(commands.Cog):
+class Gear(commands.Cog):
     def __init__(self, bot):
         self.bot: GearBot = bot
         name = self.__class__.__name__

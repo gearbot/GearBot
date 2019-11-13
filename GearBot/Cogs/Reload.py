@@ -4,11 +4,11 @@ import os
 from discord.ext import commands
 
 from Bot import TheRealGearBot, Reloader
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils, Update
 
 
-class Reload(BaseCog):
+class Reload(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

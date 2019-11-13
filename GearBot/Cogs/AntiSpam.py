@@ -14,7 +14,7 @@ from discord.member import Member
 from discord.message import Message
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator, MessageUtils, \
     Permissioncheckers
 from Util.Matchers import MENTION_MATCHER, URL_MATCHER
@@ -42,7 +42,7 @@ class ActionHolder:
         self.count = count
 
 
-class AntiSpam(BaseCog):
+class AntiSpam(Gear):
 
     def __init__(self, bot):
         super(AntiSpam, self).__init__(bot)

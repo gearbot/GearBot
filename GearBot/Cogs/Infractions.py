@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
 from Util.Arguments import ArgumentParser
@@ -14,7 +14,7 @@ from Util.Arguments import ArgumentParser
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
 
 
-class Infractions(BaseCog):
+class Infractions(Gear):
 
     @staticmethod
     async def _warn(ctx, target, *, reason, message=True):

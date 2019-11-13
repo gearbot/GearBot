@@ -4,7 +4,7 @@ from discord import TextChannel
 from discord.ext import commands
 from pytz import UnknownTimeZoneError
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
     MessageUtils, Selfroles
 from Util.Converters import LoggingChannel, ListMode
@@ -72,7 +72,7 @@ def gen_override_strings(ctx, perm_dict, prefix = ""):
     return output
 
 
-class ServerAdmin(BaseCog):
+class ServerAdmin(Gear):
     LOGGING_TYPES = [
         "RAID_LOGS",
         "CENSORED_MESSAGES",

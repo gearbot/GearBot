@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import ReactionManager
 
 
-class ReactionHandler(BaseCog):
+class ReactionHandler(Gear):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):

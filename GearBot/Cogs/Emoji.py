@@ -5,12 +5,12 @@ from discord import HTTPException, InvalidArgument, Embed, Role, Emoji
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
 
 
-class Emoji(BaseCog):
+class Emoji(Gear):
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import BaseCog
+from Cogs.BaseCog import Gear
 from Util import Configuration
 
 
-class DMMessages(BaseCog):
+class DMMessages(Gear):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
