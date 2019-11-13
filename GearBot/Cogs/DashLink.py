@@ -12,8 +12,7 @@ from discord.ext import commands
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, GearbotLogging, Translator, server_info, DashConfig, Utils, Permissioncheckers, Update, \
-    DashUtils, InfractionUtils
+from Util import Configuration, GearbotLogging, Translator, DashConfig, Utils, Update, DashUtils
 from Util.DashConfig import ValidationException
 from Util.DashUtils import DASH_PERMS, get_guild_perms
 
@@ -393,9 +392,8 @@ class DashLink(BaseCog):
             await self.send_to_dash("usernames", uid=message["uid"], names=names)
 
         for uid in last_todo:
-            await self.send_to_dash("usernames", uid=message["uid"], names={uid: await Utils.username(uid, redis=False, clean=False)})
-
-
+            await self.send_to_dash("usernames", uid=message["uid"],
+                                    names={uid: await Utils.username(uid, redis=False, clean=False)})
 
     # crowdin
     async def crowdin_webhook(self, message):
