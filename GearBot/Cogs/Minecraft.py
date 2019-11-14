@@ -6,7 +6,7 @@ from collections import OrderedDict
 import aiohttp
 import discord
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import GearbotLogging, Pages, VersionInfo, Translator
 
 

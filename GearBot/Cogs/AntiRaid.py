@@ -5,7 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, GearbotLogging, MessageUtils
 from Util.RaidHandling.RaidShield import RaidShield
 from database.Models import Raider, Raid

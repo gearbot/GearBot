@@ -14,7 +14,7 @@ from discord.member import Member
 from discord.message import Message
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator, MessageUtils, \
     Permissioncheckers
 from Util.Matchers import MENTION_MATCHER, URL_MATCHER

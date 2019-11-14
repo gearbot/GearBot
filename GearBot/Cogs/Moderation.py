@@ -11,7 +11,7 @@ from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConve
 from tortoise.query_utils import Q
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
     Archive, Confirmation, MessageUtils, Questions, server_info, Actions
 from Util.Actions import ActionFailed

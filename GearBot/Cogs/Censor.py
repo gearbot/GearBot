@@ -6,7 +6,7 @@ from discord import DMChannel
 from discord.ext import commands
 from discord.ext.commands import clean_content
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, GearbotLogging, Permissioncheckers, Utils
 from Util.Matchers import INVITE_MATCHER
 

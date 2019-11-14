@@ -6,7 +6,7 @@ from discord import Embed, User, NotFound, Forbidden, DMChannel
 from discord.ext import commands
 
 from Bot import TheRealGearBot
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
 from database.DatabaseConnector import Reminder, ReminderStatus

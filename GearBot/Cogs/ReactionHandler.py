@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import ReactionManager
 
 

@@ -5,7 +5,7 @@ from aiohttp import web
 from discord.ext import commands
 from prometheus_client.exposition import generate_latest
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 
 
 class PromMonitoring(Gear):

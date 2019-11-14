@@ -5,7 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, MessageUtils, Translator, Utils
 from Util.Converters import ApexPlatform
 from Util.JumboGenerator import JumboGenerator

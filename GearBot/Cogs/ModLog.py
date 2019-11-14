@@ -9,7 +9,7 @@ from discord.embeds import EmptyEmbed
 from discord.ext import commands
 from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction

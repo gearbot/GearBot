@@ -4,7 +4,7 @@ from discord import TextChannel
 from discord.ext import commands
 from pytz import UnknownTimeZoneError
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
     MessageUtils, Selfroles
 from Util.Converters import LoggingChannel, ListMode

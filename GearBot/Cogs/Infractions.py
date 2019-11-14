@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
 from Util.Arguments import ArgumentParser

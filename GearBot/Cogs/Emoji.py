@@ -5,7 +5,7 @@ from discord import HTTPException, InvalidArgument, Embed, Role, Emoji
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-from Cogs.BaseCog import Gear
+from Cogs.Gear import Gear
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
 
