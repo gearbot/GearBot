@@ -1,4 +1,4 @@
-discord.py==1.2.3
+discord.py==1.2.5
 peewee==3.10.0
 Pillow==6.2.0
 PyMySQL==0.9.3
