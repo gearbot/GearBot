@@ -1,4 +1,4 @@
-discord.py==1.2.4
+discord.py==1.2.5
 git+https://github.com/tortoise/tortoise-orm@develop
 Pillow==6.2.0
 requests==2.22.0
