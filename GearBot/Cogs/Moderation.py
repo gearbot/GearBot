@@ -411,7 +411,7 @@ class Moderation(Gear):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason, require_on_server=False, confirm=False)
+            failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason, require_on_server=False, confirm=False, check_bot_ability=False)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
