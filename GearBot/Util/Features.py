@@ -15,7 +15,7 @@ def is_logged(guild, feature):
 
 
 requires_logging = {
-    "CENSOR_MESSAGES": "CENSORED_MESSAGES",
+    "CENSOR_MESSAGES": "CENSORING",
     "EDIT_LOGS": "MESSAGE_LOGS"
 }
 

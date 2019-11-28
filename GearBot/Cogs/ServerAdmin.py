@@ -674,7 +674,7 @@ class ServerAdmin(BaseCog):
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
         embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
-            e = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", f)
+            e = Configuration.get_var(ctx.guild.id, t, "ENABLED", f)
             embed.add_field(name=f, value=enabled if e else disabled)
         return embed
 
@@ -686,7 +686,7 @@ class ServerAdmin(BaseCog):
                     counts[i] = 1
                 else:
                     counts[i] +=1
-        return logging not in Features.requires_logging.values() or (logging in counts and counts[logging] > 1)
+        return logging not in Features.requires_logging.values() or (logging in counts and counts[logging] > 1) or Configuration.get_var("MESSAGE_LOGS" if logging == "EDIT_LOGS" else "CENSORING", "ENABLED", False)
 
 
     @features.command(name="disable")
