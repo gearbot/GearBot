@@ -72,7 +72,7 @@ class UserID(Converter):
 
 class Reason(Converter):
     async def convert(self, ctx, argument):
-        argument = argument.strip("|").strip().replace("@everyone", "@\u200beveryone").replace("@here", "@\u200bhere")
+        argument = await Utils.clean(argument.strip("|").strip(), markdown=False, links=False, emoji=False)
         for match in EMOJI_MATCHER.finditer(argument):
             argument = argument.replace(match.group(0), f":{match.group(2)}:")
         if len(argument) > 1800:

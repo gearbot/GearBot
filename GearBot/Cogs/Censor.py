@@ -95,19 +95,17 @@ class Censor(Gear):
             except discord.NotFound as ex:
                 pass
             else:
-                clean_message = await Utils.clean(message.content, message.guild)
+                clean_message = await Utils.clean(message.content, message.guild, markdown=False)
                 GearbotLogging.log_key(message.guild.id, f'censored_message{key}', user=message.author, user_id=message.author.id,
                                        message=clean_message, sequence=bad, channel=message.channel.mention)
                 self.bot.dispatch("user_censored", message)
-                censored = True
         else:
 
-            clean_message = await Utils.clean(message.content, message.guild)
+            clean_message = await Utils.clean(message.content, message.guild, markdown=False)
             GearbotLogging.log_key(message.guild.id, f'censor_message_failed{key}', user=message.author,
                                    user_id=message.author.id, message=clean_message, sequence=bad,
                                    link=message.jump_url)
             self.bot.dispatch("user_censored", message)
-            censored = True
 
     async def censor_invite(self, ctx, code, server_name):
         # Allow for users with a trusted role, or trusted users, to post invite links

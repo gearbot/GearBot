@@ -62,8 +62,20 @@ async def empty_list(ctx, action):
     await message2.delete()
 
 
-async def clean(text, guild: discord.Guild = None, markdown=True, links=True, emoji=True):
+
+replacements = {
+    "`": "ˋ"
+}
+
+def replace_lookalikes(text):
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    return text
+
+
+async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True, lookalikes=True):
     text = str(text)
+
     if guild is not None:
         # resolve user mentions
         for uid in set(ID_MATCHER.findall(text)):
@@ -93,6 +105,9 @@ async def clean(text, guild: discord.Guild = None, markdown=True, links=True, em
 
     urls = set(URL_MATCHER.findall(text))
 
+    if lookalikes:
+        text = replace_lookalikes(text)
+
     if markdown:
         text = escape_markdown(text)
     else:
@@ -112,7 +127,7 @@ async def clean(text, guild: discord.Guild = None, markdown=True, links=True, em
 
 def escape_markdown(text):
     text = str(text)
-    for c in ["\\", "`", "*", "_", "~", "|", "{", ">"]:
+    for c in ["\\", "*", "_", "~", "|", "{", ">"]:
         text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 

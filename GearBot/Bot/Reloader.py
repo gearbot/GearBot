@@ -2,7 +2,7 @@ from Bot import TheRealGearBot
 from Cogs import Gear
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, Converters, Permissioncheckers, \
     VersionInfo, Confirmation, HelpGenerator, InfractionUtils, Archive, DocUtils, JumboGenerator, MessageUtils, Enums, \
-    Matchers, Questions, Selfroles, ReactionManager, server_info, DashConfig, Update, DashUtils, Actions
+    Matchers, Questions, Selfroles, ReactionManager, server_info, DashConfig, Update, DashUtils, Actions, Features
 from Util.RaidHandling import RaidActions, RaidShield
 from database import DBUtils, Models
 
@@ -38,5 +38,6 @@ components = [
     Update,
     Gear,
     DashUtils,
-    Actions
+    Actions,
+    Features
 ]
