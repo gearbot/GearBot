@@ -61,9 +61,13 @@ async def empty_list(ctx, action):
 
 
 
+replacements = {
+    "`": "ˋ"
+}
 
-async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True):
+async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True, lookalikes=True):
     text = str(text)
+
     if guild is not None:
         # resolve user mentions
         for uid in set(ID_MATCHER.findall(text)):
@@ -93,6 +97,10 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
 
     urls = set(URL_MATCHER.findall(text))
 
+    if lookalikes:
+        for k, v in replacements.items():
+            text = text.replace(k, v)
+
     if markdown:
         text = escape_markdown(text)
     else:
@@ -112,7 +120,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
 
 def escape_markdown(text):
     text = str(text)
-    for c in ["\\", "`", "*", "_", "~", "|", "{", ">"]:
+    for c in ["\\", "*", "_", "~", "|", "{", ">"]:
         text = text.replace(c, f"\\{c}")
     return text.replace("@", "@\u200b")
 
@@ -175,7 +183,7 @@ async def get_user(uid, fetch=True):
                     )
 
                     pipeline.expire(f"users:{uid}", 3000) # 5 minute cache life
-                    
+
                     BOT.loop.create_task(pipeline.execute())
 
                 except NotFound:
