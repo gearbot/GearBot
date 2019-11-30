@@ -65,6 +65,12 @@ replacements = {
     "`": "ˋ"
 }
 
+def replace_lookalikes(text):
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    return text
+
+
 async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji=True, lookalikes=True):
     text = str(text)
 
@@ -98,8 +104,7 @@ async def clean(text, guild:discord.Guild=None, markdown=True, links=True, emoji
     urls = set(URL_MATCHER.findall(text))
 
     if lookalikes:
-        for k, v in replacements.items():
-            text = text.replace(k, v)
+        text = replace_lookalikes(text)
 
     if markdown:
         text = escape_markdown(text)
