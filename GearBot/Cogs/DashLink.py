@@ -7,7 +7,7 @@ from datetime import datetime
 
 import aioredis
 from aioredis.pubsub import Receiver
-from discord import Embed, Color, Forbidden
+from discord import Embed, Color, Forbidden, User
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -58,7 +58,7 @@ class DashLink(Gear):
             user_guilds_end=self.user_guilds_end,
             guild_info_watch=self.guild_info_watch,
             guild_info_watch_end=self.guild_info_watch_end,
-            usernames_request=self.usernames_request
+            get_users_info=self.get_users_info
         )
         self.question_handlers = dict(
             heartbeat=self.still_spinning,
@@ -363,19 +363,22 @@ class DashLink(Gear):
             tag_on=None if len(failed) is 0 else f'```{out}```'
         )
 
-    async def usernames_request(self, message):
-        names = dict()
+    async def get_users_info(self, message):
+        info = dict()
         todo = message["ids"].copy()
         # find all in the bot cache and back to
         for uid in message["ids"]:
             user = self.bot.get_user(int(uid))
             if user is not None:
-                names[uid] = str(user)
+                info[uid] = {
+                    "username": str(user),
+                    "avatar": str(user.avatar_url_as(size=128))
+                }
                 todo.remove(uid)
         # send those already, reset list
-        if len(names) > 0:
-            await self.send_to_dash("usernames", uid=message["uid"], names=names)
-            names = dict()
+        if len(info) > 0:
+            await self.send_to_dash("users_info", uid=message["uid"], info=info)
+            info = dict()
 
         # check if we have any of these already in redis manually so we can do a batch, much faster then one by one
         pipeline = self.bot.redis_pool.pipeline()
@@ -386,14 +389,41 @@ class DashLink(Gear):
         for result in results:
             if len(result) is not 0:
                 uid = result["id"]
-                names[uid] = f'{result["name"]}#{result["discriminator"]}'
+                info[uid] = {
+                    "username": f'{result["name"]}#{result["discriminator"]}',
+                    "avatar": result["avatar_url"]
+                }
+
                 last_todo.remove(uid)
-        if len(names) > 0:
-            await self.send_to_dash("usernames", uid=message["uid"], names=names)
+        if len(info) > 0:
+            await self.send_to_dash("users_info", uid=message["uid"], info=info)
 
         for uid in last_todo:
-            await self.send_to_dash("usernames", uid=message["uid"],
-                                    names={uid: await Utils.username(uid, redis=False, clean=False)})
+            user = await Utils.get_user(uid, redis=False)
+            if user is None:
+                await self.send_to_dash("users_info", uid=message["uid"],
+                                        info={
+                                            uid: {
+                                                "username": "UNKNOWN USER",
+                                                "avatar": "/assets/gears/gearWhat.png"
+                                            }
+                                        })
+            elif isinstance(user, User):
+                await self.send_to_dash("users_info", uid=message["uid"],
+                                        info={
+                                            uid: {
+                                                "username": str(user),
+                                                "avatar": str(user.avatar_url_as(size=128))
+                                            }
+                                        })
+            else:
+                await self.send_to_dash("users_info", uid=message["uid"],
+                                        info={
+                                            uid: {
+                                                "username": f'{user["name"]}#{user["discriminator"]}',
+                                                "avatar": user["avatar_url"]
+                                            }
+                                        })
 
     # crowdin
     async def crowdin_webhook(self, message):

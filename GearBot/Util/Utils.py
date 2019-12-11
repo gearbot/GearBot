@@ -151,9 +151,8 @@ async def username(uid, *, redis=True, fetch=True, clean=True):
     else:
         return f"{user.name}#{user.discriminator}"
 
-
+UserClass = namedtuple("UserClass", "name id discriminator bot avatar_url created_at is_avatar_animated mention")
 async def get_user(uid, redis=True, fetch=True):
-    UserClass = namedtuple("UserClass", "name id discriminator bot avatar_url created_at is_avatar_animated mention")
     user = BOT.get_user(uid)
     if user is None:
         if uid in known_invalid_users:
