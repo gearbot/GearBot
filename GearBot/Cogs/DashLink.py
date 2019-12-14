@@ -202,7 +202,7 @@ class DashLink(Gear):
         return_info = {
             "username": user_info.name,
             "discrim": user_info.discriminator,
-            "avatar_url": str(user_info.avatar_url_as(size=256)),
+            "avatar_url": str(user_info.avatar_url_as(size=64)),
             "bot_admin_status": await self.bot.is_owner(user_info) or user_id in Configuration.get_master_var(
                 "BOT_ADMINS", [])
         }
@@ -401,29 +401,23 @@ class DashLink(Gear):
         for uid in last_todo:
             user = await Utils.get_user(uid, redis=False)
             if user is None:
-                await self.send_to_dash("users_info", uid=message["uid"],
-                                        info={
-                                            uid: {
-                                                "username": "UNKNOWN USER",
-                                                "avatar": "/assets/gears/gearWhat.png"
-                                            }
-                                        })
+                name = "UNKNOWN USER"
+                avatar = "/assets/gears/gearWhat.png"
+
             elif isinstance(user, User):
-                await self.send_to_dash("users_info", uid=message["uid"],
-                                        info={
-                                            uid: {
-                                                "username": str(user),
-                                                "avatar": str(user.avatar_url_as(size=128))
-                                            }
-                                        })
+                name = str(user)
+                avatar = str(user.avatar_url_as(size=64))
             else:
-                await self.send_to_dash("users_info", uid=message["uid"],
-                                        info={
-                                            uid: {
-                                                "username": f'{user["name"]}#{user["discriminator"]}',
-                                                "avatar": user["avatar_url"]
-                                            }
-                                        })
+                name = f'{user["name"]}#{user["discriminator"]}'
+                avatar = user["avatar_url"]
+
+            await self.send_to_dash("users_info", uid=message["uid"],
+                                    info={
+                                        uid: {
+                                            "username": name,
+                                            "avatar": avatar
+                                        }
+                                    })
 
     # crowdin
     async def crowdin_webhook(self, message):
