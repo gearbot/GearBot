@@ -879,8 +879,6 @@ class ServerAdmin(Gear):
         blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
         if word.lower() in blacklist:
             await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
-        elif len(word) < 3:
-            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
         else:
             blacklist.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
@@ -920,8 +918,6 @@ class ServerAdmin(Gear):
         blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
         if word.lower() in blacklist:
             await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
-        elif len(word) < 3:
-            await MessageUtils.send_to(ctx, "NO", "entry_too_short")
         else:
             blacklist.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)

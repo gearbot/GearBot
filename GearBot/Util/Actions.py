@@ -59,7 +59,7 @@ def can_act(action, ctx, user, require_on_server=True, action_bot=True, check_bo
     if not isinstance(user, Member) and require_on_server:
         return False, Translator.translate("user_not_on_server", ctx.guild.id)
 
-    if user.top_role >= ctx.guild.me.top_role and check_bot_ability:
+    if check_bot_ability and user.top_role >= ctx.guild.me.top_role:
         return False, Translator.translate(f'{action}_unable', ctx.guild.id, user=Utils.clean_user(user))
 
     if ((ctx.author != user and ctx.author.top_role > user.top_role) or (
