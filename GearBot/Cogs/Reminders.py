@@ -29,7 +29,8 @@ class Reminders(BaseCog):
         """remind_help"""
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
-
+            
+    @commands.bot_has_permissions(add_reactions=True)
     @remind.command("me", aliases=["add", "m", "a"])
     async def remind_me(self, ctx, duration: Duration, *, reminder: ReminderText):
         """remind_me_help"""
