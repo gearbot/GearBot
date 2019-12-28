@@ -56,7 +56,10 @@ async def mass_action(ctx, name, targets, handler, allow_duplicates=False, allow
 
 
 def can_act(action, ctx, user, require_on_server=True, action_bot=True, check_bot_ability=True):
-    if not isinstance(user, Member) and require_on_server:
+    is_member = isinstance(user, Member)
+    if not require_on_server and not is_member:
+        return True, None
+    if (not is_member) and require_on_server:
         return False, Translator.translate("user_not_on_server", ctx.guild.id)
 
     if check_bot_ability and user.top_role >= ctx.guild.me.top_role:
