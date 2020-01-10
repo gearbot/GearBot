@@ -1,5 +1,8 @@
-{
+ {
   "too_many_roles_to_list": "``<Too many roles to list>``",
+  "search_help": "Searches for user(s) in the current server.",
+  "search_found": "This is what I was able to find.\n```{names}```",
+  "search_not_found": "No users were found in your search using {search}. Either they are not in the current guild the search is launched in, or the search may be too specific.",
   "seen_fail": "I've never seen {user} (``{user_id}``) talk before.",
   "seen_success": "I last saw {user} (``{user_id}``) on {date}.",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
