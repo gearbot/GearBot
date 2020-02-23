@@ -313,10 +313,6 @@ async def handle_database_error(bot):
 
 
 async def handle_exception(exception_type, bot, exception, event=None, message=None, ctx = None, *args, **kwargs):
-    # shut up cloudflare
-    if isinstance(exception, KeyError) and "content-type" in str(exception):
-        return
-
     bot.errors = bot.errors + 1
     with sentry_sdk.push_scope() as scope:
         embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
