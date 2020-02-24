@@ -153,7 +153,7 @@ class Admin(BaseCog):
     @commands.command()
     async def blacklist_user(self, ctx, user:DiscordUser):
         for guild in self.bot.guilds:
-            if guild.owner.id == user.id:
+            if guild.owner is not None and guild.owner.id == user.id:
                 await guild.leave()
         blocked = Configuration.get_persistent_var("user_blacklist", [])
         blocked.append(user.id)
