@@ -151,15 +151,15 @@ async def updater(cog:BCVersionChecker):
                         else:
                             notify_channel.send(f"{Emoji.get_chat_emoji('WARNING')} No blog post data found, notifying <@180057061353193472>")
 
-                        message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
-                        code, output, errors = await Utils.execute(f'cd BuildCraft/uploader && gradle curseforge -Pnew_version="{latestBC}"')
-                        GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output}\n------stderr------\n{errors}")
-                        if code is 0:
-                            content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded"
-                            await message.edit(content=content)
-                        else:
-                            content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>"
-                            await notify_channel.send(content)
+                        # message = await notify_channel.send(f"{Emoji.get_chat_emoji('REFRESH')} Uploading files to CurseForge...")
+                        # code, output, errors = await Utils.execute(f'cd BuildCraft/uploader && gradle curseforge -Pnew_version="{latestBC}"')
+                        # GearbotLogging.info(f"Upload to CF complete\n)------stdout------\n{output}\n------stderr------\n{errors}")
+                        # if code is 0:
+                        #     content = f"{Emoji.get_chat_emoji('YES')} All archives successfully uploaded"
+                        #     await message.edit(content=content)
+                        # else:
+                        #     content = f"{Emoji.get_chat_emoji('NO')} Upload failed with code {code}, notifying <@106354106196570112>"
+                        #     await notify_channel.send(content)
 
             # update FAQs if needed
             async with session.get('https://mod-buildcraft.com/website_src/faq.md') as reply:
