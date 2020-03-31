@@ -201,7 +201,7 @@ class AntiSpam(BaseCog):
         a.count -= v.count
 
     async def warn_punishment(self, v: Violation):
-        reason = self.assemble_reason(v)
+        reason = v.bucket["PUNISHMENT"].get("REASON", self.assemble_reason(v))
         i = InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Warn', reason)
         GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
                                moderator=Utils.clean_user(v.guild.me), reason=reason,
