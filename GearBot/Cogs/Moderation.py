@@ -557,6 +557,10 @@ class Moderation(BaseCog):
 
     async def _forceban(self, ctx, user, reason):
         # not banned, wack with the hammer
+        if user.discriminator == '0000':
+            await MessageUtils.send_to(ctx, 'NO', 'forceban_unable_sytem_user')
+            return
+        
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
