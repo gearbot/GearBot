@@ -48,7 +48,11 @@ class Infractions(BaseCog):
 
             message = MessageUtils.assemble(ctx, "THINK", "warn_to_feedback")
             await Confirmation.confirm(ctx, message, on_yes=yes)
-
+        
+        if member.discriminator == '0000':
+            await MessageUtils.send_to(ctx, 'NO', 'cant_warn_system_user')
+            return
+                        
         if member.bot:
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
