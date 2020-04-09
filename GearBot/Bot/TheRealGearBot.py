@@ -149,8 +149,7 @@ async def on_message(bot, message:Message):
             except Forbidden:
                 pass  # closed DMs
         else:
-            f = time.perf_counter_ns if hasattr(time, "perf_counter_ns") else time.perf_counter
-            start = f()
+            ctx.command_started_at = time.perf_counter_ns()
             await bot.invoke(ctx)
 
 
