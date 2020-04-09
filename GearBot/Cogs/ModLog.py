@@ -436,8 +436,6 @@ class ModLog(BaseCog):
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
-        end = time.perf_counter_ns()
-        GearbotLogging.info(f"{ctx.message.content.split(' ')[:2]} command completed in {(end - ctx.command_started_at) / 1000000} ms")
         if ctx.guild is not None and Features.is_logged(ctx.guild.id, "MISC"):
             clean_content = await Utils.clean(ctx.message.content, ctx.guild, markdown=False, links=False, emoji=False)
             GearbotLogging.log_key(ctx.guild.id, 'command_used', user=Utils.escape_markdown(ctx.author), user_id=ctx.author.id, channel=ctx.message.channel.mention,
