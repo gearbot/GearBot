@@ -46,9 +46,8 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     else:
         infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
                 ("[user]" in fields and isinstance(query, int) and Infraction.user_id == query) |
-                ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query)
-                # ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower()))
-        )).order_by(
+                ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
+                ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
             Infraction.id.desc()).limit(int(amount))
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', guild_id))
