@@ -216,6 +216,7 @@ class ModLog(BaseCog):
                     clean_new = await Utils.clean(after, channel.guild)
                     GearbotLogging.log_raw(channel.guild.id, "edit_logging", f"**Old:** {clean_old}")
                     GearbotLogging.log_raw(channel.guild.id, "edit_logging", f"**New:** {clean_new}")
+                GearbotLogging.info(f"updated a message: {event.channel_id}:{event.message_id}")
             await MessageUtils.update_message(self.bot, event.message_id, after, event.data["pinned"])
 
     @commands.Cog.listener()
