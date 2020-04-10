@@ -189,6 +189,7 @@ class ModLog(BaseCog):
                     GearbotLogging.log_raw(c.guild.id, key, f'```\n{Utils.trim_message(event.data["content"], 1990)}\n```')
                     GearbotLogging.log_raw(c.guild.id, key, f"{Translator.translate('jump_link', c.guild.id)}: {MessageUtils.construct_jumplink(c.guild.id, c.id, event.message_id)}")
                     await MessageUtils.update_message(self.bot, event.message_id, message.content, new)
+                    GearbotLogging.info(f"updated a message: {event.channel_id}:{event.message_id}")
                     return
 
             mc = message.content

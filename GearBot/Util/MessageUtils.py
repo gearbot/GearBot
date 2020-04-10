@@ -51,10 +51,7 @@ async def update_message(bot, message_id, content, pinned):
         pipe.hmset_dict(f"messages:{message_id}", content=content)
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
         await pipe.execute()
-    start = time.perf_counter_ns()
     LoggedMessage.update(content=content, pinned=pinned).where(LoggedMessage.messageid == message_id).execute()
-    end = time.perf_counter_ns()
-    GearbotLogging.info(f"updated message in the database in {(end - start) / 1000000} ms")
 
 def assemble(destination, emoji, m, translate=True, **kwargs):
     translated = Translator.translate(m, destination, **kwargs) if translate else m
