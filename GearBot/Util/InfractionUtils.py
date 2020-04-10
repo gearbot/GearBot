@@ -1,5 +1,6 @@
 import asyncio
 import re
+import time
 from datetime import datetime
 
 from aioredis import ReplyError
@@ -25,6 +26,7 @@ def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=Tru
 cleaners = dict()
 
 def clear_cache(guild_id):
+    GearbotLogging.info(f"reseting cache for {guild_id}")
     if guild_id in cleaners:
         cleaners[guild_id].cancel()
     cleaners[guild_id] = bot.loop.create_task(cleaner(guild_id))
@@ -41,6 +43,7 @@ async def cleaner(guild_id):
 
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
+    start = time.perf_counter_ns()
     if query == "":
         infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
     else:
@@ -49,6 +52,8 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
                 ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
                 ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
             Infraction.id.desc()).limit(int(amount))
+    end = time.perf_counter_ns()
+    GearbotLogging.info(f"fetched infractions from the database in {(end - start) /1000000}ms")
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', guild_id))
     longest_timestamp = max(len(Translator.translate('timestamp', guild_id)), 19)
