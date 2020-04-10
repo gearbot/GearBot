@@ -26,8 +26,6 @@ async def get_message_data(bot, message_id):
     if message is None:
         start = time.perf_counter_ns()
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
-        end = time.perf_counter_ns()
-        GearbotLogging.info(f"fetched message from the database in {(end - start) / 1000000} ms")
     return message
 
 async def insert_message(bot, message, redis=True):
