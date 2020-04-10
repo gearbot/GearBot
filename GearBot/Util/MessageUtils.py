@@ -5,7 +5,7 @@ from datetime import datetime
 
 from discord import Object, HTTPException, MessageType
 
-from Util import Translator, Emoji, Archive
+from Util import Translator, Emoji, Archive, GearbotLogging
 from database import DBUtils
 from database.DatabaseConnector import LoggedMessage
 
@@ -24,7 +24,10 @@ async def get_message_data(bot, message_id):
         if len(parts) is 6:
             message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1')
     if message is None:
+        start = time.perf_counter_ns()
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
+        end = time.perf_counter_ns()
+        GearbotLogging.info(f"fetched message from the database in {(end - start) / 1000000} ms")
     return message
 
 async def insert_message(bot, message, redis=True):
@@ -50,7 +53,10 @@ async def update_message(bot, message_id, content, pinned):
         pipe.hmset_dict(f"messages:{message_id}", content=content)
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
         await pipe.execute()
+    start = time.perf_counter_ns()
     LoggedMessage.update(content=content, pinned=pinned).where(LoggedMessage.messageid == message_id).execute()
+    end = time.perf_counter_ns()
+    GearbotLogging.info(f"updated message in the database in {(end - start) / 1000000} ms")
 
 def assemble(destination, emoji, m, translate=True, **kwargs):
     translated = Translator.translate(m, destination, **kwargs) if translate else m

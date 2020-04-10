@@ -1,11 +1,14 @@
+import time
+
 from discord import MessageType
 from peewee import IntegrityError
 
+from Util import GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 def insert_message(message):
-
+    start = time.perf_counter_ns()
     try:
         message_type = message.type
 
@@ -24,4 +27,6 @@ def insert_message(message):
                                        messageid=message.id)
     except IntegrityError:
         return message
+    end = time.perf_counter_ns()
+    GearbotLogging.info(f"inserted message into the database in {(end - start) / 1000000} ms")
     return logged
