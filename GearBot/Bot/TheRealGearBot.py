@@ -149,10 +149,7 @@ async def on_message(bot, message:Message):
             except Forbidden:
                 pass  # closed DMs
         else:
-            start = time.perf_counter_ns()
             await bot.invoke(ctx)
-            end = time.perf_counter_ns()
-            GearbotLogging.info(f"{ctx.message.content.split(' ')[:2]} command completed in {(end - start) / 1000000} ms")
 
 
 async def on_guild_join(guild):

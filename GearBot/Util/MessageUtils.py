@@ -24,7 +24,6 @@ async def get_message_data(bot, message_id):
         if len(parts) is 6:
             message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1')
     if message is None:
-        start = time.perf_counter_ns()
         message = LoggedMessage.get_or_none(LoggedMessage.messageid == message_id)
     return message
 
