@@ -187,7 +187,7 @@ class Message(Converter):
     @staticmethod
     async def fetch_messages(ctx, message_id, channel_id):
         message = None
-        logged_message = LoggedMessage.get_or_none(messageid=message_id).prefetch_related("attachments")
+        logged_message = await LoggedMessage.get_or_none(messageid=message_id).prefetch_related("attachments")
         async with ctx.typing():
             if logged_message is None:
                 if channel_id is None:
