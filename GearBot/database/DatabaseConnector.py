@@ -18,7 +18,7 @@ class LoggedAttachment(Model):
     id = fields.BigIntField(pk=True, generated=False)
     name = fields.CharField(max_length=100)
     isImage = fields.BooleanField()
-    messageid = fields.ForeignKeyField("models.LoggedMessage", related_name='attachments', source_field='messageid')
+    message = fields.ForeignKeyField("models.LoggedMessage", related_name='attachments', source_field='messageid')
 
 
 class CustomCommand(Model):
