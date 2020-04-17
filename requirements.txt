@@ -1,5 +1,5 @@
 discord.py==git+https://github.com/Rapptz/discord.py@sharding-rework
-peewee==3.10.0
+tortoise-orm==0.16.5
 Pillow==6.2.0
 PyMySQL==0.9.3
 requests==2.22.0

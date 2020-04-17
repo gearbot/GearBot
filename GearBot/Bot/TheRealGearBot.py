@@ -36,8 +36,7 @@ async def initialize(bot, startup=False):
     try:
         #database
         GearbotLogging.info("Connecting to the database.")
-        DatabaseConnector.init()
-        bot.database_connection = DatabaseConnector.connection
+        await DatabaseConnector.init()
         GearbotLogging.info("Database connection established.")
 
         Emoji.initialize(bot)
@@ -111,7 +110,6 @@ async def on_ready(bot):
 
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()
-        bot.loop.create_task(keepDBalive(bot))  # ping DB every hour so it doesn't run off
         gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
         a = " ".join(gears)
         b = " ".join(reversed(gears))
@@ -119,12 +117,6 @@ async def on_ready(bot):
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
     else:
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
-
-
-async def keepDBalive(bot):
-    while not bot.is_closed():
-        bot.database_connection.connection().ping(True)
-        await asyncio.sleep(3600)
 
 
 async def on_message(bot, message:Message):
@@ -223,8 +215,6 @@ async def on_command_error(bot, ctx: commands.Context, error):
         await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=Utils.replace_lookalikes(str(error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.CommandNotFound):
         return
-    elif isinstance(error, PeeweeException):
-        await handle_database_error(bot)
 
     else:
         await handle_exception("Command execution failed", bot, error.original if hasattr(error, "original") else error, ctx=ctx)
@@ -396,8 +386,6 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
         GearbotLogging.error("\n".join(lines))
 
 
-        if isinstance(exception, PeeweeException):
-            await handle_database_error(bot)
 
         for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
             if isinstance(exception, t):

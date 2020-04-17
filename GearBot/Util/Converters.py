@@ -142,10 +142,10 @@ class Message(Converter):
             if message is None:
                 raise TranslatedBadArgument('unknown_message', ctx)
             if logged is None and message is not None and self.insert:
-                logged = DBUtils.insert_message(message)
+                logged =await DBUtils.insert_message(message)
             if logged is not None and logged.content != message.content:
                 logged.content = message.content
-                logged.save()
+                await logged.save()
         if message.channel != ctx.channel and self.local_only:
             raise TranslatedBadArgument('message_wrong_channel', ctx)
         return message
@@ -187,7 +187,7 @@ class Message(Converter):
     @staticmethod
     async def fetch_messages(ctx, message_id, channel_id):
         message = None
-        logged_message = LoggedMessage.get_or_none(messageid=message_id)
+        logged_message = LoggedMessage.get_or_none(messageid=message_id).prefetch_related("attachments")
         async with ctx.typing():
             if logged_message is None:
                 if channel_id is None:
@@ -307,7 +307,7 @@ class ServerInfraction(Converter):
             argument = int(argument)
         except ValueError:
             raise TranslatedBadArgument('NaN', ctx)
-        infraction = Infraction.get_or_none(id=argument, guild_id=ctx.guild.id)
+        infraction = await Infraction.get_or_none(id=argument, guild_id=ctx.guild.id)
         if infraction is None:
             raise TranslatedBadArgument('inf_not_found', ctx, id=argument)
         else:

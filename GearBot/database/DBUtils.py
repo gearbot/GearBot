@@ -7,7 +7,7 @@ from Util import GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
-def insert_message(message):
+async def insert_message(message):
     try:
         message_type = message.type
 
@@ -16,12 +16,12 @@ def insert_message(message):
         else:
             if not isinstance(message_type, int):
                 message_type = message_type.value
-        logged = LoggedMessage.create(messageid=message.id, content=message.content,
+        logged = await LoggedMessage.create(messageid=message.id, content=message.content,
                                    author=message.author.id,
                                    channel=message.channel.id, server=message.guild.id,
                                    type=message_type, pinned=message.pinned)
         for a in message.attachments:
-            LoggedAttachment.create(id=a.id, name=a.filename,
+            await LoggedAttachment.create(id=a.id, name=a.filename,
                                        isImage=(a.width is not None or a.width is 0),
                                        messageid=message.id)
     except IntegrityError:

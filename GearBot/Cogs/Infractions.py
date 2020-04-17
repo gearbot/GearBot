@@ -16,7 +16,7 @@ class Infractions(BaseCog):
 
     @staticmethod
     async def _warn(ctx, target, *, reason, message=True):
-        i = InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
+        i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
         name = Utils.clean_user(target)
         if message:
             await MessageUtils.send_to(ctx, 'YES', 'warning_added', user=name, inf=i.id)
@@ -151,7 +151,7 @@ class Infractions(BaseCog):
         mod = await Utils.get_user(infraction.mod_id)
 
         async def yes():
-            infraction.delete_instance()
+            await infraction.delete()
             await MessageUtils.send_to(ctx, "YES", "inf_delete_deleted", id=infraction.id)
             GearbotLogging.log_key(ctx.guild.id, 'inf_delete_log', id=infraction.id, target=Utils.clean_user(target),
                                    target_id=target.id, mod=Utils.clean_user(mod), mod_id=mod.id if mod is not None else 0, reason=reason,
@@ -166,7 +166,7 @@ class Infractions(BaseCog):
     async def claim(self, ctx, infraction: ServerInfraction):
         """inf_claim_help"""
         infraction.mod_id = ctx.author.id
-        infraction.save()
+        await infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_claimed', inf_id=infraction.id)
         InfractionUtils.clear_cache(ctx.guild.id)
 

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
-class ReminderStatus(Enum):
+class ReminderStatus(IntEnum):
     Pending = 1
     Delivered = 2
     Failed = 3

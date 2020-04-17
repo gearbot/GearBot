@@ -46,10 +46,15 @@ class Basic(BaseCog):
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
                               description=
-                              MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears', duration=Translator.translate('dhms', ctx, days=days, hours=hours, minutes=minutes, seconds=seconds)) + "\n"+
-                              MessageUtils.assemble(ctx, 'GOLD', 'about_messages', user_messages=user_messages, bot_messages=bot_messages, self_messages=self_messages) + "\n"+
+                              MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears',
+                                                    duration=Translator.translate('dhms', ctx, days=days, hours=hours,
+                                                                                  minutes=minutes,
+                                                                                  seconds=seconds)) + "\n" +
+                              MessageUtils.assemble(ctx, 'GOLD', 'about_messages', user_messages=user_messages,
+                                                    bot_messages=bot_messages, self_messages=self_messages) + "\n" +
                               MessageUtils.assemble(ctx, 'IRON', 'about_grinders', errors=self.bot.errors) + "\n" +
-                              MessageUtils.assemble(ctx, 'STONE', 'about_commands', commandCount=self.bot.commandCount, custom_command_count=self.bot.custom_command_count) + "\n" +
+                              MessageUtils.assemble(ctx, 'STONE', 'about_commands', commandCount=self.bot.commandCount,
+                                                    custom_command_count=self.bot.custom_command_count) + "\n" +
                               MessageUtils.assemble(ctx, 'WOOD', 'about_guilds', guilds=len(self.bot.guilds)) + "\n" +
                               MessageUtils.assemble(ctx, 'INNOCENT', 'about_users', total=total, unique=unique) + "\n" +
                               MessageUtils.assemble(ctx, 'TACO', 'about_tacos', tacos=tacos) + "\n" +
@@ -57,7 +62,8 @@ class Basic(BaseCog):
                               MessageUtils.assemble(ctx, 'TODO', 'about_stats'))
 
         click_here = Translator.translate('click_here', ctx)
-        embed.add_field(name=Translator.translate('support_server', ctx), value=f"[{click_here}](https://discord.gg/vddW3D9)")
+        embed.add_field(name=Translator.translate('support_server', ctx),
+                        value=f"[{click_here}](https://discord.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
@@ -71,14 +77,14 @@ class Basic(BaseCog):
         message = await ctx.send(":ping_pong:")
         t2 = time.perf_counter()
         rest = round((t2 - t1) * 1000)
-        latency = round(self.bot.latency*1000, 2)
-        await message.edit(content=f":hourglass: {Translator.translate('ping_pong', ctx, rest=rest, latency=latency)} :hourglass:")
-
+        latency = round(self.bot.latency * 1000, 2)
+        await message.edit(
+            content=f":hourglass: {Translator.translate('ping_pong', ctx, rest=rest, latency=latency)} :hourglass:")
 
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
-    async def quote(self, ctx: commands.Context, *, message:Message):
+    async def quote(self, ctx: commands.Context, *, message: Message):
         """quote_help"""
         await ctx.trigger_typing()
         member = message.guild.get_member(ctx.author.id)
@@ -91,7 +97,7 @@ class Basic(BaseCog):
                     await MessageUtils.send_to(ctx, 'NO', 'quote_nsfw_refused')
                 else:
                     attachment = None
-                    attachments = LoggedAttachment.select().where(LoggedAttachment.messageid == message.id)
+                    attachments = await LoggedAttachment.filter(messageid=message.id)
                     if len(attachments) == 1:
                         attachment = attachments[0]
                     embed = discord.Embed(colour=discord.Color(0xd5fff),
@@ -130,9 +136,6 @@ class Basic(BaseCog):
             else:
                 await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
 
-
-
-
     @commands.command()
     async def coinflip(self, ctx, *, thing: str = ""):
         """coinflip_help"""
@@ -145,9 +148,6 @@ class Basic(BaseCog):
             await ctx.send(Translator.translate("coinflip_yes", ctx, thing=thing))
         else:
             await ctx.send(Translator.translate("coinflip_no", ctx, thing=thing))
-
-
-
 
     @commands.command(aliases=["selfrole", "self_roles", "selfroles"])
     @commands.bot_has_permissions(embed_links=True)
@@ -177,7 +177,6 @@ class Basic(BaseCog):
                 else:
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
-
     @commands.command()
     async def help(self, ctx, *, query: str = None):
         """help_help"""
@@ -196,7 +195,8 @@ class Basic(BaseCog):
                 "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
                 query=query_clean)), None, False
         eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(pages) > 1
+        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
+            pages) > 1
 
     async def update_help(self, ctx, message, page_num, action, data):
         pages = await self.get_help_pages(ctx, data.get("query", None))
@@ -227,7 +227,7 @@ class Basic(BaseCog):
         return None
 
     @commands.command()
-    async def uid(self, ctx, *, text:str):
+    async def uid(self, ctx, *, text: str):
         """uid_help"""
         parts = set()
         for p in set(NUMBER_MATCHER.findall(text)):
@@ -275,7 +275,7 @@ class Basic(BaseCog):
         GearbotLogging.info("Selfrole view updater enabled")
         while self.running:
             guild_id = await self.bot.wait_for("self_roles_update")
-            #make sure we shouldn't have terminated yet
+            # make sure we shouldn't have terminated yet
             if not self.running:
                 return
             todo = await Selfroles.self_cleaner(self.bot, guild_id)

@@ -92,9 +92,9 @@ class Mute(RaidAction):
                 await TheRealGearBot.handle_exception('RAID MUTE FAILURE', bot, ex)
             finally:
                 until = time.time() + duration
-                i = InfractionUtils.add_infraction(member.guild.id, member.id, member.guild.me.id, "Mute", reason,
+                i = await InfractionUtils.add_infraction(member.guild.id, member.id, member.guild.me.id, "Mute", reason,
                                                    end=until)
-                DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
+                await DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
@@ -121,12 +121,12 @@ class Kick(RaidAction):
                 user_id=member.id)
             await TheRealGearBot.handle_exception('RAID KICK FAILURE', bot, ex)
         finally:
-            i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
+            i = await  InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
             GearbotLogging.log_key(member.guild.id, 'kick_log',
                                    user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
                                    reason=reason, inf=i.id)
-            DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
+            await DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
@@ -152,7 +152,7 @@ class Ban(RaidAction):
                 user_id=member.id)
             await TheRealGearBot.handle_exception('RAID BAN FAILURE', bot, ex)
         finally:
-            i = InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, "Ban", reason)
+            i = await InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, "Ban", reason)
             GearbotLogging.log_key(member.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(bot.user), moderator_id=bot.user.id,
                                    reason=reason, inf=i.id)

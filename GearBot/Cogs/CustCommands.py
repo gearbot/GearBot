@@ -19,7 +19,7 @@ class CustCommands(BaseCog):
     async def reloadCommands(self):
         for guild in self.bot.guilds:
             self.commands[guild.id] = dict()
-            for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):
+            for command in await CustomCommand.filter(serverid = guild.id):
                 self.commands[guild.id][command.trigger] = command.response
         self.loaded = True
 
@@ -30,8 +30,8 @@ class CustCommands(BaseCog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         del self.commands[guild.id]
-        for command in CustomCommand.select().where(CustomCommand.serverid == guild.id):
-            command.delete_instance()
+        await CustomCommand.filter(serverid = guild.id).delete()
+
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
@@ -65,9 +65,9 @@ class CustCommands(BaseCog):
         else:
             trigger = trigger.lower()
             trigger = await Utils.clean(trigger)
-            command = CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
+            command = await CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
-                CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
+                await CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
                 self.commands[ctx.guild.id][trigger] = reply
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
             else:
@@ -87,7 +87,7 @@ class CustCommands(BaseCog):
         if len(trigger) > 20:
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         elif trigger in self.commands[ctx.guild.id]:
-            CustomCommand.get(serverid = ctx.guild.id, trigger=trigger).delete_instance()
+            await CustomCommand.filter(serverid = ctx.guild.id, trigger=trigger).delete()
             del self.commands[ctx.guild.id][trigger]
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")
         else:
@@ -102,13 +102,13 @@ class CustCommands(BaseCog):
         if reply is None:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_empty_reply', ctx)}")
         else:
-            command = CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
+            command = await CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
             if command is None:
                 await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
                 await ctx.invoke(self.create, trigger, reply=reply)
             else:
                 command.response = reply
-                command.save()
+                await command.save()
                 self.commands[ctx.guild.id][trigger] = reply
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 

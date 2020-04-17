@@ -6,6 +6,7 @@ from datetime import datetime
 from aioredis import ReplyError
 from discord import NotFound
 from peewee import fn
+from tortoise.query_utils import Q
 
 from Bot import GearBot
 from Util import Pages, Utils, Translator, GearbotLogging, Emoji, ReactionManager
@@ -17,9 +18,9 @@ def initialize(gearbot):
     global bot
     bot = gearbot
 
-def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
-    i = Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
-                      start=datetime.now(), end=end, active=active)
+async def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
+    i = await Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
+                      start=str(datetime.now()), end=end, active=active)
     clear_cache(guild_id)
     return i
 
@@ -44,13 +45,17 @@ async def cleaner(guild_id):
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
     if query == "":
-        infs = Infraction.select().where(Infraction.guild_id == guild_id).order_by(Infraction.id.desc()).limit(50)
+        infs = await Infraction.filter(guild_id = guild_id).order_by("-id").limit(50)
     else:
-        infs = Infraction.select().where((Infraction.guild_id == guild_id) & (
-                ("[user]" in fields and isinstance(query, int) and Infraction.user_id == query) |
-                ("[mod]" in fields and isinstance(query, int) and Infraction.mod_id == query) |
-                ("[reason]" in fields and fn.lower(Infraction.reason).contains(str(query).lower())))).order_by(
-            Infraction.id.desc()).limit(int(amount))
+        subfilters = []
+        if "[user]" in fields and isinstance(query, int):
+            subfilters.append(Q(user_id=query))
+        if "[mod]" in fields and isinstance(query, int):
+            subfilters.append(Q(mod_id=query))
+        if "[reason]" in fields:
+            subfilters.append(Q(reason__icontains=str(query)))
+
+        infs = await Infraction.filter(Q(Q(*subfilters, join_type="OR"), guild_id=guild_id, join_type="AND")).order_by("-id").limit(int(amount))
     longest_type = 4
     longest_id = len(str(infs[0].id)) if len(infs) > 0 else len(Translator.translate('id', guild_id))
     longest_timestamp = max(len(Translator.translate('timestamp', guild_id)), 19)

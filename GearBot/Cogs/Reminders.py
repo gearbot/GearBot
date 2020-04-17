@@ -9,7 +9,7 @@ from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
-from database.DatabaseConnector import Reminder, ReminderStatus
+from database.DatabaseConnector import Reminder
 
 
 class Reminders(BaseCog):
@@ -73,9 +73,9 @@ class Reminders(BaseCog):
 
         else:
             dm = True
-        Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
+        await Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
                         to_remind=await Utils.clean(reminder, markdown=False, links=False, emoji=False),
-                        time=time.time() + duration_seconds, status=ReminderStatus.Pending,
+                        time=datetime.fromtimestamp(time.time() + duration_seconds), send=datetime.now(), status=1,
                         guild_id=ctx.guild.id if ctx.guild is not None else "@me", message_id=ctx.message.id)
         mode = "dm" if dm else "here"
         await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
@@ -87,7 +87,7 @@ class Reminders(BaseCog):
             now = datetime.fromtimestamp(time.time())
             limit = datetime.fromtimestamp(time.time() + 30)
 
-            for r in Reminder.select().where(Reminder.time <= limit, Reminder.status == ReminderStatus.Pending):
+            for r in await Reminder.filter(time__lt = limit, status = 1):
                 if r.id not in self.handling:
                     self.handling.add(r.id)
                     self.bot.loop.create_task(
@@ -107,9 +107,9 @@ class Reminders(BaseCog):
         first = dm if r.dm else channel
         alternative = channel if r.dm else dm
 
-        new_status = ReminderStatus.Delivered if (await self.attempt_delivery(first, r) or await self.attempt_delivery(alternative, r)) else ReminderStatus.Failed
+        new_status = 2 if (await self.attempt_delivery(first, r) or await self.attempt_delivery(alternative, r)) else 3
         r.status = new_status
-        r.save()
+        await r.save()
 
     async def attempt_delivery(self, location, package):
         try:
