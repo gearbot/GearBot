@@ -36,8 +36,8 @@ class Infraction(Model):
     mod_id = fields.BigIntField()
     type = fields.CharField(max_length=10, collation="utf8mb4_general_ci")
     reason = fields.CharField(max_length=2000, collation="utf8mb4_general_ci")
-    start = fields.DatetimeField()
-    end = fields.DatetimeField(null=True)
+    start = fields.BigIntField()
+    end = fields.BigIntField(null=True)
     active = fields.BooleanField(default=True)
 
 

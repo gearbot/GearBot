@@ -20,7 +20,7 @@ def initialize(gearbot):
 
 async def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
     i = await Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
-                      start=datetime.now(), end=end, active=active)
+                      start=datetime.now().toordinal(), end=end, active=active)
     clear_cache(guild_id)
     return i
 
