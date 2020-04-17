@@ -23,7 +23,7 @@ async def insert_message(message):
         for a in message.attachments:
             await LoggedAttachment.create(id=a.id, name=a.filename,
                                        isImage=(a.width is not None or a.width is 0),
-                                       message=message)
+                                       message=logged)
     except IntegrityError:
         return message
     return logged
