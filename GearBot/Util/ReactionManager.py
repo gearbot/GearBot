@@ -110,7 +110,7 @@ async def register(bot, message_id, channel_id, type, pipe=None, **kwargs):
         pipe = bot.redis_pool.pipeline()
     key = f"reactor:{message_id}"
     pipe.hmset_dict(key, message_id=message_id, channel_id=channel_id, type=type, **kwargs)
-    pipe.expire(key, kwargs.get("duration", 60*60))
+    pipe.expire(key, kwargs.get("duration", 60*60*8))
     await pipe.execute()
 
 
