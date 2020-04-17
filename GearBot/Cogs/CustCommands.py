@@ -119,7 +119,7 @@ class CustCommands(BaseCog):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         prefix = Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
-        if message.content.startswith(prefix, 0):
+        if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
                     command_content = self.commands[message.guild.id][trigger].replace("@", "@\u200b")
