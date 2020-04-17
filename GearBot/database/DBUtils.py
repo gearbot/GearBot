@@ -1,7 +1,7 @@
 import time
 
 from discord import MessageType
-from peewee import IntegrityError
+from tortoise.exceptions import IntegrityError
 
 from Util import GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
