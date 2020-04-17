@@ -642,7 +642,7 @@ class Moderation(BaseCog):
                                 await target.add_roles(role, reason=Utils.trim_message(
                                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
                                     500))
-                                until = datetime.datetime.fromtimestamp(time.time() + duration_seconds)
+                                until = time.time() + duration_seconds
                                 i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
                                                                end=until)
                                 await MessageUtils.send_to(ctx, 'MUTE', 'mute_confirmation', user=Utils.clean_user(target),
@@ -657,7 +657,7 @@ class Moderation(BaseCog):
                             else:
                                 d = f'{duration.length} {duration.unit}'
                                 async def extend():
-                                    infraction.end += datetime.timedelta(seconds=duration_seconds)
+                                    infraction.end += duration_seconds
                                     await infraction.save()
                                     await MessageUtils.send_to(ctx, 'YES', 'mute_duration_extended', duration=d, end=infraction.end)
                                     GearbotLogging.log_key(ctx.guild.id, 'mute_duration_extended_log', user=Utils.clean_user(target),
@@ -680,7 +680,7 @@ class Moderation(BaseCog):
                                                            reason=reason, inf_id=infraction.id, end=infraction.end)
 
                                 async def overwrite():
-                                    infraction.end = infraction.start + datetime.timedelta(seconds=duration_seconds)
+                                    infraction.end = infraction.start + duration_seconds
                                     await infraction.save()
                                     await MessageUtils.send_to(ctx, 'YES', 'mute_duration_overwritten', duration=d, end=infraction.end)
                                     GearbotLogging.log_key(ctx.guild.id, 'mute_duration_overwritten_log',
@@ -999,7 +999,7 @@ class Moderation(BaseCog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        now = datetime.datetime.fromtimestamp(time.time())
+        now = time.time()
         i = await Infraction.get_or_none(type = "Mute", active = True, end__gt=now, guild_id = member.guild.id, user_id = member.id)
         if i is not None:
             roleid = Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE")
@@ -1028,7 +1028,7 @@ class Moderation(BaseCog):
             limit = datetime.datetime.fromtimestamp(time.time() + 30)
             for name, action in types.items():
 
-                for infraction in await Infraction.filter(type = name, active = True, end__lt=limit):
+                for infraction in await Infraction.filter(type = name, active = True, end__lt=limit.toordinal()):
                     if infraction.id not in self.handling:
                         self.handling.add(infraction.id)
                         self.bot.loop.create_task(

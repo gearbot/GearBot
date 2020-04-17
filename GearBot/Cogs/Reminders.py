@@ -75,7 +75,7 @@ class Reminders(BaseCog):
             dm = True
         await Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
                         to_remind=await Utils.clean(reminder, markdown=False, links=False, emoji=False),
-                        time=datetime.fromtimestamp(time.time() + duration_seconds), send=datetime.now(), status=1,
+                        time=time.time() + duration_seconds, send=datetime.now().toordinal(), status=1,
                         guild_id=ctx.guild.id if ctx.guild is not None else "@me", message_id=ctx.message.id)
         mode = "dm" if dm else "here"
         await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
@@ -87,7 +87,7 @@ class Reminders(BaseCog):
             now = datetime.fromtimestamp(time.time())
             limit = datetime.fromtimestamp(time.time() + 30)
 
-            for r in await Reminder.filter(time__lt = limit, status = 1):
+            for r in await Reminder.filter(time__lt = limit.toordinal(), status = 1):
                 if r.id not in self.handling:
                     self.handling.add(r.id)
                     self.bot.loop.create_task(

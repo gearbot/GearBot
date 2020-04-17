@@ -49,8 +49,8 @@ class Reminder(Model):
     message_id = fields.BigIntField()
     dm = fields.BooleanField()
     to_remind = fields.CharField(max_length=1800, collation="utf8mb4_general_ci")
-    send = fields.DatetimeField(null=True)
-    time = fields.DatetimeField()
+    send = fields.BigIntField(null=True)
+    time = fields.BigIntField()
     status = fields.IntField()
 
 
