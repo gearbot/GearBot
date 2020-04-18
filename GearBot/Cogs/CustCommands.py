@@ -24,13 +24,10 @@ class CustCommands(BaseCog):
         self.loaded = True
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        self.commands[guild.id] = dict()
-
-    @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        del self.commands[guild.id]
-        await CustomCommand.filter(serverid = guild.id).delete()
+        if guild.id in self.commands:
+            del self.commands[guild.id]
+            await CustomCommand.filter(serverid = guild.id).delete()
 
 
     @commands.group(name="commands", aliases=['command'])
