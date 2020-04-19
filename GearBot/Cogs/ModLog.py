@@ -37,46 +37,30 @@ class ModLog(BaseCog):
         editCount = 0
         count = 0
         no_access = 0
-        fetch_times = []
-        processing_times = []
         for channel in guild.text_channels:
             permissions = channel.permissions_for(guild.get_member(self.bot.user.id))
             if permissions.read_messages and permissions.read_message_history:
 
                 async for message in channel.history(limit=limit, oldest_first=False,
                                                      before=self.cache_message if startup else None):
-                    processing = time.perf_counter()
                     if not self.running:
                         GearbotLogging.info("Cog unloaded while still building cache, aborting.")
                         return
-                    fetch = time.perf_counter()
                     logged = await LoggedMessage.get_or_none(messageid=message.id)
-                    fetch_times.append(time.perf_counter() - fetch)
                     if logged is None:
                         await MessageUtils.insert_message(self.bot, message, redis=False)
                         newCount = newCount + 1
                     elif message.edited_at is not None:
                         if logged.content != message.content:
                             logged.content = message.content
-                            logged.save()
+                            await logged.save()
                             editCount = editCount + 1
                     count = count + 1
-                    processing_times.append(time.perf_counter() - processing)
-                    if count % min(75, int(limit / 2)) is 0:
-                        await asyncio.sleep(0)
-
-                await asyncio.sleep(0)
             else:
                 no_access += 1
         GearbotLogging.info(
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
-        total_fetch_time = sum(fetch_times)
-        avg_fetch_time = (total_fetch_time / len(fetch_times)) * 1000
-        total_processing = (sum(processing_times)) * 1000
-        avg_processing = total_processing / len(processing_times)
-        GearbotLogging.info(f"Average fetch time: {avg_fetch_time} (total fetch time: {total_fetch_time})")
-        GearbotLogging.info(f"Average processing time: {avg_processing} (total of {total_processing})")
-        GearbotLogging.info(f"Was unable to read messages from {no_access} channels")
+
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
