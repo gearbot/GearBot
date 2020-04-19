@@ -180,7 +180,7 @@ class Infractions(BaseCog):
         """inf_info_help"""
         embed = discord.Embed(color=0x00cea2,
                               description=f"**{Translator.translate('reason', ctx)}**\n{infraction.reason}",
-                              timestamp=infraction.start)
+                              timestamp=datetime.fromtimestamp(infraction.start))
         user = await Utils.get_user(infraction.user_id)
         mod = await Utils.get_user(infraction.mod_id)
         key = f"inf_{infraction.type.lower().replace(' ', '_')}"
