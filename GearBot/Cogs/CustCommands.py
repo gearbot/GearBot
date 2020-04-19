@@ -38,7 +38,7 @@ class CustCommands(BaseCog):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(timestamp=ctx.message.created_at, color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
             value = ""
-            if len(self.commands[ctx.guild.id].keys()) > 0:
+            if ctx.guild.id in self.commands:
                 for trigger in self.commands[ctx.guild.id].keys():
                     if len(value) + len(trigger) > 1000:
                         embed.add_field(name="\u200b", value=value)
