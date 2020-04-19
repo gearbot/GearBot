@@ -1,6 +1,7 @@
 import asyncio
 import re
 import typing
+from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -186,7 +187,7 @@ class Infractions(BaseCog):
         if infraction.end is None:
             duration = Translator.translate("unknown_duration", ctx)
         else:
-            time = (infraction.end - infraction.start).total_seconds()
+            time = (datetime.fromtimestamp(infraction.end) - datetime.fromtimestamp(infraction.start)).total_seconds()
             duration = Utils.to_pretty_time(time, ctx.guild.id)
 
         embed.set_author(
@@ -198,9 +199,9 @@ class Infractions(BaseCog):
         embed.add_field(name=Translator.translate('user', ctx), value=Utils.clean_user(user))
         embed.add_field(name=Translator.translate('mod_id', ctx), value=infraction.mod_id)
         embed.add_field(name=Translator.translate('user_id', ctx), value=infraction.user_id)
-        embed.add_field(name=Translator.translate('inf_added', ctx), value=infraction.start)
+        embed.add_field(name=Translator.translate('inf_added', ctx), value=datetime.fromtimestamp(infraction.start))
         if infraction.end is not None:
-            embed.add_field(name=Translator.translate('inf_end', ctx), value=infraction.end)
+            embed.add_field(name=Translator.translate('inf_end', ctx), value=datetime.fromtimestamp(infraction.end))
         embed.add_field(name=Translator.translate('inf_active', ctx),
                         value=MessageUtils.assemble(ctx, 'YES' if infraction.active else 'NO',
                                                     str(infraction.active).lower()))
