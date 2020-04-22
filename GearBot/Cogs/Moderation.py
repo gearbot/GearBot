@@ -1024,15 +1024,15 @@ class Moderation(BaseCog):
                 "Mute": self._lift_mute,
                 "Tempban": self._lift_tempban
             }
-            now = datetime.datetime.fromtimestamp(time.time())
-            limit = datetime.datetime.fromtimestamp(time.time() + 30)
+            now = time.time()
+            limit = time.time() + 30
             for name, action in types.items():
 
-                for infraction in await Infraction.filter(type = name, active = True, end__lt=limit.toordinal()):
+                for infraction in await Infraction.filter(type = name, active = True, end__lt=limit):
                     if infraction.id not in self.handling:
                         self.handling.add(infraction.id)
                         self.bot.loop.create_task(
-                            self.run_after((infraction.end - now).total_seconds(), action(infraction)))
+                            self.run_after(infraction.end - now, action(infraction)))
             await asyncio.sleep(10)
         GearbotLogging.info("Timed moderation actions background task terminated")
 

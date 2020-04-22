@@ -72,7 +72,7 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     title = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', guild_id, name=name, page_num=100, pages=100)}\n```md\n\n```"
     page_header = get_header(longest_id, 37, longest_type, longest_timestamp, guild_id)
     mcount = 2000 - len(header) - len(page_header) - len(title)
-    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {inf.start} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
+    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {datetime.fromtimestamp(inf.start)} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
     pages = Pages.paginate(out, max_chars=mcount)
     if bot.redis_pool is not None:
         GearbotLogging.debug(f"Pushing placeholders for {key}")

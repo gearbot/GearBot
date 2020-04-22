@@ -84,14 +84,14 @@ class Reminders(BaseCog):
     async def delivery_service(self):
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")
         while self.running:
-            now = datetime.fromtimestamp(time.time())
-            limit = datetime.fromtimestamp(time.time() + 30)
+            now = time.time()
+            limit = datetime.fromtimestamp(time.time() + 30).timestamp()
 
-            for r in await Reminder.filter(time__lt = limit.toordinal(), status = 1):
+            for r in await Reminder.filter(time__lt = limit, status = 1):
                 if r.id not in self.handling:
                     self.handling.add(r.id)
                     self.bot.loop.create_task(
-                        self.run_after((r.time - now).total_seconds(), self.deliver(r)))
+                        self.run_after(r.time - now, self.deliver(r)))
             await asyncio.sleep(10)
         GearbotLogging.info("📪 Reminder delivery background task terminated 📪")
 
@@ -121,7 +121,7 @@ class Reminders(BaseCog):
                 jumplink_available = MessageUtils.construct_jumplink(package.guild_id, package.channel_id, package.message_id)
             mode = "dm" if isinstance(location, User) else "channel"
             now = datetime.utcfromtimestamp(time.time())
-            send_time = datetime.utcfromtimestamp(package.send.timestamp())
+            send_time = datetime.utcfromtimestamp(package.send)
             parts = {
                 "date": send_time.strftime('%c'),
                 "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) or isinstance(location, DMChannel) else location.guild.id),
