@@ -38,7 +38,7 @@ class Infractions(BaseCog):
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: Reason):
         """warn_help"""
         # don't allow warning GearBot, get some feedback about issues instead
-        if member.id == self.bot.user.id:
+        if member.id = self.bot.user.id:
 
             async def yes():
                 channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
@@ -54,7 +54,7 @@ class Infractions(BaseCog):
             await MessageUtils.send_to(ctx, 'NO', 'cant_warn_system_user')
             return
                         
-        if member.bot and member.id == self.bot.user.id:
+        if member.bot and member.id != self.bot.user.id:
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
 
