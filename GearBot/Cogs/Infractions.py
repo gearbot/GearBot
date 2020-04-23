@@ -55,7 +55,7 @@ class Infractions(BaseCog):
             await MessageUtils.send_to(ctx, 'NO', 'cant_warn_system_user')
             return
                         
-        if member.bot and member.id != self.bot.user.id:
+        if member.bot:
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
 
