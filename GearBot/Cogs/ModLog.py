@@ -66,7 +66,7 @@ class ModLog(BaseCog):
     async def on_message(self, message: discord.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and message.content != "" and message.author.id != self.bot.user.id:
+        if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (message.content != "" or len(message.attachments) > 0) and message.author.id != self.bot.user.id:
             await MessageUtils.insert_message(self.bot, message)
 
     @commands.Cog.listener()
