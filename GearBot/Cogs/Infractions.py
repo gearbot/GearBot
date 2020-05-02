@@ -141,7 +141,7 @@ class Infractions(BaseCog):
         """inf_update_help"""
         infraction.mod_id = ctx.author.id
         infraction.reason = reason
-        infraction.save()
+        await infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_updated', id=infraction.id)
         InfractionUtils.clear_cache(ctx.guild.id)
 
