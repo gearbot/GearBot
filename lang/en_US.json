@@ -784,5 +784,18 @@
   "too_many_roles": "Too many roles to show",
   "too_many_many_roles": "An absolute ridiculous amount of roles",
   "user_not_on_server": "This user is not on the server",
-  "unban_unable": "This user is on the server so can't be unbanned"
+  "unban_unable": "This user is on the server so can't be unbanned",
+  "invalid_steam_id": "That's not a valid Steam profile link nor id in SteamID64 format.",
+  "not_brawlhalla_player": "The Steam id provided was valid but there's no Brawlhalla account linked to it.",
+  "brawlhalla_account_linked": "Your brawlhalla account has been linked, now you can just use `{prefix}brawlhalla` to get your own stats!",
+  "brawlhalla_account_already_linked": "You already have a brawlhalla account linked, do you want me to overwrite it?",
+  "brawlhalla_new_account_linked": "You've successfully changed the account linked!",
+  "brawlhalla_no_account_linked": "You currently don't have any brawlhalla account linked, to do so use the `{prefix}brawlhalla link` command. If you want to check stats without linking an account, use the `{prefix}brawlhalla check` command.",
+  "brawlhalla_stats_for_user": "Displaying Brawlhalla stats for {user}",
+  "brawlhalla_stats_for_user_in_clan": "Displaying Brawlhalla stats for {user} in {clan}",
+  "brawlhalla_user_not_found_already_linked": "It would appear that the Brawlhalla account you had has been removed, the link will also be removed now.",
+  "brawlhalla_wins": "Wins",
+  "brawlhalla_games_played": "Games Played",
+  "brawlhalla_level": "Level",
+  "brawlhalla_legend_count": "Legend count"
 }
