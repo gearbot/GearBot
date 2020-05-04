@@ -76,6 +76,10 @@ class RaidAction(Model):
     infraction = fields.ForeignKeyField("models.Infraction", related_name="RaiderAction", source_field="infraction_id", null=True)
 
 
+class BrawlhallaUser(Model):
+    discord_id = fields.BigIntField(pk=True, generated=False)
+    brawlhalla_id = fields.IntField()
+
 async def init():
     await Tortoise.init(
         db_url=f"mysql://{Configuration.get_master_var('DATABASE_USER')}:{Configuration.get_master_var('DATABASE_PASS')}@{Configuration.get_master_var('DATABASE_HOST')}:{Configuration.get_master_var('DATABASE_PORT')}/{Configuration.get_master_var('DATABASE_NAME')}",
