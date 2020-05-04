@@ -87,7 +87,7 @@ class Fun(BaseCog):
                 response_json = await resp.json()
                 if response_json == {}:
                     await link.delete()
-                    return await MessageUtils.send_to(ctx, "NO", "user_not_found_already_linked")
+                    return await MessageUtils.send_to(ctx, "NO", "brawlhalla_user_not_found_already_linked")
                 else:
                     embed = discord.Embed(timestamp=datetime.utcfromtimestamp(time.time()))
                     if response_json.get("clan"):
