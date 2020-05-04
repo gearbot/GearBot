@@ -1,25 +1,39 @@
 import asyncio
+import re
 import time
 from datetime import datetime
+import xml.etree.ElementTree as ET
+
 
 import discord
 from discord.ext import commands
+from tortoise.exceptions import DoesNotExist
+
 
 from Cogs.BaseCog import BaseCog
+from database.DatabaseConnector import BrawlhallaUser
 from Util import Configuration, MessageUtils, Translator, Utils
 from Util.Converters import ApexPlatform
 from Util.JumboGenerator import JumboGenerator
 
+from Util import Confirmation
+
+
+STEAM_PROFILE_URL = re.compile("https://steamcommunity.com/id/\w+/?$")
 
 class Fun(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
+        self.brawlhalla_rate_limit_15_minutes = asyncio.Semaphore(180)
+        self.brawlhalla_rate_limit_per_second = asyncio.Semaphore(10)
+
 
         to_remove = {
             "CAT_KEY": "cat",
             "DOG_KEY": "dog",
-            "APEX_KEY": "apexstats"
+            "APEX_KEY": "apexstats",
+            "BRAWLHALLA_KEY": "brawlhalla"
         }
         for k, v in to_remove.items():
             if Configuration.get_master_var(k, "0") == "0":
@@ -46,6 +60,88 @@ class Fun(BaseCog):
                     type_key_value = stat_type["displayValue"]
                     embed.add_field(name=Translator.translate(f'apexstats_key_{type_key_name}', ctx), value=type_key_value)
                 await ctx.send(embed=embed)
+
+    async def lock_rate_limits(self):
+        await self.brawlhalla_rate_limit_15_minutes.acquire()
+        await self.brawlhalla_rate_limit_per_second.acquire()
+
+    async def unlock_rate_limits(self):
+        await asyncio.sleep(1)
+        self.brawlhalla_rate_limit_15_minutes.release()
+        self.brawlhalla_rate_limit_per_second.release()
+
+
+    @commands.group()
+    async def brawlhalla(self, ctx):
+        if ctx.invoked_subcommand:
+            return
+        try:
+            link = await BrawlhallaUser.get(discord_id=ctx.author.id)
+        except DoesNotExist:
+            return await ctx.send(Translator.translate('brawlhalla_no_account_linked', ctx, prefix=Configuration.get_var(ctx.guild.id, 'GENERAL', 'PREFIX')))
+        url = f"https://api.brawlhalla.com/player/{link.brawlhalla_id}/stats&api_key={Configuration.get_master_var('BRAWLHALLA_KEY')}"
+
+        try:
+            await self.lock_rate_limits()
+            async with self.bot.aiosession.get(url) as resp:
+                response_json = await resp.json()
+                if response_json == {}:
+                    await link.delete()
+                    return await MessageUtils.send_to(ctx, "NO", "user_not_found_already_linked")
+                else:
+                    embed = discord.Embed(timestamp=datetime.utcfromtimestamp(time.time()))
+                    if response_json.get("clan"):
+                        embed.description = Translator.translate("brawlhalla_stats_for_user_in_clan", ctx,
+                                                                 user=await Utils.clean(response_json["name"]),
+                                                                 clan=await Utils.clean(response_json["clan"]["clan_name"]))
+                    else:
+                        embed.description = Translator.translate("brawlhalla_stats_for_user", ctx,
+                                                                 user=await Utils.clean(response_json["name"]))
+                    embed.add_field(name=Translator.translate("brawlhalla_wins", ctx), value=response_json["wins"])
+                    embed.add_field(name=Translator.translate("brawlhalla_games_played", ctx), value=response_json["games"])
+                    embed.add_field(name=Translator.translate("brawlhalla_level", ctx), value=response_json["level"])
+                    embed.add_field(name=Translator.translate("brawlhalla_legend_count", ctx), value=str(len(response_json["legends"])))
+                    await ctx.send(embed=embed)
+
+        finally:
+            await self.unlock_rate_limits()
+
+    @brawlhalla.command()
+    async def link(self, ctx, steam_id: str):
+        if not steam_id.isnumeric():
+            if STEAM_PROFILE_URL.match(steam_id):
+                async with self.bot.aiosession.get(f"{steam_id}?xml=1") as resp:
+                    steam_response = ET.fromstring(await resp.text())
+                    if steam_response[0].text.isnumeric():
+                        steam_id = steam_response[0].text
+                    else:
+                        return await MessageUtils.send_to(ctx, "NO", "invalid_steam_id")
+            else:
+                return await MessageUtils.send_to(ctx, "NO", "invalid_steam_id")
+        else:
+            if len(steam_id) != 17:
+                return await MessageUtils.send_to(ctx, "NO", "invalid_steam_id")
+
+        url = f"https://api.brawlhalla.com/search?steamid={steam_id}&api_key={Configuration.get_master_var('BRAWLHALLA_KEY')}"
+        await self.lock_rate_limits()
+        try:
+            async with self.bot.aiosession.get(url) as resp:
+                response_json = await resp.json()
+                if not response_json:
+                    return await MessageUtils.send_to(ctx, "NO", "not_brawlhalla_player")
+                try:
+                    link = await BrawlhallaUser.get(discord_id=ctx.author.id)
+                except DoesNotExist:
+                    await BrawlhallaUser.create(discord_id=ctx.author.id, brawlhalla_id=response_json["brawlhalla_id"])
+                    Configuration.get_var(ctx.guild.id, 'GENERAL', 'PREFIX')
+                    return await ctx.send(Translator.translate('brawlhalla_account_linked', ctx, prefix=Configuration.get_var(ctx.guild.id, 'GENERAL', 'PREFIX')))
+                async def yes():
+                    link.brawlhalla_id = response_json["brawlhalla_id"]
+                    await link.save()
+                    return await MessageUtils.send_to(ctx, "YES", "brawlhalla_new_account_linked")
+                await Confirmation.confirm(ctx, Translator.translate("brawlhalla_account_already_linked", ctx), on_yes=yes)
+        finally:
+            await self.unlock_rate_limits()
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
