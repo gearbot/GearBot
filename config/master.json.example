@@ -8,6 +8,7 @@
   "DATABASE_PORT": 3306,
   "DATABASE_USER": "gearbot",
   "APEX_KEY": "",
+  "BRAWLHALLA_KEY": "",
   "EMOJI": {
   },
   "GUIDES": 0,
