@@ -93,7 +93,7 @@ class AntiRaid(BaseCog):
                 # TRIGGERED
                 if member.guild.id not in self.raid_trackers:
                     # assign raid id, track raiders
-                    raid = await Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()))
+                    raid = await Raid.create(guild_id=member.guild.id, start=datetime.utcfromtimestamp(time.time()).timestamp())
                     GearbotLogging.log_key(member.guild.id, 'raid_new', raid_id=raid.id)
                     # create trackers if needed
                     raider_ids = dict()
