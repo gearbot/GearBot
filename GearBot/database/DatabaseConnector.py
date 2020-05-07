@@ -58,15 +58,15 @@ class Reminder(Model):
 class Raid(Model):
     id = fields.IntField(pk=True, generated=True)
     guild_id = fields.BigIntField()
-    start = fields.DatetimeField()
-    end = fields.DatetimeField(null=True)
+    start = fields.BigIntField()
+    end = fields.BigIntField(null=True)
 
 
 class Raider(Model):
     id = fields.IntField(pk=True, generated=True)
     raid = fields.ForeignKeyField("models.Raid", related_name="raiders", source_field="raid_id")
     user_id = fields.BigIntField()
-    joined_at = fields.DatetimeField()
+    joined_at = fields.BigIntField()
 
 
 class RaidAction(Model):
