@@ -94,7 +94,6 @@ class Mute(RaidAction):
                 until = time.time() + duration
                 i = await InfractionUtils.add_infraction(member.guild.id, member.id, member.guild.me.id, "Mute", reason,
                                                    end=until)
-                await DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
@@ -126,7 +125,6 @@ class Kick(RaidAction):
                                    user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
                                    reason=reason, inf=i.id)
-            await DatabaseConnector.RaidAction.create(raider=raider_ids[member.id], action="mute_raider", infraction=i)
 
     async def reverse(self, bot, guild, user, data, raid_id, raider_id):
         pass
