@@ -420,6 +420,7 @@
   "no_roles": "No roles",
   "infractions": "Infractions",
   "total_infractions": "{total, plural, one {1 infraction} other {# infractions}} on {servers, plural, one {1 server} other {# servers}}",
+  "guild_infractions": "{count, plural, one {1 infraction} other {# infractions}} on this server",
   "profile": "Profile",
   "status": "Status",
   "activity": "Activity",

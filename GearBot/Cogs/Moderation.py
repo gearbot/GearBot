@@ -788,16 +788,23 @@ class Moderation(BaseCog):
         embed.add_field(name=Translator.translate('account_created_at', ctx),
                         value=f"{(ctx.message.created_at - user.created_at).days} days ago (``{user.created_at}``)",
                         inline=True)
-        infractions = await Infraction.filter(user_id=user.id)
-        il = len(infractions)
-        seen = []
-        ild = 0
-        for i in infractions:
-            if i.guild_id not in seen:
-                seen.append(i.guild_id)
-            ild += 1
-        emoji = "SINISTER" if il >= 2 else "INNOCENT"
-        embed.add_field(name=Translator.translate("infractions", ctx), value=MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild))
+        infs = ""
+        if Configuration.get_master_var("global_inf_counter", True):
+            infractions = await Infraction.filter(user_id=user.id)
+            il = len(infractions)
+            seen = []
+            ild = 0
+            for i in infractions:
+                if i.guild_id not in seen:
+                    seen.append(i.guild_id)
+                ild += 1
+            emoji = "SINISTER" if il >= 2 else "INNOCENT"
+            infs += MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild) + "\n"
+
+        infractions = await Infraction.filter(user_id=user.id, guild_id=ctx.guild.id)
+        emoji = "SINISTER" if len(infractions) >= 2 else "INNOCENT"
+        embed.add_field(name=Translator.translate("infractions", ctx),
+                        value=infs + MessageUtils.assemble(ctx, emoji, "guild_infractions", count=len(infractions)))
 
         await ctx.send(embed=embed)
 
