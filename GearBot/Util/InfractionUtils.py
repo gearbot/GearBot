@@ -27,7 +27,6 @@ async def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, acti
 cleaners = dict()
 
 def clear_cache(guild_id):
-    GearbotLogging.info(f"reseting cache for {guild_id}")
     if guild_id in cleaners:
         cleaners[guild_id].cancel()
     cleaners[guild_id] = bot.loop.create_task(cleaner(guild_id))
