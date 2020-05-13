@@ -64,6 +64,7 @@ class Censor(BaseCog):
                 if invite.guild is None:
                     await self.censor_invite(ctx, code, "DM group")
                     censored = True
+                    return
                 else:
                     if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != message.guild.id):
                         await self.censor_invite(ctx, code, invite.guild.name)
