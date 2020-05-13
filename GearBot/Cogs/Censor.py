@@ -61,7 +61,8 @@ class Censor(BaseCog):
                     invite: discord.Invite = await self.bot.fetch_invite(code)
                 except discord.NotFound:
                     await self.censor_invite(ctx, code, "INVALID INVITE")
-                except KeyError:
+                    return
+                if invite.guild is None:
                     await self.censor_invite(ctx, code, "DM group")
                     censored = True
                 else:
