@@ -20,6 +20,8 @@ async def act(ctx, name, target, handler, allow_bots=True, require_on_server=Tru
             return False, message
         else:
             user = ctx.bot.get_user(target)
+    if user is None and not require_on_server:
+        user = await Utils.get_user(target)
     if user is None:
         return False, "Unknown user"
     allowed, message = can_act(name, ctx, user, require_on_server=require_on_server, action_bot=allow_bots, check_bot_ability=check_bot_ability)

@@ -1130,6 +1130,24 @@ class Moderation(BaseCog):
         await infraction.save()
         self.handling.remove(infraction.id)
 
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        pipeline = self.bot.redis_pool.pipeline()
+        pipeline.hmset_dict(f"users:{member.id}",
+                            name=member.name,
+                            id=member.id,
+                            discriminator=member.discriminator,
+                            bot=int(member.bot),
+                            avatar_url=str(member.avatar_url),
+                            created_at=member.created_at.timestamp(),
+                            is_avatar_animated=int(member.is_avatar_animated()),
+                            mention=member.mention
+                            )
+
+        pipeline.expire(f"users:{member.id}", 3000)  # 5 minute cache life
+
+        await pipeline.execute()
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
