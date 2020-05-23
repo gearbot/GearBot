@@ -1,3 +1,8 @@
+# force it to use v6 instead of v7
+import discord.http
+
+discord.http.Route.BASE = 'https://discordapp.com/api/v6'
+
 import os
 from argparse import ArgumentParser
 
