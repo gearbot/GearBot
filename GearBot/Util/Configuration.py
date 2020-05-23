@@ -336,11 +336,11 @@ async def initialize(bot: commands.Bot):
     TEMPLATE = Utils.fetch_from_disk("config/template")
     CONFIG_VERSION = TEMPLATE["VERSION"]
     GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")
-    GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
-    for guild in bot.guilds:
-        GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
-        load_config(guild.id)
-        validate_config(guild.id)
+    # GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
+    # for guild in bot.guilds:
+    #     GearbotLogging.info(f"Loading info for {guild.name} ({guild.id}).")
+    #     load_config(guild.id)
+    #     validate_config(guild.id)
 
 
 def load_config(guild):
