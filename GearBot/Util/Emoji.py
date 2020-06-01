@@ -73,7 +73,8 @@ BACKUPS = {
 }
 
 
-def initialize(bot):
+async def initialize(bot):
+    emoji_guild = await bot.fetch_guild(Configuration.get_master_var("EMOJI_GUILD"))
     for name, eid in Configuration.get_master_var("EMOJI", {}).items():
         emojis[name] = utils.get(bot.emojis, id=eid)
 

@@ -35,11 +35,11 @@ async def initialize(bot, startup=False):
     bot.locked = True
     try:
         #database
-        GearbotLogging.info("Connecting to the database.")
+        GearbotLogging.info(f"Cluster {bot.cluster} connecting to the database.")
         await DatabaseConnector.init()
-        GearbotLogging.info("Database connection established.")
+        GearbotLogging.info(f"Cluster {bot.cluster} database connection established.")
 
-        Emoji.initialize(bot)
+        await Emoji.initialize(bot)
         Utils.initialize(bot)
         InfractionUtils.initialize(bot)
         bot.data = {
@@ -52,8 +52,8 @@ async def initialize(bot, startup=False):
         if startup:
             c = await Utils.get_commit()
             bot.version = c
-            GearbotLogging.info(f"GearBot spinning up version {c}")
-            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot spinning up version {c}")
+            GearbotLogging.info(f"GearBot cluster {bot.cluster} spinning up version {c}")
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot cluster {bot.cluster} spinning up version {c}")
 
         if bot.redis_pool is None:
             try:
@@ -66,8 +66,8 @@ async def initialize(bot, startup=False):
                 GearbotLogging.error("==============Failed to connect to redis==============")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
             else:
-                GearbotLogging.info("Redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Redis connection established, let's go full speed!")
+                GearbotLogging.info("Cluster {bot.cluster} redis connection established")
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} redis connection established, let's go full speed!")
 
         if bot.aiosession is None:
             bot.aiosession = aiohttp.ClientSession()

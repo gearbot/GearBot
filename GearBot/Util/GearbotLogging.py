@@ -293,7 +293,7 @@ def init_logger():
 async def initialize(bot: commands.Bot, channelID):
     global BOT_LOG_CHANNEL, BOT, STARTUP_ERRORS
     BOT = bot
-    BOT_LOG_CHANNEL = bot.get_channel(int(channelID))
+    BOT_LOG_CHANNEL = await bot.fetch_channel(int(channelID))
     if BOT_LOG_CHANNEL is None:
         LOGGER.error(
             "==========================Logging channel is misconfigured, aborting startup!==========================")

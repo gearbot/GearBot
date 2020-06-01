@@ -14,14 +14,13 @@ from Util import Configuration, GearbotLogging
 def prefix_callable(bot, message):
     return TheRealGearBot.prefix_callable(bot, message)
 
-gearbot = GearBot(command_prefix=prefix_callable, case_insensitive=True, max_messages = 100) #100 is the min for some reason
-
-
-
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--token", help="Specify your Discord token")
+    parser.add_argument("--total_shards", help="Total shard count")
+    parser.add_argument("--num_shards", help="Amount of shards to start in this cluster")
+    parser.add_argument("--offset", help="Shard offset")
 
     GearbotLogging.init_logger()
 
@@ -34,10 +33,27 @@ if __name__ == '__main__':
         token = Configuration.get_master_var("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
+
+    args = {
+        "command_prefix": prefix_callable,
+        "case_insensitive": True,
+        "max_messages": None,
+    }
+    if clargs.total_shards:
+        total_shards = int(clargs.total_shards)
+        offset = int(clargs.offset)
+        num_shards = int(clargs.num_shards)
+        args.update({
+            "shard_count": total_shards,
+            "cluster": offset,
+            "shard_ids": [*range(offset * num_shards, (offset * num_shards) + num_shards)]
+        })
+
+    gearbot = GearBot(**args)
+
     gearbot.remove_command("help")
     GearbotLogging.info("Ready to go, spinning up the gears")
     gearbot.run(token)
     GearbotLogging.info("GearBot shutting down, cleaning up")
     gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
-
