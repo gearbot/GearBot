@@ -987,6 +987,56 @@ class ServerAdmin(BaseCog):
         mode = "whitelist" if mode else "blacklist"
         await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
 
+
+
+    @configure.group()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
+    async def domain_list(self, ctx):
+        """configure_domain_list_help"""
+        if ctx.invoked_subcommand is None:
+            items = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
+            mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+            if len(items) == 0:
+                desc = Translator.translate(f"empty_domain_list", ctx)
+            else:
+                desc = "\n".join(f"{item}" for item in items)
+            embed = discord.Embed(title=Translator.translate(f"current_domain_{mode}", ctx), description=desc)
+            await ctx.send(embed=embed)
+
+    @domain_list.command("add")
+    async def domain_list_add(self, ctx, *, domain):
+        """configure_domain_list_add"""
+        domain = domain.lower()
+        domains = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
+        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+        if domain in domains:
+            await MessageUtils.send_to(ctx, "NO", f"domain_list_add_fail_{mode}", domain=domain)
+        else:
+            domains.append(domain)
+            Configuration.save(ctx.guild.id)
+            await MessageUtils.send_to(ctx, "YES", f"domain_list_add_confirmation_{mode}", domain=domain)
+
+
+    @domain_list.command("remove", aliases=["rmv"])
+    async def domain_list_remove(self, ctx, *, domain):
+        """configure_domain_list_remove"""
+        domains = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
+        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+        if domain not in domains:
+            await MessageUtils.send_to(ctx, "NO", f"domain_list_rmv_fail_{mode}", domain=domain)
+        else:
+            domains.remove(domain)
+            Configuration.save(ctx.guild.id)
+            await MessageUtils.send_to(ctx, "YES", f"domain_list_rmv_confirmation_{mode}", domain=domain)
+
+    @domain_list.command("mode")
+    async def domain_list_mode(self, ctx, mode:ListMode):
+        """configure_domain_list_mode"""
+        Configuration.set_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST", mode)
+        mode = "whitelist" if mode else "blacklist"
+        await MessageUtils.send_to(ctx, "YES", f"domain_list_mode_{mode}")
+
     @configure.command()
     @commands.guild_only()
     async def timezone(self, ctx, new_zone=None):

@@ -1,5 +1,5 @@
 {
-	"VERSION": 22,
+	"VERSION": 23,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -27,7 +27,9 @@
 		"ALLOW_TRUSTED_BYPASS": false,
 		"WORD_BLACKLIST": [],
 		"TOKEN_BLACKLIST": [],
-		"INVITE_WHITELIST": []
+		"INVITE_WHITELIST": [],
+		"DOMAIN_WHITELIST": false,
+		"DOMAIN_LIST": []
 	},
 	"INFRACTIONS": {
 		"DM_ON_WARN": false

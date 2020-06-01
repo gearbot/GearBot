@@ -1,5 +1,6 @@
 import re
 from urllib import parse
+from urllib.parse import urlparse
 
 import discord
 from discord import DMChannel
@@ -8,9 +9,7 @@ from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Permissioncheckers, Utils
-from Util.Matchers import INVITE_MATCHER
-
-
+from Util.Matchers import INVITE_MATCHER, URL_MATCHER
 
 
 class Censor(BaseCog):
@@ -51,6 +50,8 @@ class Censor(BaseCog):
         blacklist = Configuration.get_var(message.guild.id, "CENSORING", "TOKEN_BLACKLIST")
         word_blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
         guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")
+        domain_list = Configuration.get_var(message.guild.id, "CENSORING", "DOMAIN_LIST")
+        domain_whitelist = Configuration.get_var(message.guild.id, "CENSORING", "DOMAIN_WHITELIST")
         content = message.content.replace('\\', '')
         decoded_content = parse.unquote(content)
         censored = False
@@ -75,17 +76,28 @@ class Censor(BaseCog):
             for bad in (w.lower() for w in blacklist):
                 if bad in content:
                     await self.censor_message(message, bad)
+                    censored = True
                     break
 
-            if not censored and len(word_blacklist) > 0:
-                if ctx.guild.id not in self.regexes:
-                    regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_blacklist) + r")\b", re.IGNORECASE)
-                    self.regexes[ctx.guild.id] = regex
-                else:
-                    regex = self.regexes[ctx.guild.id]
-                match = regex.findall(message.content)
-                if len(match):
-                    await self.censor_message(message, match[0], "_word")
+        if not censored and len(word_blacklist) > 0:
+            if ctx.guild.id not in self.regexes:
+                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_blacklist) + r")\b", re.IGNORECASE)
+                self.regexes[ctx.guild.id] = regex
+            else:
+                regex = self.regexes[ctx.guild.id]
+            match = regex.findall(message.content)
+            if len(match):
+                await self.censor_message(message, match[0], "_word")
+                censored = True
+
+        if not censored and len(domain_list) > 0:
+            link_list = URL_MATCHER.findall(message.content)
+            for link in link_list:
+                url = urlparse(link)
+                domain = url.hostname
+                if (domain in domain_list) is not domain_whitelist:
+                    await self.censor_message(message, url.hostname, "_domain_whitelist" if domain_whitelist else "_domain_blacklist")
+                print(domain)
 
 
     async def censor_message(self, message, bad, key=""):

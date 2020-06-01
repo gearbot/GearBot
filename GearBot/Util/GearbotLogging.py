@@ -41,7 +41,9 @@ LOGGING_INFO = {
         "censored": {
             "censored_invite": "WARNING",
             "censored_message": "WARNING",
-            "censored_message_word": "WARNING"
+            "censored_message_word": "WARNING",
+            "censored_message_domain_whitelist": "WARNING",
+            "censored_message_domain_blacklist": "WARNING",
         }
     },
     "CHANNEL_CHANGES": {
