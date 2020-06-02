@@ -273,11 +273,11 @@ def init_logger(cluster):
 
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 
-    handler = logging.StreamHandler(stream=sys.stdout)
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(formatter)
-    LOGGER.addHandler(handler)
-    DISCORD_LOGGER.addHandler(handler)
+    # handler = logging.StreamHandler(stream=sys.stdout)
+    # handler.setLevel(logging.INFO)
+    # handler.setFormatter(formatter)
+    # LOGGER.addHandler(handler)
+    # DISCORD_LOGGER.addHandler(handler)
 
     if not os.path.isdir("logs"):
         os.mkdir("logs")
