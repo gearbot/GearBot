@@ -22,9 +22,10 @@ if __name__ == '__main__':
     parser.add_argument("--num_shards", help="Amount of shards to start in this cluster")
     parser.add_argument("--offset", help="Shard offset")
 
-    GearbotLogging.init_logger()
-
     clargs = parser.parse_args()
+
+    GearbotLogging.init_logger(int(clargs.offset) if clargs.offset else 0)
+
     if 'gearbotlogin' in os.environ:
         token = os.environ['gearbotlogin']
     elif clargs.token:

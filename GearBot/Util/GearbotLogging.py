@@ -261,7 +261,7 @@ def before_send(event, hint):
     return event
 
 
-def init_logger():
+def init_logger(cluster):
     # track commits to make sentry versions
     dsn = Configuration.get_master_var('SENTRY_DSN', '')
     if dsn != '':
@@ -281,7 +281,7 @@ def init_logger():
 
     if not os.path.isdir("logs"):
         os.mkdir("logs")
-    handler = TimedRotatingFileHandler(filename='logs/gearbot.log', encoding='utf-8', when="midnight", backupCount=30)
+    handler = TimedRotatingFileHandler(filename=f'logs/gearbot_cluster_{cluster}.log', encoding='utf-8', when="midnight", backupCount=30)
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
     DISCORD_LOGGER.addHandler(handler)
