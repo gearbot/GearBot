@@ -28,11 +28,15 @@ class GearBot(AutoShardedBot):
     dash_guild_users = set()
     dash_guild_watchers = dict()
     cluster = 0
+    shard_count = 1
+    shard_ids = []
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
         self.metrics = PromMonitors(self)
         self.cluster = kwargs.get("cluster", 0)
+        self.total_shards = kwargs.get("shard_count", 1)
+        self.shard_ids = kwargs.get("shard_ids", [0])
 
     def dispatch(self, event_name, *args, **kwargs):
         if "socket" not in event_name not in ["message_edit"]:

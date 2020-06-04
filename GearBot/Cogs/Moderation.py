@@ -1036,7 +1036,7 @@ class Moderation(BaseCog):
             for name, action in types.items():
 
                 for infraction in await Infraction.filter(type = name, active = True, end__lt=limit):
-                    if infraction.id not in self.handling:
+                    if infraction.id not in self.handling and ((infraction.guild_id >> 22) % self.bot.total_shards) in self.bot.shard_ids:
                         self.handling.add(infraction.id)
                         self.bot.loop.create_task(
                             self.run_after(infraction.end - now, action(infraction)))

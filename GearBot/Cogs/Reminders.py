@@ -82,6 +82,9 @@ class Reminders(BaseCog):
                                      duration_identifier=duration.unit)
 
     async def delivery_service(self):
+        # only let cluster 0 do this one
+        if self.bot.cluster is not 0:
+            return
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")
         while self.running:
             now = time.time()
@@ -102,8 +105,8 @@ class Reminders(BaseCog):
             await action
 
     async def deliver(self, r):
-        channel = self.bot.get_channel(r.channel_id)
-        dm = self.bot.get_user(r.user_id)
+        channel = await self.bot.fetch_channel(r.channel_id)
+        dm = await self.bot.fetch_user(r.user_id)
         first = dm if r.dm else channel
         alternative = channel if r.dm else dm
 
