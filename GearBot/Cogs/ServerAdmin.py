@@ -579,11 +579,8 @@ class ServerAdmin(BaseCog):
             message = ""
             for t in known:
                 if t in info:
-                    if self.can_remove(ctx.guild.id, t):
-                        removed.append(t)
-                        info.remove(t)
-                    else:
-                        unable.append(t)
+                    removed.append(t)
+                    info.remove(t)
                 else:
                     ignored.append(t)
             if len(removed) > 0:
