@@ -1,5 +1,5 @@
 {
-	"VERSION": 23,
+	"VERSION": 24,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -11,7 +11,7 @@
 	"ROLES": {
 		"SELF_ROLES": [],
 		"ROLE_LIST": [],
-		"ROLE_WHITELIST": true,
+		"ROLE_LIST_MODE": true,
 		"MUTE_ROLE": 0
 	},
 	"LOG_CHANNELS": {},
@@ -25,10 +25,10 @@
 	"CENSORING": {
 		"ENABLED": false,
 		"ALLOW_TRUSTED_BYPASS": false,
-		"WORD_BLACKLIST": [],
-		"TOKEN_BLACKLIST": [],
-		"INVITE_WHITELIST": [],
-		"DOMAIN_WHITELIST": false,
+		"WORD_CENSORLIST": [],
+		"TOKEN_CENSORLIST": [],
+		"ALLOWED_INVITE_LIST": [],
+		"DOMAIN_LIST_ALLOWED": false,
 		"DOMAIN_LIST": []
 	},
 	"INFRACTIONS": {

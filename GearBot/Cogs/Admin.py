@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update, DocUtils
 from Util.Converters import UserID, Guild, DiscordUser
 
 
@@ -22,6 +22,10 @@ class Admin(BaseCog):
 
     async def cog_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
+
+    @commands.command()
+    async def commandlist(self, ctx):
+        await DocUtils.generate_command_list2(self.bot, ctx.message)
 
 
     @commands.command(hidden=True)
@@ -141,25 +145,25 @@ class Admin(BaseCog):
         await ctx.invoke(self.bot.get_command("hotreload"))
 
     @commands.command()
-    async def blacklist_server(self, ctx, guild: Guild):
-        blocked = Configuration.get_persistent_var("server_blacklist", [])
+    async def block_server(self, ctx, guild: Guild):
+        blocked = Configuration.get_persistent_var("server_blocklist", [])
         blocked.append(guild.id)
-        Configuration.set_persistent_var("server_blacklist", blocked)
+        Configuration.set_persistent_var("server_blocklist", blocked)
         await guild.leave()
-        await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist", translate=False)
+        await MessageUtils.send_to(ctx, "YES", f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blocked servers list", translate=False)
         await GearbotLogging.bot_log(
-            f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blacklist by {Utils.clean_user(ctx.author)}")
+            f"{Utils.escape_markdown(guild.name)} (``{guild.id}``) has been added to the blocked server list by {Utils.clean_user(ctx.author)}")
 
     @commands.command()
-    async def blacklist_user(self, ctx, user:DiscordUser):
+    async def block_user(self, ctx, user:DiscordUser):
         for guild in self.bot.guilds:
             if guild.owner is not None and guild.owner.id == user.id:
                 await guild.leave()
-        blocked = Configuration.get_persistent_var("user_blacklist", [])
+        blocked = Configuration.get_persistent_var("user_blocklist", [])
         blocked.append(user.id)
-        Configuration.set_persistent_var("user_blacklist", blocked)
-        await MessageUtils.send_to(ctx, "YES", f"{Utils.clean_user(user)} (``{user.id}``) has been added to the blacklist", translate=False)
-        await GearbotLogging.bot_log(f"{Utils.clean_user(user)} (``{user.id}``) has been added to the blacklist by {Utils.clean_user(ctx.author)}")
+        Configuration.set_persistent_var("user_blocklist", blocked)
+        await MessageUtils.send_to(ctx, "YES", f"{Utils.clean_user(user)} (``{user.id}``) has been added to the blocked users list", translate=False)
+        await GearbotLogging.bot_log(f"{Utils.clean_user(user)} (``{user.id}``) has been added to the blocked users list by {Utils.clean_user(ctx.author)}")
 
     @commands.command()
     async def pendingchanges(self, ctx):

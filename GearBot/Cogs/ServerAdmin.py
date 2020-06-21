@@ -94,8 +94,8 @@ class ServerAdmin(BaseCog):
         super().__init__(bot)
 
         bot.to_cache = []
-        Pages.register("blacklist", self._blacklist_init, self._blacklist_update)
-        Pages.register("word_blacklist", self._word_blacklist_init, self._word_blacklist_update)
+        Pages.register("censorlist", self._censorlist_init, self._censorklist_update)
+        Pages.register("word_censorlist", self._word_censorlist_init, self._word_censor_list_update)
 
 
 
@@ -217,18 +217,18 @@ class ServerAdmin(BaseCog):
         self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @configure.group()
-    async def invite_whitelist(self, ctx: commands.Context):
-        """configure_invite_whitelist_help"""
+    async def allowed_invites(self, ctx: commands.Context):
+        """configure_allowed_invite_list_help"""
         if ctx.invoked_subcommand is None:
-            await list_list(ctx, "invite", list_name="whitelist", wrapper="{item}", config_section="CENSORING")
+            await list_list(ctx, "allowed", list_name="invite_list", wrapper="{item}", config_section="CENSORING")
 
-    @invite_whitelist.command(name="add")
-    async def add_to_whitelist(self, ctx: commands.Context, server:int):
-        await add_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
+    @allowed_invites.command(name="add")
+    async def add_to_allowed_list(self, ctx: commands.Context, server:int):
+        await add_item(ctx, ServerHolder(server), "allowed", list_name="invite_list", config_section="CENSORING")
 
-    @invite_whitelist.command(name="remove")
-    async def remove_from_whitelist(self, ctx: commands.Context, server:int):
-        await remove_item(ctx, ServerHolder(server), "invite", list_name="whitelist", config_section="CENSORING")
+    @allowed_invites.command(name="remove")
+    async def remove_from_allowed_list(self, ctx: commands.Context, server:int):
+        await remove_item(ctx, ServerHolder(server), "allowed", list_name="invite_list", config_section="CENSORING")
 
     @configure.command(name="censortrustedbypass")
     async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
@@ -857,81 +857,81 @@ class ServerAdmin(BaseCog):
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
-    @configure.group()
-    async def blacklist(self, ctx):
+    @configure.group(aliases=["censorlist"])
+    async def censor_list(self, ctx):
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "blacklist", ctx)
+            await Pages.create_new(self.bot, "censor_list", ctx)
 
     @staticmethod
-    async def _blacklist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
-        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+    async def _censorlist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
+        return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
 
     @staticmethod
-    async def _blacklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_BLACKLIST")))
+    async def _censorklist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
-        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        return f"**{Translator.translate(f'censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
-    @blacklist.command("add")
-    async def blacklist_add(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
-        if word.lower() in blacklist:
-            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
+    @censor_list.command("add")
+    async def censor_list_add(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        if word.lower() in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "already_censored", word=word)
         else:
-            blacklist.append(word.lower())
+            censor_list.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
 
-    @blacklist.command("remove")
-    async def blacklist_remove(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_BLACKLIST")
-        if word not in blacklist:
-            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
+    @censor_list.command("remove")
+    async def censor_list_remove(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        if word not in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "not_censored", word=word)
         else:
-            blacklist.remove(word)
+            censor_list.remove(word)
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
     @configure.group()
-    async def word_blacklist(self, ctx):
+    async def word_censor_list(self, ctx):
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "word_blacklist", ctx)
+            await Pages.create_new(self.bot, "word_censor_list", ctx)
 
     @staticmethod
-    async def _word_blacklist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")))
-        return f"**{Translator.translate(f'blacklist_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+    async def _word_censorlist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")))
+        return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
             pages) > 1
 
     @staticmethod
-    async def _word_blacklist_update(ctx, message, page_num, action, data):
+    async def _word_censor_list_update(ctx, message, page_num, action, data):
         pages = Pages.paginate(
-            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_BLACKLIST")))
+            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_CENSORLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
-        return f"**{Translator.translate(f'blacklist_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        return f"**{Translator.translate(f'censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
 
-    @word_blacklist.command("add")
-    async def word_blacklist_add(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
-        if word.lower() in blacklist:
-            await MessageUtils.send_to(ctx, "NO", "already_blacklisted", word=word)
+    @word_censor_list.command("add")
+    async def word_censor_list_add(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
+        if word.lower() in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "already_censored", word=word)
         else:
-            blacklist.append(word.lower())
+            censor_list.append(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
                 del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
-    @word_blacklist.command("remove")
-    async def word_blacklist_remove(self, ctx, *, word: str):
-        blacklist = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_BLACKLIST")
-        if word not in blacklist:
-            await MessageUtils.send_to(ctx, "NO", "not_blacklisted", word=word)
+    @word_censor_list.command("remove")
+    async def word_censor_list_remove(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
+        if word not in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "not_censored", word=word)
         else:
-            blacklist.remove(word)
+            censor_list.remove(word)
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
@@ -945,23 +945,23 @@ class ServerAdmin(BaseCog):
         """configure_role_list_help"""
         if ctx.invoked_subcommand is None:
             items = Configuration.get_var(ctx.guild.id, "ROLES", f"ROLE_LIST")
-            mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST") else "blacklist"
+            mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
             if len(items) == 0:
                 desc = Translator.translate(f"no_role_{mode}", ctx)
             else:
                 desc = "\n".join(f"<@&{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"current_role_{mode}", ctx), description=desc)
+            embed = discord.Embed(title=Translator.translate(f"current_role_{mode}_list", ctx), description=desc)
             await ctx.send(embed=embed)
 
     @role_list.command("add")
     async def role_list_add(self, ctx, *, role:discord.Role):
         """configure_role_list_add"""
         roles = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
-        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST") else "blacklist"
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
         if role == ctx.guild.default_role:
             await MessageUtils.send_to(ctx, "NO", "default_role_forbidden")
         elif role.id in roles:
-            await MessageUtils.send_to(ctx, "NO", f"role_list_add_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"role_list_add_fail", role=Utils.escape_markdown(role.name))
         else:
             roles.append(role.id)
             Configuration.save(ctx.guild.id)
@@ -972,7 +972,7 @@ class ServerAdmin(BaseCog):
     async def role_list_remove(self, ctx, *, role: discord.Role):
         """configure_role_list_remove"""
         roles = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
-        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST") else "blacklist"
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
         if role.id not in roles:
             await MessageUtils.send_to(ctx, "NO", f"role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
         else:
@@ -983,8 +983,8 @@ class ServerAdmin(BaseCog):
     @role_list.command("mode")
     async def role_list_mode(self, ctx, mode:ListMode):
         """configure_role_list_mode"""
-        Configuration.set_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST", mode)
-        mode = "whitelist" if mode else "blacklist"
+        Configuration.set_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE", mode)
+        mode = "allowed" if mode else "blocked"
         await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
 
 
@@ -996,12 +996,12 @@ class ServerAdmin(BaseCog):
         """configure_domain_list_help"""
         if ctx.invoked_subcommand is None:
             items = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
-            mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+            mode = "allowed" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED") else "blocked"
             if len(items) == 0:
                 desc = Translator.translate(f"empty_domain_list", ctx)
             else:
                 desc = "\n".join(f"{item}" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"current_domain_{mode}", ctx), description=desc)
+            embed = discord.Embed(title=Translator.translate(f"current_domain_list_{mode}", ctx), description=desc)
             await ctx.send(embed=embed)
 
     @domain_list.command("add")
@@ -1009,7 +1009,7 @@ class ServerAdmin(BaseCog):
         """configure_domain_list_add"""
         domain = domain.lower()
         domains = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
-        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED") else "block"
         if domain in domains:
             await MessageUtils.send_to(ctx, "NO", f"domain_list_add_fail_{mode}", domain=domain)
         else:
@@ -1022,7 +1022,7 @@ class ServerAdmin(BaseCog):
     async def domain_list_remove(self, ctx, *, domain):
         """configure_domain_list_remove"""
         domains = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
-        mode = "whitelist" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST") else "blacklist"
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED") else "block"
         if domain not in domains:
             await MessageUtils.send_to(ctx, "NO", f"domain_list_rmv_fail_{mode}", domain=domain)
         else:
@@ -1033,8 +1033,8 @@ class ServerAdmin(BaseCog):
     @domain_list.command("mode")
     async def domain_list_mode(self, ctx, mode:ListMode):
         """configure_domain_list_mode"""
-        Configuration.set_var(ctx.guild.id, "CENSORING", "DOMAIN_WHITELIST", mode)
-        mode = "whitelist" if mode else "blacklist"
+        Configuration.set_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED", mode)
+        mode = "allow" if mode else "block"
         await MessageUtils.send_to(ctx, "YES", f"domain_list_mode_{mode}")
 
     @configure.command()

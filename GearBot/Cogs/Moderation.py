@@ -170,8 +170,8 @@ class Moderation(BaseCog):
 
         if Actions.can_act(f"role_{action}", ctx, user):
             role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
-            mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_WHITELIST")
-            mode_name = "whitelist" if mode else "blacklist"
+            mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE")
+            mode_name = "allow" if mode else "block"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
                     if drole < ctx.author.top_role or user == ctx.guild.owner:

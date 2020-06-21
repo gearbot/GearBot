@@ -135,9 +135,9 @@ async def on_message(bot, message:Message):
                 await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
             except Forbidden:
                 pass  # closed DMs
-        elif ctx.author.id in Configuration.get_persistent_var("user_blacklist", []):
+        elif ctx.author.id in Configuration.get_persistent_var("user_blocklist", []):
             try:
-                await MessageUtils.send_to(ctx, "BAD_USER", "You have been globally blacklisted from using this bot due to abuse", translate=False)
+                await MessageUtils.send_to(ctx, "BAD_USER", "You have been globally blocked from using this bot due to abuse", translate=False)
             except Forbidden:
                 pass  # closed DMs
         else:
@@ -145,18 +145,18 @@ async def on_message(bot, message:Message):
 
 
 async def on_guild_join(guild):
-    blocked = Configuration.get_persistent_var("server_blacklist", [])
+    blocked = Configuration.get_persistent_var("server_blocklist", [])
     if guild.id in blocked:
-        GearbotLogging.info(f"Someone tried to add me to blacklisted guild {guild.name} ({guild.id})")
+        GearbotLogging.info(f"Someone tried to add me to blocked guild {guild.name} ({guild.id})")
         try:
-            await guild.owner.send("Someone tried adding me to {guild.name} (``{guild.id}``) but the server has been blacklisted")
+            await guild.owner.send("Someone tried adding me to {guild.name} (``{guild.id}``) but the server has been blocked")
         except Exception:
             pass
         await guild.leave()
-    elif guild.owner.id in Configuration.get_persistent_var("user_blacklist", []):
-        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner.id})) is blacklisted")
+    elif guild.owner.id in Configuration.get_persistent_var("user_blocklist", []):
+        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner.id})) is blocked")
         try:
-            await guild.owner.send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blacklisted due to bot abuse, so i left")
+            await guild.owner.send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blocked due to bot abuse, so i left")
         except Exception:
             pass
         await guild.leave()
@@ -167,19 +167,19 @@ async def on_guild_join(guild):
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info_embed(guild))
 
 async def on_guild_remove(guild):
-    blocked = Configuration.get_persistent_var("server_blacklist", [])
-    blocked_users = Configuration.get_persistent_var("user_blacklist", [])
+    blocked = Configuration.get_persistent_var("server_blocklist", [])
+    blocked_users = Configuration.get_persistent_var("user_blocklist", [])
     if guild.id not in blocked and guild.owner.id not in blocked_users:
         GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info_embed(guild))
 
 
 async def on_guild_update(before, after):
-    if after.owner is not None and after.owner.id in Configuration.get_persistent_var("user_blacklist", []):
+    if after.owner is not None and after.owner.id in Configuration.get_persistent_var("user_blocklist", []):
         GearbotLogging.info(
-            f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blacklisted")
+            f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blocked")
         try:
-            await after.owner.send(f"Someone transferred {after.name} (``{after.id}``) to you, but you have been blacklisted due to bot abuse, so i left")
+            await after.owner.send(f"Someone transferred {after.name} (``{after.id}``) to you, but you have been blocked due to bot abuse, so i left")
         except Exception:
             pass
         await after.leave()

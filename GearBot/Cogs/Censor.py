@@ -47,11 +47,11 @@ class Censor(BaseCog):
         ctx = await self.bot.get_context(message)
         if Permissioncheckers.get_user_lvl(ctx.guild, ctx.author) >= 2:
             return
-        blacklist = Configuration.get_var(message.guild.id, "CENSORING", "TOKEN_BLACKLIST")
-        word_blacklist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_BLACKLIST")
-        guilds = Configuration.get_var(message.guild.id, "CENSORING", "INVITE_WHITELIST")
+        censorlist = Configuration.get_var(message.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        word_censorlist = Configuration.get_var(message.guild.id, "CENSORING", "WORD_CENSORLIST")
+        guilds = Configuration.get_var(message.guild.id, "CENSORING", "ALLOWED_INVITE_LIST")
         domain_list = Configuration.get_var(message.guild.id, "CENSORING", "DOMAIN_LIST")
-        domain_whitelist = Configuration.get_var(message.guild.id, "CENSORING", "DOMAIN_WHITELIST")
+        domains_allowed = Configuration.get_var(message.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
         content = message.content.replace('\\', '')
         decoded_content = parse.unquote(content)
         censored = False
@@ -73,15 +73,15 @@ class Censor(BaseCog):
 
         if not censored:
             content = content.lower()
-            for bad in (w.lower() for w in blacklist):
+            for bad in (w.lower() for w in censorlist):
                 if bad in content:
                     await self.censor_message(message, bad)
                     censored = True
                     break
 
-        if not censored and len(word_blacklist) > 0:
+        if not censored and len(word_censorlist) > 0:
             if ctx.guild.id not in self.regexes:
-                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_blacklist) + r")\b", re.IGNORECASE)
+                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_censorlist) + r")\b", re.IGNORECASE)
                 self.regexes[ctx.guild.id] = regex
             else:
                 regex = self.regexes[ctx.guild.id]
@@ -95,8 +95,8 @@ class Censor(BaseCog):
             for link in link_list:
                 url = urlparse(link)
                 domain = url.hostname
-                if (domain in domain_list) is not domain_whitelist:
-                    await self.censor_message(message, url.hostname, "_domain_whitelist" if domain_whitelist else "_domain_blacklist")
+                if (domain in domain_list) is not domains_allowed:
+                    await self.censor_message(message, url.hostname, "_domain_blocked")
                 print(domain)
 
 

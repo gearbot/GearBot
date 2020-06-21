@@ -24,15 +24,15 @@ Invite censoring does not kick in until there are servers on the whitelist. If y
 
 To add a server to the whitelist:
 ```
-!configure invite_whitelist add <serverid>
+!configure allowed_invites add <serverid>
 ```
 Similar story to remove one:
 ```
-!configure invite_whitelist remove <serverid>
+!configure allowed_invites remove <serverid>
 ```
 And to view the entire list:
 ```
-!configure invite_whitelist
+!configure allowed_invites
 ```
 
 ## Setting up text censoring
@@ -40,11 +40,11 @@ Text censoring works with partial text matches and is case insensitive.
 
 **WARNING:** Be very careful for partial matches as this does not differentiate if it's in the middle of a word or a word on it's own.
 
-To add something to the blacklist:
+To add something to the censor_list:
 ```
-!configure blacklist add <thing>
+!configure censor_list add <thing>
 ```
 To remove:
 ```
-!configure blacklist remove <thing>
+!configure censor_list remove <thing>
 ```
