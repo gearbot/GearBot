@@ -94,8 +94,8 @@ class ServerAdmin(BaseCog):
         super().__init__(bot)
 
         bot.to_cache = []
-        Pages.register("censorlist", self._censorlist_init, self._censorklist_update)
-        Pages.register("word_censorlist", self._word_censorlist_init, self._word_censor_list_update)
+        Pages.register("censor_list", self._censorlist_init, self._censorklist_update)
+        Pages.register("word_censor_list", self._word_censorlist_init, self._word_censor_list_update)
 
 
 
