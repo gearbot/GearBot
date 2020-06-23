@@ -319,6 +319,9 @@ def v24(config):
     config["CENSORING"]["ROLE_LIST_MODE"] = config["ROLES"]["ROLE_WHITELIST"]
     del config["ROLES"]["ROLE_WHITELIST"]
 
+def v25(config):
+    config["ROLES"]["ROLE_LIST_MODE"] = config["CENSORING"]["ROLE_WHITELIST"]
+    del config["CENSORING"]["ROLE_WHITELIST"]
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
@@ -341,7 +344,7 @@ def move_keys(config, section, *keys):
             del config[key]
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25]
 
 BOT = None
 

@@ -86,8 +86,8 @@ def gen_command_listing2(bot, cog, command):
         example = bot.help_command.get_command_signature(command).strip()
         parts = str(example).split(' ')
         parts[0] = ''.join(parts[0][1:])
-        for i in range(0, len(parts)-1):
-            if "[" == parts[i][0]:
+        for i in range(0, len(parts)):
+            if "[" == parts[i][0] and "|" in parts[i]:
                 parts[i] = ''.join(parts[i].split('|')[0][1:])
         command_listing["example"] = '!' + ' '.join(parts)
         command_listing["subcommands"] = {}
