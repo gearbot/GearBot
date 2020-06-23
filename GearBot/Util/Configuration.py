@@ -320,8 +320,9 @@ def v24(config):
     del config["ROLES"]["ROLE_WHITELIST"]
 
 def v25(config):
-    config["ROLES"]["ROLE_LIST_MODE"] = config["CENSORING"]["ROLE_WHITELIST"]
-    del config["CENSORING"]["ROLE_WHITELIST"]
+    if "ROLE_WHITELIST" in config["CENSORING"]:
+        config["ROLES"]["ROLE_LIST_MODE"] = config["CENSORING"]["ROLE_WHITELIST"]
+        del config["CENSORING"]["ROLE_WHITELIST"]
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
