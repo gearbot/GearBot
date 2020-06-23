@@ -322,7 +322,7 @@ def v24(config):
 def v25(config):
     if "ROLE_LIST_MODE" in config["CENSORING"].keys():
         config["ROLES"]["ROLE_LIST_MODE"] = config["CENSORING"]["ROLE_LIST_MODE"]
-        del config["CENSORING"]["ROLE_WHITELIST"]
+        del config["CENSORING"]["ROLE_LIST_MODE"]
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
