@@ -320,7 +320,7 @@ def v24(config):
     del config["ROLES"]["ROLE_WHITELIST"]
 
 def v25(config):
-    if "ROLE_WHITELIST" in config["CENSORING"]:
+    if "ROLE_WHITELIST" in config["CENSORING"].keys():
         config["ROLES"]["ROLE_LIST_MODE"] = config["CENSORING"]["ROLE_WHITELIST"]
         del config["CENSORING"]["ROLE_WHITELIST"]
 
