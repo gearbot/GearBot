@@ -144,6 +144,8 @@ class Infractions(BaseCog):
         await infraction.save()
         await MessageUtils.send_to(ctx, 'YES', 'inf_updated', id=infraction.id)
         InfractionUtils.clear_cache(ctx.guild.id)
+        user = await Utils.get_user(infraction.user_id)
+        GearbotLogging.log_key(ctx.guild.id, "inf_update_log", inf=infraction.id, user=Utils.clean_user(user), userid=user.id, mod=Utils.clean_user(ctx.author), modid=ctx.author.id, reason=reason)
 
     @inf.command(aliases=["del", "remove"])
     async def delete(self, ctx: commands.Context, infraction: ServerInfraction):
