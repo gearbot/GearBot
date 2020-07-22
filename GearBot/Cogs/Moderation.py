@@ -704,30 +704,66 @@ class Moderation(BaseCog):
                 else:
                     await MessageUtils.send_to(ctx, 'NO', 'mute_not_allowed', user=target)
 
+
+    @commands.guild_only()
+    @commands.command()
+    @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
+    async def munmute(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+        """munmute_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        async def yes():
+            pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
+            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True)
+            await pmessage.delete()
+            await MessageUtils.send_to(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures))
+            if len(failures) > 0:
+                await Pages.create_new(self.bot, "mass_failures", ctx, action="unmute",
+                                       failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
+        if len(targets) > 0:
+            await Confirmation.confirm(ctx, Translator.translate("munmute_confirm", ctx), on_yes=yes)
+        else:
+            await Utils.empty_list(ctx, "unmute")
+
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason: Reason = ""):
         """unmute_help"""
+        await self._unmute(ctx, target, reason=reason, confirm=True)
+
+    async def _unmute(self, ctx, target, *, reason, confirm=False):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
-            await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
+            if confirm:
+                await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
+            else:
+                raise ActionFailed(Translator.translate("unmute_fail_disabled", ctx))
         else:
             role = ctx.guild.get_role(roleid)
             if role is None:
-                await MessageUtils.send_to(ctx, 'NO', 'unmtue_fail_role_removed')
+                if confirm:
+                    await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_role_removed')
+                else:
+                    raise ActionFailed(Translator.translate("unmute_fail_role_removed", ctx))
             else:
                 infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
                 if role not in target.roles and infraction is None:
-                    await MessageUtils.send_to(ctx, 'WHAT', 'unmute_not_muted', user=Utils.clean_user(target))
+                    if confirm:
+                        await MessageUtils.send_to(ctx, 'WHAT', 'unmute_not_muted', user=Utils.clean_user(target))
+                    else:
+                        raise ActionFailed(Translator.translate("unmute_not_muted", ctx, user=Utils.clean_user(target)))
                 else:
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
-                    await MessageUtils.send_to(ctx, 'INNOCENT', 'unmute_confirmation', user=Utils.clean_user(target), inf = i.id)
+                    if confirm:
+                        await MessageUtils.send_to(ctx, 'INNOCENT', 'unmute_confirmation', user=Utils.clean_user(target), inf = i.id)
                     GearbotLogging.log_key(ctx.guild.id, 'unmute_modlog', user=Utils.clean_user(target), user_id=target.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
+
 
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)

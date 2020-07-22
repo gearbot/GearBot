@@ -806,6 +806,9 @@
   "configure_domain_list_mode": "Set if the domains on the list should be censored or only those domains should be allowed",
   "domain_list_mode_block": "All domains on the list will now be censored.",
   "domain_list_mode_allow": "All domains not on the list will now be censored",
-  "inf_update_log": "Infraction #{inf} for {user} (``{userid}``) has been updated by {mod} (``{modid}``) to ``{reason}``"
+  "inf_update_log": "Infraction #{inf} for {user} (``{userid}``) has been updated by {mod} (``{modid}``) to ``{reason}``",
+  "munmute_confirm": "Are you sure you want to unmute those people?",
+  "munmute_confirmation": "Sucessfully unmuted {count} users",
+  "mass_failures_unmute": "I was unable to unmute the following users: ({page_num}/{pages}):"
 
 }
