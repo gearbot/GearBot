@@ -38,7 +38,7 @@ if __name__ == '__main__':
     args = {
         "command_prefix": prefix_callable,
         "case_insensitive": True,
-        "max_messages": 1000,
+        "max_messages": None,
     }
     if clargs.total_shards:
         total_shards = int(clargs.total_shards)

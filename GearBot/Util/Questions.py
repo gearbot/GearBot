@@ -14,10 +14,10 @@ async def ask(ctx, text, options, timeout=60):
     for option in options:
         await message.add_reaction(option.emoji)
         handlers[str(option.emoji)] = option.handler
-    def check(reaction: Reaction, user):
-        return user == ctx.message.author and str(reaction.emoji) in handlers.keys() and reaction.message.id == message.id
+    def check(reaction):
+        return reaction.userid == ctx.message.author.id and str(reaction.emoji) in handlers.keys() and reaction.message_id == message.id
     try:
-        reaction, user = await ctx.bot.wait_for('reaction_add', timeout=timeout, check=check)
+        reaction = await ctx.bot.wait_for('raw_reaction_add', timeout=timeout, check=check)
     except asyncio.TimeoutError:
         await MessageUtils.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
         return

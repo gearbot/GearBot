@@ -1,4 +1,4 @@
-discord.py==git+https://github.com/Rapptz/discord.py@sharding-rework
+git+https://github.com/Rapptz/discord.py@sharding-rework
 tortoise-orm==0.16.6
 Pillow==6.2.0
 PyMySQL==0.9.3
