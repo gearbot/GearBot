@@ -39,7 +39,8 @@ async def cleaner(guild_id):
     todo = await inf_cleaner(guild_id, reset_cache=True)
     for view in sorted(todo, key=lambda l: l[0], reverse=True):
         await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
-    del cleaners[guild_id]
+    if guild_id in cleaners:
+        del cleaners[guild_id]
 
 async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     key = get_key(guild_id, query, fields, amount)
