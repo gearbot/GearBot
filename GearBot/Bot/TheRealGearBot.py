@@ -14,7 +14,6 @@ from aiohttp import ClientOSError, ServerDisconnectedError
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed
 from discord.abc import PrivateChannel
 from discord.ext import commands
-from peewee import PeeweeException
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
     server_info, DashConfig
