@@ -642,6 +642,10 @@ class Moderation(BaseCog):
                                 await target.add_roles(role, reason=Utils.trim_message(
                                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
                                     500))
+                                try:
+                                    await target.move_to(None, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
+                                except Forbidden:
+                                    pass
                                 until = time.time() + duration_seconds
                                 i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Mute", reason,
                                                                end=until)
