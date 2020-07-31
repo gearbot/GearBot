@@ -13,7 +13,7 @@ import discord
 import pytz
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from discord import ConnectionClosed
+from discord import ConnectionClosed, AllowedMentions
 from discord.ext import commands
 
 from Bot import TheRealGearBot
@@ -448,10 +448,10 @@ async def log_task(guild_id, target):
                 to_send = f'{to_send}\n{todo.message if todo.message is not None else ""}'
             else:
                 # too large, send it out
-                await channel.send(to_send)
+                await channel.send(to_send, allowed_mentions=AllowedMentions(everyone=False, users=False, roles=False))
                 to_send = todo.message
             if todo.embed is not None or todo.file is not None or LOG_QUEUE[target].empty():
-                await channel.send(to_send, embed=todo.embed, file=todo.file)
+                await channel.send(to_send, embed=todo.embed, file=todo.file, allowed_mentions=AllowedMentions(everyone=False, users=False, roles=False))
                 to_send = ""
         except discord.Forbidden:
             # someone screwed up their permissions, not my problem, will show an error in the dashboard

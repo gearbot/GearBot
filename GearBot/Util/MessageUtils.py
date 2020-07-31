@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 from datetime import datetime
 
-from discord import Object, HTTPException, MessageType
+from discord import Object, HTTPException, MessageType, AllowedMentions
 
 from Util import Translator, Emoji, Archive, GearbotLogging
 from database import DBUtils
@@ -69,7 +69,7 @@ async def archive_purge(bot, id_list, guild_id):
 
 async def send_to(destination, emoji, message, delete_after=None, translate=True, embed=None, **kwargs):
     translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
-    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after, embed=embed)
+    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after, embed=embed, allowed_mentions=AllowedMentions(everyone=False, users=True, roles=False))
 
 async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
     translated = Translator.translate(string_name, message.channel, **kwargs)
