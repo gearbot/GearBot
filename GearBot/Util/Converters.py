@@ -249,7 +249,7 @@ class ListMode(Converter):
         argument = argument.lower()
         if argument == "allow":
             return True
-        elif argument == "block" or argument == "censor":
+        elif argument == "block" or argument == "censor" or argument == "blocked":
             return False
         else:
             raise TranslatedBadArgument("invalid_mode", ctx)
