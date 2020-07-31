@@ -643,7 +643,7 @@ class Moderation(BaseCog):
                                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
                                     500))
                                 if target.voice:
-                                    permissions = ctx.bot.permissions_in(target.voice.channel)
+                                    permissions = target.voice.channel.permissions_for(ctx.guild.me)
                                     if permissions.move_members:
                                         await target.move_to(None, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
                                 until = time.time() + duration_seconds
