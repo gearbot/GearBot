@@ -110,8 +110,7 @@ class Reminders(BaseCog):
         alternative = channel if r.dm else dm
 
         new_status = 2 if (await self.attempt_delivery(first, r) or await self.attempt_delivery(alternative, r)) else 3
-        r.status = new_status
-        await r.save()
+        await r.delete()
 
     async def attempt_delivery(self, location, package):
         try:

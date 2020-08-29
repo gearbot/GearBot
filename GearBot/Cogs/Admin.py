@@ -2,13 +2,17 @@ import contextlib
 import io
 import textwrap
 import traceback
+from datetime import datetime
+from time import time
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
+from discord.utils import time_snowflake
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update, DocUtils
 from Util.Converters import UserID, Guild, DiscordUser
+from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 
 
 class Admin(BaseCog):
@@ -16,9 +20,11 @@ class Admin(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         Pages.register("eval", self.init_eval, self.update_eval)
+        self.db_cleaner.start()
 
     def cog_unload(self):
         Pages.unregister("eval")
+        self.db_cleaner.cancel()
 
     async def cog_check(self, ctx):
         return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
@@ -168,6 +174,15 @@ class Admin(BaseCog):
     @commands.command()
     async def pendingchanges(self, ctx):
         await ctx.send(f'https://github.com/gearbot/GearBot/compare/{self.bot.version}...master')
+
+    @tasks.loop(hours=1)
+    async def db_cleaner(self):
+        if Configuration.get_master_var("purge_db", True):
+            # purge all messages older then 6 weeks
+            snowflake = time_snowflake(datetime.fromtimestamp(time() - 60*60*24*7*6))
+            purged_attachments = await LoggedAttachment.filter(id__lt=snowflake).delete()
+            purged = await LoggedMessage.filter(messageid__lt=snowflake).delete()
+            GearbotLogging.info(f"Purged {purged} old messages and {purged_attachments} attachments")
 
 
 
