@@ -661,7 +661,7 @@ class Moderation(BaseCog):
     @commands.command()
     @bot_has_guild_permission(add_reactions=True)
     @commands.bot_has_permissions(add_reactions=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
+ async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
             parts = reason.split(" ")
@@ -735,7 +735,7 @@ class Moderation(BaseCog):
                                             await dm_channel.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('extend_mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.Forbidden:
-                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                            GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                 userid=target.id)
 
                                 async def until():
@@ -757,7 +757,7 @@ class Moderation(BaseCog):
                                             await dm_channel.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_until_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.Forbidden:
-                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                            GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                 userid=target.id)
 
                                 async def overwrite():
@@ -779,7 +779,7 @@ class Moderation(BaseCog):
                                             await dm_channel.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_change_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.Forbidden:
-                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                            GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                 userid=target.id)
 
                                 await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
