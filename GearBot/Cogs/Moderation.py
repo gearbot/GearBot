@@ -684,6 +684,7 @@ class Moderation(BaseCog):
                         duration_seconds = duration.to_seconds(ctx)
                         if duration_seconds > 0:
                             infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
+
                             if infraction is None:
                                 await target.add_roles(role, reason=Utils.trim_message(
                                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
@@ -704,6 +705,16 @@ class Moderation(BaseCog):
                                                        moderator_id=ctx.author.id,
                                                        duration=f'{duration.length} {duration.unit}',
                                                        reason=reason, inf=i.id)
+                                name = Utils.clean_user(target)
+                                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                    try:
+                                        dm_channel = await target.create_dm();
+                                        dur=f'{duration.length}{duration.unit}'
+                                        await dm_channel.send(
+                                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
+                                    except discord.Forbidden:
+                                        GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
+                                                            userid=target.id)
                             else:
                                 d = f'{duration.length} {duration.unit}'
                                 async def extend():
@@ -716,6 +727,16 @@ class Moderation(BaseCog):
                                                            moderator_id=ctx.author.id,
                                                            duration=f'{duration.length} {duration.unit}',
                                                            reason=reason, inf_id=infraction.id, end=infraction.end)
+                                    name = Utils.clean_user(target)
+                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                        try:
+                                            dm_channel = await target.create_dm();
+                                            dur=f'{duration.length}{duration.unit}'
+                                            await dm_channel.send(
+                                                f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('extend_mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
+                                        except discord.Forbidden:
+                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                                                userid=target.id)
 
                                 async def until():
                                     infraction.end = time.time() + duration_seconds
@@ -728,6 +749,16 @@ class Moderation(BaseCog):
                                                            moderator_id=ctx.author.id,
                                                            duration=f'{duration.length} {duration.unit}',
                                                            reason=reason, inf_id=infraction.id, end=infraction.end)
+                                    name = Utils.clean_user(target)
+                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                        try: 
+                                            dm_channel = await target.create_dm();
+                                            dur=f'{duration.length}{duration.unit}'
+                                            await dm_channel.send(
+                                                f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_until_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
+                                        except discord.Forbidden:
+                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                                                userid=target.id)
 
                                 async def overwrite():
                                     infraction.end = infraction.start + duration_seconds
@@ -740,13 +771,23 @@ class Moderation(BaseCog):
                                                            moderator_id=ctx.author.id,
                                                            duration=f'{duration.length} {duration.unit}',
                                                            reason=reason, inf_id=infraction.id, end=infraction.end)
-
+                                    name = Utils.clean_user(target)
+                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                        try:
+                                            dm_channel = await target.create_dm();
+                                            dur=f'{duration.length}{duration.unit}'
+                                            await dm_channel.send(
+                                                f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_change_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
+                                        except discord.Forbidden:
+                                            GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
+                                                                userid=target.id)
 
                                 await Questions.ask(ctx, MessageUtils.assemble(ctx, 'WHAT', 'mute_options', id=infraction.id), [
                                     Questions.Option(Emoji.get_emoji("1"), Translator.translate("mute_option_extend", ctx, duration=d), extend),
                                     Questions.Option(Emoji.get_emoji("2"), Translator.translate("mute_option_until", ctx, duration=d), until),
                                     Questions.Option(Emoji.get_emoji("3"), Translator.translate("mute_option_overwrite", ctx, duration=d), overwrite)
                                 ])
+                                
                         else:
                             await MessageUtils.send_to(ctx, 'NO', 'mute_negative_denied', duration=f'{duration.length} {duration.unit}')
                     else:
