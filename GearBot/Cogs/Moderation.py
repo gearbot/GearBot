@@ -824,7 +824,7 @@ class Moderation(BaseCog):
         """unmute_help"""
         await self._unmute(ctx, target, reason=reason, confirm=True)
 
-    async def _unmute(self, ctx, target, *, reason, confirm=False):
+    async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=True):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
@@ -849,6 +849,15 @@ class Moderation(BaseCog):
                         raise ActionFailed(Translator.translate("unmute_not_muted", ctx, user=Utils.clean_user(target)))
                 else:
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
+                    name = Utils.clean_user(user)
+                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
+                        try:
+                            dm_channel = await user.create_dm();
+                            await dm_channel.send(
+                                f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unmute_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+                        except discord.Forbidden:
+                            GearbotLogging.log_key(ctx.guild.id, 'unmute_could_not_dm', user=name,
+                                                userid=user.id)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                     if confirm:
