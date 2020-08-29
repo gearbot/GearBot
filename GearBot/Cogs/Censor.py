@@ -97,7 +97,6 @@ class Censor(BaseCog):
                 domain = url.hostname
                 if (domain in domain_list) is not domains_allowed:
                     await self.censor_message(message, url.hostname, "_domain_blocked")
-                print(domain)
 
 
     async def censor_message(self, message, bad, key=""):
