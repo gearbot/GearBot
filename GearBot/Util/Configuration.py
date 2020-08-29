@@ -329,6 +329,7 @@ def v26(config):
     config["INFRACTIONS"]["DM_ON_MUTE"] = False
     config["INFRACTIONS"]["DM_ON_KICK"] = False
     config["INFRACTIONS"]["DM_ON_BAN"] = False
+    config["INFRACTIONS"]["DM_ON_TEMPBAN"] = False
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
