@@ -302,9 +302,23 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
+        if reason == "":
+            reason = Translator.translate("no_reason", ctx.guild.id)
+                        
         if ctx.guild.get_member(user.id) is not None:
             member = ctx.guild.get_member(user.id)
             await self._ban_command(ctx, member, reason, 0)
+
+        name = Utils.clean_user(user)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN"):
+            try:
+                dm_channel = await user.create_dm();
+                await dm_channel.send(
+                    f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+            except discord.Forbidden:
+                GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
+                                       userid=user.id)
+                    
         else:
             async def yes():
                 await ctx.invoke(self.forceban, user=user, reason=reason)
@@ -367,12 +381,23 @@ class Moderation(BaseCog):
         else:
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
-    async def _ban(self, ctx, user, reason, confirm, days=0):
+    async def _ban(self, ctx, user, reason, confirm, days=0, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                             delete_message_days=days)
         await Infraction.filter(user_id=user.id, type="Unban", guild_id=ctx.guild.id).update(active=False)
+                    
+        name = Utils.clean_user(user)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
+            try:
+                dm_channel = await user.create_dm();
+                await dm_channel.send(
+                    f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+            except discord.Forbidden:
+                GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
+                                       userid=user.id)
+                    
         i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_key(ctx.guild.id, 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         if confirm:
@@ -409,7 +434,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False)
+            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False, dm_action=True)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
