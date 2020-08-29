@@ -205,8 +205,18 @@ class Moderation(BaseCog):
             reason = Translator.translate("no_reason", ctx.guild.id)
 
         await Actions.act(ctx, "kick", user.id, self._kick, reason=reason, message=True)
-
-    async def _kick(self, ctx, user, reason, message):
+        
+        name = Utils.clean_user(user)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK"):
+            try:
+                dm_channel = await user.create_dm();
+                await dm_channel.send(
+                    f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+            except discord.Forbidden:
+                GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
+                                       userid=user.id)
+                    
+    async def _kick(self, ctx, user, reason, message, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         await ctx.guild.kick(user,
                              reason=Utils.trim_message(
@@ -216,6 +226,17 @@ class Moderation(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'kick_log', user=Utils.clean_user(user), user_id=user.id,
                                moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
                                reason=reason, inf=i.id)
+        
+        name = Utils.clean_user(user)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
+            try:
+                dm_channel = await user.create_dm();
+                await dm_channel.send(
+                    f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
+            except discord.Forbidden:
+                GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
+                                       userid=user.id)
+                    
         if message:
             await MessageUtils.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
                                        user_id=user.id, reason=reason, inf=i.id)
@@ -231,7 +252,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False)
+            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False, dm_action=True)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
