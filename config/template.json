@@ -36,7 +36,8 @@
 		"DM_ON_UNMUTE": false,
 		"DM_ON_MUTE": false,
 		"DM_ON_KICK": false,
-		"DM_ON_BAN": false
+		"DM_ON_BAN": false,
+		"DM_ON_TEMPBAN": false
 	},
 	"PERM_OVERRIDES": {},
 	"RAID_HANDLING": {
