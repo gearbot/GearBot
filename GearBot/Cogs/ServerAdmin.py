@@ -863,6 +863,13 @@ class ServerAdmin(BaseCog):
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_ban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @configure.command()
+    async def dm_on_tempban(self, ctx, value: bool):
+        """dm_on_tempban_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_tempban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
     async def dm_on_mute(self, ctx, value: bool):
         """dm_on_mute_help"""
         Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE", value)
