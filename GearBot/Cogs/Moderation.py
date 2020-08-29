@@ -806,7 +806,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True)
+            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True, dm_action=True)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
