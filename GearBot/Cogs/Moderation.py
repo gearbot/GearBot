@@ -661,7 +661,7 @@ class Moderation(BaseCog):
     @commands.command()
     @bot_has_guild_permission(add_reactions=True)
     @commands.bot_has_permissions(add_reactions=True)
- async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
+    async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
             parts = reason.split(" ")
