@@ -16,7 +16,7 @@ from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction,
 class Infractions(BaseCog):
 
     @staticmethod
-    async def _warn(ctx, target, *, reason, message=True):
+    async def _warn(ctx, target, *, reason, message=True, dm_action=True):
         i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
         name = Utils.clean_user(target)
         if message:
@@ -24,7 +24,7 @@ class Infractions(BaseCog):
         aname = Utils.clean_user(ctx.author)
         GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
                                user_id=target.id, moderator_id=ctx.author.id, inf=i.id)
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN"):
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN") and dm_action:
             try:
                 dm_channel = await target.create_dm()
                 await dm_channel.send(
@@ -72,7 +72,7 @@ class Infractions(BaseCog):
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
             failures = await Actions.mass_action(ctx, "warning", targets, self._warn, max_targets=10, allow_bots=False,
-                                                 message=False, reason=reason)
+                                                 message=False, reason=reason, dm_action=True)
 
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mwarn_confirmation", count=len(targets) - len(failures))
