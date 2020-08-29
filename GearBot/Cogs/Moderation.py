@@ -365,11 +365,23 @@ class Moderation(BaseCog):
         if allowed:
             duration_seconds = duration.to_seconds(ctx)
             if duration_seconds > 0:
-
+                name = Utils.clean_user(user)
+                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
+                    try:
+                        dm_channel = await user.create_dm();
+                        dur=f'{duration.length}{duration.unit}'
+                        await dm_channel.send(
+                            f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('tempban_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
+                    except discord.Forbidden:
+                        GearbotLogging.log_key(ctx.guild.id, 'tempban_could_not_dm', user=name,
+                                            userid=user.id)
+                                            
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
+
+
                 until = time.time() + duration_seconds
                 i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
                 GearbotLogging.log_key(ctx.guild.id, 'tempban_log', user=Utils.clean_user(user), user_id=user.id,
