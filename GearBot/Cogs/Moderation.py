@@ -205,27 +205,9 @@ class Moderation(BaseCog):
             reason = Translator.translate("no_reason", ctx.guild.id)
 
         await Actions.act(ctx, "kick", user.id, self._kick, reason=reason, message=True)
-        
-        name = Utils.clean_user(user)
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK"):
-            try:
-                dm_channel = await user.create_dm();
-                await dm_channel.send(
-                    f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-            except discord.Forbidden:
-                GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
-                                       userid=user.id)
                     
     async def _kick(self, ctx, user, reason, message, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-        await ctx.guild.kick(user,
-                             reason=Utils.trim_message(
-                                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
-                                 500))
-        i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, 'Kick', reason, active=False)
-        GearbotLogging.log_key(ctx.guild.id, 'kick_log', user=Utils.clean_user(user), user_id=user.id,
-                               moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
-                               reason=reason, inf=i.id)
         
         name = Utils.clean_user(user)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
@@ -236,7 +218,15 @@ class Moderation(BaseCog):
             except discord.Forbidden:
                 GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
                                        userid=user.id)
-                    
+        
+        await ctx.guild.kick(user,
+                             reason=Utils.trim_message(
+                                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
+                                 500))
+        i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, 'Kick', reason, active=False)
+        GearbotLogging.log_key(ctx.guild.id, 'kick_log', user=Utils.clean_user(user), user_id=user.id,
+                               moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id,
+                               reason=reason, inf=i.id)                    
         if message:
             await MessageUtils.send_to(ctx, "YES", "kick_confirmation", ctx.guild.id, user=Utils.clean_user(user),
                                        user_id=user.id, reason=reason, inf=i.id)
@@ -307,18 +297,7 @@ class Moderation(BaseCog):
                         
         if ctx.guild.get_member(user.id) is not None:
             member = ctx.guild.get_member(user.id)
-            await self._ban_command(ctx, member, reason, 0)
-
-        name = Utils.clean_user(user)
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN"):
-            try:
-                dm_channel = await user.create_dm();
-                await dm_channel.send(
-                    f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-            except discord.Forbidden:
-                GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
-                                       userid=user.id)
-                    
+            await self._ban_command(ctx, member, reason, 0)                    
         else:
             async def yes():
                 await ctx.invoke(self.forceban, user=user, reason=reason)
@@ -395,11 +374,7 @@ class Moderation(BaseCog):
 
     async def _ban(self, ctx, user, reason, confirm, days=0, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-        await ctx.guild.ban(user, reason=Utils.trim_message(
-            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
-                            delete_message_days=days)
-        await Infraction.filter(user_id=user.id, type="Unban", guild_id=ctx.guild.id).update(active=False)
-                    
+                            
         name = Utils.clean_user(user)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
             try:
@@ -410,6 +385,10 @@ class Moderation(BaseCog):
                 GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
                                        userid=user.id)
                     
+        await ctx.guild.ban(user, reason=Utils.trim_message(
+            f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
+                            delete_message_days=days)
+        await Infraction.filter(user_id=user.id, type="Unban", guild_id=ctx.guild.id).update(active=False)
         i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Ban", reason)
         GearbotLogging.log_key(ctx.guild.id, 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
         if confirm:
