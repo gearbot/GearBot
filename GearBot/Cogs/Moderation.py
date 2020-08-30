@@ -840,15 +840,15 @@ class Moderation(BaseCog):
                         raise ActionFailed(Translator.translate("unmute_not_muted", ctx, user=Utils.clean_user(target)))
                 else:
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
-                    name = Utils.clean_user(user)
+                    name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
                         try:
-                            dm_channel = await user.create_dm();
+                            dm_channel = await target.create_dm();
                             await dm_channel.send(
                                 f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unmute_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
                         except discord.Forbidden:
                             GearbotLogging.log_key(ctx.guild.id, 'unmute_could_not_dm', user=name,
-                                                userid=user.id)
+                                                userid=target.id)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                     if confirm:
