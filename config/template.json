@@ -1,5 +1,5 @@
 {
-	"VERSION": 26,
+	"VERSION": 27,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -32,7 +32,12 @@
 		"DOMAIN_LIST": []
 	},
 	"INFRACTIONS": {
-		"DM_ON_WARN": false
+		"DM_ON_WARN": false,
+		"DM_ON_UNMUTE": false,
+		"DM_ON_MUTE": false,
+		"DM_ON_KICK": false,
+		"DM_ON_BAN": false,
+		"DM_ON_TEMPBAN": false
 	},
 	"PERM_OVERRIDES": {},
 	"RAID_HANDLING": {

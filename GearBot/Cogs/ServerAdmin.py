@@ -847,6 +847,41 @@ class ServerAdmin(BaseCog):
         Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN", value)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+    
+    @configure.command()            
+    async def dm_on_kick(self, ctx, value: bool):
+        """dm_on_kick_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_kick_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
+    async def dm_on_ban(self, ctx, value: bool):
+        """dm_on_ban_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_ban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
+    async def dm_on_tempban(self, ctx, value: bool):
+        """dm_on_tempban_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_tempban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
+    async def dm_on_mute(self, ctx, value: bool):
+        """dm_on_mute_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_mute_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+    @configure.command()
+    async def dm_on_unmute(self, ctx, value: bool):
+        """dm_on_unmute_help"""
+        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_unmute_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @configure.command()
     async def log_embeds(self, ctx, value: bool):

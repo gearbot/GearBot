@@ -118,7 +118,8 @@ LOGGING_INFO = {
     "MOD_ACTIONS": {
         "ban": {
             "ban_log": "BAN",
-            "manual_ban_log": "BAN"
+            "manual_ban_log": "BAN",
+            "ban_could_not_dm": "WARNING" 
         },
         "errors": {
             "mute_reapply_failed_log": "WARNING",
@@ -130,12 +131,16 @@ LOGGING_INFO = {
         },
         "forceban_log": "BAN",
         "inf_delete_log": "DELETE",
-        "kick_log": "BOOT",
+        "kick_log": {
+            "kick_log": "BOOT",
+            "kick_could_not_dm": "WARNING" 
+        },
         "mute_log": {
             "mute_duration_added_log": "MUTE",
             "mute_duration_extended_log": "MUTE",
             "mute_duration_overwritten_log": "MUTE",
-            "mute_log": "MUTE"
+            "mute_log": "MUTE",
+            "mute_could_not_dm": "WARNING" 
         },
         "mute_reapply_log": "BAD_USER",
         "softban_log": "BAN",
@@ -146,7 +151,10 @@ LOGGING_INFO = {
             "unban_log": "INNOCENT"
         },
         "unmute_modlog": "INNOCENT",
-        "unmuted": "INNOCENT",
+        "unmuted": {
+            "unmuted": "INNOCENT",
+            "unmute_could_not_dm": "WARNING"
+        },
         "verification_log": "WRENCH",
         "warning": {
             "warning_added_modlog": "WARNING",
