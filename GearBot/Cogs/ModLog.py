@@ -636,6 +636,7 @@ async def cache_task(modlog: ModLog):
             ctx = modlog.bot.to_cache.pop(0)
             await modlog.buildCache(ctx.guild, limit=500)
             await ctx.send("Caching complete.")
+            ctx = None
         await asyncio.sleep(1)
     GearbotLogging.info("modlog background task terminated.")
 
