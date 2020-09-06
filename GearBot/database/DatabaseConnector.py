@@ -81,3 +81,4 @@ async def init():
         db_url=f"mysql://{Configuration.get_master_var('DATABASE_USER')}:{Configuration.get_master_var('DATABASE_PASS')}@{Configuration.get_master_var('DATABASE_HOST')}:{Configuration.get_master_var('DATABASE_PORT')}/{Configuration.get_master_var('DATABASE_NAME')}",
         modules={"models": ["database.DatabaseConnector"]}
     )
+    await Tortoise.generate_schemas()

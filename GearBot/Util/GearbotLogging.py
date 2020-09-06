@@ -146,6 +146,7 @@ LOGGING_INFO = {
         "softban_log": "BAN",
         "tempban_lifted": "INNOCENT",
         "tempban_log": "BAN",
+        "tempban_could_not_dm": "WARNING",
         "unban": {
             "manual_unban_log": "INNOCENT",
             "unban_log": "INNOCENT"
