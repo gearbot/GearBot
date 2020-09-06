@@ -242,7 +242,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_KICK"))
+            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False, dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
@@ -424,7 +424,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_BAN"))
+            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False, dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
@@ -796,7 +796,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_UNMUTE"))
+            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True, dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
