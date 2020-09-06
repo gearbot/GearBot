@@ -242,7 +242,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False, dm_action=True)
+            failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_KICK"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
@@ -347,9 +347,8 @@ class Moderation(BaseCog):
                 name = Utils.clean_user(user)
                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
                     try:
-                        dm_channel = await user.create_dm()
                         dur=f'{duration.length}{duration.unit}'
-                        await dm_channel.send(
+                        await user.send(
                             f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('tempban_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                     except discord.HTTPException:
                         GearbotLogging.log_key(ctx.guild.id, 'tempban_could_not_dm', user=name,
@@ -425,7 +424,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False, dm_action=True)
+            failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False, require_on_server=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_BAN"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
@@ -797,7 +796,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True, dm_action=True)
+            failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason, require_on_server=True, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_UNMUTE"))
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
@@ -815,7 +814,7 @@ class Moderation(BaseCog):
         """unmute_help"""
         await self._unmute(ctx, target, reason=reason, confirm=True)
 
-    async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=True):
+    async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_UNMUTE")):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
