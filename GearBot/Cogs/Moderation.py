@@ -212,8 +212,7 @@ class Moderation(BaseCog):
         name = Utils.clean_user(user)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
             try:
-                dm_channel = await user.create_dm()
-                await dm_channel.send(
+                await user.send(
                     f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
             except discord.HTTPException:
                 GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
@@ -377,8 +376,7 @@ class Moderation(BaseCog):
         name = Utils.clean_user(user)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
             try:
-                dm_channel = await user.create_dm()
-                await dm_channel.send(
+                await user.send(
                     f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
             except discord.HTTPException:
                 GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
@@ -698,9 +696,8 @@ class Moderation(BaseCog):
                                 name = Utils.clean_user(target)
                                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                     try:
-                                        dm_channel = await target.create_dm()
                                         dur=f'{duration.length}{duration.unit}'
-                                        await dm_channel.send(
+                                        await target.send(
                                             f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                     except discord.HTTPException:
                                         GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
@@ -720,9 +717,8 @@ class Moderation(BaseCog):
                                     name = Utils.clean_user(target)
                                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try:
-                                            dm_channel = await target.create_dm()
                                             dur=f'{duration.length}{duration.unit}'
-                                            await dm_channel.send(
+                                            await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('extend_mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.HTTPException:
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
@@ -742,9 +738,8 @@ class Moderation(BaseCog):
                                     name = Utils.clean_user(target)
                                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try: 
-                                            dm_channel = await target.create_dm()
                                             dur=f'{duration.length}{duration.unit}'
-                                            await dm_channel.send(
+                                            await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_until_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.HTTPException:
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
@@ -764,9 +759,8 @@ class Moderation(BaseCog):
                                     name = Utils.clean_user(target)
                                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try:
-                                            dm_channel = await target.create_dm()
                                             dur=f'{duration.length}{duration.unit}'
-                                            await dm_channel.send(
+                                            await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_change_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
                                         except discord.HTTPException:
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
@@ -842,8 +836,7 @@ class Moderation(BaseCog):
                     name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
                         try:
-                            dm_channel = await target.create_dm()
-                            await dm_channel.send(
+                            await target.send(
                                 f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unmute_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
                         except discord.HTTPException:
                             GearbotLogging.log_key(ctx.guild.id, 'unmute_could_not_dm', user=name,
