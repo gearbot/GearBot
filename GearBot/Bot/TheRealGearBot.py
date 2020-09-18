@@ -220,7 +220,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         # notify caller
         e = Emoji.get_chat_emoji('BUG')
         if ctx.channel.permissions_for(ctx.me).send_messages:
-            await ctx.send(f"{e} Something went wrong while executing that command {e}")
+            await ctx.send(f"{e} Something went wrong while executing that command. If this keeps happening please report it on support server (DM me ``!about`` or check the website for an invite) {e}")
 
 
 
