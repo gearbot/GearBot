@@ -22,7 +22,10 @@ class Censor(BaseCog):
     async def on_message(self, message: discord.Message):
         if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
-        await self.check_message(message.author, message.content, message.channel, message.id)
+        member = message.guild.get_member(message.author.id) #d.py is weird
+        if member is None:
+            return
+        await self.check_message(member, message.content, message.channel, message.id)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
