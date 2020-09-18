@@ -28,7 +28,7 @@ class Censor(BaseCog):
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         m = await MessageUtils.get_message_data(self.bot, event.message_id)
-        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED"):
+        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED") or "content" not in event.data:
             return
         author_id=None
         if m is not None:
