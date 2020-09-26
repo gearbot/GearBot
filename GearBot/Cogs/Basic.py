@@ -45,7 +45,7 @@ class Basic(BaseCog):
         unique = str(len(self.bot.users))
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
                               timestamp=datetime.utcfromtimestamp(time.time()),
-                              description=
+                              description=f"Stats for cluster {self.bot.cluster}\n" +
                               MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears',
                                                     duration=Translator.translate('dhms', ctx, days=days, hours=hours,
                                                                                   minutes=minutes,

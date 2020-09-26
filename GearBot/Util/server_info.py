@@ -57,16 +57,6 @@ def server_info_embed(guild, request_guild=None):
             value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji"
         )
 
-    statuses = dict(online=0, idle=0, dnd=0, offline=0)
-    for m in guild.members:
-        statuses[str(m.status)] += 1
-    embed.add_field(
-        name=Translator.translate('member_statuses', request_guild),
-        value="\n".join(
-            f"{Emoji.get_chat_emoji(status.upper())} {Translator.translate(status, request_guild)}: {count}" for
-            status, count in statuses.items())
-    )
-
     if guild.splash_url != "":
         embed.set_image(url=guild.splash_url)
     if guild.banner_url_as() != "":
