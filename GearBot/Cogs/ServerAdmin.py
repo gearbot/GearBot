@@ -96,6 +96,7 @@ class ServerAdmin(BaseCog):
         bot.to_cache = []
         Pages.register("censor_list", self._censorlist_init, self._censorklist_update)
         Pages.register("word_censor_list", self._word_censorlist_init, self._word_censor_list_update)
+        Pages.register("full_message_censor_list", self._full_censorlist_init, self._full_censor_list_update)
 
 
 
@@ -232,6 +233,7 @@ class ServerAdmin(BaseCog):
 
     @configure.command(name="censortrustedbypass")
     async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
+        """censortrustedbypass_help"""
         config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS")
 
         enabled_string = "enabled" if enabled_status else "disabled"
@@ -891,6 +893,7 @@ class ServerAdmin(BaseCog):
 
     @configure.group(aliases=["censorlist"])
     async def censor_list(self, ctx):
+        "censor_list_help"
         if ctx.invoked_subcommand is None:
             await Pages.create_new(self.bot, "censor_list", ctx)
 
@@ -960,10 +963,10 @@ class ServerAdmin(BaseCog):
     @word_censor_list.command("remove")
     async def word_censor_list_remove(self, ctx, *, word: str):
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
-        if word not in censor_list:
+        if word.lower() not in censor_list:
             await MessageUtils.send_to(ctx, "NO", "not_censored", word=word)
         else:
-            censor_list.remove(word)
+            censor_list.remove(word.lower())
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
@@ -1088,6 +1091,150 @@ class ServerAdmin(BaseCog):
                 else:
                     Configuration.set_var(ctx.guild.id, "GENERAL", "TIMEZONE", zone)
                     await MessageUtils.send_to(ctx, "YES", "timezone_set", timezone=zone)
+
+
+
+    @configure.group()
+    async def full_message_censor_list(self, ctx):
+        """full_message_censor_list_help"""
+        if ctx.invoked_subcommand is None:
+            await Pages.create_new(self.bot, "full_message_censor_list", ctx)
+
+    @staticmethod
+    async def _full_censorlist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")))
+        return f"**{Translator.translate(f'full_message_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+
+    @staticmethod
+    async def _full_censor_list_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate(
+            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "FULL_MESSAGE_LIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return f"**{Translator.translate(f'full_message_censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+
+    @full_message_censor_list.command("add")
+    async def full_message_censor_list_add(self, ctx, *, message: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+        if message.lower() in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "already_censored", word=message)
+        else:
+            censor_list.append(message.lower())
+            await MessageUtils.send_to(ctx, "YES", "entry_added", entry=message)
+            Configuration.save(ctx.guild.id)
+
+    @full_message_censor_list.command("remove")
+    async def full_message_censor_list_remove(self, ctx, *, message: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+        if message.lower() not in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "not_censored", word=message)
+        else:
+            censor_list.remove(message.lower())
+            await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=message)
+            Configuration.save(ctx.guild.id)
+
+
+    @configure.command()
+    async def censor_emoji_only_messages(self, ctx, value: bool):
+        "censor_emoji_only_messages_help"
+        Configuration.set_var(ctx.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('censor_emoji_messages_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+
+
+    @configure.group()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
+    async def custom_commands_role_list(self, ctx):
+        if ctx.invoked_subcommand is None:
+            items = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", f"ROLES")
+            mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
+            if len(items) == 0:
+                desc = Translator.translate(f"no_role_{mode}", ctx)
+            else:
+                desc = "\n".join(f"<@&{item}>" for item in items)
+            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx), description=desc)
+            await ctx.send(embed=embed)
+
+    @custom_commands_role_list.command("add")
+    async def custom_commands_role_list_add(self, ctx, *, role:discord.Role):
+        roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
+        if role == ctx.guild.default_role:
+            await MessageUtils.send_to(ctx, "NO", "default_role_forbidden")
+        elif role.id in roles:
+            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_add_fail", role=Utils.escape_markdown(role.name))
+        else:
+            roles.append(role.id)
+            Configuration.save(ctx.guild.id)
+            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+
+
+    @custom_commands_role_list.command("remove", aliases=["rmv"])
+    async def custom_commands_role_list_remove(self, ctx, *, role: discord.Role):
+        roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
+        mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
+        if role.id not in roles:
+            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
+        else:
+            roles.remove(role.id)
+            Configuration.save(ctx.guild.id)
+            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+
+
+
+    @commands.guild_only()
+    @configure.group()
+    async def custom_commands_channel_list(self, ctx):
+        """custom_commands_channel_list_help"""
+        if ctx.invoked_subcommand == self.custom_commands_channel_list:
+            pass
+
+    @custom_commands_channel_list.command("add")
+    async def custom_commands_ignored_channels_add(self, ctx, channel:TextChannel):
+        channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
+        mode = "ignore" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "use"
+        if channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list')
+        else:
+            channels.append(channel.id)
+            await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_added_{mode}', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
+
+    @custom_commands_channel_list.command("remove")
+    async def custom_commands_ignored_channels_remove(self, ctx, channel: TextChannel):
+        channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
+        mode = "ignore" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "use"
+        if not channel.id in channels:
+            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_not_on_{mode}_list', channel=channel.mention)
+        else:
+            channels.remove(channel.id)
+            await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_{mode}_removed', channel=channel.mention)
+            Configuration.save(ctx.guild.id)
+
+
+    @custom_commands_channel_list.command("mode")
+    async def custom_commands_role_list_mode(self, ctx, mode:ListMode):
+        Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED", mode)
+        mode = "ignore" if mode else "use"
+        await MessageUtils.send_to(ctx, "YES", f"custom_commands_channel_list_mode_{mode}")
+
+
+
+    @custom_commands_role_list.command("mode")
+    async def custom_commands_role_list_mode(self, ctx, mode:ListMode):
+        Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED", mode)
+        mode = "allowed" if mode else "blocked"
+        await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_mode_{mode}")
+
+
+    @configure.command()
+    async def custom_commands_mod_bypass(self, ctx, value: bool):
+        """custom_commands_mod_bypass"""
+        Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS", value)
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_commands_mod_bypass_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):

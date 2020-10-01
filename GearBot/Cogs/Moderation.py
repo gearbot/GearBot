@@ -298,10 +298,17 @@ class Moderation(BaseCog):
             member = ctx.guild.get_member(user.id)
             await self._ban_command(ctx, member, reason, 0)                    
         else:
-            async def yes():
-                await ctx.invoke(self.forceban, user=user, reason=reason)
 
-            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx, "SINISTER", 'ban_user_not_here', user=Utils.clean_user(user)), on_yes=yes)
+            try:
+                await ctx.guild.fetch_ban(user)
+            except NotFound:
+                async def yes():
+                    await ctx.invoke(self.forceban, user=user, reason=reason)
+
+                await Confirmation.confirm(ctx, MessageUtils.assemble(ctx, "SINISTER", 'ban_user_not_here', user=Utils.clean_user(user)), on_yes=yes)
+            else:
+                await MessageUtils.send_to(ctx, 'BAD_USER', 'already_banned_user')
+
 
     @commands.command(aliases=["clean_ban"])
     @commands.guild_only()
@@ -577,11 +584,8 @@ class Moderation(BaseCog):
                 #not banned, wack em
                 await self._forceban(ctx, user, reason)
             else:
-                # already banned, ask for confirmation
-                message = MessageUtils.assemble(ctx, 'QUESTION', 'forceban_banned_confirmation', user=Utils.clean_user(user))
-                async def yes():
-                    await self._forceban(ctx, user, reason)
-                await Confirmation.confirm(ctx, message, on_yes=yes)
+                await MessageUtils.send_to(ctx, 'BAD_USER', 'already_banned_user')
+
         else:
             # they are here, reroute to regular ban
             await MessageUtils.send_to(ctx, 'WARNING', 'forceban_to_ban', user=Utils.clean_user(member))

@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py@master
+discord.py==1.5.0
 tortoise-orm==0.16.14
 Pillow==7.2.0
 requests==2.24.0
@@ -8,3 +8,4 @@ pytz==2020.1
 pyseeyou==1.0.0
 prometheus_client==0.8.0
 aiomysql==0.0.20
+emoji==0.6.0

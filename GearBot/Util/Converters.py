@@ -247,9 +247,9 @@ class RangedIntBan(RangedInt):
 class ListMode(Converter):
     async def convert(self, ctx, argument):
         argument = argument.lower()
-        if argument == "allow":
+        if argument == "allow" or argument == "allowed":
             return True
-        elif argument == "block" or argument == "censor" or argument == "blocked":
+        elif argument == "block" or argument == "censor" or argument == "blocked" or argument == "deny":
             return False
         else:
             raise TranslatedBadArgument("invalid_mode", ctx)

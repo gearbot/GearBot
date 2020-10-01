@@ -1,5 +1,5 @@
 {
-	"VERSION": 27,
+	"VERSION": 29,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -29,7 +29,9 @@
 		"TOKEN_CENSORLIST": [],
 		"ALLOWED_INVITE_LIST": [],
 		"DOMAIN_LIST_ALLOWED": false,
-		"DOMAIN_LIST": []
+		"DOMAIN_LIST": [],
+		"FULL_MESSAGE_LIST": [],
+		"CENSOR_EMOJI_ONLY_MESSAGES": false
 	},
 	"INFRACTIONS": {
 		"DM_ON_WARN": false,
@@ -68,5 +70,12 @@
 		"TRUSTED_ROLES": [],
 		"TRUSTED_USERS": []
 	},
-	"SERVER_LINKS": []
+	"SERVER_LINKS": [],
+	"CUSTOM_COMMANDS": {
+		"ROLES": [],
+		"ROLE_REQUIRED": false,
+		"CHANNELS": [],
+		"CHANNELS_IGNORED": true,
+		"MOD_BYPASS": true
+	}
 }

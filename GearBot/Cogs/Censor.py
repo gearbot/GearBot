@@ -3,15 +3,15 @@ from urllib import parse
 from urllib.parse import urlparse
 
 import discord
+import emoji
 from discord import DMChannel
 from discord.ext import commands
-from discord.ext.commands import clean_content
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Permissioncheckers, Utils, MessageUtils
 from Util.Matchers import INVITE_MATCHER, URL_MATCHER
 
-
+EMOJI_REGEX = re.compile('([^<]*)<a?:(?:[^:]+):([0-9]+)>')
 class Censor(BaseCog):
 
     def __init__(self, bot):
@@ -58,9 +58,11 @@ class Censor(BaseCog):
         guilds = Configuration.get_var(member.guild.id, "CENSORING", "ALLOWED_INVITE_LIST")
         domain_list = Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST")
         domains_allowed = Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
+        full_message_list = Configuration.get_var(member.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+        censor_emoji_message = Configuration.get_var(member.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES")
         content = content.replace('\\', '')
         decoded_content = parse.unquote(content)
-        censored = False
+
         if len(guilds) is not 0:
             codes = INVITE_MATCHER.findall(decoded_content)
             for code in codes:
@@ -71,21 +73,24 @@ class Censor(BaseCog):
                     return
                 if invite.guild is None:
                     await self.censor_invite(member, message_id, channel, code, "DM group", content)
-                    censored = True
+                    return
                 else:
                     if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != member.guild.id):
                         await self.censor_invite(member, message_id, channel, code, invite.guild.name, content)
-                        censored = True
+                        return
 
-        if not censored:
-            content = content.lower()
-            for bad in (w.lower() for w in censorlist):
-                if bad in content:
-                    await self.censor_message(message_id, content, channel, member, bad)
-                    censored = True
-                    break
+        content = content.lower()
 
-        if not censored and len(word_censorlist) > 0:
+        if content in full_message_list:
+            await self.censor_message(message_id, content, channel, member, "", "_content")
+            return
+
+        for bad in (w.lower() for w in censorlist):
+            if bad in content:
+                await self.censor_message(message_id, content, channel, member, bad)
+                return
+
+        if len(word_censorlist) > 0:
             if channel.guild.id not in self.regexes:
                 regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_censorlist) + r")\b", re.IGNORECASE)
                 self.regexes[channel.guild.id] = regex
@@ -94,15 +99,25 @@ class Censor(BaseCog):
             match = regex.findall(content)
             if len(match):
                 await self.censor_message(message_id, content, channel, member, match[0], "_word")
-                censored = True
+                return
 
-        if not censored and len(domain_list) > 0:
+        if len(domain_list) > 0:
             link_list = URL_MATCHER.findall(content)
             for link in link_list:
                 url = urlparse(link)
                 domain = url.hostname
                 if (domain in domain_list) is not domains_allowed:
                     await self.censor_message(message_id, content, channel, member, url.hostname, "_domain_blocked")
+                    return
+
+        if censor_emoji_message:
+            new_content = ''.join(c for c in content if c not in emoji.UNICODE_EMOJI)
+            new_content = re.sub(EMOJI_REGEX, '', new_content)
+            if new_content == '':
+                await self.censor_message(message_id, content, channel, member, '', "_emoji_only")
+                return
+
+
 
 
     async def censor_message(self, message_id, content, channel, member, bad, key=""):

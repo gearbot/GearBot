@@ -1,5 +1,8 @@
 import asyncio
 import datetime
+import re
+
+import emoji
 from asyncio.base_futures import CancelledError
 
 import time
@@ -43,7 +46,7 @@ class ActionHolder:
     def __init__(self, count: int):
         self.count = count
 
-
+EMOJI_REGEX = re.compile('([^<]*)<a?:(?:[^:]+):([0-9]+)>')
 class AntiSpam(BaseCog):
 
     def __init__(self, bot):
@@ -53,7 +56,8 @@ class AntiSpam(BaseCog):
             "max_messages": lambda m: 1,
             "max_newlines": lambda m: len(m.content.split("\n")) - 1,
             "max_mentions": lambda m: len(MENTION_MATCHER.findall(m.content)),
-            "max_links": lambda m: len(URL_MATCHER.findall(m.content))
+            "max_links": lambda m: len(URL_MATCHER.findall(m.content)),
+            "max_emoji": lambda m: len([1 for c in m if c not in reversed(emoji.UNICODE_EMOJI)]) + len(EMOJI_REGEX.findall(m))
         }
 
         self.punishments = {

@@ -1,8 +1,9 @@
 import discord
+from discord import Member
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils
+from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils, Permissioncheckers
 from database.DatabaseConnector import CustomCommand
 
 
@@ -119,6 +120,31 @@ class CustCommands(BaseCog):
             return
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
+
+        member = message.channel.guild.get_member(message.author.id)
+        if member is None:
+            return
+
+        role_list = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLES")
+        role_required = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED")
+        channel_list = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS")
+        channels_ignored = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED")
+        mod_bypass = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS")
+
+        is_mod = Permissioncheckers.is_mod(member)
+
+        if (message.channel.id in channel_list) is channels_ignored and not (is_mod and mod_bypass):
+            return
+
+        has_role = False
+        for role in member.roles:
+            if role.id in role_list:
+                has_role = True
+                break
+
+        if has_role is not role_required:
+            return
+
         prefix = Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
         if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
