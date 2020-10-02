@@ -871,7 +871,7 @@
   "custom_commands_mod_bypass_disabled": "Mods can no longer use custom commands at will but will have the same restrictions applied as any other user",
   "censor_emoji_only_messages_help": "Enable/disable censoring of messages that only contain emoji",
   "censor_list_help": "Manage the token censor list",
-  "censortrustedbypass": "Allow trusted users to bypass censoring or not",
+  "censortrustedbypass_help": "Allow trusted users to bypass censoring or not",
   "custom_commands_channel_list_help": "Manage what channels custom commands can be used in or are blocked from",
   "custom_commands_mod_bypass_help": "Enable/disable the ability for mods to use custom commands everywhere or not",
   "full_message_censor_list_help": "Messages to censor if the content matches exactly",
