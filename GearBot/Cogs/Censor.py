@@ -110,7 +110,7 @@ class Censor(BaseCog):
                     await self.censor_message(message_id, content, channel, member, url.hostname, "_domain_blocked")
                     return
 
-        if censor_emoji_message:
+        if censor_emoji_message and content is not None and len(content) > 0:
             new_content = ''.join(c for c in content if c not in emoji.UNICODE_EMOJI)
             new_content = re.sub(EMOJI_REGEX, '', new_content)
             if new_content == '':
