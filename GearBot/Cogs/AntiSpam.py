@@ -57,7 +57,7 @@ class AntiSpam(BaseCog):
             "max_newlines": lambda m: len(m.content.split("\n")) - 1,
             "max_mentions": lambda m: len(MENTION_MATCHER.findall(m.content)),
             "max_links": lambda m: len(URL_MATCHER.findall(m.content)),
-            "max_emoji": lambda m: len([1 for c in m if c not in reversed(emoji.UNICODE_EMOJI)]) + len(EMOJI_REGEX.findall(m))
+            "max_emoji": lambda m: len([1 for c in m.content if c not in reversed(emoji.UNICODE_EMOJI)]) + len(EMOJI_REGEX.findall(m.content))
         }
 
         self.punishments = {
