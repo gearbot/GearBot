@@ -11,12 +11,15 @@ import aiohttp
 import aioredis
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild
 from discord.abc import PrivateChannel
 from discord.ext import commands
 
+from Bot import GearBot
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
     server_info, DashConfig
+from Util.Permissioncheckers import NotCachedException
+from Util.Utils import to_pretty_time
 from database import DatabaseConnector
 
 
@@ -117,6 +120,22 @@ async def on_ready(bot):
     else:
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
 
+    bot.missing_guilds = [g.id for g in bot.guilds]
+    GearbotLogging.info(f"Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
+    start_time = time.time()
+    tasks = [cache_guild(bot, guild_id) for guild_id in bot.missing_guilds]
+    await asyncio.wait(tasks)
+    end = time.time()
+    pretty_time = to_pretty_time(end - start_time, None)
+    GearbotLogging.info(f"Cluster {bot.cluster} finished fetching member info in {pretty_time}")
+    bot.initial_fill_complete=True
+
+
+async def cache_guild(bot, guild_id):
+    guild: Guild = bot.get_guild(guild_id)
+    await guild.chunk(cache=True)
+    bot.missing_guilds.remove(guild_id)
+
 
 async def on_message(bot, message:Message):
     if message.author.bot:
@@ -143,7 +162,7 @@ async def on_message(bot, message:Message):
             await bot.invoke(ctx)
 
 
-async def on_guild_join(guild):
+async def on_guild_join(bot, guild):
     blocked = Configuration.get_persistent_var("server_blocklist", [])
     if guild.id in blocked:
         GearbotLogging.info(f"Someone tried to add me to blocked guild {guild.name} ({guild.id})")
@@ -160,6 +179,9 @@ async def on_guild_join(guild):
             pass
         await guild.leave()
     else:
+        bot.missing_guilds.append(guild.id)
+        await guild.chunk(cache=True)
+        bot.missing_guilds.remove(guild.id)
         GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
         Configuration.load_config(guild.id)
         name = await Utils.clean(guild.name)
@@ -192,6 +214,11 @@ class PostParseError(commands.BadArgument):
 
 
 async def on_command_error(bot, ctx: commands.Context, error):
+    if isinstance(error, NotCachedException):
+        if bot.initial_fill_complete:
+            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot only just joined this guild and is still receiving the initial member info for this guild, please try again in a few seconds")
+        else:
+            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot is in the process of starting up and has not received the member info for this guild. Please try again in a few minutes.")
     if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)

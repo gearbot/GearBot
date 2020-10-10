@@ -29,7 +29,9 @@ class GearBot(AutoShardedBot):
     dash_guild_watchers = dict()
     cluster = 0
     shard_count = 1
-    shard_ids = []
+    shard_ids = [],
+    missing_guilds = []
+    initial_fill_complete = False
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
@@ -59,7 +61,7 @@ class GearBot(AutoShardedBot):
     async def on_message(self, message):
         await TheRealGearBot.on_message(self, message)
 
-    async def on_guild_join(self, guild):
+    async def on_guild_join(self, bot, guild):
         await TheRealGearBot.on_guild_join(guild)
 
     async def on_guild_remove(self, guild):

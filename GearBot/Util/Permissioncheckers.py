@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord.ext.commands import NoPrivateMessage, BotMissingPermissions
+from discord.ext.commands import NoPrivateMessage, BotMissingPermissions, CheckFailure
 
 from Util import Configuration
 
@@ -66,6 +66,16 @@ def bc_only():
 
     return commands.check(predicate)
 
+class NotCachedException(CheckFailure):
+    pass
+
+
+def require_cache():
+    async def predicate(ctx):
+        if ctx.guild is not None and ctx.guild.id in ctx.bot.missing_guilds:
+            raise NotCachedException
+        return True
+    return commands.check(predicate)
 
 def check_permission(command_object, guild, member):
     if guild is None:
