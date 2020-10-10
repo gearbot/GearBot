@@ -62,7 +62,7 @@ class GearBot(AutoShardedBot):
         await TheRealGearBot.on_message(self, message)
 
     async def on_guild_join(self, bot, guild):
-        await TheRealGearBot.on_guild_join(guild)
+        await TheRealGearBot.on_guild_join(bot, guild)
 
     async def on_guild_remove(self, guild):
         await TheRealGearBot.on_guild_remove(guild)
