@@ -162,7 +162,7 @@ async def on_message(bot, message:Message):
             await bot.invoke(ctx)
 
 
-async def on_guild_join(bot, guild):
+async def on_guild_join(bot, guild: Guild):
     blocked = Configuration.get_persistent_var("server_blocklist", [])
     if guild.id in blocked:
         GearbotLogging.info(f"Someone tried to add me to blocked guild {guild.name} ({guild.id})")
@@ -171,10 +171,10 @@ async def on_guild_join(bot, guild):
         except Exception:
             pass
         await guild.leave()
-    elif guild.owner.id in Configuration.get_persistent_var("user_blocklist", []):
-        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner.id})) is blocked")
+    elif guild.owner_id in Configuration.get_persistent_var("user_blocklist", []):
+        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner_id})) is blocked")
         try:
-            await guild.owner.send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blocked due to bot abuse, so i left")
+            await (await bot.fetch_user(guild.owner_id)).send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blocked due to bot abuse, so i left")
         except Exception:
             pass
         await guild.leave()
@@ -190,15 +190,15 @@ async def on_guild_join(bot, guild):
 async def on_guild_remove(guild):
     blocked = Configuration.get_persistent_var("server_blocklist", [])
     blocked_users = Configuration.get_persistent_var("user_blocklist", [])
-    if guild.id not in blocked and guild.owner.id not in blocked_users:
+    if guild.id not in blocked and guild.owner_id not in blocked_users:
         GearbotLogging.info(f"I was removed from a guild: {guild.name} ({guild.id}).")
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LEAVE')} I was removed from a guild: {guild.name} ({guild.id}).", embed=server_info.server_info_embed(guild))
 
 
 async def on_guild_update(before, after):
-    if after.owner is not None and after.owner.id in Configuration.get_persistent_var("user_blocklist", []):
+    if after.owner is not None and after.owner_id in Configuration.get_persistent_var("user_blocklist", []):
         GearbotLogging.info(
-            f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner.id})) but they are blocked")
+            f"Someone transferred {after.name} ({after.id}) to ({after.owner} ({after.owner_id})) but they are blocked")
         try:
             await after.owner.send(f"Someone transferred {after.name} (``{after.id}``) to you, but you have been blocked due to bot abuse, so i left")
         except Exception:
