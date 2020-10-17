@@ -1199,7 +1199,7 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list')
         else:
             channels.append(channel.id)
-            await MessageUtils.send_to(ctx, 'YES', f'custom_ccensortrustedbypassommands_channel_added_{mode}', channel=channel.mention)
+            await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_added_{mode}', channel=channel.mention)
             Configuration.save(ctx.guild.id)
 
     @custom_commands_channel_list.command("remove")
