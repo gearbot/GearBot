@@ -875,7 +875,8 @@
   "custom_commands_channel_list_help": "Manage what channels custom commands can be used in or are blocked from",
   "custom_commands_mod_bypass_help": "Enable/disable the ability for mods to use custom commands everywhere or not",
   "full_message_censor_list_help": "Messages to censor if the content matches exactly",
-  "already_banned_user": "This user is already banned"
-
+  "already_banned_user": "This user is already banned",
+  "unmute_higher_role": "I require a role that is above the mute role to be able to unmute people",
+  "mute_higher_role": "I require a role that is above the mute role to be able to mute people"
 
 }

@@ -851,6 +851,8 @@ class Moderation(BaseCog):
                     else:
                         raise ActionFailed(Translator.translate("unmute_not_muted", ctx, user=Utils.clean_user(target)))
                 else:
+                    if role.position >= ctx.me.top_role.position:
+                        raise ActionFailed(Translator.translate("unmute_higher_role", ctx))
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
