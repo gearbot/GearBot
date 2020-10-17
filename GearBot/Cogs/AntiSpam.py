@@ -245,9 +245,9 @@ class AntiSpam(BaseCog):
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
         else:
-            i.end += datetime.timedelta(seconds=duration)
+            i.end += duration
             i.reason += f'+ {reason}'
-            i.save()
+            await i.save()
             GearbotLogging.log_key(v.guild.id, 'mute_duration_extended_log',
                                    user=Utils.clean_user(v.member),
                                    user_id=v.member.id,
