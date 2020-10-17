@@ -104,12 +104,17 @@ class Reminders(BaseCog):
             await action
 
     async def deliver(self, r):
-        channel = await self.bot.fetch_channel(r.channel_id)
+        channel = None
+        try:
+            channel = await self.bot.fetch_channel(r.channel_id)
+        except (Forbidden, NotFound):
+            pass
         dm = await self.bot.fetch_user(r.user_id)
         first = dm if r.dm else channel
         alternative = channel if r.dm else dm
 
-        new_status = 2 if (await self.attempt_delivery(first, r) or await self.attempt_delivery(alternative, r)) else 3
+        if not await self.attempt_delivery(first, r):
+            await self.attempt_delivery(alternative, r)
         await r.delete()
 
     async def attempt_delivery(self, location, package):
