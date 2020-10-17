@@ -99,7 +99,7 @@ class Infractions(BaseCog):
 
     @inf.command()
     async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
-                     query: typing.Union[UserID, str] = ""):
+                     query: str = ""):
         """inf_search_help"""
         if fields is None or len(fields) is 0:
             fields = ["[user]", "[mod]", "[reason]"]
