@@ -891,7 +891,7 @@ class ServerAdmin(BaseCog):
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
-    @configure.group(aliases=["censorlist"])
+    @configure.group(aliases=["censorlist", "cl"])
     async def censor_list(self, ctx):
         "censor_list_help"
         if ctx.invoked_subcommand is None:
@@ -929,7 +929,7 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
-    @configure.group()
+    @configure.group(aliases=["wordcensorlist", "wcl"])
     async def word_censor_list(self, ctx):
         if ctx.invoked_subcommand is None:
             await Pages.create_new(self.bot, "word_censor_list", ctx)

@@ -8,6 +8,7 @@ import discord
 from discord import Object, Emoji, Forbidden, NotFound, ActivityType
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
+from tortoise.exceptions import MultipleObjectsReturned
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -690,7 +691,12 @@ class Moderation(BaseCog):
                     if ctx.guild.me.top_role > role:
                         duration_seconds = duration.to_seconds(ctx)
                         if duration_seconds > 0:
-                            infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
+                            try:
+                                infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
+                            except MultipleObjectsReturned:
+                                infraction = await Infraction.filter(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True).first()
+                                await Infraction.filter(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True, id__not=infraction.id).update(active=False)
+                                await MessageUtils.send_to(ctx, "BUG", "CRITICAL ERROR: This user somehow has multiple active mutes, this should not be possile. The older corrupted mutes have been deactived and this command used only the most recent one to work. Plese let me know about this on the support server (link found in the about command or website) for further investigation!",translate=False)
 
                             if infraction is None:
                                 await target.add_roles(role, reason=Utils.trim_message(
@@ -844,7 +850,12 @@ class Moderation(BaseCog):
                 else:
                     raise ActionFailed(Translator.translate("unmute_fail_role_removed", ctx))
             else:
-                infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
+                try:
+                    infraction = await Infraction.get_or_none(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True)
+                except MultipleObjectsReturned:
+                    infraction = await Infraction.filter(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True).first()
+                    await Infraction.filter(user_id = target.id, type = "Mute", guild_id = ctx.guild.id, active=True, id__not=infraction.id).update(active=False)
+                    await MessageUtils.send_to(ctx, "BUG", "CRITICAL ERROR: This user somehow has multiple active mutes, this should not be possile. The older corrupted mutes have been deactived and this command used only the most recent one to work. Plese let me know about this on the support server (link found in the about command or website) for further investigation!",translate=False)
                 if role not in target.roles and infraction is None:
                     if confirm:
                         await MessageUtils.send_to(ctx, 'WHAT', 'unmute_not_muted', user=Utils.clean_user(target))
