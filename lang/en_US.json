@@ -254,7 +254,7 @@
   "command_used": "{user} (``{user_id}``) used a command in {channel}:",
   "purge_fail_not_found": "Whoops, something went wrong there, I tried purging a message but Discord said it was already removed, do you have another bot in here who also responded to that purge command?",
   "censored_message": "Censored message by {user} (``{user_id}``) in {channel}, char sequence ``{sequence}`` is not allowed.\n```{message}```",
-  "censor_message_failed": "Failed to censor a message by {user} (``{user_id}``), char sequence `{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
+  "censored_message_failed": "Failed to censor a message by {user} (``{user_id}``), char sequence `{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
   "censored_message_word": "Censored message by {user} (``{user_id}``) in {channel}, word ``{sequence}`` is not allowed.\n```{message}```",
   "censored_message_failed_word": "Failed to censor a message by {user} (``{user_id}``), word`{sequence}` is not allowed but I was unable to remove it.\n```{message}\n```<{link}>",
   "censored_message_content": "Censored message by {user} (``{user_id}``) because the content is on the full message censor list.```{message}```",

@@ -134,7 +134,7 @@ class Censor(BaseCog):
         else:
 
             clean_message = await Utils.clean(content, channel.guild, markdown=False)
-            GearbotLogging.log_key(channel.guild.id, f'censor_message_failed{key}', user=member,
+            GearbotLogging.log_key(channel.guild.id, f'censored_message_failed{key}', user=member,
                                    user_id=member.id, message=clean_message, sequence=bad,
                                    link='https://discord.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id))
 
