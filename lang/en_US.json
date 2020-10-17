@@ -877,6 +877,7 @@
   "full_message_censor_list_help": "Messages to censor if the content matches exactly",
   "already_banned_user": "This user is already banned",
   "unmute_higher_role": "I require a role that is above the mute role to be able to unmute people",
-  "mute_higher_role": "I require a role that is above the mute role to be able to mute people"
+  "mute_higher_role": "I require a role that is above the mute role to be able to mute people",
+  "emoji_upload_rejected_no_message": "Failed to upload emoji but discord didn't tell me what exactly is wrong with it"
 
 }

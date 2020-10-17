@@ -118,8 +118,10 @@ class Emoji(BaseCog):
                 except HTTPException as msg:
                     if msg.code == 50035:
                         await MessageUtils.send_to(ctx, 'NO', 'emoji_upload_rejected')
-                    else:
+                    elif msg.text is not None and str(msg.text) != "":
                         return await ctx.send(msg.text)
+                    else:
+                        await MessageUtils.send_to(ctx, 'NO', 'emoji_upload_rejected_no_message')
                 except InvalidArgument as msg:
                     return await MessageUtils.try_edit(message, emoji="NO", string_name="emoji_upload_invalid_file")
 
