@@ -1,11 +1,14 @@
+from collections import namedtuple
+
 import discord
-from discord import Member
+from discord import Member, Permissions, Embed
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils, Permissioncheckers
 from database.DatabaseConnector import CustomCommand
 
+CommandInfo = namedtuple("CommandInfo", "content created_by")
 
 class CustCommands(BaseCog):
 
@@ -23,7 +26,7 @@ class CustCommands(BaseCog):
         for command in commands:
             if command.serverid not in self.commands:
                 self.commands[command.serverid] = dict()
-            self.commands[command.serverid][command.trigger] = command.response
+            self.commands[command.serverid][command.trigger] = CommandInfo(command.response, command.created_by)
         self.loaded = True
 
     @commands.Cog.listener()
@@ -67,10 +70,10 @@ class CustCommands(BaseCog):
             trigger = await Utils.clean(trigger)
             command = await CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
-                await CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply)
+                await CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply, created_by=ctx.author.id)
                 if ctx.guild.id not in self.commands:
                     self.commands[ctx.guild.id] = dict()
-                self.commands[ctx.guild.id][trigger] = reply
+                self.commands[ctx.guild.id][trigger] = CommandInfo(reply, ctx.author.id)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
             else:
                 async def yes():
@@ -110,8 +113,9 @@ class CustCommands(BaseCog):
                 await ctx.invoke(self.create, trigger, reply=reply)
             else:
                 command.response = reply
+                command.created_by = ctx.author.id
                 await command.save()
-                self.commands[ctx.guild.id][trigger] = reply
+                self.commands[ctx.guild.id][trigger] = CommandInfo(reply, ctx.author.id)
                 await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
     @commands.Cog.listener()
@@ -123,6 +127,10 @@ class CustCommands(BaseCog):
 
         member = message.channel.guild.get_member(message.author.id)
         if member is None:
+            return
+
+        permissions: Permissions = message.channel.permissions_for(message.guild.me)
+        if not (permissions.read_messages and permissions.send_messages and permissions.embed_links):
             return
 
         role_list = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLES")
@@ -149,8 +157,12 @@ class CustCommands(BaseCog):
         if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
-                    command_content = self.commands[message.guild.id][trigger].replace("@", "@\u200b")
-                    await message.channel.send(command_content)
+                    info = self.commands[message.guild.id][trigger]
+                    embed = Embed(description=info.content)
+                    if info.created_by is not None:
+                        creator = await Utils.get_user(info.created_by)
+                        embed.set_footer(text=f"Created by {str(creator)} ({info.created_by})", icon_url=creator.avatar_url)
+                    await message.channel.send(embed=embed)
                     self.bot.custom_command_count += 1
 
 

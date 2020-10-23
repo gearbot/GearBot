@@ -26,6 +26,7 @@ class CustomCommand(Model):
     serverid = fields.BigIntField()
     trigger = fields.CharField(max_length=20, collation="utf8mb4_general_ci")
     response = fields.CharField(max_length=2000, collation="utf8mb4_general_ci")
+    created_by = fields.BigIntField(null=True)
 
 
 
