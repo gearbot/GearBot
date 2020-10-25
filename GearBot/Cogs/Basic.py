@@ -180,6 +180,10 @@ class Basic(BaseCog):
     @commands.command()
     async def help(self, ctx, *, query: str = None):
         """help_help"""
+        if query is not None and len(query) > 100:
+            return #bye bye spammers
+        if query is not None:
+            query = ''.join(query.splitlines())
         data = {
             "trigger": ctx.message.id
         }
