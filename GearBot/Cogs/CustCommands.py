@@ -150,7 +150,7 @@ class CustCommands(BaseCog):
                 has_role = True
                 break
 
-        if has_role is not role_required:
+        if has_role is not role_required and not (is_mod and mod_bypass):
             return
 
         prefix = Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
