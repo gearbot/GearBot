@@ -1,3 +1,4 @@
+import re
 from collections import namedtuple
 
 import discord
@@ -9,6 +10,9 @@ from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, U
 from database.DatabaseConnector import CustomCommand
 
 CommandInfo = namedtuple("CommandInfo", "content created_by")
+IMAGE_MATCHER = re.compile(
+    r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',
+    re.IGNORECASE)
 
 class CustCommands(BaseCog):
 
@@ -18,7 +22,6 @@ class CustCommands(BaseCog):
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
-
 
     async def reloadCommands(self):
         self.commands = dict()
@@ -33,16 +36,17 @@ class CustCommands(BaseCog):
     async def on_guild_remove(self, guild):
         if guild.id in self.commands:
             del self.commands[guild.id]
-            await CustomCommand.filter(serverid = guild.id).delete()
-
+            await CustomCommand.filter(serverid=guild.id).delete()
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
-    async def command(self, ctx:commands.Context):
+    async def command(self, ctx: commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(timestamp=ctx.message.created_at, color=0x663399, title=Translator.translate("custom_command_list", ctx.guild.id, server_name=ctx.guild.name))
+            embed = discord.Embed(timestamp=ctx.message.created_at, color=0x663399,
+                                  title=Translator.translate("custom_command_list", ctx.guild.id,
+                                                             server_name=ctx.guild.name))
             value = ""
             if ctx.guild.id in self.commands:
                 for trigger in self.commands[ctx.guild.id].keys():
@@ -60,9 +64,11 @@ class CustCommands(BaseCog):
     async def create(self, ctx: commands.Context, trigger: str, *, reply: str = None):
         """command_create_help"""
         if len(trigger) == 0:
-            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_trigger', ctx.guild.id)}")
         elif reply is None or reply == "":
-            await ctx.send(f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply', ctx.guild.id)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('WHAT')} {Translator.translate('custom_command_empty_reply', ctx.guild.id)}")
         elif len(trigger) > 20:
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         else:
@@ -70,53 +76,63 @@ class CustCommands(BaseCog):
             trigger = await Utils.clean(trigger)
             command = await CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
-                await CustomCommand.create(serverid = ctx.guild.id, trigger=trigger, response=reply, created_by=ctx.author.id)
+                await CustomCommand.create(serverid=ctx.guild.id, trigger=trigger, response=reply,
+                                           created_by=ctx.author.id)
                 if ctx.guild.id not in self.commands:
                     self.commands[ctx.guild.id] = dict()
                 self.commands[ctx.guild.id][trigger] = CommandInfo(reply, ctx.author.id)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
             else:
                 async def yes():
                     await ctx.send(Translator.translate('updating', ctx.guild.id))
                     await ctx.invoke(self.update, trigger, reply=reply)
+
                 async def no():
                     await ctx.send(Translator.translate('custom_command_not_updating', ctx.guild.id))
-                await Confirmation.confirm(ctx, Translator.translate('custom_command_override_confirmation', ctx.guild.id), on_yes=yes , on_no=no)
+
+                await Confirmation.confirm(ctx,
+                                           Translator.translate('custom_command_override_confirmation', ctx.guild.id),
+                                           on_yes=yes, on_no=no)
 
     @command.command(aliases=["del", "delete"])
     @commands.guild_only()
-    async def remove(self, ctx:commands.Context, trigger:str):
+    async def remove(self, ctx: commands.Context, trigger: str):
         """command_remove_help"""
         trigger = trigger.lower()
         trigger = await Utils.clean(trigger)
         if len(trigger) > 20:
             await MessageUtils.send_to(ctx, 'WHAT', 'custom_command_trigger_too_long')
         elif ctx.guild.id in self.commands and trigger in self.commands[ctx.guild.id]:
-            await CustomCommand.filter(serverid = ctx.guild.id, trigger=trigger).delete()
+            await CustomCommand.filter(serverid=ctx.guild.id, trigger=trigger).delete()
             del self.commands[ctx.guild.id][trigger]
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_removed', ctx.guild.id, trigger=trigger)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_not_found', ctx.guild.id, trigger=trigger)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_not_found', ctx.guild.id, trigger=trigger)}")
 
     @command.command(aliases=["edit", "set"])
     @commands.guild_only()
-    async def update(self, ctx:commands.Context, trigger:str, *, reply:str = None):
+    async def update(self, ctx: commands.Context, trigger: str, *, reply: str = None):
         """command_update_help"""
         trigger = trigger.lower()
         trigger = await Utils.clean(trigger)
         if reply is None:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('custom_command_empty_reply', ctx)}")
         else:
-            command = await CustomCommand.get_or_none(serverid = ctx.guild.id, trigger=trigger)
+            command = await CustomCommand.get_or_none(serverid=ctx.guild.id, trigger=trigger)
             if command is None:
-                await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('custom_command_creating', ctx.guild.id)}")
                 await ctx.invoke(self.create, trigger, reply=reply)
             else:
                 command.response = reply
                 command.created_by = ctx.author.id
                 await command.save()
                 self.commands[ctx.guild.id][trigger] = CommandInfo(reply, ctx.author.id)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -126,7 +142,6 @@ class CustCommands(BaseCog):
             return
 
         member = message.channel.guild.get_member(message.author.id)
-
 
         me = message.guild.me
         if me is None:
@@ -159,17 +174,25 @@ class CustCommands(BaseCog):
         prefix = Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
         if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
-                if message.content.lower() == prefix+trigger or (message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix+trigger)] == " "):
+                if message.content.lower() == prefix + trigger or (
+                        message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix + trigger)] == " "):
                     info = self.commands[message.guild.id][trigger]
-                    embed = Embed(description=info.content)
+                    images = IMAGE_MATCHER.findall(info.content)
+                    image = None
+                    if len(images) == 1:
+                        image = images[0]
+                        description = info.content.replace(image, "")
+                    else:
+                        description = info.content
+                    embed = Embed(description=description)
                     if info.created_by is not None:
                         creator = await Utils.get_user(info.created_by)
-                        embed.set_footer(text=f"Created by {str(creator)} ({info.created_by})", icon_url=creator.avatar_url)
+                        embed.set_footer(text=f"Created by {str(creator)} ({info.created_by})",
+                                         icon_url=creator.avatar_url)
+                    if image is not None:
+                        embed.set_image(url=image)
                     await message.channel.send(embed=embed)
                     self.bot.custom_command_count += 1
-
-
-
 
 
 def setup(bot):
