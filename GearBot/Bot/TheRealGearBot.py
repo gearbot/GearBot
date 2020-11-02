@@ -136,10 +136,10 @@ async def fill_cache(bot):
     while len(bot.missing_guilds) > 0:
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('CLOCK')} Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
         start_time = time.time()
-        tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
         old = len(bot.missing_guilds)
         while len(bot.missing_guilds) > 0:
             try:
+                tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
                 await asyncio.wait_for(asyncio.gather(*tasks), 90)
             except (CancelledError, concurrent.futures._base.CancelledError):
                 pass
