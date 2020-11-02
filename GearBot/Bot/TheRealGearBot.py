@@ -2,6 +2,8 @@ import asyncio
 import json
 import os
 import signal
+from concurrent.futures._base import CancelledError
+
 import sys
 import time
 import traceback
@@ -138,7 +140,7 @@ async def fill_cache(bot):
         while len(bot.missing_guilds) > 0:
             try:
                 await asyncio.wait_for(asyncio.gather(*tasks), 90)
-            except TimeoutError:
+            except (TimeoutError, CancelledError):
                 pass
             except Exception as e:
                 await handle_exception("Fetching member info", bot, e)
