@@ -126,10 +126,12 @@ class CustCommands(BaseCog):
             return
 
         member = message.channel.guild.get_member(message.author.id)
-        if member is None:
-            return
 
-        permissions: Permissions = message.channel.permissions_for(message.guild.me)
+
+        me = message.guild.me
+        if me is None:
+            message.guild.fetch_member()
+        permissions = message.channel.permissions_for(me)
         if not (permissions.read_messages and permissions.send_messages and permissions.embed_links):
             return
 
@@ -139,16 +141,17 @@ class CustCommands(BaseCog):
         channels_ignored = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED")
         mod_bypass = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS")
 
-        is_mod = Permissioncheckers.is_mod(member)
+        is_mod = member is not None and Permissioncheckers.is_mod(member)
 
         if (message.channel.id in channel_list) is channels_ignored and not (is_mod and mod_bypass):
             return
 
         has_role = False
-        for role in member.roles:
-            if role.id in role_list:
-                has_role = True
-                break
+        if member is not None:
+            for role in member.roles:
+                if role.id in role_list:
+                    has_role = True
+                    break
 
         if has_role is not role_required and not (is_mod and mod_bypass):
             return
