@@ -484,4 +484,5 @@ async def message_owner(bot, message):
         app = await bot.application_info()
         bot.owner_id = app.owner.id
     owner = bot.get_user(bot.owner_id)
-    await owner.send(message)
+    if owner is not None:
+        await owner.send(message)
