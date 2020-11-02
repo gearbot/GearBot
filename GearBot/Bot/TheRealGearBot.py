@@ -121,18 +121,35 @@ async def on_ready(bot):
         await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
 
     bot.missing_guilds = [g.id for g in bot.guilds]
-    GearbotLogging.info(f"Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
-    start_time = time.time()
-    tasks = [cache_guild(bot, guild_id) for guild_id in bot.missing_guilds]
-    await asyncio.wait(tasks)
-    end = time.time()
-    pretty_time = to_pretty_time(end - start_time, None)
-    GearbotLogging.info(f"Cluster {bot.cluster} finished fetching member info in {pretty_time}")
-    bot.initial_fill_complete=True
+    await fill_cache(bot)
 
+
+async def fill_cache(bot):
+    while len(bot.missing_guilds) > 0:
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('CLOCK')} Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
+        start_time = time.time()
+        tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
+        old = len(bot.missing_guilds)
+        while len(bot.missing_guilds) > 0:
+            try:
+                await asyncio.wait_for(asyncio.gather(*tasks), 90)
+            except TimeoutError:
+                pass
+            except Exception as e:
+                await handle_exception("Fetching member info", bot, e)
+            else:
+                if old == len(bot.missing_guilds):
+                    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
+                    for task in tasks:
+                        task.cancel()
+                    continue
+        end = time.time()
+        pretty_time = to_pretty_time(end - start_time, None)
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} finished fetching member info in {pretty_time}")
+        bot.initial_fill_complete=True
 
 async def cache_guild(bot, guild_id):
-    guild: Guild = bot.get_guild(guild_id)
+    guild = bot.get_guild(guild_id)
     await guild.chunk(cache=True)
     bot.missing_guilds.remove(guild_id)
 
