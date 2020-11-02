@@ -165,7 +165,8 @@ async def fill_cache(bot):
 async def cache_guild(bot, guild_id):
     guild = bot.get_guild(guild_id)
     await guild.chunk(cache=True)
-    bot.missing_guilds.remove(guild_id)
+    if guild_id in bot.missing_guilds:
+        bot.missing_guilds.remove(guild_id)
 
 
 async def on_message(bot, message:Message):
