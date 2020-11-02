@@ -87,41 +87,46 @@ async def initialize(bot, startup=False):
 
 
 async def on_ready(bot):
-    if not bot.STARTUP_COMPLETE:
-        await initialize(bot, True)
-        #shutdown handler for clean exit on linux
-        try:
-            for signame in ('SIGINT', 'SIGTERM'):
-                asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                        lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
-        except Exception:
-            pass #doesn't work on windows
-
-        bot.start_time = datetime.utcnow()
-        GearbotLogging.info("Loading cogs...")
-        for extension in Configuration.get_master_var("COGS"):
+    try:
+        if not bot.STARTUP_COMPLETE:
+            await initialize(bot, True)
+            #shutdown handler for clean exit on linux
             try:
-                bot.load_extension("Cogs." + extension)
+                for signame in ('SIGINT', 'SIGTERM'):
+                    asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
+                                            lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
             except Exception as e:
-                await handle_exception(f"Failed to load cog {extension}", bot, e)
-        GearbotLogging.info("Cogs loaded")
+                pass #doesn't work on windows
 
-        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
-        for c in to_unload:
-            bot.remove_command(c)
 
-        bot.STARTUP_COMPLETE = True
-        info = await bot.application_info()
-        gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
-        a = " ".join(gears)
-        b = " ".join(reversed(gears))
-        await GearbotLogging.bot_log(message=f"{a} All gears turning at full speed, {info.name} ready to go! {b}")
-        await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
-    else:
-        await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
+            bot.start_time = datetime.utcnow()
+            GearbotLogging.info("Loading cogs...")
+            for extension in Configuration.get_master_var("COGS"):
+                try:
+                    bot.load_extension("Cogs." + extension)
+                except Exception as e:
+                    await handle_exception(f"Failed to load cog {extension}", bot, e)
+            GearbotLogging.info("Cogs loaded")
 
-    bot.missing_guilds = [g.id for g in bot.guilds]
-    await fill_cache(bot)
+            to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
+            for c in to_unload:
+                bot.remove_command(c)
+
+            bot.STARTUP_COMPLETE = True
+            info = await bot.application_info()
+            gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
+            a = " ".join(gears)
+            b = " ".join(reversed(gears))
+            await GearbotLogging.bot_log(message=f"{a} All gears turning at full speed, {info.name} ready to go! {b}")
+            await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
+        else:
+            await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
+
+        bot.missing_guilds = [g.id for g in bot.guilds]
+        await fill_cache(bot)
+
+    except Exception as e:
+        await handle_exception("Ready event failure", bot, e)
 
 
 async def fill_cache(bot):
