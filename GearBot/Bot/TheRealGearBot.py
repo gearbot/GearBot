@@ -140,7 +140,7 @@ async def fill_cache(bot):
         while len(bot.missing_guilds) > 0:
             try:
                 tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
-                await asyncio.wait_for(asyncio.gather(*tasks), 90)
+                await asyncio.wait_for(asyncio.gather(*tasks), 600)
             except (CancelledError, concurrent.futures._base.CancelledError):
                 pass
             except concurrent.futures._base.TimeoutError:
@@ -148,6 +148,7 @@ async def fill_cache(bot):
                     await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
                     for task in tasks:
                         task.cancel()
+                    await asyncio.sleep(1)
                     continue
             except Exception as e:
                 await handle_exception("Fetching member info", bot, e)
