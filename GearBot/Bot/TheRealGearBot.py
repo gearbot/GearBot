@@ -1,4 +1,5 @@
 import asyncio
+import concurrent
 import json
 import os
 import signal
@@ -140,8 +141,14 @@ async def fill_cache(bot):
         while len(bot.missing_guilds) > 0:
             try:
                 await asyncio.wait_for(asyncio.gather(*tasks), 90)
-            except (TimeoutError, CancelledError):
+            except (CancelledError, concurrent.futures._base.CancelledError):
                 pass
+            except TimeoutError:
+                if old == len(bot.missing_guilds):
+                    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
+                    for task in tasks:
+                        task.cancel()
+                    continue
             except Exception as e:
                 await handle_exception("Fetching member info", bot, e)
             else:
