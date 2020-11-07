@@ -96,7 +96,22 @@ def get_command_pieces(command_object):
 
 
 def get_required(command_object, perm_dict):
-    return get_perm_dict(get_command_pieces(command_object), perm_dict)["required"]
+    pieces = get_command_pieces(command_object)
+    required = perm_dict["required"]
+    found = True
+    while len(pieces) > 0 and found:
+        found = False
+        if "commands" in perm_dict.keys():
+            for entry, value in perm_dict["commands"].items():
+                if pieces[0] in entry.split("|"):
+                    r = value["required"]
+                    if r != -1:
+                        required = r
+                    perm_dict = value
+                    pieces.pop(0)
+                    found = True
+                    break
+    return required
 
 
 def get_perm_dict(pieces, perm_dict, strict=False):
