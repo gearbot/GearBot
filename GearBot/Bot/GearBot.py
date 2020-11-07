@@ -32,6 +32,7 @@ class GearBot(AutoShardedBot):
     shard_ids = [],
     missing_guilds = []
     initial_fill_complete = False
+    loading_task = None
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)

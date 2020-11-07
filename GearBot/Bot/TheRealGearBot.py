@@ -125,43 +125,51 @@ async def on_ready(bot):
         else:
             await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
 
+        bot.missing_guilds = []
         bot.missing_guilds = [g.id for g in bot.guilds]
-        await fill_cache(bot)
+        if bot.loading_task is not None:
+            bot.loading_task.cancel()
+        bot.loading_task = asyncio.create_task(fill_cache(bot))
 
     except Exception as e:
         await handle_exception("Ready event failure", bot, e)
 
 
 async def fill_cache(bot):
-    while len(bot.missing_guilds) > 0:
-        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('CLOCK')} Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
-        start_time = time.time()
-        old = len(bot.missing_guilds)
+    try:
         while len(bot.missing_guilds) > 0:
-            try:
-                tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
-                await asyncio.wait_for(asyncio.gather(*tasks), 600)
-            except (CancelledError, concurrent.futures._base.CancelledError):
-                pass
-            except concurrent.futures._base.TimeoutError:
-                if old == len(bot.missing_guilds):
-                    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
-                    for task in tasks:
-                        task.cancel()
-                    await asyncio.sleep(1)
-                    continue
-            except Exception as e:
-                await handle_exception("Fetching member info", bot, e)
-            else:
-                if old == len(bot.missing_guilds):
-                    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
-                    for task in tasks:
-                        task.cancel()
-                    continue
-        end = time.time()
-        pretty_time = to_pretty_time(end - start_time, None)
-        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} finished fetching member info in {pretty_time}")
-        bot.initial_fill_complete=True
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('CLOCK')} Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
+            start_time = time.time()
+            old = len(bot.missing_guilds)
+            while len(bot.missing_guilds) > 0:
+                try:
+                    tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
+                    await asyncio.wait_for(asyncio.gather(*tasks), 600)
+                except (CancelledError, concurrent.futures._base.CancelledError):
+                    pass
+                except concurrent.futures._base.TimeoutError:
+                    if old == len(bot.missing_guilds):
+                        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
+                        for task in tasks:
+                            task.cancel()
+                        await asyncio.sleep(1)
+                        continue
+                except Exception as e:
+                    await handle_exception("Fetching member info", bot, e)
+                else:
+                    if old == len(bot.missing_guilds):
+                        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
+                        for task in tasks:
+                            task.cancel()
+                        continue
+            end = time.time()
+            pretty_time = to_pretty_time(end - start_time, None)
+            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} finished fetching member info in {pretty_time}")
+            bot.initial_fill_complete=True
+    except Exception as e:
+        await handle_exception("Guild fetching failed", bot, e)
+    finally:
+        bot.loading_task = None
 
 async def cache_guild(bot, guild_id):
     guild = bot.get_guild(guild_id)
@@ -248,10 +256,13 @@ class PostParseError(commands.BadArgument):
 
 async def on_command_error(bot, ctx: commands.Context, error):
     if isinstance(error, NotCachedException):
-        if bot.initial_fill_complete:
-            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot only just joined this guild and is still receiving the initial member info for this guild, please try again in a few seconds")
+        if bot.loading_task is not None:
+            if bot.initial_fill_complete:
+                await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} Due to a earlier connection failure the cached data for this guild is no longer up to date and is being rebuild. Please try again in a few minutes.")
+            else:
+                await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot is in the process of starting up and has not received the member info for this guild. Please try again in a few minutes.")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot is in the process of starting up and has not received the member info for this guild. Please try again in a few minutes.")
+            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot only just joined this guild and is still receiving the initial member info for this guild, please try again in a few seconds")
     if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await ctx.send(error)
