@@ -46,7 +46,7 @@ class Censor(BaseCog):
                 else:
                     author_id = message.author.id
 
-        member = channel.guild.get_member(author_id)
+        member = await Utils.get_member(self.bot, channel.guild, author_id)
         if member is not None and author_id != self.bot.user.id:
             await self.check_message(member, event.data["content"], channel, event.message_id)
 

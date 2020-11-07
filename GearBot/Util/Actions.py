@@ -11,7 +11,7 @@ class ActionFailed(Exception):
 
 
 async def act(ctx, name, target, handler, allow_bots=True, require_on_server=True, send_message=True, check_bot_ability=True, **kwargs):
-    user = ctx.guild.get_member(target)
+    user = await Utils.get_member(ctx.bot, ctx.guild, target)
     if user is None:
         if require_on_server:
             message = Translator.translate('user_not_on_server', ctx.guild.id)

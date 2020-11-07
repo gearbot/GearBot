@@ -87,11 +87,10 @@ class Basic(BaseCog):
     async def quote(self, ctx: commands.Context, *, message: Message):
         """quote_help"""
         await ctx.trigger_typing()
-        member = message.guild.get_member(ctx.author.id)
-        if member is None:
+        if ctx.message.author is None:
             await MessageUtils.send_to(ctx, 'NO', 'quote_not_visible_to_user')
         else:
-            permissions = message.channel.permissions_for(member)
+            permissions = message.channel.permissions_for(ctx.message.author)
             if permissions.read_message_history and permissions.read_message_history:
                 if message.channel.is_nsfw() and not ctx.channel.is_nsfw():
                     await MessageUtils.send_to(ctx, 'NO', 'quote_nsfw_refused')

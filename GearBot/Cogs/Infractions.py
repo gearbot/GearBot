@@ -5,13 +5,12 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter
+from discord.ext.commands import BadArgument, Greedy
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
-from Util.Permissioncheckers import require_cache
 
 
 class Infractions(BaseCog):
@@ -36,7 +35,6 @@ class Infractions(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    @require_cache()
     async def warn(self, ctx: commands.Context, member: discord.Member, *, reason: Reason):
         """warn_help"""
         # don't allow warning GearBot, get some feedback about issues instead
@@ -66,7 +64,6 @@ class Infractions(BaseCog):
     @commands.guild_only()
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True)
-    @require_cache()
     async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mwarn_help"""
         if reason == "":

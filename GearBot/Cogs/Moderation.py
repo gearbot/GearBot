@@ -17,7 +17,7 @@ from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, E
 from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
-from Util.Permissioncheckers import bot_has_guild_permission, require_cache
+from Util.Permissioncheckers import bot_has_guild_permission
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -83,7 +83,6 @@ class Moderation(BaseCog):
     @commands.group(aliases=["nick"])
     @commands.guild_only()
     @commands.bot_has_permissions(manage_nicknames=True)
-    @require_cache()
     async def nickname(self, ctx: commands.Context):
         """mod_nickname_help"""
         if ctx.subcommand_passed is None:
@@ -91,7 +90,6 @@ class Moderation(BaseCog):
     
     @nickname.command("add", aliases=["set", "update", "edit"])
     @commands.bot_has_permissions(manage_nicknames=True)
-    @require_cache()
     async def nickname_add(self, ctx, user: discord.Member, *, nick:Nickname):
         """mod_nickname_add_help"""
         try:
@@ -119,7 +117,6 @@ class Moderation(BaseCog):
 
     @nickname.command("remove", aliases=["clear", "nuke", "reset"])
     @commands.bot_has_permissions(manage_nicknames=True)
-    @require_cache()
     async def nickname_remove(self, ctx, user: discord.Member):
         """mod_nickname_remove_help"""
         if user.nick is None:
@@ -152,7 +149,6 @@ class Moderation(BaseCog):
     @commands.group()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
-    @require_cache()
     async def role(self, ctx: commands.Context):
         """mod_role_help"""
         if ctx.subcommand_passed is None:
@@ -191,14 +187,12 @@ class Moderation(BaseCog):
 
     @role.command()
     @commands.bot_has_permissions(manage_roles=True)
-    @require_cache()
     async def add(self, ctx, user: discord.Member, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
 
     @role.command(aliases=["rmv"])
     @commands.bot_has_permissions(manage_roles=True)
-    @require_cache()
     async def remove(self, ctx, user: discord.Member, *, role: str):
         """role_remove_help"""
         await self.role_handler(ctx, user, role, "remove")
@@ -206,7 +200,6 @@ class Moderation(BaseCog):
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
-    @require_cache()
     async def kick(self, ctx, user: discord.Member, *, reason: Reason = ""):
         """kick_help"""
         if reason == "":
@@ -275,7 +268,6 @@ class Moderation(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    @require_cache()
     async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
         """bean_help"""
         if reason == "":
@@ -298,15 +290,14 @@ class Moderation(BaseCog):
     @commands.command(aliases=["🚪"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
-    @require_cache()
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
-                        
-        if ctx.guild.get_member(user.id) is not None:
-            member = ctx.guild.get_member(user.id)
-            await self._ban_command(ctx, member, reason, 0)                    
+
+        member = await Utils.get_member(ctx.bot, ctx.guild, user.id)
+        if member is not None:
+            await self._ban_command(ctx, member, reason, 0)
         else:
 
             try:
@@ -323,13 +314,12 @@ class Moderation(BaseCog):
     @commands.command(aliases=["clean_ban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    @require_cache()
     async def cleanban(self, ctx: commands.Context, user: DiscordUser, days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
         """clean_ban_help"""
         await self._ban_command(ctx, user, reason, days)
 
     async def _ban_command(self, ctx, user, reason, days):
-        member = ctx.guild.get_member(user.id)
+        member = await Utils.get_member(ctx.bot, ctx.guild, user.id)
 
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -343,7 +333,6 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    @require_cache()
     async def tempban(self, ctx: commands.Context, user: DiscordUser, duration: Duration, *, reason: Reason = ""):
         """tempban_help"""
         if duration.unit is None:
@@ -354,7 +343,7 @@ class Moderation(BaseCog):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
 
-        member = ctx.guild.get_member(user.id)
+        member = await Utils.get_member(self.bot, ctx.guild, user.id)
         if member is not None:
             allowed, message = Actions.can_act("ban", ctx, member)
         else:
@@ -434,7 +423,6 @@ class Moderation(BaseCog):
     @commands.guild_only()
     @commands.command(aliases=["🚪🚪"])
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
-    @require_cache()
     async def mban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mban_help"""
         if reason == "":
@@ -523,7 +511,6 @@ class Moderation(BaseCog):
     @commands.command(aliases=["softban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    @require_cache()
     async def cleankick(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
         """softban_help"""
         if reason == "":
@@ -583,7 +570,6 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True, add_reactions=True)
-    @require_cache()
     async def forceban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """forceban_help"""
         if reason == "":
@@ -668,7 +654,6 @@ class Moderation(BaseCog):
     @commands.command()
     @bot_has_guild_permission(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True)
-    @require_cache()
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
@@ -887,7 +872,7 @@ class Moderation(BaseCog):
         if user is None:
             user = member = ctx.author
         else:
-            member = None if ctx.guild is None else ctx.guild.get_member(user.id)
+            member = None if ctx.guild is None else await Utils.get_member(self.bot, ctx.guild, user.id)
         embed = discord.Embed(color=member.top_role.color if member is not None else 0x00cea2, timestamp=ctx.message.created_at)
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
@@ -999,7 +984,6 @@ class Moderation(BaseCog):
     @clean.command("user")
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
-    @require_cache()
     async def clean_user(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_user_help"""
         if len(users) is 0:
@@ -1049,7 +1033,6 @@ class Moderation(BaseCog):
     @clean.command("everywhere")
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
-    @require_cache()
     async def clean_everywhere(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_everywhere_help"""
         if len(users) is 0:
@@ -1193,7 +1176,7 @@ class Moderation(BaseCog):
             return await self.end_infraction(infraction)
 
         role = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
-        member = guild.get_member(infraction.user_id)
+        member = await Utils.get_member(self.bot, guild, infraction.user_id)
         role = guild.get_role(role)
         if role is None or member is None:
             return await self.end_infraction(infraction)  # role got removed or member left

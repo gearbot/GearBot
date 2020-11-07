@@ -273,3 +273,10 @@ def to_pretty_time(seconds, guild_id):
 
 def assemble_attachment(channel, aid, name):
     return f"https://media.discordapp.net/attachments/{channel}/{aid}/{name}"
+
+
+async def get_member(bot, guild, user_id):
+    member = guild.get_member(user_id)
+    if member is None and guild.id in bot.missing_guilds:
+        member = await guild.fetch_member(user_id)
+    return member
