@@ -390,7 +390,7 @@ def load_config(guild):
     if len(config.keys()) != 0 and "VERSION" not in config and len(config) < 15:
         GearbotLogging.info(f"The config for {guild} is to old to migrate, resetting")
         config = dict()
-    else:
+    elif len(config.keys()) != 0:
         if "VERSION" not in config:
             config["VERSION"] = 0
         SERVER_CONFIGS[guild] = update_config(guild, config)
