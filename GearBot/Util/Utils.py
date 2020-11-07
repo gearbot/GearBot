@@ -9,7 +9,7 @@ from subprocess import Popen
 
 import discord
 import math
-from discord import NotFound
+from discord import NotFound, DiscordException
 
 from Util import GearbotLogging, Translator, Emoji
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
@@ -278,5 +278,8 @@ def assemble_attachment(channel, aid, name):
 async def get_member(bot, guild, user_id):
     member = guild.get_member(user_id)
     if member is None and guild.id in bot.missing_guilds:
-        member = await guild.fetch_member(user_id)
+        try:
+            member = await guild.fetch_member(user_id)
+        except DiscordException:
+            return None
     return member
