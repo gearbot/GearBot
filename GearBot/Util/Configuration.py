@@ -387,17 +387,18 @@ async def initialize(bot: commands.Bot):
 def load_config(guild):
     global SERVER_CONFIGS
     config = Utils.fetch_from_disk(f'config/{guild}')
-    if "VERSION" not in config and len(config) < 15:
+    if len(config.keys()) != 0 and "VERSION" not in config and len(config) < 15:
         GearbotLogging.info(f"The config for {guild} is to old to migrate, resetting")
         config = dict()
     else:
         if "VERSION" not in config:
             config["VERSION"] = 0
         SERVER_CONFIGS[guild] = update_config(guild, config)
-    if len(config) is 0:
+    if len(config.keys()) is 0:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
         SERVER_CONFIGS[guild] = Utils.fetch_from_disk("config/template")
         save(guild)
+    validate_config(guild)
     Features.check_server(guild)
 
 
@@ -406,8 +407,11 @@ def validate_config(guild_id):
     # no guild means we're not there anymore, ignore it
     if guild is None:
         return
+    changed = False
     for key in ["ADMIN_ROLES", "MOD_ROLES", "TRUSTED_ROLES"]:
-        checklist(guild.id, key, guild.get_role)
+        changed |= checklist(guild.id, key, guild.get_role)
+    if changed:
+        save(guild_id)
 
 
 def checklist(guid, key, getter):
@@ -420,8 +424,7 @@ def checklist(guid, key, getter):
             changed = True
     for r in tr:
         cl.remove(r)
-    if changed:
-        save(guid)
+    return changed
 
 
 def update_config(guild, config):

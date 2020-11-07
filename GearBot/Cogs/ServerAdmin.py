@@ -123,6 +123,7 @@ class ServerAdmin(BaseCog):
         """configure_admin_roles_help"""
         if ctx.invoked_subcommand is None:
             await list_list(ctx, 'admin')
+        Configuration.validate_config(ctx.guild.id)
 
     @admin_roles.command(name="add")
     async def add_admin_role(self, ctx, *, role:discord.Role):
@@ -137,6 +138,7 @@ class ServerAdmin(BaseCog):
         """configure_mod_roles_help"""
         if ctx.invoked_subcommand is None:
             await list_list(ctx, 'mod')
+        Configuration.validate_config(ctx.guild.id)
 
     @mod_roles.command(name="add")
     async def add_mod_role(self, ctx, *, role: discord.Role):
@@ -151,6 +153,7 @@ class ServerAdmin(BaseCog):
         """configure_trusted_roles_help"""
         if ctx.invoked_subcommand is None:
             await list_list(ctx, 'trusted')
+        Configuration.validate_config(ctx.guild.id)
 
     @trusted_roles.command(name="add")
     async def add_trusted_role(self, ctx, *, role: discord.Role):
@@ -893,7 +896,7 @@ class ServerAdmin(BaseCog):
 
     @configure.group(aliases=["censorlist", "cl"])
     async def censor_list(self, ctx):
-        "censor_list_help"
+        """censor_list_help"""
         if ctx.invoked_subcommand is None:
             await Pages.create_new(self.bot, "censor_list", ctx)
 
