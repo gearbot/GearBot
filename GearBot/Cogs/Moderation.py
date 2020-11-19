@@ -892,13 +892,13 @@ class Moderation(BaseCog):
 
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
             if len(role_list) > 60:
-                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_many_roles', ctx))
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_many_roles', ctx), inline=False)
             elif len(role_list) > 40:
-                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_roles', ctx))
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate('too_many_roles', ctx), inline=False)
             elif len(role_list) > 0:
-                embed.add_field(name=Translator.translate('all_roles', ctx), value=" ".join(role_list))
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=" ".join(role_list), inline=False)
             else:
-                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate("no_roles", ctx))
+                embed.add_field(name=Translator.translate('all_roles', ctx), value=Translator.translate("no_roles", ctx), inline=False)
 
             embed.add_field(name=Translator.translate('joined_at', ctx),
                             value=f"{(ctx.message.created_at - member.joined_at).days} days ago (``{member.joined_at}``)",
@@ -1265,7 +1265,6 @@ class Moderation(BaseCog):
         pipeline.expire(f"users:{member.id}", 3000)  # 5 minute cache life
 
         await pipeline.execute()
-
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
