@@ -6,7 +6,7 @@ from discord import Member, Permissions, Embed
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils, Permissioncheckers
+from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils, Permissioncheckers, Pages
 from database.DatabaseConnector import CustomCommand
 
 CommandInfo = namedtuple("CommandInfo", "content created_by")
@@ -22,6 +22,7 @@ class CustCommands(BaseCog):
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
+        Pages.register("custom_command_list", self.command_list_init, self.command_list_update)
 
     async def reloadCommands(self):
         self.commands = dict()
@@ -44,20 +45,40 @@ class CustCommands(BaseCog):
     async def command(self, ctx: commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(timestamp=ctx.message.created_at, color=0x663399,
-                                  title=Translator.translate("custom_command_list", ctx.guild.id,
-                                                             server_name=ctx.guild.name))
-            value = ""
             if ctx.guild.id in self.commands:
-                for trigger in self.commands[ctx.guild.id].keys():
-                    if len(value) + len(trigger) > 1000:
-                        embed.add_field(name="\u200b", value=value)
-                        value = ""
-                    value = f"{value}{trigger}\n"
-                embed.add_field(name="\u200b", value=value)
-                await ctx.send(embed=embed)
+                await Pages.create_new(self.bot, "custom_command_list", ctx)
             else:
                 await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
+
+
+    def get_command_pages(self, guild_id):
+        pages = []
+        page = ""
+        for trigger in self.commands[guild_id].keys():
+            if len(page) + len(trigger) > 400:
+                pages.append(page)
+                page = ""
+            page += f"\n{trigger}"
+        if len(page) > 0:
+            pages.append(page)
+        return pages
+
+
+    async def command_list_init(self, ctx):
+        pages = self.get_command_pages(ctx.guild.id)
+        return None, self.gen_command_page(pages, 0, ctx.guild), len(pages) > 1
+
+    async def command_list_update(self, ctx, message, page_num, action, data):
+        pages = self.get_command_pages(message.guild.id)
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return None, self.gen_command_page(pages, page_num, message.guild), data
+
+    def gen_command_page(self, pages, page_num, guild):
+        return Embed(description=pages[page_num], title=f"{Translator.translate('custom_command_list', guild.id,server_name=guild.name)} ({page_num+1}/{len(pages)})", color=0x663399)
+
+
+
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
