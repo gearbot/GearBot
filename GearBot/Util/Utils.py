@@ -52,12 +52,15 @@ def trim_message(message, limit):
     return f"{message[:limit-4]}..."
 
 async def empty_list(ctx, action):
-    message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
-    await asyncio.sleep(3)
-    message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
-    await asyncio.sleep(3)
-    await message.edit(content=Translator.translate('intimidation', ctx))
-    await message2.delete()
+    try:
+        message = await ctx.send(f"{Translator.translate('m_nobody', ctx, action=action)} {Emoji.get_chat_emoji('THINK')}")
+        await asyncio.sleep(3)
+        message2 = await ctx.send(f"{Translator.translate('m_nobody_2', ctx)} {Emoji.get_chat_emoji('WINK')}")
+        await asyncio.sleep(3)
+        await message.edit(content=Translator.translate('intimidation', ctx))
+        await message2.delete()
+    except DiscordException:
+        pass
 
 
 
