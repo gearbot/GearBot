@@ -1109,6 +1109,8 @@ class Moderation(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        # sleep a little, sometimes discord sends the event too soon
+        await asyncio.sleep(5)
         guild: discord.Guild = channel.guild
         roleid = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if roleid is not 0:
@@ -1119,13 +1121,13 @@ class Moderation(BaseCog):
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       send_messages=False,
                                                       add_reactions=False)
-                    except discord.Forbidden:
+                    except (discord.Forbidden, discord.NotFound):
                         pass
                 else:
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       speak=False, connect=False)
-                    except discord.Forbidden:
+                    except (discord.Forbidden, discord.NotFound):
                         pass
 
     @commands.Cog.listener()
