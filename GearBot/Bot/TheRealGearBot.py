@@ -126,7 +126,7 @@ async def on_ready(bot):
             await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
 
         bot.missing_guilds = []
-        bot.missing_guilds = [g.id for g in bot.guilds]
+        bot.missing_guilds = {g.id for g in bot.guilds}
         if bot.loading_task is not None:
             bot.loading_task.cancel()
         bot.loading_task = asyncio.create_task(fill_cache(bot))
