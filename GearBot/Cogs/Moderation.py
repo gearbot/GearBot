@@ -832,6 +832,7 @@ class Moderation(BaseCog):
             if role is None:
                 if confirm:
                     await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_role_removed')
+                    return
                 else:
                     raise ActionFailed(Translator.translate("unmute_fail_role_removed", ctx))
             else:
@@ -844,11 +845,16 @@ class Moderation(BaseCog):
                 if role not in target.roles and infraction is None:
                     if confirm:
                         await MessageUtils.send_to(ctx, 'WHAT', 'unmute_not_muted', user=Utils.clean_user(target))
+                        return
                     else:
                         raise ActionFailed(Translator.translate("unmute_not_muted", ctx, user=Utils.clean_user(target)))
                 else:
                     if role.position >= ctx.me.top_role.position:
-                        raise ActionFailed(Translator.translate("unmute_higher_role", ctx))
+                        if confirm:
+                            await MessageUtils.send_to(ctx, 'NO', 'unmute_higher_role')
+                            return
+                        else:
+                            raise ActionFailed(Translator.translate("unmute_higher_role", ctx))
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
