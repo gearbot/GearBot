@@ -136,7 +136,7 @@ class CustCommands(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.bot or message.webhook_id is not None:
             return
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
@@ -160,7 +160,7 @@ class CustCommands(BaseCog):
             return
 
         has_role = False
-        if message.author is not None:
+        if message.author is not None and hasattr(message.author, "roles"):
             for role in message.author.roles:
                 if role.id in role_list:
                     has_role = True
