@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 import pytz
 from discord import TextChannel
@@ -175,20 +177,29 @@ class ServerAdmin(BaseCog):
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx)}")
             return
         if not guild.me.top_role > role:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx, role=role.mention)}")
+            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
             return
         Configuration.set_var(ctx.guild.id, "ROLES", "MUTE_ROLE", int(role.id))
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_role_confirmation', ctx, role=role.mention)}")
         failed = []
+        for category in guild.categories:
+            if category.permissions_for(guild.me).manage_channels:
+                await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False, speak=False, connect=False)
+
+        # sleep a bit so we have time to receive the update events
+        await asyncio.sleep(2)
+
         for channel in guild.text_channels:
-            try:
-                await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
-            except discord.Forbidden as ex:
+            if channel.permissions_for(guild.me).manage_channels:
+                if channel.overwrites_for(role).is_empty():
+                    await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
+            else:
                 failed.append(channel.mention)
         for channel in guild.voice_channels:
-            try:
-                await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
-            except discord.Forbidden as ex:
+            if channel.permissions_for(guild.me).manage_channels:
+                if channel.overwrites_for(role).is_empty():
+                    await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
+            else:
                 failed.append(Translator.translate('voice_channel', ctx, channel=channel.name))
         if len(failed) > 0:
             message = f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_setup_failures', ctx, role=role.mention)}\n"
