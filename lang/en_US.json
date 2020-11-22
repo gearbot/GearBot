@@ -1,6 +1,6 @@
 {
   "too_many_roles_to_list": "``<Too many roles to list>``",
-  "seen_fail": "I've never seen {user} (``{user_id}``) talk before.",
+  "seen_fail": "I've not seen {user} (``{user_id}``) talk on this server in the last 6 weeks.",
   "seen_success": "I last saw {user} (``{user_id}``) on {date}.",
   "quote_footer": "Sent in #{channel} | Quote requested by {user} | {message_id}",
   "quote_nsfw_refused": "You requested a message from a NSFW channel, but this channel is not marked as NSFW, quote denied.",
