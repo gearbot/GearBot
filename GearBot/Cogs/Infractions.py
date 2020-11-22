@@ -117,6 +117,10 @@ class Infractions(BaseCog):
                     query = (" ".join(parts[:-1])).strip()
             except ValueError:
                 amount = 100
+                try:
+                    query = await UserID().convert(ctx, parts[0])
+                except BadArgument:
+                    query = parts[0]
             else:
                 if 1 < amount > 500:
                     if query == "":
