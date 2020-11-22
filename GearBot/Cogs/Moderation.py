@@ -794,7 +794,7 @@ class Moderation(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    @commands.bot_has_permissions(manage_roles=True, add_reactions=True)
+    @commands.bot_has_guild_permission(manage_roles=True, add_reactions=True, external_emojis=True)
     async def munmute(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """munmute_help"""
         if reason == "":
