@@ -41,7 +41,7 @@ class CustCommands(BaseCog):
 
     @commands.group(name="commands", aliases=['command'])
     @commands.guild_only()
-    @commands.bot_has_permissions(embed_links=True)
+    @commands.bot_has_permissions(embed_links=True, external_emojis=True, add_reactions=True)
     async def command(self, ctx: commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:

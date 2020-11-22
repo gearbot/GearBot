@@ -63,7 +63,7 @@ class Infractions(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    @commands.bot_has_permissions(add_reactions=True)
+    @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
     async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mwarn_help"""
         if reason == "":
@@ -95,6 +95,7 @@ class Infractions(BaseCog):
         pass
 
     @inf.command()
+    @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
     async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
                      query: str = ""):
         """inf_search_help"""
@@ -183,6 +184,7 @@ class Infractions(BaseCog):
         re.IGNORECASE)
 
     @inf.command("info", aliases=["details"])
+    @commands.bot_has_permissions(embed_links=True)
     async def info(self, ctx, infraction: ServerInfraction):
         """inf_info_help"""
         embed = discord.Embed(color=0x00cea2,

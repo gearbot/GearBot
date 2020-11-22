@@ -26,6 +26,7 @@ class Fun(BaseCog):
                 bot.remove_command(v)
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def apexstats(self, ctx, platform: ApexPlatform, *, username):
         """about_apexstats"""
         headers = {"TRN-Api-Key": Configuration.get_master_var("APEX_KEY")}

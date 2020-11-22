@@ -31,6 +31,7 @@ class Basic(BaseCog):
         self.running = False
 
     @commands.command()
+    @commands.bot_has_permissions(embed_links=True)
     async def about(self, ctx):
         """about_help"""
         uptime = datetime.utcnow() - self.bot.start_time
@@ -149,7 +150,7 @@ class Basic(BaseCog):
             await ctx.send(Translator.translate("coinflip_no", ctx, thing=thing))
 
     @commands.command(aliases=["selfrole", "self_roles", "selfroles"])
-    @commands.bot_has_permissions(embed_links=True)
+    @commands.bot_has_permissions(embed_links=True, external_emojis=True, add_reactions=True)
     @commands.guild_only()
     async def self_role(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
@@ -177,6 +178,7 @@ class Basic(BaseCog):
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
     @commands.command()
+    @commands.bot_has_permissions(external_emojis=True, add_reactions=True)
     async def help(self, ctx, *, query: str = None):
         """help_help"""
         if query is not None and len(query) > 100:

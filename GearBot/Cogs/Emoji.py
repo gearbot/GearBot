@@ -87,13 +87,14 @@ class Emoji(BaseCog):
         embed.add_field(name=Translator.translate("emoji_role_restrictions", location), value=roles)
 
     @emoji.command("info")
+    @commands.bot_has_permissions(embed_links=True)
     async def emoji_info(self, ctx, emoji: Emoji):
         embed = Embed(color=0x2db1f3)
         self.add_emoji_info(ctx, embed, emoji)
         await ctx.send(embed=embed)
 
     @emoji.command("add", aliases=["upload", "create"])
-    @commands.bot_has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
     async def emoji_add(self, ctx, name: EmojiName, roles: Greedy[Role] = None):
         """emoji_upload_help"""
         if len(ctx.message.attachments) is 0:
@@ -126,7 +127,7 @@ class Emoji(BaseCog):
                     return await MessageUtils.try_edit(message, emoji="NO", string_name="emoji_upload_invalid_file")
 
     @emoji.command(aliases=["change", "rename", "redefine"])
-    @commands.bot_has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
     async def update(self, ctx, emote: discord.Emoji, new_name: EmojiName):
         """emoji_update_help"""
         try:
@@ -159,7 +160,7 @@ class Emoji(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="emoji roles")
 
     @emoji_roles.command("add")
-    @commands.bot_has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
     async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
         if roles is None:
             return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
@@ -183,7 +184,7 @@ class Emoji(BaseCog):
         await ctx.send(message)
 
     @emoji_roles.command("remove")
-    @commands.bot_has_permissions(manage_emojis=True)
+    @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
     async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
         if roles is None:
             return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
