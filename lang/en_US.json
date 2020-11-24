@@ -152,7 +152,7 @@
   "no_allowed_invite_list": "Invite censoring is disabled, add servers to the list to enable it.",
   "current_allowed_invite_list": "Current allowed invite liset (Server IDs):",
   "already_allowed_invite_list": "`{item}` is already on the allowed invite list.",
-  "allowed_invite_list_added": "`{item}` is now a allowed server. Invites leading to this server will not be removed when posted.",
+  "allowed_invite_list_added": "`{item}` is now an allowed server. Invites leading to this server will not be removed when posted.",
   "was_no_allowed_invite_list": "`{item}` was not on the allowed invite list.",
   "allowed_invite_list_removed": "`{item}` is no longer an allowed server. Invites leading to this server will be removed when posted.",
   "no_ignored_users": "No ignored users configured, I will log edits and deletions by all users.",
