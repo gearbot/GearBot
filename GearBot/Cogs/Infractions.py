@@ -4,13 +4,16 @@ import typing
 from datetime import datetime
 
 import discord
+from discord import User
 from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy
+from discord.ext.commands import BadArgument, Greedy, BucketType
+from tortoise.query_utils import Q
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
+from database.DatabaseConnector import Infraction
 
 
 class Infractions(BaseCog):
@@ -118,10 +121,11 @@ class Infractions(BaseCog):
                     query = (" ".join(parts[:-1])).strip()
             except ValueError:
                 amount = 100
-                try:
-                    query = await UserID().convert(ctx, parts[0])
-                except BadArgument:
-                    query = parts[0]
+                if parts[0] != "":
+                    try:
+                        query = await UserID().convert(ctx, parts[0])
+                    except BadArgument:
+                        query = parts[0]
             else:
                 if 1 < amount > 500:
                     if query == "":
