@@ -220,7 +220,7 @@ async def on_guild_join(bot, guild: Guild):
             pass
         await guild.leave()
     else:
-        bot.missing_guilds.append(guild.id)
+        bot.missing_guilds.add(guild.id)
         await guild.chunk(cache=True)
         bot.missing_guilds.remove(guild.id)
         GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
