@@ -654,7 +654,7 @@ class Moderation(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'unban_log', user=Utils.clean_user(member.user), user_id=member.user.id, moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason, inf=i.id)
 
     @commands.command()
-    @commands.has_guild_permissions(manage_roles=True)
+    @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
     async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
