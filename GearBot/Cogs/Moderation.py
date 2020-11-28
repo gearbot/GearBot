@@ -75,7 +75,7 @@ class Moderation(BaseCog):
     @commands.guild_only()
     async def seen(self, ctx, user: discord.Member):
         """seen_help"""
-        messages = await LoggedMessage.filter(author=user.id, guild_id=ctx.guild.id).order_by("-messageid").limit(1).prefetch_related("attachments")
+        messages = await LoggedMessage.filter(author=user.id, server=ctx.guild.id).order_by("-messageid").limit(1).prefetch_related("attachments")
         if len(messages) is 0:
             await MessageUtils.send_to(ctx, "SPY", "seen_fail", user_id=user.id, user=Utils.clean_user(user))
         else:
