@@ -34,10 +34,6 @@ if __name__ == '__main__':
     else:
         token = input("Please enter your Discord token: ")
 
-    if 'monitoring_prefix' in os.environ:
-        monitoring_prefix = os.environ['monitoring_prefix']
-    else:
-        monitoring_prefix = "gearbot"
     args = {
         "command_prefix": prefix_callable,
         "case_insensitive": True,
@@ -62,7 +58,7 @@ if __name__ == '__main__':
             joined=True,
         ),
         "chunk_guilds_at_startup": False,
-        "monitoring_prefix": monitoring_prefix
+        "monitoring_prefix": Configuration.get_master_var("MONITORING_PREFIX")
     }
     if clargs.total_shards:
         total_shards = int(clargs.total_shards)
