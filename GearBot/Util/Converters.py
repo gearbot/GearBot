@@ -141,8 +141,6 @@ class Message(Converter):
             logged, message, = await self.fetch_messages(ctx, message_id, channel_id)
             if message is None:
                 raise TranslatedBadArgument('unknown_message', ctx)
-            if logged is None and message is not None and self.insert:
-                logged =await DBUtils.insert_message(message)
             if logged is not None and logged.content != message.content:
                 logged.content = message.content
                 await logged.save()
