@@ -69,7 +69,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
                         return kwargs
                 else:
                     if message.channel.permissions_for(message.channel.guild.me).send_messages:
-                        await MessageUtils.send_to(message.channel, "YES", "role_joined" if add_role else "role_left", role_name=await Utils.clean(role.name), user=ctx.author, delete_after=10)
+                        await MessageUtils.send_to(message.channel, "YES", "role_joined" if add_role else "role_left", role_name=await Utils.clean(role.name), user=user.name, delete_after=10)
                         bot.loop.create_task(remove_reaction(message, reaction, user))
                         return kwargs
 
