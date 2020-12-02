@@ -379,7 +379,7 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
     log_to(guild_id, targets, Utils.trim_message(message, 2000) if message is not None else None, embed, file, None)
 
 
-def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, **kwargs):
+def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, timestamp=datetime.now(), **kwargs):
     # logging category, emoji and
     info = LOG_TYPES[key]
 
@@ -398,7 +398,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, *
 
     if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
         s = datetime.strftime(
-            datetime.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
+            timestamp.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
             '%H:%M:%S')
         stamp = f"[``{s}``] "
         message = Utils.trim_message(f'{stamp} {message}', 2000)
