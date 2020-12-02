@@ -15,14 +15,14 @@ async def insert_message(message):
     if message.id not in recent_list and message.id not in previous_list:
         batch[message.id] = message
         recent_list.add(message.id)
-        if len(batch) >= 500:
+        if len(batch) >= 1000:
             asyncio.create_task(flush(force=True))
     return message
 
 
 async def flush(force=False):
     try:
-        if force or (datetime.now() - last_flush).total_seconds() > 10:
+        if force or (datetime.now() - last_flush).total_seconds() > 4 * 60:
             await do_flush()
     except Exception as e:
         await TheRealGearBot.handle_exception("Message flushing", None, e)

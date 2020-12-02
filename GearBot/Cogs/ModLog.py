@@ -620,7 +620,7 @@ class ModLog(BaseCog):
 
     async def find_log(self, guild, action, matcher, check_limit=10, retry=True):
         try:
-            return asyncio.wait_for(self.find_actual_log(guild, action, matcher, check_limit, retry), 10)
+            return await asyncio.wait_for(self.find_actual_log(guild, action, matcher, check_limit, retry), 10)
         except (asyncio.TimeoutError, asyncio.CancelledError):
             return None
 
