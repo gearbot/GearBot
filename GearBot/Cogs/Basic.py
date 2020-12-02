@@ -167,10 +167,10 @@ class Basic(BaseCog):
                     try:
                         if role in ctx.author.roles:
                             await ctx.author.remove_roles(role)
-                            await ctx.send(Translator.translate("role_left", ctx, role_name=role.name))
+                            await ctx.send(Translator.translate("role_left", ctx, role_name=role.name, user=ctx.author))
                         else:
                             await ctx.author.add_roles(role)
-                            await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name))
+                            await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name, user=ctx.author))
                     except discord.Forbidden:
                         await ctx.send(
                             f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
