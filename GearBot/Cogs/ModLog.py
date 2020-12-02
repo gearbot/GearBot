@@ -618,34 +618,35 @@ class ModLog(BaseCog):
         elif value is True:
             return "granted"
 
-    async def find_log(self, guild, action, matcher, check_limit=10, retry=True):
+    @staticmethod
+    async def find_log(guild, action, matcher, check_limit=10, retry=True):
         try:
-            return await asyncio.wait_for(self.find_actual_log(guild, action, matcher, check_limit, retry), 10)
+            return await asyncio.wait_for(find_actual_log(guild, action, matcher, check_limit, retry), 10)
         except (asyncio.TimeoutError, asyncio.CancelledError):
             return None
 
-    @staticmethod
-    async def find_actual_log(guild, action, matcher, check_limit, retry):
-        try:
-            if guild.me is None:
-                return None
-            entry = None
-            if guild.me.guild_permissions.view_audit_log:
-                try:
-                    async for e in guild.audit_logs(action=action, limit=check_limit):
-                        if matcher(e):
-                            if entry is None or e.id > entry.id:
-                                entry = e
-                except discord.Forbidden:
-                    pass
-            if entry is None and retry:
-                await asyncio.sleep(2)
-                return await ModLog.find_log(guild, action, matcher, check_limit, False)
-            if entry is not None and isinstance(entry.target, discord.Object):
-                entry.target = await Utils.get_user(entry.target.id)
-            return entry
-        except (asyncio.TimeoutError, asyncio.CancelledError):
+
+async def find_actual_log(guild, action, matcher, check_limit, retry):
+    try:
+        if guild.me is None:
             return None
+        entry = None
+        if guild.me.guild_permissions.view_audit_log:
+            try:
+                async for e in guild.audit_logs(action=action, limit=check_limit):
+                    if matcher(e):
+                        if entry is None or e.id > entry.id:
+                            entry = e
+            except discord.Forbidden:
+                pass
+        if entry is None and retry:
+            await asyncio.sleep(2)
+            return await ModLog.find_log(guild, action, matcher, check_limit, False)
+        if entry is not None and isinstance(entry.target, discord.Object):
+            entry.target = await Utils.get_user(entry.target.id)
+        return entry
+    except (asyncio.TimeoutError, asyncio.CancelledError):
+        return None
 
 
 async def cache_task(modlog: ModLog):
