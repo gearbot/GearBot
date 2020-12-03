@@ -13,7 +13,7 @@ recent_list = set()
 previous_list = set()
 last_flush = datetime.now()
 
-violation_regex = re.compile("Duplicate entry '(\d+)' for key 'PRIMARY'.*")
+violation_regex = re.compile("\(1062, \"Duplicate entry '(\d+)' for key 'PRIMARY'.*")
 
 async def insert_message(message):
     if message.id not in recent_list and message.id not in previous_list:
