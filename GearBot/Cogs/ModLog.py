@@ -372,7 +372,7 @@ class ModLog(BaseCog):
         if before.name != after.name or before.discriminator != after.discriminator:
             for guild in self.bot.guilds:
                 if guild.get_member(before.id) is not None:
-                    after_clean_name = Utils.escape_markdown(after)
+                    after_clean_name = Utils.escape_markdown(Utils.replace_lookalikes(after))
                     GearbotLogging.log_key(guild.id, 'username_changed', after_clean=after_clean_name, before=before, user_id=after.id, after=after)
 
     @commands.Cog.listener()

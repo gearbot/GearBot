@@ -215,7 +215,7 @@ async def get_user(uid, fetch=True):
 def clean_user(user):
     if user is None:
         return "UNKNOWN USER"
-    return f"{escape_markdown(user.name)}#{user.discriminator}"
+    return f"{escape_markdown(replace_lookalikes(user.name))}#{user.discriminator}"
 
 def username_from_user(user):
     if user is None:
