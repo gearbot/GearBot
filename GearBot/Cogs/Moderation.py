@@ -18,6 +18,7 @@ from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
 from Util.Permissioncheckers import bot_has_guild_permission
+from database import DBUtils
 from database.DatabaseConnector import LoggedMessage, Infraction
 
 
@@ -965,7 +966,7 @@ class Moderation(BaseCog):
         if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = await LoggedMessage.filter(server=ctx.guild.id, channel=channel.id).order_by("-messageid").limit(amount).prefetch_related("attachments")
-            await Archive.ship_messages(ctx, messages, "channel")
+            await Archive.ship_messages(ctx, messages + DBUtils.get_messages_for_channel(channel.id), "channel")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
@@ -978,7 +979,7 @@ class Moderation(BaseCog):
         if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = await LoggedMessage.filter(server=ctx.guild.id, author=user).order_by("-messageid").limit(amount).prefetch_related("attachments")
-            await Archive.ship_messages(ctx, messages, "user")
+            await Archive.ship_messages(ctx, messages + DBUtils.get_messages_for_user_in_guild(user, ctx.guild.id), "user")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
