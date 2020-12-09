@@ -1,11 +1,12 @@
 import asyncio
 import datetime
+import re
 import time
 import typing
 from typing import Optional
 
 import discord
-from discord import Object, Emoji, Forbidden, NotFound, ActivityType
+from discord import Object, Emoji, Forbidden, NotFound, ActivityType, DMChannel, DiscordException
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
 from tortoise.exceptions import MultipleObjectsReturned
@@ -13,7 +14,7 @@ from tortoise.exceptions import MultipleObjectsReturned
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, Emoji, Translator, \
-    Archive, Confirmation, MessageUtils, Questions, server_info, Actions
+    Archive, Confirmation, MessageUtils, Questions, server_info, Actions, Permissioncheckers
 from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
     RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
@@ -32,6 +33,8 @@ class Moderation(BaseCog):
         self.bot.loop.create_task(self.timed_actions())
         Pages.register("roles", self.roles_init, self.roles_update)
         Pages.register("mass_failures", self._mass_failures_init, self._mass_failures_update)
+
+        self.regexes = dict()
 
     def cog_unload(self):
         self.running = False
@@ -1277,6 +1280,63 @@ class Moderation(BaseCog):
         pipeline.expire(f"users:{member.id}", 3000)  # 5 minute cache life
 
         await pipeline.execute()
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or self.bot.user.id == message.author.id:
+            return
+        if message.channel.guild is not None:
+            await self.check_for_flagged_words(message.content, message.channel.guild.id, message.channel.id, message.id, message.author)
+
+    @commands.Cog.listener()
+    async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
+        channel = self.bot.get_channel(int(event.data["channel_id"]))
+        if channel is None or isinstance(channel, DMChannel) or "content" not in event.data:
+            return
+        await self.check_for_flagged_words(event.data["content"], channel.guild.id, channel.id, event.message_id)
+
+    async def check_for_flagged_words(self, content, guild_id, channel_id, message_id, author=None):
+        if content is None:
+            return
+        content = content.lower()
+        token_list = Configuration.get_var(guild_id, "FLAGGING", "TOKEN_LIST")
+        word_list = Configuration.get_var(guild_id, "FLAGGING", "WORD_LIST")
+
+        for bad in (t.lower() for t in token_list):
+            if bad in content:
+                await self.flag_message(content, bad, guild_id, channel_id, message_id, author, "token")
+                return
+
+        if len(word_list) > 0:
+            if guild_id not in self.regexes:
+                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_list) + r")\b", re.IGNORECASE)
+                self.regexes[guild_id] = regex
+            else:
+                regex = self.regexes[guild_id]
+            match = regex.findall(content)
+            if len(match):
+                await self.flag_message(content, match[0], guild_id, channel_id, message_id, author, "word")
+                return
+
+    async def flag_message(self, content, flagged, guild_id, channel_id, message_id, author=None, type=""):
+        if author is None:
+            message = await MessageUtils.get_message_data(self.bot, message_id)
+            if message is None:
+                try:
+                    channel = self.bot.get_channel(channel_id)
+                    message = await channel.fetch_message(message_id)
+                except DiscordException:
+                    pass
+            if message is not None:
+                author = await Utils.get_member(self.bot, self.bot.get_guild(guild_id), message.author)
+        if author is None or author.id == self.bot.user.id or Permissioncheckers.get_user_lvl(author.guild, author) >= 2:
+            return
+
+        content = Utils.trim_message(content, 1800)
+        content = Utils.replace_lookalikes(content)
+        link = MessageUtils.construct_jumplink(guild_id, channel_id, message_id)
+        GearbotLogging.log_key(guild_id, f"flagged_{type}", user=Utils.clean_user(author), user_id=author.id, flagged=flagged, channel=f"<#{channel_id}>", content=content, link=link)
+
 
 def setup(bot):
     bot.add_cog(Moderation(bot))

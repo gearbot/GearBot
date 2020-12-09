@@ -878,6 +878,15 @@
   "already_banned_user": "This user is already banned",
   "unmute_higher_role": "I require a role that is above the mute role to be able to unmute people",
   "mute_higher_role": "I require a role that is above the mute role to be able to mute people",
-  "emoji_upload_rejected_no_message": "Failed to upload emoji but discord didn't tell me what exactly is wrong with it"
-
+  "emoji_upload_rejected_no_message": "Failed to upload emoji but discord didn't tell me what exactly is wrong with it",
+  "flagged_token": "Message by {user} (`{user_id}`) in {channel} contains flagged token sequence `{flagged}`: ```\n{content}```Jump link: {link}",
+  "flagged_word": "Message by {user} (`{user_id}`) in {channel} contains flagged word `{flagged}`: ```\n{content}```Jump link: {link}",
+  "flagged_list": "Flagged tokens for {server} ({page_num}/{pages})",
+  "flagged_word_list": "Flagged words for {server} ({page_num}/{pages})",
+  "already_flagged": "``{word}`` was already on the flagged list.",
+  "flag_added": "Successfully added ``{entry}`` to the flag list.",
+  "not_flagged": "``{word}`` was not on the flag list.",
+  "flag_removed": "Successfully removed ``{entry}`` from the flag list.",
+  "word_flag_list_help": "Words to flag to the moderators",
+  "flag_list_help": "Tokens to flag to the moderators"
 }

@@ -1,5 +1,5 @@
 {
-	"VERSION": 29,
+	"VERSION": 30,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -32,6 +32,10 @@
 		"DOMAIN_LIST": [],
 		"FULL_MESSAGE_LIST": [],
 		"CENSOR_EMOJI_ONLY_MESSAGES": false
+	},
+	"FLAGGING": {
+		"WORD_LIST": [],
+		"TOKEN_LIST": []
 	},
 	"INFRACTIONS": {
 		"DM_ON_WARN": false,

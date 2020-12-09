@@ -345,10 +345,17 @@ def v28(config):
         "MOD_BYPASS": True
     }
 
+def v29(config):
+    add_logging(config, "MESSAGE_FLAGS")
+    config["FLAGGING"] = {
+        "WORD_LIST": [],
+        "TOKEN_LIST": []
+    }
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
-        if "FUTURE_LOGS" in info:
-            info.extend(args)
+        if "FUTURE_LOGS" in info["CATEGORIES"]:
+            info["CATEGORIES"].extend(args)
 
 
 def nuke_keys(config, *keys):
@@ -366,7 +373,7 @@ def move_keys(config, section, *keys):
             del config[key]
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28, v29]
 
 BOT = None
 

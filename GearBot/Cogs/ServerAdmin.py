@@ -89,6 +89,7 @@ class ServerAdmin(BaseCog):
         "VOICE_CHANGES",
         "SPAM_VIOLATION",
         "CONFIG_CHANGES",
+        "MESSAGE_FLAGS"
         "FUTURE_LOGS"
     ]
 
@@ -99,6 +100,9 @@ class ServerAdmin(BaseCog):
         Pages.register("censor_list", self._censorlist_init, self._censorklist_update)
         Pages.register("word_censor_list", self._word_censorlist_init, self._word_censor_list_update)
         Pages.register("full_message_censor_list", self._full_censorlist_init, self._full_censor_list_update)
+
+        Pages.register("flag_list", self._flaglist_init, self._flaglist_update)
+        Pages.register("word_flag_list", self._word_flaglist_init, self._word_flag_list_update)
 
 
 
@@ -985,6 +989,88 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
                 del self.bot.get_cog("Censor").regexes[ctx.guild.id]
+
+    @configure.group(aliases=["flaglist", "fl"])
+    async def flag_list(self, ctx):
+        """flag_list_help"""
+        if ctx.invoked_subcommand is None:
+            await Pages.create_new(self.bot, "flag_list", ctx)
+
+    @staticmethod
+    async def _flaglist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")))
+        return f"**{Translator.translate(f'flagged_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+
+    @staticmethod
+    async def _flaglist_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "FLAGGING", "TOKEN_LIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return f"**{Translator.translate(f'flagged_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+
+    @flag_list.command("add")
+    async def flag_list_add(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
+        if word.lower() in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "already_flagged", word=word)
+        else:
+            censor_list.append(word.lower())
+            await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @flag_list.command("remove")
+    async def flag_list_remove(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
+        if word not in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "not_flagged", word=word)
+        else:
+            censor_list.remove(word)
+            await MessageUtils.send_to(ctx, "YES", "flag_removed", entry=word)
+            Configuration.save(ctx.guild.id)
+
+    @configure.group(aliases=["wordflaglist", "wfl"])
+    async def word_flag_list(self, ctx):
+        """word_flag_list_help"""
+        if ctx.invoked_subcommand is None:
+            await Pages.create_new(self.bot, "word_flag_list", ctx)
+
+    @staticmethod
+    async def _word_flaglist_init(ctx):
+        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")))
+        return f"**{Translator.translate(f'flagged_word_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+            pages) > 1
+
+    @staticmethod
+    async def _word_flag_list_update(ctx, message, page_num, action, data):
+        pages = Pages.paginate(
+            "\n".join(Configuration.get_var(message.channel.guild.id, "FLAGGING", "WORD_LIST")))
+        page, page_num = Pages.basic_pages(pages, page_num, action)
+        data["page"] = page_num
+        return f"**{Translator.translate(f'flagged_word_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+
+    @word_flag_list.command("add")
+    async def word_flag_list_add(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
+        if word.lower() in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "already_flagged", word=word)
+        else:
+            censor_list.append(word.lower())
+            await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
+            Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
+                del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
+
+    @word_flag_list.command("remove")
+    async def word_flag_list_remove(self, ctx, *, word: str):
+        censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
+        if word.lower() not in censor_list:
+            await MessageUtils.send_to(ctx, "NO", "not_flagged", word=word)
+        else:
+            censor_list.remove(word.lower())
+            await MessageUtils.send_to(ctx, "YES", "flag_removed", entry=word)
+            Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
+                del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
 
 
     @configure.group()

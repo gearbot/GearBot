@@ -254,6 +254,10 @@ LOGGING_INFO = {
         "voice_change_self_deaf_true": "VOICE",
         "voice_change_self_mute_false": "VOICE",
         "voice_change_self_mute_true": "VOICE"
+    },
+    "MESSAGE_FLAGS": {
+        "flagged_word": "WARNING",
+        "flagged_token": "WARNING"
     }
 }
 
