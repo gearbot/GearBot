@@ -89,7 +89,7 @@ class ServerAdmin(BaseCog):
         "VOICE_CHANGES",
         "SPAM_VIOLATION",
         "CONFIG_CHANGES",
-        "MESSAGE_FLAGS"
+        "MESSAGE_FLAGS",
         "FUTURE_LOGS"
     ]
 

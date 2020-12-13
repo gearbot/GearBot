@@ -1332,7 +1332,7 @@ class Moderation(BaseCog):
         if author is None or author.id == self.bot.user.id or Permissioncheckers.get_user_lvl(author.guild, author) >= 2:
             return
 
-        content = Utils.trim_message(content, 1800)
+        content = Utils.trim_message(content, 1700)
         content = Utils.replace_lookalikes(content)
         link = MessageUtils.construct_jumplink(guild_id, channel_id, message_id)
         GearbotLogging.log_key(guild_id, f"flagged_{type}", user=Utils.clean_user(author), user_id=author.id, flagged=flagged, channel=f"<#{channel_id}>", content=content, link=link)
