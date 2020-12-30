@@ -220,7 +220,7 @@ async def on_guild_join(bot, guild: Guild):
             pass
         await guild.leave()
     elif guild.owner_id in Configuration.get_persistent_var("user_blocklist", []):
-        GearbotLogging.info(f"Someone tried to add me to {guild.name} ({guild.id}) but the owner ({guild.owner} ({guild.owner_id})) is blocked")
+        GearbotLogging.info(f"Someone tried to add me to {Utils.clean(guild.name)} ({guild.id}) but the owner ({guild.owner} ({guild.owner_id})) is blocked")
         try:
             await (await bot.fetch_user(guild.owner_id)).send(f"Someone tried adding me to {guild.name} (``{guild.id}``) but you have been blocked due to bot abuse, so i left")
         except Exception:
