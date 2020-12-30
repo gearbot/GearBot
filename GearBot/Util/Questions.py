@@ -1,7 +1,7 @@
 import asyncio
 from collections import namedtuple
 
-from discord import Embed, Reaction
+from discord import Embed, Reaction, NotFound
 
 from Util import MessageUtils
 
@@ -24,4 +24,7 @@ async def ask(ctx, text, options, timeout=60):
     else:
         await handlers[str(reaction.emoji)]()
     finally:
-        await message.delete()
+        try:
+            await message.delete()
+        except NotFound:
+            pass
