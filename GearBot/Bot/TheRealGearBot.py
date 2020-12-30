@@ -14,7 +14,7 @@ import aiohttp
 import aioredis
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild
+from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
 from discord.abc import PrivateChannel
 from discord.ext import commands
 
@@ -265,33 +265,40 @@ async def on_command_error(bot, ctx: commands.Context, error):
     if isinstance(error, NotCachedException):
         if bot.loading_task is not None:
             if bot.initial_fill_complete:
-                await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} Due to a earlier connection failure the cached data for this guild is no longer up to date and is being rebuild. Please try again in a few minutes.")
+                await send(ctx, f"{Emoji.get_chat_emoji('CLOCK')} Due to a earlier connection failure the cached data for this guild is no longer up to date and is being rebuild. Please try again in a few minutes.")
             else:
-                await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot is in the process of starting up and has not received the member info for this guild. Please try again in a few minutes.")
+                await send(ctx, f"{Emoji.get_chat_emoji('CLOCK')} GearBot is in the process of starting up and has not received the member info for this guild. Please try again in a few minutes.")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('CLOCK')} GearBot only just joined this guild and is still receiving the initial member info for this guild, please try again in a few seconds")
+            await send(ctx, f"{Emoji.get_chat_emoji('CLOCK')} GearBot only just joined this guild and is still receiving the initial member info for this guild, please try again in a few seconds")
     if isinstance(error, commands.BotMissingPermissions):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
-        await ctx.send(error)
+        await send(ctx, error)
     elif isinstance(error, commands.CheckFailure):
         if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
             await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send(error)
+        await send(ctx, error)
     elif isinstance(error, commands.MissingRequiredArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
         bot.help_command.context = ctx
-        await ctx.send(
+        await send(ctx,
             f"{Emoji.get_chat_emoji('NO')} {Translator.translate('missing_arg', ctx, arg=param._name, error=Utils.replace_lookalikes(str(error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, PostParseError):
         bot.help_command.context = ctx
-        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=Utils.replace_lookalikes(str(error.error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
+        await send(ctx, f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=error.type, error=Utils.replace_lookalikes(str(error.error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.BadArgument):
         param = list(ctx.command.params.values())[min(len(ctx.args) + len(ctx.kwargs), len(ctx.command.params))]
         bot.help_command.context = ctx
-        await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=Utils.replace_lookalikes(str(error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
+        await send(ctx, f"{Emoji.get_chat_emoji('NO')} {Translator.translate('bad_argument', ctx, type=param._name, error=Utils.replace_lookalikes(str(error)))}\n{Emoji.get_chat_emoji('WRENCH')} {Translator.translate('command_usage', ctx, usage=bot.help_command.get_command_signature(ctx.command))}")
     elif isinstance(error, commands.CommandNotFound):
         return
+    elif isinstance(error, NotFound):
+        e = Emoji.get_chat_emoji('BUG')
+        await send(ctx, f"{e} Command failed because the discord api responded with \"not found\" If you didn't delete anything manually and this keeps happening please report it on support server (DM me ``!about`` or check the website for an invite) {e}")
+
+    elif isinstance(error, NotFound):
+        e = Emoji.get_chat_emoji('BUG')
+        await ctx.send(f"{e} Command failed because the discord api responded with \"forbidden\" reply. Please make sure the bot has the permissions and roles required to perform this command {e}")
 
     else:
         await handle_exception("Command execution failed", bot, error.original if hasattr(error, "original") else error, ctx=ctx)
@@ -301,6 +308,9 @@ async def on_command_error(bot, ctx: commands.Context, error):
             await ctx.send(f"{e} Something went wrong while executing that command. If this keeps happening please report it on support server (DM me ``!about`` or check the website for an invite) {e}")
 
 
+async def send(ctx, *args, **kwargs):
+    if ctx.channel.permissions_for(ctx.me).send_messages:
+        await ctx.send(*args, **kwargs)
 
 def extract_info(o):
     info = ""
