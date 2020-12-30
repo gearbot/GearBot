@@ -406,7 +406,7 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "ban_confirmation", user=Utils.clean_user(user), user_id=user.id,
                                          reason=reason, inf=i.id)
 
-    async def _unban(self, ctx, user, reason, confirm):
+    async def _unban(self, ctx, user, reason, confirm, dm_action=False):
         self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
         try:
             await ctx.guild.unban(user, reason=Utils.trim_message(
@@ -457,7 +457,7 @@ class Moderation(BaseCog):
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-            failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason, require_on_server=False, confirm=False, check_bot_ability=False)
+            failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason, require_on_server=False, confirm=False, check_bot_ability=False, dm_action=False)
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
