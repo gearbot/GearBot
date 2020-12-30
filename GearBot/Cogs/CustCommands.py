@@ -164,8 +164,10 @@ class CustCommands(BaseCog):
 
         me = message.guild.me
         if me is None:
-            message.guild.fetch_member(self.bot.user.id)
+            me = Utils.get_member(self.bot, message.guild, self.bot.user.id)
         permissions = message.channel.permissions_for(me)
+        if me is None:
+            return
         if not (permissions.read_messages and permissions.send_messages and permissions.embed_links):
             return
 
