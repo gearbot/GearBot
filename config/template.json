@@ -1,5 +1,5 @@
 {
-	"VERSION": 30,
+	"VERSION": 31,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -43,7 +43,13 @@
 		"DM_ON_MUTE": false,
 		"DM_ON_KICK": false,
 		"DM_ON_BAN": false,
-		"DM_ON_TEMPBAN": false
+		"DM_ON_TEMPBAN": false,
+		"WARN": null,
+		"UNMUTE": null,
+		"MUTE": null,
+		"KICK": null,
+	    "BAN": null,
+        "TEMPBAN": null
 	},
 	"PERM_OVERRIDES": {},
 	"RAID_HANDLING": {

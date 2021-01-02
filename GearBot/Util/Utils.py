@@ -6,12 +6,13 @@ from collections import namedtuple, OrderedDict
 from datetime import datetime
 from json import JSONDecodeError
 from subprocess import Popen
+from pyseeyou import format
 
 import discord
 import math
 from discord import NotFound, DiscordException
 
-from Util import GearbotLogging, Translator, Emoji
+from Util import GearbotLogging, Translator, Emoji, Configuration, MessageUtils
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
 
 BOT = None
@@ -286,3 +287,32 @@ async def get_member(bot, guild, user_id):
         except DiscordException:
             return None
     return member
+
+
+async def send_infraction(user, guild, emoji, type, reason, **kwargs):
+    try:
+        override = Configuration.get_var(guild.id, "INFRACTIONS", type.upper())
+        kwargs.update(
+            reason=reason,
+            server=guild.name
+        )
+        if override is not None:
+            message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}"
+        else:
+           message = f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(f'{type.lower()}_dm', guild.id, **kwargs)}```{reason}```"
+        parts = message.split("```")
+        out = ""
+        wrap = False
+        while len(parts) > 0:
+            temp = parts.pop(0)
+            added = 6 if wrap else 0
+            chars = "```" if wrap else ""
+            if (len(out) + len(temp) + added) > 2000:
+                await user.send(out)
+                temp = ""
+            out = f"{out}{chars}{temp}{chars}"
+            wrap = not wrap
+        if len(out) > 0:
+            await user.send(out)
+    except (discord.HTTPException, AttributeError):
+        GearbotLogging.log_key(guild.id, f'{type}_could_not_dm', user=clean_user(user), userid=user.id)

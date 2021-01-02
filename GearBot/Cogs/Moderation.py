@@ -215,14 +215,8 @@ class Moderation(BaseCog):
     async def _kick(self, ctx, user, reason, message, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         
-        name = Utils.clean_user(user)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
-            try:
-                await user.send(
-                    f"{Emoji.get_chat_emoji('BOOT')} {Translator.translate('kick_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-            except (discord.HTTPException, AttributeError):
-                GearbotLogging.log_key(ctx.guild.id, 'kick_could_not_dm', user=name,
-                                       userid=user.id)
+            await Utils.send_infraction(user, ctx.guild, 'BOOT', 'kick', reason)
         
         await ctx.guild.kick(user,
                              reason=Utils.trim_message(
@@ -357,16 +351,9 @@ class Moderation(BaseCog):
         if allowed:
             duration_seconds = duration.to_seconds(ctx)
             if duration_seconds > 0:
-                name = Utils.clean_user(user)
                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
-                    try:
-                        dur=f'{duration.length}{duration.unit}'
-                        await user.send(
-                            f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('tempban_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
-                    except (discord.HTTPException, AttributeError):
-                        GearbotLogging.log_key(ctx.guild.id, 'tempban_could_not_dm', user=name,
-                                            userid=user.id)
-                                            
+                    dur=f'{duration.length}{duration.unit}'
+                    await Utils.send_infraction(user, ctx.guild, 'BAN', 'tempban', reason, duration=dur)
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
@@ -709,15 +696,9 @@ class Moderation(BaseCog):
                                                        moderator_id=ctx.author.id,
                                                        duration=f'{duration.length} {duration.unit}',
                                                        reason=reason, inf=i.id)
-                                name = Utils.clean_user(target)
                                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
-                                    try:
-                                        dur=f'{duration.length}{duration.unit}'
-                                        await target.send(
-                                            f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur)}```{reason}```")
-                                    except (discord.HTTPException, AttributeError):
-                                        GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
-                                                            userid=target.id)
+                                    dur=f'{duration.length}{duration.unit}'
+                                    await Utils.send_infraction(target, ctx.guild, 'MUTE', 'mute', reason, duration=dur)
                             else:
                                 d = f'{duration.length} {duration.unit}'
                                 async def extend():
@@ -865,12 +846,7 @@ class Moderation(BaseCog):
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
-                        try:
-                            await target.send(
-                                f"{Emoji.get_chat_emoji('INNOCENT')} {Translator.translate('unmute_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-                        except (discord.HTTPException, AttributeError):
-                            GearbotLogging.log_key(ctx.guild.id, 'unmute_could_not_dm', user=name,
-                                                userid=target.id)
+                        await Utils.send_infraction(target, ctx.guild, 'INNOCENT', 'unmute', reason)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                     if confirm:

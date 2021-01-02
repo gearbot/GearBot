@@ -28,13 +28,7 @@ class Infractions(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
                                user_id=target.id, moderator_id=ctx.author.id, inf=i.id)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN") and dm_action:
-            try:
-                dm_channel = await target.create_dm()
-                await dm_channel.send(
-                    f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('warning_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-            except discord.Forbidden:
-                GearbotLogging.log_key(ctx.guild.id, 'warning_could_not_dm', user=name,
-                                       userid=target.id)
+            await Utils.send_infraction(target, ctx.guild, 'WARNING', 'warn', reason)
 
     @commands.guild_only()
     @commands.command()
