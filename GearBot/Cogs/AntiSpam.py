@@ -216,7 +216,7 @@ class AntiSpam(BaseCog):
             await dm_channel.send(MessageUtils.assemble(dm_channel, 'WARNING', 'warning_dm',
                                                         server=v.member.guild.name) + f"```{reason}```")
         except Forbidden:
-            GearbotLogging.log_key(v.member.guild.id, 'warning_could_not_dm',
+            GearbotLogging.log_key(v.member.guild.id, 'warn_could_not_dm',
                                    user=Utils.escape_markdown(v.member.name), userid=v.member.id)
 
     async def mute_punishment(self, v: Violation):

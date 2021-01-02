@@ -162,7 +162,7 @@ LOGGING_INFO = {
         "verification_log": "WRENCH",
         "warning": {
             "warning_added_modlog": "WARNING",
-            "warning_could_not_dm": "WARNING"
+            "warn_could_not_dm": "WARNING"
         },
         "inf_update_log": "WARNING"
     },
