@@ -1,6 +1,6 @@
 import asyncio
 
-from discord import Forbidden, NotFound, Embed, Colour
+from discord import Forbidden, NotFound, Embed, Colour, Object
 
 from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator, Configuration, MessageUtils, Utils
 
@@ -8,7 +8,7 @@ from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator, Configura
 async def paged(bot, message, user_id, reaction, **kwargs):
     user = await Utils.get_member(bot, message.channel.guild, user_id)
     if user is None:
-        await remove_reaction(message, reaction, await bot.fetch_user(user_id))
+        await remove_reaction(message, reaction, Object(user_id))
         return
     left = Emoji.get_chat_emoji('LEFT')
     right = Emoji.get_chat_emoji('RIGHT')
@@ -29,7 +29,7 @@ async def self_roles(bot, message, user_id, reaction, **kwargs):
     user = await Utils.get_member(bot, message.channel.guild, user_id)
     if user is None:
         if user_id is not 0:
-            await remove_reaction(message, reaction, await bot.fetch_user(user_id))
+            await remove_reaction(message, reaction, Object(user_id))
             return kwargs
     bot.loop.create_task(remove_reaction(message, reaction, user))
     left = Emoji.get_chat_emoji('LEFT')
