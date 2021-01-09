@@ -241,7 +241,7 @@ class AntiSpam(BaseCog):
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
                 if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
-                    await Utils.send_infraction(v.member, v.guild, 'MUTE', 'mute', reason)
+                    await Utils.send_infraction(v.member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
         else:
             i.end += duration
             i.reason += f'+ {reason}'
