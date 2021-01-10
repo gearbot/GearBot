@@ -46,7 +46,10 @@ class CustCommands(BaseCog):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
             if ctx.guild.id in self.commands:
-                await Pages.create_new(self.bot, "custom_command_list", ctx)
+                if len(self.commands[ctx.guild.id]) == 0:
+                    await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
+                else:
+                    await Pages.create_new(self.bot, "custom_command_list", ctx)
             else:
                 await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
 
