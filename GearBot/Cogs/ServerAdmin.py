@@ -188,7 +188,10 @@ class ServerAdmin(BaseCog):
         failed = []
         for category in guild.categories:
             if category.permissions_for(guild.me).manage_channels:
-                await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False, speak=False, connect=False)
+                try:
+                    await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False, speak=False, connect=False)
+                except discord.Forbidden:
+                    pass
 
         # sleep a bit so we have time to receive the update events
         await asyncio.sleep(2)
@@ -196,13 +199,19 @@ class ServerAdmin(BaseCog):
         for channel in guild.text_channels:
             if channel.permissions_for(guild.me).manage_channels:
                 if channel.overwrites_for(role).is_empty():
-                    await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
+                    try:
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
+                    except discord.Forbidden:
+                        pass
             else:
                 failed.append(channel.mention)
         for channel in guild.voice_channels:
             if channel.permissions_for(guild.me).manage_channels:
                 if channel.overwrites_for(role).is_empty():
-                    await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
+                    try:
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
+                    except discord.Forbidden:
+                        pass
             else:
                 failed.append(Translator.translate('voice_channel', ctx, channel=channel.name))
         if len(failed) > 0:
