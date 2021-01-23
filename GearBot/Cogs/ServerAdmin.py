@@ -1303,7 +1303,7 @@ class ServerAdmin(BaseCog):
     @custom_commands_channel_list.command("add")
     async def custom_commands_ignored_channels_add(self, ctx, channel:TextChannel):
         channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
-        mode = "ignore" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "use"
+        mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
         if channel.id in channels:
             await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list')
         else:
@@ -1314,7 +1314,7 @@ class ServerAdmin(BaseCog):
     @custom_commands_channel_list.command("remove")
     async def custom_commands_ignored_channels_remove(self, ctx, channel: TextChannel):
         channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
-        mode = "ignore" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "use"
+        mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
         if not channel.id in channels:
             await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_not_on_{mode}_list', channel=channel.mention)
         else:
