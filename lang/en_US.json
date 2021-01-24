@@ -867,6 +867,8 @@
   "custom_commands_channel_use_removed": "Custom commands are no longer enabled for {channel}",
   "custom_commands_channel_list_mode_ignore": "Custom commands channel list is now a list of channels custom commands can not be used in",
   "custom_commands_channel_list_mode_use": "Custom commands channel list is now a list of channels where commands can be used",
+  "custom_commands_channel_list_empty_use": "There are no channels on the allowed channels list, so custom commands cannot be used in any channels.",
+  "custom_commands_channel_list_empty_ignore": "There are no channels on the blocked channels list, so custom commands can be used in all channels.",
   "custom_commands_mod_bypass_enabled": "Mods can now always use custom commands in all channels",
   "custom_commands_mod_bypass_disabled": "Mods can no longer use custom commands at will but will have the same restrictions applied as any other user",
   "censor_emoji_only_messages_help": "Enable/disable censoring of messages that only contain emoji",
