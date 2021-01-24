@@ -1260,7 +1260,7 @@ class ServerAdmin(BaseCog):
             items = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", f"ROLES")
             mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
             if len(items) == 0:
-                desc = Translator.translate(f"no_role_{mode}", ctx)
+                desc = Translator.translate(f"custom_commands_role_list_empty_{mode}", ctx)
             else:
                 desc = "\n".join(f"<@&{item}>" for item in items)
             embed = discord.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx), description=desc)
@@ -1312,7 +1312,7 @@ class ServerAdmin(BaseCog):
         channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
         mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
         if channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list')
+            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list', channel=channel.mention)
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_added_{mode}', channel=channel.mention)

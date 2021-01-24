@@ -857,6 +857,8 @@
   "custom_commands_role_list_rmv_confirmation_deny": "The **{role}** role is no longer blocked from executing custom commands",
   "custom_commands_role_list_mode_allowed": "Roles on the custom commands role list are now the roles that can execute custom commands",
   "custom_commands_role_list_mode_blocked": "Roles on the custom commands role list are now the roles that can not execute custom commands",
+  "custom_commands_role_list_empty_allow": "There are no roles on the allowed roles list, so custom commands cannot be used by anyone.",
+  "custom_commands_role_list_empty_block": "There are no roles on the blocked roles list, so custom commands can be used by anyone.",
   "custom_commands_current_channel_use_list": "Channels where custom commands can be executed",
   "custom_commands_current_channel_ignore_list": "Channels where custom commands cannot be executed",
   "custom_commands_channel_already_on_ignore_list": "Custom commands are already disabled for {channel}",
