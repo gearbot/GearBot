@@ -1295,10 +1295,17 @@ class ServerAdmin(BaseCog):
 
     @commands.guild_only()
     @configure.group()
+    @commands.bot_has_permissions(embed_links=True)
     async def custom_commands_channel_list(self, ctx):
-        """custom_commands_channel_list_help"""
-        if ctx.invoked_subcommand == self.custom_commands_channel_list:
-            pass
+        if ctx.invoked_subcommand is None:
+            items = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS")
+            mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
+            if len(items) == 0:
+                desc = Translator.translate(f"custom_commands_channel_list_empty_{mode}", ctx)
+            else:
+                desc = "\n".join(f"<#{item}>" for item in items)
+            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_channel_{mode}_list", ctx), description=desc)
+            await ctx.send(embed=embed)
 
     @custom_commands_channel_list.command("add")
     async def custom_commands_ignored_channels_add(self, ctx, channel:TextChannel):
