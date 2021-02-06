@@ -374,14 +374,8 @@ class Moderation(BaseCog):
     async def _ban(self, ctx, user, reason, confirm, days=0, dm_action=True):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                             
-        name = Utils.clean_user(user)
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
-            try:
-                await user.send(
-                    f"{Emoji.get_chat_emoji('BAN')} {Translator.translate('ban_dm', ctx.guild.id, server=ctx.guild.name)}```{reason}```")
-            except (discord.HTTPException, AttributeError):
-                GearbotLogging.log_key(ctx.guild.id, 'ban_could_not_dm', user=name,
-                                       userid=user.id)
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
+            await Utils.send_infraction(user, ctx.guild, 'BAN', 'ban', reason)
                     
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
