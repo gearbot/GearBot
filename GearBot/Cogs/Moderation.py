@@ -806,7 +806,7 @@ class Moderation(BaseCog):
         """unmute_help"""
         await self._unmute(ctx, target, reason=reason, confirm=True)
 
-    async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=Configuration.get_var("INFRACTIONS", "DM_ON_UNMUTE")):
+    async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE")):
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
