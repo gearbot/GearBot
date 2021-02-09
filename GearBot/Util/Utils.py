@@ -297,7 +297,7 @@ async def send_infraction(user, guild, emoji, type, reason, **kwargs):
             server=guild.name
         )
         if override is not None:
-            message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}"
+            message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}```{reason}```"
         else:
            message = f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(f'{type.lower()}_dm', guild.id, **kwargs)}```{reason}```"
         parts = message.split("```")
