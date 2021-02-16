@@ -111,7 +111,7 @@ class ServerAdmin(BaseCog):
     async def configure(self, ctx:commands.Context):
         """configure_help"""
         if ctx.subcommand_passed is None:
-            await ctx.send("See the subcommands ({prefix}help configure) for configurations.")
+            await ctx.send("See the subcommands (!help configure) for configurations.")
 
     @configure.command()
     async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
