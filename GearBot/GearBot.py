@@ -1,6 +1,9 @@
 # force it to use v6 instead of v7
+import asyncio
+
 import discord.http
-discord.http.Route.BASE = 'https://discordapp.com/api/v6'
+
+discord.http.Route.BASE = 'http://http-proxy/api/v6'
 
 import os
 from argparse import ArgumentParser
@@ -9,10 +12,30 @@ from Bot import TheRealGearBot
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging
 from discord import Intents, MemberCacheFlags
+from kubernetes import client, config
 
 def prefix_callable(bot, message):
     return TheRealGearBot.prefix_callable(bot, message)
 
+async def node_init(generation, resource_version):
+    from database import DatabaseConnector
+    from database.DatabaseConnector import Node
+    await DatabaseConnector.init()
+    hostname = os.uname()[1]
+    GearbotLogging.info(f"GearBot clusternode {hostname} (generation {generation}). Trying to figure out where i fit in")
+    existing = await Node.filter(hostname=hostname, generation=generation).get_or_none()
+    if existing is None:
+        count = 0
+        while count < 100:
+
+            try:
+                await Node.create(hostname=hostname, generation=generation, resource_version=resource_version, shard=count)
+                return count
+            except Exception as ex:
+                GearbotLogging.exception("did something go wrong?", ex)
+                count += 1
+    else:
+        return existing.shard
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -33,6 +56,9 @@ if __name__ == '__main__':
         token = Configuration.get_master_var("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     args = {
         "command_prefix": prefix_callable,
@@ -69,12 +95,30 @@ if __name__ == '__main__':
             "cluster": offset,
             "shard_ids": [*range(offset * num_shards, (offset * num_shards) + num_shards)]
         })
+    elif os.environ['namespace']:
+        GearbotLogging.info("Determining scaling information from kubernetes ...")
+        namespace = os.environ['namespace']
+        config.load_incluster_config()
+        kubeclient = client.AppsV1Api()
+        deployment = kubeclient.read_namespaced_deployment("gearbot", "gearbot")
+        print(deployment)
+        cluster = loop.run_until_complete(node_init(deployment.status.observed_generation, deployment.metadata.annotations["deployment.kubernetes.io/revision"]))
+        num_clusters = deployment.spec.replicas
+        args.update({
+            "shard_count": num_clusters,
+            "cluster": cluster,
+            "shard_ids": [cluster]
+        })
+
+
+
 
     gearbot = GearBot(**args)
 
     gearbot.remove_command("help")
-    GearbotLogging.info("Ready to go, spinning up the gears")
+    GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")
     gearbot.run(token)
     GearbotLogging.info("GearBot shutting down, cleaning up")
     gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
+

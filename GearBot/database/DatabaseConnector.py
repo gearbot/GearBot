@@ -1,7 +1,7 @@
 from tortoise.models import Model
 from tortoise import fields, Tortoise
 
-from Util import Configuration
+from Util import Configuration, GearbotLogging
 
 
 class LoggedMessage(Model):
@@ -76,10 +76,17 @@ class RaidAction(Model):
     action = fields.CharField(max_length=20)
     infraction = fields.ForeignKeyField("models.Infraction", related_name="RaiderAction", source_field="infraction_id", null=True)
 
+class Node(Model):
+    hostname = fields.CharField(max_length=50, pk=True)
+    generation = fields.IntField()
+    shard = fields.IntField()
+    resource_version = fields.CharField(max_length=50)
+
 
 async def init():
+    GearbotLogging.info("Connecting to the database...")
     await Tortoise.init(
-        db_url=f"mysql://{Configuration.get_master_var('DATABASE_USER')}:{Configuration.get_master_var('DATABASE_PASS')}@{Configuration.get_master_var('DATABASE_HOST')}:{Configuration.get_master_var('DATABASE_PORT')}/{Configuration.get_master_var('DATABASE_NAME')}",
+        db_url=Configuration.get_master_var('DATABASE'),
         modules={"models": ["database.DatabaseConnector"]}
     )
     await Tortoise.generate_schemas()

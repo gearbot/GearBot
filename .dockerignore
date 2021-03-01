@@ -1,0 +1,5 @@
+*
+!requirements.txt
+!GearBot/*
+!lang/*
+!template.json

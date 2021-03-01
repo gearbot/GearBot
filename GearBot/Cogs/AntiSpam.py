@@ -304,7 +304,7 @@ class AntiSpam(BaseCog):
 
 
     async def censor_detector(self):
-        # reciever taks for someone gets censored
+        # reciever task for someone gets censored
         while self.running:
             try:
                 message = None

@@ -393,7 +393,7 @@ BOT = None
 async def initialize(bot: commands.Bot):
     global CONFIG_VERSION, BOT, TEMPLATE
     BOT = bot
-    TEMPLATE = Utils.fetch_from_disk("config/template")
+    TEMPLATE = Utils.fetch_from_disk("template")
     CONFIG_VERSION = TEMPLATE["VERSION"]
     GearbotLogging.info(f"Current template config version: {CONFIG_VERSION}")
     # GearbotLogging.info(f"Loading configurations for {len(bot.guilds)} guilds.")
@@ -415,7 +415,7 @@ def load_config(guild):
         SERVER_CONFIGS[guild] = update_config(guild, config)
     if len(config.keys()) is 0:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
-        SERVER_CONFIGS[guild] = Utils.fetch_from_disk("config/template")
+        SERVER_CONFIGS[guild] = Utils.fetch_from_disk("template")
         save(guild)
     validate_config(guild)
     Features.check_server(guild)

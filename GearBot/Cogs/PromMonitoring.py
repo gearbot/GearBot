@@ -45,7 +45,8 @@ class PromMonitoring(BaseCog):
 
         runner = web.AppRunner(metrics_app)
         await self.bot.loop.create_task(runner.setup())
-        site = web.TCPSite(runner, 'localhost', 8090 + self.bot.cluster)
+        site = web.TCPSite(runner, host='0.0.0.0', port=8090)
+
         await site.start()
 
         self.metric_server = site
