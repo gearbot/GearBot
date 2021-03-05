@@ -34,18 +34,29 @@ LOGGING_INFO = {
     "CENSORED_MESSAGES": {
         "censor_fail": {
             "censored_message_failed": "WARNING",
+            "censored_message_failed_edit": "WARNING",
             "censored_message_failed_word": "WARNING",
+            "censored_message_failed_word_edit": "WARNING",
             "invite_censor_fail": "WARNING",
+            "invite_censor_fail_edit": "WARNING",
             "invite_censor_forbidden": "WARNING",
+            "invite_censor_forbidden_edit": "WARNING",
             "censored_message_failed_content": "WARNING"
+            "censored_message_failed_content_edit": "WARNING"
         },
         "censored": {
             "censored_invite": "WARNING",
+            "censored_invite_edit": "WARNING",
             "censored_message": "WARNING",
+            "censored_message_edit": "WARNING",
             "censored_message_word": "WARNING",
+            "censored_message_word_edit": "WARNING",
             "censored_message_domain_blocked": "WARNING",
+            "censored_message_domain_blocked_edit": "WARNING",
             "censored_message_content": "WARNING",
-            "censored_message_emoji_only": "WARNING"
+            "censored_message_content_edit": "WARNING",
+            "censored_message_emoji_only": "WARNING",
+            "censored_message_emoji_only_edit": "WARNING",
         }
     },
     "CHANNEL_CHANGES": {
@@ -107,7 +118,9 @@ LOGGING_INFO = {
     "FUTURE_LOGS": {},
     "MESSAGE_LOGS": {
         "edit_logging": "EDIT",
+        "edit_logging_with_id": "EDIT",
         "message_removed": "TRASH",
+        "message_removed_with_id": "TRASH",
         "pins": {
             "message_pinned": "PIN",
             "message_pinned_by": "PIN",
@@ -256,8 +269,10 @@ LOGGING_INFO = {
         "voice_change_self_mute_true": "VOICE"
     },
     "MESSAGE_FLAGS": {
-        "flagged_word": "WARNING",
-        "flagged_token": "WARNING"
+        "flagged_word": "THINK",
+        "flagged_token": "THINK",
+        "flagged_word_edit": "THINK",
+        "flagged_token_edit": "THINK"
     }
 }
 

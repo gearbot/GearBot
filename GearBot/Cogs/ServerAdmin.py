@@ -9,7 +9,7 @@ from pytz import UnknownTimeZoneError
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
     MessageUtils, Selfroles
-from Util.Converters import LoggingChannel, ListMode
+from Util.Converters import LoggingChannel, ListMode, SpamType, RangedInt, Duration, AntiSpamPunishment
 
 
 class ServerHolder(object):
@@ -918,6 +918,11 @@ class ServerAdmin(BaseCog):
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('embed_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
+    @configure.command(aliases=["log_message_id"])
+    async def log_message_ids(self, ctx, value: bool):
+        Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS", "MESSAGE_ID", value)
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('message_id_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
     @configure.group(aliases=["censorlist", "cl"])
     async def censor_list(self, ctx):
         """censor_list_help"""
@@ -1351,6 +1356,96 @@ class ServerAdmin(BaseCog):
         Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS", value)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_commands_mod_bypass_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+
+
+    anti_spam_types = {
+        "duplicates",
+        "max_messages",
+        "max_newlines",
+        "max_mentions",
+        "max_links",
+        "max_emoji",
+        "censored"
+    }
+
+    anti_spam_punishments = [
+        "mute",
+        "kick",
+        "temp_ban",
+        "ban"
+    ]
+    @configure.group()
+    async def anti_spam(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send(embed=self.get_anti_spam_embed(ctx))
+
+
+    def get_anti_spam_embed(self, ctx):
+        buckets = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
+        embed = discord.Embed()
+        limit = Translator.translate("limit", ctx)
+        timeframe = Translator.translate("timeframe", ctx)
+        punishment = Translator.translate("punishment", ctx)
+        disabled = Translator.translate("disabled", ctx)
+        seen = set()
+        for bucket in buckets:
+            extra = ""
+            if "DURATION" in bucket["PUNISHMENT"]:
+                extra = f"for {Utils.to_pretty_time(bucket['PUNISHMENT']['DURATION'], ctx)}"
+            desc = f"**{limit}**: {bucket['SIZE']['COUNT']}\n**{timeframe}**: {bucket['SIZE']['PERIOD']}s\n**{punishment}**: {bucket['PUNISHMENT']['TYPE']} {extra}"
+            embed.add_field(name=bucket['TYPE'], value=desc)
+            seen.add(bucket['TYPE'])
+        for other in self.anti_spam_types - seen:
+            embed.add_field(name=other, value=disabled)
+        return embed
+
+    @anti_spam.command()
+    async def set(self, ctx, type: SpamType, amount: RangedInt(3, 150), seconds: RangedInt(1, 180), punishment: AntiSpamPunishment, duration: Duration = None):
+        duration_required = punishment in ("mute", "temp_ban")
+        if duration_required is (duration is None):
+            await MessageUtils.send_to(ctx, 'NO', 'duration_required' if duration_required else "no_duration_expected")
+            return
+
+        Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "ENABLED", True)
+        Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "CLEAN", True)
+
+        existing = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
+
+        new = {
+            "TYPE": type,
+            "SIZE": {
+                "COUNT": amount,
+                "PERIOD": seconds
+            },
+            "PUNISHMENT": {
+                "TYPE": punishment
+            }
+        }
+        if duration is not None:
+            new["PUNISHMENT"]["DURATION"] = duration.to_seconds(ctx)
+
+        for i in range(0, len(existing)):
+            if existing[i]["TYPE"] == type:
+                existing[i] = new
+                break
+        else:
+            existing.append(new)
+
+        Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
+
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=self.get_anti_spam_embed(ctx))
+
+
+    @anti_spam.command()
+    async def disable(self, ctx, type: SpamType):
+        existing = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
+        for i in range(0, len(existing)):
+            if existing[i]["TYPE"] == type:
+                del existing[i]
+                break
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=self.get_anti_spam_embed(ctx))
+
+
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):

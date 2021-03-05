@@ -247,7 +247,7 @@ async def get_commit():
     return out
 
 def to_pretty_time(seconds, guild_id):
-    seconds = round(seconds)
+    seconds = max(round(seconds, 2), 0)
     partcount = 0
     parts = {
         'weeks': 60 * 60 * 24 * 7,
@@ -258,8 +258,8 @@ def to_pretty_time(seconds, guild_id):
     }
     duration = ""
 
-    if seconds == 0:
-       return Translator.translate("seconds", guild_id, amount=0)
+    if seconds < 1:
+       return Translator.translate("seconds", guild_id, amount=seconds)
 
 
     for k, v in parts.items():

@@ -1,4 +1,5 @@
 import re
+from collections import namedtuple
 from urllib import parse
 from urllib.parse import urlparse
 
@@ -12,6 +13,7 @@ from Util import Configuration, GearbotLogging, Permissioncheckers, Utils, Messa
 from Util.Matchers import INVITE_MATCHER, URL_MATCHER
 
 EMOJI_REGEX = re.compile('([^<]*)<a?:(?:[^:]+):([0-9]+)>')
+messageholder = namedtuple('censored_message', 'id author channel guild')
 class Censor(BaseCog):
 
     def __init__(self, bot):
@@ -25,7 +27,7 @@ class Censor(BaseCog):
         member = message.guild.get_member(message.author.id) #d.py is weird
         if member is None:
             return
-        await self.check_message(member, message.content, message.channel, message.id)
+        await self.check_message(member, message.content, message.channel, message.id, False)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
@@ -48,9 +50,9 @@ class Censor(BaseCog):
 
         member = await Utils.get_member(self.bot, channel.guild, author_id)
         if member is not None and author_id != self.bot.user.id:
-            await self.check_message(member, event.data["content"], channel, event.message_id)
+            await self.check_message(member, event.data["content"], channel, event.message_id, True)
 
-    async def check_message(self, member, content, channel, message_id):
+    async def check_message(self, member, content, channel, message_id, edit):
         if Permissioncheckers.get_user_lvl(member.guild, member) >= 2:
             return
         censorlist = Configuration.get_var(member.guild.id, "CENSORING", "TOKEN_CENSORLIST")
@@ -69,25 +71,25 @@ class Censor(BaseCog):
                 try:
                     invite: discord.Invite = await self.bot.fetch_invite(code)
                 except discord.NotFound:
-                    await self.censor_invite(member, message_id, channel, code, "INVALID INVITE", content)
+                    await self.censor_invite(member, message_id, channel, code, "INVALID INVITE", content, edit)
                     return
                 if invite.guild is None:
-                    await self.censor_invite(member, message_id, channel, code, "DM group", content)
+                    await self.censor_invite(member, message_id, channel, code, "DM group", content, edit)
                     return
                 else:
                     if invite.guild is None or (not invite.guild.id in guilds and invite.guild.id != member.guild.id):
-                        await self.censor_invite(member, message_id, channel, code, invite.guild.name, content)
+                        await self.censor_invite(member, message_id, channel, code, invite.guild.name, content, edit)
                         return
 
         content = content.lower()
 
         if content in full_message_list:
-            await self.censor_message(message_id, content, channel, member, "", "_content")
+            await self.censor_message(message_id, content, channel, member, "", "_content", edit=edit)
             return
 
         for bad in (w.lower() for w in censorlist):
             if bad in content:
-                await self.censor_message(message_id, content, channel, member, bad)
+                await self.censor_message(message_id, content, channel, member, bad, edit=edit)
                 return
 
         if len(word_censorlist) > 0:
@@ -98,7 +100,7 @@ class Censor(BaseCog):
                 regex = self.regexes[channel.guild.id]
             match = regex.findall(content)
             if len(match):
-                await self.censor_message(message_id, content, channel, member, match[0], "_word")
+                await self.censor_message(message_id, content, channel, member, match[0], "_word", edit=edit)
                 return
 
         if len(domain_list) > 0:
@@ -107,20 +109,21 @@ class Censor(BaseCog):
                 url = urlparse(link)
                 domain = url.hostname
                 if (domain in domain_list) is not domains_allowed:
-                    await self.censor_message(message_id, content, channel, member, url.hostname, "_domain_blocked")
+                    await self.censor_message(message_id, content, channel, member, url.hostname, "_domain_blocked", edit=edit)
                     return
 
         if censor_emoji_message and content is not None and len(content) > 0:
             new_content = ''.join(c for c in content if c not in emoji.UNICODE_EMOJI)
             new_content = re.sub(EMOJI_REGEX, '', new_content)
             if new_content == '':
-                await self.censor_message(message_id, content, channel, member, '', "_emoji_only")
+                await self.censor_message(message_id, content, channel, member, '', "_emoji_only", edit=edit)
                 return
 
 
 
 
-    async def censor_message(self, message_id, content, channel, member, bad, key=""):
+    async def censor_message(self, message_id, content, channel, member, bad, key="", edit=False):
+        e = '_edit' if edit else ''
         if channel.permissions_for(channel.guild.me).manage_messages:
             try:
                 self.bot.data["message_deletes"].add(message_id)
@@ -129,42 +132,47 @@ class Censor(BaseCog):
                 pass
             else:
                 clean_message = await Utils.clean(content, channel.guild, markdown=False)
-                GearbotLogging.log_key(channel.guild.id, f'censored_message{key}', user=member, user_id=member.id,
+                GearbotLogging.log_key(channel.guild.id, f'censored_message{key}{e}', user=member, user_id=member.id,
                                        message=clean_message, sequence=bad, channel=channel.mention)
         else:
 
             clean_message = await Utils.clean(content, channel.guild, markdown=False)
-            GearbotLogging.log_key(channel.guild.id, f'censored_message_failed{key}', user=member,
+            GearbotLogging.log_key(channel.guild.id, f'censored_message_failed{key}{e}', user=member,
                                    user_id=member.id, message=clean_message, sequence=bad,
                                    link='https://discord.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id))
+        self.bot.dispatch("user_censored", messageholder(message_id, member, channel, channel.guild))
 
-    async def censor_invite(self, member, message_id, channel, code, server_name, content):
+    async def censor_invite(self, member, message_id, channel, code, server_name, content, edit):
         # Allow for users with a trusted role, or trusted users, to post invite links
         if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(
                 member):
             return
+
+        e = '_edit' if edit else ''
 
         self.bot.data["message_deletes"].add(message_id)
         clean_message = await Utils.clean(content, member.guild)
         clean_name = Utils.clean_user(member)
         try:
             await channel.delete_messages([discord.Object(message_id)])
-            GearbotLogging.log_key(member.guild.id, 'censored_invite', user=clean_name, code=code, message=clean_message,
+            GearbotLogging.log_key(member.guild.id, f'censored_invite{e}', user=clean_name, code=code, message=clean_message,
                                    server_name=server_name, user_id=member.id,
                                    channel=channel.mention)
         except discord.NotFound:
             # we failed? guess we lost the race, log anyways
-            GearbotLogging.log_key(member.guild.id, 'invite_censor_fail', user=clean_name, code=code,
+            GearbotLogging.log_key(member.guild.id, f'invite_censor_fail{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,
                                    channel=channel.mention)
             if message_id in self.bot.data["message_deletes"]:
                 self.bot.data["message_deletes"].remove(message_id)
         except discord.Forbidden:
-            GearbotLogging.log_key(member.guild.id, 'invite_censor_forbidden', user=clean_name, code=code,
+            GearbotLogging.log_key(member.guild.id, f'invite_censor_forbidden{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,
                                    channel=channel.mention)
             if message_id in self.bot.data["message_deletes"]:
                 self.bot.data["message_deletes"].remove(message_id)
+
+        self.bot.dispatch("user_censored", messageholder(message_id, member, channel, channel.guild))
 
 
 def setup(bot):

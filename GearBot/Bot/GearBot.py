@@ -36,7 +36,7 @@ class GearBot(AutoShardedBot):
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)
-        self.metrics = PromMonitors(self, kwargs.get("monitoring_prefix", ""))
+        self.metrics = PromMonitors(self, kwargs.get("monitoring_prefix", "gearbot"))
         self.cluster = kwargs.get("cluster", 0)
         self.total_shards = kwargs.get("shard_count", 1)
         self.shard_ids = kwargs.get("shard_ids", [0])

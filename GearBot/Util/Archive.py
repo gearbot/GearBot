@@ -26,7 +26,10 @@ async def pack_messages(messages):
         out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
-async def ship_messages(ctx, messages, t, filename="Message archive"):
+async def ship_messages(ctx, messages, t, filename="Message archive", filtered=False):
+    addendum = ""
+    if filtered:
+        addendum = f"\n{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_message_filtered', ctx)}"
     if len(messages) > 0:
         global archive_counter
         archive_counter += 1
@@ -40,6 +43,7 @@ async def ship_messages(ctx, messages, t, filename="Message archive"):
         buffer = io.BytesIO()
         buffer.write(out.encode())
         buffer.seek(0)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))}", file=discord.File(fp=buffer, filename=f"{filename}.txt"))
+
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))} {addendum}", file=discord.File(fp=buffer, filename=f"{filename}.txt"))
     else:
-        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)} {addendum}")

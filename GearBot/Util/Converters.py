@@ -398,3 +398,34 @@ class Nickname(Converter):
         if len(argument) > 32:
             raise TranslatedBadArgument('nickname_too_long', ctx)
         return argument
+
+
+anti_spam_types = {
+    "duplicates",
+    "max_messages",
+    "max_newlines",
+    "max_mentions",
+    "max_links",
+    "max_emoji",
+    "censored"
+}
+
+class SpamType(Converter):
+    async def convert(self, ctx, argument):
+        if argument not in anti_spam_types:
+            raise TranslatedBadArgument('invalid_anti_spam_type', ctx, types=",".join(anti_spam_types))
+        return argument
+
+anti_spam_punishments = {
+    "mute",
+    "kick",
+    "temp_ban",
+    "ban"
+}
+
+class AntiSpamPunishment(Converter):
+    async def convert(self, ctx, argument):
+        if argument not in anti_spam_punishments:
+            raise TranslatedBadArgument('invalid_anti_spam_punisment', ctx, types=",".join(anti_spam_punishments))
+        return argument
+

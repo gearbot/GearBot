@@ -84,7 +84,7 @@ if __name__ == '__main__':
             joined=True,
         ),
         "chunk_guilds_at_startup": False,
-        "monitoring_prefix": Configuration.get_master_var("MONITORING_PREFIX")
+        "monitoring_prefix": Configuration.get_master_var("MONITORING_PREFIX", "gearbot")
     }
     if clargs.total_shards:
         total_shards = int(clargs.total_shards)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             "cluster": offset,
             "shard_ids": [*range(offset * num_shards, (offset * num_shards) + num_shards)]
         })
-    elif os.environ['namespace']:
+    elif 'namespace' in os.environ:
         GearbotLogging.info("Determining scaling information from kubernetes ...")
         namespace = os.environ['namespace']
         config.load_incluster_config()
@@ -110,13 +110,14 @@ if __name__ == '__main__':
             "shard_ids": [cluster]
         })
 
+        GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")
+
 
 
 
     gearbot = GearBot(**args)
 
     gearbot.remove_command("help")
-    GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")
     gearbot.run(token)
     GearbotLogging.info("GearBot shutting down, cleaning up")
     gearbot.database_connection.close()
