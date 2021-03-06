@@ -681,7 +681,7 @@ class ServerAdmin(BaseCog):
                 Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", True)
                 if t == "EDIT_LOGS":
                     await ctx.send(Translator.translate('minor_log_caching_start', ctx))
-                    self.bot.to_cache.append(ctx)
+                    # self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
             message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_enabled', count=len(enabled)) + ', '.join(enabled)
@@ -1376,11 +1376,12 @@ class ServerAdmin(BaseCog):
     ]
     @configure.group(invoke_without_command=True)
     async def anti_spam(self, ctx):
+        """anti_spam_help"""
         if ctx.invoked_subcommand is None:
-            await ctx.send(embed=self.get_anti_spam_embed(ctx))
+            await ctx.send(embed=await self.get_anti_spam_embed(ctx))
 
 
-    def get_anti_spam_embed(self, ctx):
+    async def get_anti_spam_embed(self, ctx):
         buckets = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
         embed = discord.Embed()
         limit = Translator.translate("limit", ctx)
@@ -1397,10 +1398,31 @@ class ServerAdmin(BaseCog):
             seen.add(bucket['TYPE'])
         for other in self.anti_spam_types - seen:
             embed.add_field(name=other, value=disabled)
+
+        users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
+        desc = None
+        if len(users) == 0:
+           desc = Translator.translate('no_ignored_spammers', ctx)
+        else:
+            resolved_users = [await Utils.get_user(user) for user in users]
+            desc = "\n".join(f"{str(user)} (`{user.id}`)" for user in resolved_users)
+        embed.add_field(name=Translator.translate('ignored_spammers', ctx), value=desc)
+
+
+        roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
+        if len(roles) == 0:
+            desc = Translator.translate('no_ignored_roles', ctx)
+        else:
+            desc = "\n".join(f"<@&{role}>" for role in roles)
+        embed.add_field(name=Translator.translate('ignored_roles', ctx), value=desc)
+
+        embed.set_footer(text=Translator.translate("mods_are_immune", ctx), icon_url='https://cdn.discordapp.com/emojis/585877748996636674.png?v=1')
+
         return embed
 
     @anti_spam.command()
     async def set(self, ctx, type: SpamType, amount: RangedInt(3, 150), seconds: RangedInt(1, 180), punishment: AntiSpamPunishment, duration: Duration = None):
+        """anti_spam_set_help"""
         duration_required = punishment in ("mute", "temp_ban")
         if duration_required is (duration is None):
             await MessageUtils.send_to(ctx, 'NO', 'duration_required' if duration_required else "no_duration_expected")
@@ -1433,19 +1455,79 @@ class ServerAdmin(BaseCog):
 
         Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
 
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=self.get_anti_spam_embed(ctx))
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=await self.get_anti_spam_embed(ctx))
 
 
     @anti_spam.command("disable")
     async def anti_spam_disable(self, ctx, type: SpamType):
+        """anti_spam_disable_help"""
         existing = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
         for i in range(0, len(existing)):
             if existing[i]["TYPE"] == type:
                 del existing[i]
                 break
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=self.get_anti_spam_embed(ctx))
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=await self.get_anti_spam_embed(ctx))
 
 
+    @anti_spam.group("immune_users", invoke_without_command=True)
+    async def immune_users(self):
+        """anti_spam_immune_users_help"""
+        pass
+
+    @immune_users.command("add")
+    async def immune_users_add(self, ctx, member: discord.Member):
+        """anti_spam_immune_users_add_help"""
+        users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
+        if member.id in users:
+            await MessageUtils.send_to(ctx, 'NO', 'already_immune', user=Utils.clean_user(member))
+        else:
+            users.append(member.id)
+            Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS", users)
+            message = MessageUtils.assemble(ctx, "YES", "user_made_immune", user=Utils.clean_user(member))
+            await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
+
+
+    @immune_users.command("remove")
+    async def immune_users_remove(self, ctx, member: discord.Member):
+        """anti_spam_immune_users_remove_help"""
+        users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
+        if member.id not in users:
+            await MessageUtils.send_to(ctx, 'NO', 'user_not_immune', user=Utils.clean_user(member))
+        else:
+            users.remove(member.id)
+            Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS", users)
+            message = MessageUtils.assemble(ctx, "YES", "user_no_longer_immune", user=Utils.clean_user(member))
+            await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
+
+
+    @anti_spam.group("immune_roles", invoke_without_command=True)
+    async def immune_roles(self):
+        """anti_spam_immune_roles_help"""
+        pass
+
+    @immune_roles.command("add")
+    async def immune_roles_add(self, ctx, role: discord.Role):
+        """anti_spam_immune_roles_add_help"""
+        roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
+        if role.id in roles:
+            await MessageUtils.send_to(ctx, 'NO', 'role_already_immune', role=role.name)
+        else:
+            roles.append(role.id)
+            Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES", roles)
+            message = MessageUtils.assemble(ctx, "YES", "role_made_immune", role=role.name)
+            await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
+
+    @immune_roles.command("remove")
+    async def immune_roles_roles(self, ctx, role: discord.Role):
+        """anti_spam_immune_roles_remove_help"""
+        roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
+        if role.id not in roles:
+            await MessageUtils.send_to(ctx, 'NO', 'role_not_immune', role=role.name)
+        else:
+            roles.remove(role.id)
+            Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES", roles)
+            message = MessageUtils.assemble(ctx, "YES", "role_no_longer_immune", role=role.name)
+            await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):

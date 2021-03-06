@@ -656,12 +656,12 @@ async def find_actual_log(guild, action, matcher, check_limit, retry):
 
 async def cache_task(modlog: ModLog):
     GearbotLogging.info("Started modlog background task.")
-    while modlog.running:
-        if len(modlog.bot.to_cache) > 0:
-            ctx = modlog.bot.to_cache.pop(0)
-            await modlog.buildCache(ctx.guild, limit=500)
-            await ctx.send("Caching complete.")
-        await asyncio.sleep(1)
+    # while modlog.running:
+    #     if len(modlog.bot.to_cache) > 0:
+    #         ctx = modlog.bot.to_cache.pop(0)
+    #         await modlog.buildCache(ctx.guild, limit=500)
+    #         await ctx.send("Caching complete.")
+    #     await asyncio.sleep(1)
     GearbotLogging.info("modlog background task terminated.")
 
 
