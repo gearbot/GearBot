@@ -15,7 +15,7 @@ previous_list = set()
 last_flush = datetime.now()
 fakeLoggedMessage = namedtuple("BufferedMessage", "messageid content author channel server type pinned attachments")
 
-violation_regex = re.compile("\(1062, \"Duplicate entry '(\d+)' for key 'PRIMARY'.*")
+violation_regex = re.compile("duplicate key value violates unique constraint .* DETAIL: Key \(id\)=\((\d)\) already exists.*")
 
 async def insert_message(message):
     if message.id not in recent_list and message.id not in previous_list:
@@ -68,7 +68,8 @@ async def do_flush():
                                             channel=message.channel, server=message.server,
                                             type=message.type, pinned=message.pinned))
                 for a in message.attachments:
-                    to_insert_attachements.add(a)
+                    if a.id not in excluded:
+                        to_insert_attachements.add(a)
 
             await LoggedMessage.bulk_create(to_insert)
             await LoggedAttachment.bulk_create(to_insert_attachements)
