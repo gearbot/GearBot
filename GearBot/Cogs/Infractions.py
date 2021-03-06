@@ -12,7 +12,7 @@ from tortoise.query_utils import Q
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
-from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID
+from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID, DiscordUser
 from database.DatabaseConnector import Infraction
 
 
@@ -32,7 +32,7 @@ class Infractions(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    async def warn(self, ctx: commands.Context, member: discord.User, *, reason: Reason):
+    async def warn(self, ctx: commands.Context, member: DiscordUser, *, reason: Reason):
         """warn_help"""
         # don't allow warning GearBot, get some feedback about issues instead
         if member.id == self.bot.user.id:
