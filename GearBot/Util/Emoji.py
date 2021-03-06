@@ -1,6 +1,6 @@
 from discord import utils
 
-from Util import Configuration
+from Util import Configuration, GearbotLogging
 
 emojis = dict()
 
@@ -75,8 +75,16 @@ BACKUPS = {
 
 async def initialize(bot):
     emoji_guild = await bot.fetch_guild(Configuration.get_master_var("EMOJI_GUILD"))
+    failed = []
     for name, eid in Configuration.get_master_var("EMOJI", {}).items():
-        emojis[name] = utils.get(bot.emojis, id=eid)
+        e = utils.get(emoji_guild.emojis, id=eid)
+        if e is not None:
+            emojis[name] = e
+        else:
+            failed.append(name)
+
+    if len(failed) > 0:
+        await GearbotLogging.bot_log("Failed to load the following emoji: " + ",".join(failed))
 
 
 def get_chat_emoji(name):
