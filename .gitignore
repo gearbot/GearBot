@@ -8,3 +8,4 @@ site/
 .gradle/
 logs/
 *.json
+!template.json

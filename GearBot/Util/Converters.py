@@ -426,6 +426,6 @@ anti_spam_punishments = {
 class AntiSpamPunishment(Converter):
     async def convert(self, ctx, argument):
         if argument not in anti_spam_punishments:
-            raise TranslatedBadArgument('invalid_anti_spam_punisment', ctx, types=",".join(anti_spam_punishments))
+            raise TranslatedBadArgument('invalid_anti_spam_punishment', ctx, types=",".join(anti_spam_punishments))
         return argument
 

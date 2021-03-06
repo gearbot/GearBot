@@ -1436,8 +1436,8 @@ class ServerAdmin(BaseCog):
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=self.get_anti_spam_embed(ctx))
 
 
-    @anti_spam.command()
-    async def disable(self, ctx, type: SpamType):
+    @anti_spam.command("disable")
+    async def anti_spam_disable(self, ctx, type: SpamType):
         existing = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
         for i in range(0, len(existing)):
             if existing[i]["TYPE"] == type:

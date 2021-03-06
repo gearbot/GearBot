@@ -41,7 +41,7 @@ LOGGING_INFO = {
             "invite_censor_fail_edit": "WARNING",
             "invite_censor_forbidden": "WARNING",
             "invite_censor_forbidden_edit": "WARNING",
-            "censored_message_failed_content": "WARNING"
+            "censored_message_failed_content": "WARNING",
             "censored_message_failed_content_edit": "WARNING"
         },
         "censored": {

@@ -90,9 +90,9 @@ class ModLog(BaseCog):
                 return
             channel = self.bot.get_channel(message.channel)
             name = Utils.clean_user(user) if hasUser else str(message.author)
-            time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(data.message_id)).total_seconds(), guild.id)
+            _time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(data.message_id)).total_seconds(), guild.id)
             with_id = Configuration.get_var(guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
-            GearbotLogging.log_key(guild.id, 'message_removed_with_id' if with_id else 'message_removed', name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention, message_id=data.message_id, time=time.strip())
+            GearbotLogging.log_key(guild.id, 'message_removed_with_id' if with_id else 'message_removed', name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention, message_id=data.message_id, time=_time.strip())
             type_string = None
             if message.type is not None:
                 if message.type == MessageType.new_member.value:
@@ -185,9 +185,9 @@ class ModLog(BaseCog):
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
             if hasUser and user.id not in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") and user.id != channel.guild.me.id:
-                time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(message.messageid)).total_seconds(), channel.guild.id)
+                _time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(message.messageid)).total_seconds(), channel.guild.id)
                 with_id = Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
-                GearbotLogging.log_key(channel.guild.id, 'edit_logging_with_id' if with_id else 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention, message_id=message.messageid, time=time)
+                GearbotLogging.log_key(channel.guild.id, 'edit_logging_with_id' if with_id else 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention, message_id=message.messageid, time=_time.strip())
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = discord.Embed()
                     embed.set_author(name=user if hasUser else message.author,
