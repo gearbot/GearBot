@@ -20,7 +20,7 @@ fakeLoggedMessage = namedtuple("BufferedMessage", "messageid content author chan
 
 violation_regex = re.compile("duplicate key value violates unique constraint .* DETAIL: Key \(id\)=\((\d)\) already exists.*")
 
-async def insert_message(message):
+def insert_message(message):
     if message.id not in recent_list and message.id not in previous_list:
         message_type = message.type
         if message_type == MessageType.default:
@@ -40,6 +40,7 @@ async def insert_message(message):
         if len(batch) >= 1000:
             asyncio.create_task(flush(force=True))
     return message
+
 
 
 async def flush(force=False):
@@ -83,7 +84,7 @@ async def do_flush():
             match = re.match(violation_regex, str(e))
             if match is not None:
                 excluded.add(int(match.group(1)))
-                GearbotLogging.log_key(f"Failed to propagate, duplicate {int(match.group(1)}")
+                GearbotLogging.log_key(f"Failed to propagate, duplicate {int(match.group(1))}")
             else:
                 raise e
 

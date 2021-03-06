@@ -42,7 +42,7 @@ async def insert_message(bot, message, redis=True):
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
         await pipe.execute()
-    await DBUtils.insert_message(message)
+    DBUtils.insert_message(message)
 
 async def update_message(bot, message_id, content, pinned):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
@@ -50,7 +50,11 @@ async def update_message(bot, message_id, content, pinned):
         pipe.hmset_dict(f"messages:{message_id}", content=content)
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
         await pipe.execute()
-    await LoggedMessage.filter(messageid=message_id).update(content=content, pinned=pinned)
+    if message_id in DBUtils.batch:
+        DBUtils.batch[message_id].content = content
+        DBUtils.batch[message_id].pinned = pinned
+    else:
+        await LoggedMessage.filter(messageid=message_id).update(content=content, pinned=pinned)
 
 def assemble(destination, emoji, m, translate=True, **kwargs):
     translated = Translator.translate(m, destination, **kwargs) if translate else m
