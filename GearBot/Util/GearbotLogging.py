@@ -419,7 +419,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, t
         s = datetime.strftime(
             timestamp.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
             '%H:%M:%S')
-        stamp = f"[``{s}``] "
+        stamp = f"[`{s}`] "
         message = Utils.trim_message(f'{stamp} {message}', 2000)
 
     if tag_on is not None:
