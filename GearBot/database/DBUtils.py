@@ -3,9 +3,12 @@ import re
 from datetime import datetime
 
 from discord import MessageType
+from tortoise import Tortoise
 from tortoise.exceptions import IntegrityError
+from tortoise.transactions import in_transaction
 
 from Bot import TheRealGearBot
+from Util import GearbotLogging
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
 from collections import namedtuple
 
@@ -71,14 +74,16 @@ async def do_flush():
                     if a.id not in excluded:
                         to_insert_attachements.add(a)
 
-            await LoggedMessage.bulk_create(to_insert)
-            await LoggedAttachment.bulk_create(to_insert_attachements)
+            with in_transaction():
+                await LoggedMessage.bulk_create(to_insert)
+                await LoggedAttachment.bulk_create(to_insert_attachements)
             last_flush = datetime.now()
             return
         except IntegrityError as e:
             match = re.match(violation_regex, str(e))
             if match is not None:
                 excluded.add(int(match.group(1)))
+                GearbotLogging.log_key(f"Failed to propagate, duplicate {int(match.group(1)}")
             else:
                 raise e
 
