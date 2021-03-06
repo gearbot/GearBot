@@ -162,7 +162,7 @@ class AntiRaid(BaseCog):
             self.raid_trackers[guild_id]["terminator"].cancel()
             del self.raid_trackers[guild_id]
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     async def raid(self, ctx):
         pass
 

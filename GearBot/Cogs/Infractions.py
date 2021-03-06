@@ -86,7 +86,7 @@ class Infractions(BaseCog):
             await Utils.empty_list(ctx, "warn")
 
     @commands.guild_only()
-    @commands.group(aliases=["infraction", "infractions"])
+    @commands.group(aliases=["infraction", "infractions"], invoke_without_command=True)
     async def inf(self, ctx: commands.Context):
         """inf_help"""
         pass

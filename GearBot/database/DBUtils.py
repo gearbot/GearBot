@@ -75,7 +75,7 @@ async def do_flush():
                     if a.id not in excluded:
                         to_insert_attachements.add(a)
 
-            with in_transaction():
+            async with in_transaction():
                 await LoggedMessage.bulk_create(to_insert)
                 await LoggedAttachment.bulk_create(to_insert_attachements)
             last_flush = datetime.now()

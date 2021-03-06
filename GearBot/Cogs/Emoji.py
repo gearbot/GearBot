@@ -23,7 +23,7 @@ class Emoji(BaseCog):
     async def cog_check (self, ctx):
         return hasattr(ctx.author, '_roles') and Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author) or ctx.channel.permissions_for(ctx.author).manage_emojis
 
-    @commands.group(aliases=["emote"])
+    @commands.group(aliases=["emote"], invoke_without_command=True)
     @commands.guild_only()
     async def emoji(self, ctx):
         """emoji_help"""
@@ -153,7 +153,7 @@ class Emoji(BaseCog):
         except HTTPException as msg:
             return await ctx.send(msg.text)
 
-    @emoji.group("roles", aliases=["role"])
+    @emoji.group("roles", aliases=["role"], invoke_without_command=True)
     async def emoji_roles(self, ctx):
         """emoji_roles_help"""
         if ctx.invoked_subcommand is None:

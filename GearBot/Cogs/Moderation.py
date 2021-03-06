@@ -86,7 +86,7 @@ class Moderation(BaseCog):
         else:
             await MessageUtils.send_to(ctx, "EYES", "seen_success", user_id=user.id, user=Utils.clean_user(user), date=Object(messages[0].messageid).created_at)
     
-    @commands.group(aliases=["nick"])
+    @commands.group(aliases=["nick"], invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(manage_nicknames=True)
     async def nickname(self, ctx: commands.Context):
@@ -152,7 +152,7 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     async def role(self, ctx: commands.Context):
@@ -996,7 +996,7 @@ class Moderation(BaseCog):
                          icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(attach_files=True)
     async def archive(self, ctx):
         """archive_help"""
@@ -1045,7 +1045,7 @@ class Moderation(BaseCog):
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(manage_messages=True)
     async def clean(self, ctx):
