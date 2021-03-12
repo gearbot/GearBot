@@ -7,6 +7,7 @@ from discord import Object, HTTPException, MessageType, AllowedMentions
 
 from Util import Translator, Emoji, Archive, GearbotLogging
 from database import DBUtils
+from database.DBUtils import fakeLoggedMessage
 from database.DatabaseConnector import LoggedMessage
 
 Message = namedtuple("Message", "messageid author content channel server attachments type pinned")
@@ -42,7 +43,7 @@ async def insert_message(bot, message, redis=True):
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)
         await pipe.execute()
-    DBUtils.insert_message(message)
+    await DBUtils.insert_message(message)
 
 async def update_message(bot, message_id, content, pinned):
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
@@ -51,8 +52,8 @@ async def update_message(bot, message_id, content, pinned):
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
         await pipe.execute()
     if message_id in DBUtils.batch:
-        DBUtils.batch[message_id].content = content
-        DBUtils.batch[message_id].pinned = pinned
+        old = DBUtils.batch[message_id]
+        DBUtils.batch[message_id] = fakeLoggedMessage(message_id, content, old.author, old.channel, old.server, old.type, pinned, old.attachments)
     else:
         await LoggedMessage.filter(messageid=message_id).update(content=content, pinned=pinned)
 

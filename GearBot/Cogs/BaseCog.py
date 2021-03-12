@@ -11,7 +11,7 @@ class BaseCog(commands.Cog):
         self.permissions = cog_permissions[name] if name in cog_permissions else None
 
     async def cog_check(self, ctx):
-        return Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author)
+        return Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author, self.bot)
 
 
 # Reference Permissions:

@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord.ext.commands import NoPrivateMessage, BotMissingPermissions, CheckFailure
 
-from Util import Configuration
+from Util import Configuration, Utils
 
 
 def is_owner():
@@ -77,7 +77,9 @@ def require_cache():
         return True
     return commands.check(predicate)
 
-def check_permission(command_object, guild, member):
+def check_permission(command_object, guild, member, bot):
+    if not hasattr(member, '_roles'):
+        member = Utils.get_member(bot, guild, member.id)
     if guild is None:
         return 0 >= get_required(command_object, command_object.cog.permissions)
     else:

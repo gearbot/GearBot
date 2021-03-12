@@ -117,7 +117,7 @@ class AntiSpam(BaseCog):
             return
 
         # Use the discord's message timestamp to hopefully not trigger false positives
-        msg_time = int(message.created_at.timestamp()) * 1000
+        msg_time = int(message.created_at.timestamp())
 
         async def check_bucket(check, friendly_text, amount, b):
             # print(f"{check} - {amount}")
@@ -128,7 +128,7 @@ class AntiSpam(BaseCog):
             if bucket is not None and await bucket.check(message.author.id, msg_time, amount,
                                                          f"{message.channel.id}-{message.id}"):
                 count = await bucket.count(message.author.id, msg_time, expire=False)
-                period = await bucket.size(message.author.id, msg_time, expire=False) / 1000
+                period = await bucket.size(message.author.id, msg_time, expire=False)
                 self.bot.loop.create_task(
                     self.violate(Violation(check, message.guild, f"{friendly_text} ({count}/{period}s)", message.author,
                                            message.channel, await bucket.get(message.author.id, msg_time, expire=False),
@@ -161,10 +161,10 @@ class AntiSpam(BaseCog):
         spam_bucket = SpamBucket(self.bot.redis_pool,
                                  f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"],
                                  rule["PERIOD"], self.get_extra_actions(key))
-        t = int(message.created_at.timestamp()) * 1000
+        t = int(message.created_at.timestamp())
         if await spam_bucket.check(full_content, t, 1, f"{message.channel.id}-{message.id}"):
             count = await spam_bucket.count(full_content, t, expire=False)
-            period = await spam_bucket.size(message.author.id, t, expire=False) / 1000
+            period = await spam_bucket.size(message.author.id, t, expire=False)
             st = Translator.translate('spam_max_duplicates', message)
             self.bot.loop.create_task(self.violate(Violation("max_duplicates", message.guild,
                                                              f"{st} ({count}/{period}s)",
@@ -323,11 +323,11 @@ class AntiSpam(BaseCog):
                 for b in buckets:
                     t = b["TYPE"]
                     if t == "censored":
-                        msg_time = int(snowflake_time(message.id).timestamp()) *1000
+                        msg_time = int(snowflake_time(message.id).timestamp())
                         bucket = self.get_bucket(message.guild.id, f"censored:{count}", b, message.author.id)
                         if bucket is not None and await bucket.check(message.author.id, msg_time, 1, f"{message.channel.id}-{message.id}"):
                             count = await bucket.count(message.author.id, msg_time, expire=False)
-                            period = await bucket.size(message.author.id, msg_time, expire=False) / 1000
+                            period = await bucket.size(message.author.id, msg_time, expire=False)
                             self.bot.loop.create_task(
                                 self.violate(Violation("max_censored", message.guild, f"{Translator.translate('spam_max_censored', message)} ({count}/{period}s)",
                                                        message.author,

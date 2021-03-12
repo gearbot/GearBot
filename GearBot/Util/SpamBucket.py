@@ -24,9 +24,7 @@ class SpamBucket:
         return await self.redis.zcount(k)
 
     async def check(self, key, current_time, message, amount=1, expire=True):
-        if expire:
-            await self._remove_expired_keys(key, current_time)
-        amt = await self.incr(key, current_time, amount, message)
+        amt = await self.incr(key, current_time, amount, message, expire)
         return amt >= (self.max_actions + self.extra_actions.count)
 
     async def count(self, key, current_time, expire=True):
@@ -55,4 +53,4 @@ class SpamBucket:
         await self.redis.zremrangebyscore(k)
 
     async def _remove_expired_keys(self, key, current_time):
-        await self.redis.zremrangebyscore(self.key_format.format(key), max=(current_time - (self.period * 1000)))
+        await self.redis.zremrangebyscore(self.key_format.format(key), max=(current_time - self.period))

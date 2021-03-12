@@ -1453,7 +1453,7 @@ class ServerAdmin(BaseCog):
         else:
             existing.append(new)
 
-        Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
+        Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
 
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=await self.get_anti_spam_embed(ctx))
 
@@ -1501,7 +1501,7 @@ class ServerAdmin(BaseCog):
 
 
     @anti_spam.group("immune_roles", invoke_without_command=True)
-    async def immune_roles(self):
+    async def immune_roles(self, ctx):
         """anti_spam_immune_roles_help"""
         pass
 

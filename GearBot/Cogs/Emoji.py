@@ -21,7 +21,7 @@ class Emoji(BaseCog):
         Pages.unregister("emoji")
 
     async def cog_check (self, ctx):
-        return hasattr(ctx.author, '_roles') and Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author) or ctx.channel.permissions_for(ctx.author).manage_emojis
+        return hasattr(ctx.author, '_roles') and Permissioncheckers.check_permission(ctx.command, ctx.guild, ctx.author, self.bot) or ctx.channel.permissions_for(ctx.author).manage_emojis
 
     @commands.group(aliases=["emote"], invoke_without_command=True)
     @commands.guild_only()
