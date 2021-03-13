@@ -1060,6 +1060,7 @@ class Moderation(BaseCog):
         """clean_user_help"""
         if len(users) is 0:
             await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            return
         await self._clean(ctx, amount, lambda m: any(m.author.id == user.id for user in users))
 
     @clean.command("bots")
@@ -1125,6 +1126,7 @@ class Moderation(BaseCog):
         """clean_everywhere_help"""
         if len(users) is 0:
             await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
+            return
         total = 0
         if any(channel.id in self.bot.being_cleaned for channel in ctx.guild.text_channels):
             await MessageUtils.send_to(ctx, "NO", "already_cleaning")
