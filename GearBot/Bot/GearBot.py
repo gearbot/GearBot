@@ -43,7 +43,7 @@ class GearBot(AutoShardedBot):
 
     def dispatch(self, event_name, *args, **kwargs):
         if "socket" not in event_name not in ["message_edit"]:
-            self.metrics.bot_event_counts.labels(event_name=event_name).inc()
+            self.metrics.bot_event_counts.labels(event_name=event_name, cluster=self.cluster).inc()
         super().dispatch(event_name, *args, **kwargs)
 
     async def _run_event(self, coro, event_name, *args, **kwargs):
@@ -66,7 +66,7 @@ class GearBot(AutoShardedBot):
         await TheRealGearBot.on_guild_join(self, guild)
 
     async def on_guild_remove(self, guild):
-        await TheRealGearBot.on_guild_remove(guild)
+        await TheRealGearBot.on_guild_remove(self, guild)
 
     async def on_command_error(self, ctx, error):
         await TheRealGearBot.on_command_error(self, ctx, error)

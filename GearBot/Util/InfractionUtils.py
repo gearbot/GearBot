@@ -35,9 +35,12 @@ def clear_cache(guild_id):
 async def cleaner(guild_id):
     # sleep a bit first, we're not in a rush
     await asyncio.sleep(5)
+    count = 0
     todo = await inf_cleaner(guild_id, reset_cache=True)
     for view in sorted(todo, key=lambda l: l[0], reverse=True):
-        await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+        if count < 10:
+            await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
+            count += 1
     if guild_id in cleaners:
         del cleaners[guild_id]
 
@@ -120,6 +123,7 @@ async def update_pages(guild_id, query, fields, amount, pages, start, longest_id
         page = f"{header}```md\n{get_header(longest_id, longest_name, longest_type, longest_timestamp, guild_id)}\n{page}```"
         GearbotLogging.debug(f"Finished assembling page {number} for key {key}")
         try:
+
             await bot.redis_pool.lset(key, number, page)
         except ReplyError:
             return # key expired while we where working on it

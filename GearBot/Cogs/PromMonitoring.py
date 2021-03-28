@@ -24,19 +24,16 @@ class PromMonitoring(BaseCog):
     @commands.Cog.listener()
     async def on_command_completion(self, ctx):
         self.bot.metrics.command_counter.labels(
-            command_name = ctx.command.qualified_name,
+            cluster=self.bot.cluster,
+            command_name= ctx.command.qualified_name,
         ).inc()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         m = self.bot.metrics
 
-        m.guild_messages.labels(
-            guild_id = message.guild.id if message.guild is not None else 0
-        ).inc()
 
-
-        (m.own_message_raw_count if message.author.id == self.bot.user.id else m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).inc()
+        (m.own_message_raw_count if message.author.id == self.bot.user.id else m.bot_message_raw_count if message.author.bot else m.user_message_raw_count).labels(cluster=self.bot.cluster).inc()
 
     async def create_site(self):
         await asyncio.sleep(15)
@@ -52,6 +49,11 @@ class PromMonitoring(BaseCog):
         self.metric_server = site
 
     async def serve_metrics(self, request):
+        self.bot.metrics.bot_users.labels(cluster=self.bot.cluster).set(sum(len(g.members) for g in self.bot.guilds))
+        self.bot.metrics.bot_users_unique.labels(cluster=self.bot.cluster).set(len(self.bot.users))
+        self.bot.metrics.bot_guilds.labels(cluster=self.bot.cluster).set(len(self.bot.guilds))
+        self.bot.metrics.bot_latency.labels(cluster=self.bot.cluster).set((self.bot.latency))
+
         metrics_to_server = generate_latest(self.bot.metrics_reg).decode("utf-8")
         return web.Response(text=metrics_to_server, content_type="text/plain")
 

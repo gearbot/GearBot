@@ -74,7 +74,7 @@ class Infractions(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mwarn_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="warn",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="warn",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
 
         if len(targets) > 10:

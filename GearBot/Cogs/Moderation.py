@@ -246,7 +246,7 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="kick",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="kick",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
 
         if len(targets) > 0:
@@ -255,14 +255,14 @@ class Moderation(BaseCog):
             await Utils.empty_list(ctx, "kick")
 
     @staticmethod
-    async def _mass_failures_init(ctx, action, failures):
+    async def _mass_failures_init(ctx, action_type, failures):
         failures = failures.split("----NEW PAGE----")
-        return f"**{Translator.translate(f'mass_failures_{action}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(failures) > 1
+        return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=1, pages=len(failures))}**```\n{failures[0]}```", None, len(failures) > 1
 
     @staticmethod
-    async def _mass_failures_update(ctx, message, page_num, action, data):
-        page, page_num = Pages.basic_pages(data["failures"].split("----NEW PAGE----"), page_num, action)
-        action_type = data["action"]
+    async def _mass_failures_update(ctx, message, page_num, action_type, data):
+        page, page_num = Pages.basic_pages(data["failures"].split("----NEW PAGE----"), page_num, action_type)
+        action_type = data["action_type"]
         data["page"] = page_num
         return f"**{Translator.translate(f'mass_failures_{action_type}', ctx, page_num=page_num + 1, pages=len(data['failures']))}**```\n{page}```", None, data
 
@@ -422,7 +422,7 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="ban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mban_confirm", ctx), on_yes=yes)
@@ -443,7 +443,7 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munban_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="unban",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="unban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("munban_confirm", ctx), on_yes=yes)
@@ -489,7 +489,7 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "mcleanban_confirmation", count=valid)
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="ban",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="ban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("mcleanban_confirm", ctx), on_yes=yes)
@@ -631,7 +631,8 @@ class Moderation(BaseCog):
             await ctx.guild.unban(member.user, reason=Utils.trim_message(
                 f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500))
         except Exception as e:
-            self.bot.data["unbans"].remove(fid)
+            if fid in self.bot.data["unbans"]:
+                self.bot.data["unbans"].remove(fid)
             raise e
         await Infraction.filter(user_id=member.user.id, type__in=["Ban", "Tempban"], guild_id=ctx.guild.id).update(active=False)
         i = await InfractionUtils.add_infraction(ctx.guild.id, member.user.id, ctx.author.id, "Unban", reason)
@@ -663,12 +664,13 @@ class Moderation(BaseCog):
             else:
                 async def yes():
                     pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
-                    failures = await Actions.mass_action(ctx, "mute", targets, self._mmute, reason=reason, dm_action=len(targets) < 6, role=role, duration=duration)
+
+                    failures = await Actions.mass_action(ctx, "mute", targets, self._mmute, reason=reason, dm_action=len(targets) < 6 and Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"), role=role, duration=duration)
 
                     await pmessage.delete()
                     await MessageUtils.send_to(ctx, "YES", "mmute_confirmation", count=len(targets) - len(failures))
                     if len(failures) > 0:
-                        await Pages.create_new(self.bot, "mass_failures", ctx, action="mute",
+                        await Pages.create_new(self.bot, "mass_failures", ctx, action_type="mute",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
 
                 if len(targets) > 0:
@@ -860,7 +862,7 @@ class Moderation(BaseCog):
             await pmessage.delete()
             await MessageUtils.send_to(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures))
             if len(failures) > 0:
-                await Pages.create_new(self.bot, "mass_failures", ctx, action="unmute",
+                await Pages.create_new(self.bot, "mass_failures", ctx, action_type="unmute",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
         if len(targets) > 0:
             await Confirmation.confirm(ctx, Translator.translate("munmute_confirm", ctx), on_yes=yes)

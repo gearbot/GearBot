@@ -1470,7 +1470,7 @@ class ServerAdmin(BaseCog):
 
 
     @anti_spam.group("immune_users", invoke_without_command=True)
-    async def immune_users(self):
+    async def immune_users(self, ctx):
         """anti_spam_immune_users_help"""
         pass
 

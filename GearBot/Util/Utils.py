@@ -294,7 +294,8 @@ async def send_infraction(user, guild, emoji, type, reason, **kwargs):
         override = Configuration.get_var(guild.id, "INFRACTIONS", type.upper())
         kwargs.update(
             reason=reason,
-            server=guild.name
+            server=guild.name,
+            guild_id=guild.id
         )
         if override is not None:
             message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}```{reason}```"
