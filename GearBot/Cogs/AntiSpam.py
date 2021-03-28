@@ -213,7 +213,7 @@ class AntiSpam(BaseCog):
         GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
                                moderator=Utils.clean_user(v.guild.me), reason=reason,
                                user_id=v.member.id, moderator_id=v.guild.me.id, inf=i.id)
-        await Utils.send_infraction(v.member, v.guild, 'WARNING', 'warning', "Spam")
+        await Utils.send_infraction(self.bot, v.member, v.guild, 'WARNING', 'warning', "Spam")
 
 
     async def mute_punishment(self, v: Violation):
@@ -242,7 +242,7 @@ class AntiSpam(BaseCog):
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
                 if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
-                    await Utils.send_infraction(v.member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
+                    await Utils.send_infraction(self.bot, v.member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
         else:
             i.end += duration
             i.reason += f'+ {reason}'
@@ -263,7 +263,7 @@ class AntiSpam(BaseCog):
         self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
         try:
             if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_KICK"):
-                asyncio.create_task(Utils.send_infraction(v.member, v.guild.guild, 'BOOT', 'kick', "Spam"))
+                asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild.guild, 'BOOT', 'kick', "Spam"))
             await v.guild.kick(v.member, reason=reason)
         except Forbidden:
             GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
@@ -284,7 +284,7 @@ class AntiSpam(BaseCog):
                                            end=until)
         if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
             dur = Utils.to_pretty_time(duration, None)
-            asyncio.create_task(Utils.send_infraction(v.member, v.guild, 'BAN', 'tempban', "Spam", duration=dur))
+            asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BAN', 'tempban', "Spam", duration=dur))
         GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(v.member),
                                user_id=v.member.id, moderator=Utils.clean_user(v.guild.me),
                                moderator_id=v.guild.me.id, reason=reason,
@@ -300,7 +300,7 @@ class AntiSpam(BaseCog):
                                moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                reason=reason, inf=i.id)
         if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_BAN"):
-            asyncio.create_task(Utils.send_infraction(v.member, v.guild, 'BAN', 'ban', "Spam"))
+            asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BAN', 'ban', "Spam"))
 
 
 

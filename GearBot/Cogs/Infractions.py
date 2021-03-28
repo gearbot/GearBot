@@ -18,8 +18,7 @@ from database.DatabaseConnector import Infraction
 
 class Infractions(BaseCog):
 
-    @staticmethod
-    async def _warn(ctx, target, *, reason, message=True, dm_action=True):
+    async def _warn(self, ctx, target, *, reason, message=True, dm_action=True):
         i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
         name = Utils.clean_user(target)
         if message:
@@ -28,7 +27,7 @@ class Infractions(BaseCog):
         GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
                                user_id=target.id, moderator_id=ctx.author.id, inf=i.id)
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN") and dm_action:
-            await Utils.send_infraction(target, ctx.guild, 'WARNING', 'warn', reason)
+            await Utils.send_infraction(self.bot, target, ctx.guild, 'WARNING', 'warn', reason)
 
     @commands.guild_only()
     @commands.command()

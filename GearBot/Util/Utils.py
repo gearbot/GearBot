@@ -289,7 +289,9 @@ async def get_member(bot, guild, user_id):
     return member
 
 
-async def send_infraction(user, guild, emoji, type, reason, **kwargs):
+async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
+    if await get_member(bot, guild, user.id) is None:
+        return
     try:
         override = Configuration.get_var(guild.id, "INFRACTIONS", type.upper())
         kwargs.update(

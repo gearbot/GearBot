@@ -217,7 +217,7 @@ class Moderation(BaseCog):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
         
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
-            await Utils.send_infraction(user, ctx.guild, 'BOOT', 'kick', reason)
+            await Utils.send_infraction(self.bot, user, ctx.guild, 'BOOT', 'kick', reason)
         
         await ctx.guild.kick(user,
                              reason=Utils.trim_message(
@@ -354,7 +354,7 @@ class Moderation(BaseCog):
             if duration_seconds > 0:
                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
                     dur=f'{duration.length}{duration.unit}'
-                    await Utils.send_infraction(user, ctx.guild, 'BAN', 'tempban', reason, duration=dur)
+                    await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'tempban', reason, duration=dur)
                 self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
@@ -376,7 +376,7 @@ class Moderation(BaseCog):
         self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
                             
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
-            await Utils.send_infraction(user, ctx.guild, 'BAN', 'ban', reason)
+            await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'ban', reason)
                     
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
@@ -709,7 +709,7 @@ class Moderation(BaseCog):
                                reason=reason, inf=i.id)
         if dm_action:
             dur=f'{duration.length}{duration.unit}'
-            await Utils.send_infraction(target, ctx.guild, 'MUTE', 'mute', reason, duration=dur)
+            await Utils.send_infraction(self.bot, target, ctx.guild, 'MUTE', 'mute', reason, duration=dur)
 
 
 
@@ -767,7 +767,7 @@ class Moderation(BaseCog):
                                                        reason=reason, inf=i.id)
                                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                     dur=f'{duration.length}{duration.unit}'
-                                    await Utils.send_infraction(target, ctx.guild, 'MUTE', 'mute', reason, duration=dur)
+                                    await Utils.send_infraction(self.bot, target, ctx.guild, 'MUTE', 'mute', reason, duration=dur)
                             else:
                                 d = f'{duration.length} {duration.unit}'
                                 async def extend():
@@ -918,7 +918,7 @@ class Moderation(BaseCog):
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     name = Utils.clean_user(target)
                     if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
-                        await Utils.send_infraction(target, ctx.guild, 'INNOCENT', 'unmute', reason)
+                        await Utils.send_infraction(self.bot, target, ctx.guild, 'INNOCENT', 'unmute', reason)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
                     if confirm:
