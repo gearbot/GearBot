@@ -9,7 +9,9 @@ import discord
 from discord import Object, Emoji, Forbidden, NotFound, ActivityType, DMChannel, DiscordException
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
+from tortoise import Tortoise
 from tortoise.exceptions import MultipleObjectsReturned
+from tortoise.transactions import in_transaction
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -362,7 +364,9 @@ class Moderation(BaseCog):
 
 
                 until = time.time() + duration_seconds
-                i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
+                async with in_transaction():
+                    await Infraction.filter(user_id=user.id, type="Tempban", guild_id=ctx.guild.id).update(active=False)
+                    i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Tempban", reason, end=until)
                 GearbotLogging.log_key(ctx.guild.id, 'tempban_log', user=Utils.clean_user(user), user_id=user.id,
                                        moderator=Utils.clean_user(ctx.author), moderator_id=ctx.author.id, reason=reason,
                                        until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
