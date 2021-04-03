@@ -42,10 +42,12 @@ async def insert_message(message):
 
     try:
         async with in_transaction():
+            is_reply = message.reference is not None and message.reference.channel_id == message.channel.id
             logged = await LoggedMessage.create(messageid=message.id, content=message.content,
                                         author=message.author.id,
                                         channel=message.channel.id, server=message.guild.id,
-                                        type=message_type, pinned=message.pinned)
+                                        type=message_type, pinned=message.pinned,
+                                                reply_to=message.reference.message_id if is_reply else None)
         for a in message.attachments:
             await LoggedAttachment.create(id=a.id, name=a.filename,
                                           isImage=(a.width is not None or a.width is 0),

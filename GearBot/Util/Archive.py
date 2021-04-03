@@ -23,7 +23,10 @@ async def pack_messages(messages):
     out = ""
     for message in messages:
         name = await Utils.username(message.author, clean=False)
-        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
+        reply = ""
+        if message.reply_to is not None:
+            reply = f" | In reply to https://discord.com/channels/{message.server}/{message.channel}/{message.messageid}"
+        out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content}{reply} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
 async def ship_messages(ctx, messages, t, filename="Message archive", filtered=False):

@@ -1041,7 +1041,7 @@ class Moderation(BaseCog):
             messages = await LoggedMessage.filter(server=ctx.guild.id, author=user).order_by("-messageid").limit(amount).prefetch_related("attachments")
             filtered = False
             actual_messages = []
-            for message in  messages + DBUtils.get_messages_for_user_in_guild(user, ctx.guild.id):
+            for message in messages + DBUtils.get_messages_for_user_in_guild(user, ctx.guild.id):
                 channel = ctx.bot.get_channel(message.channel)
                 if channel is None or channel.permissions_for(ctx.author).read_messages:
                     actual_messages.append(message)

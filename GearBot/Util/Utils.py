@@ -274,10 +274,12 @@ def to_pretty_time(seconds, guild_id):
     return duration.strip()
 
 
-
 def assemble_attachment(channel, aid, name):
     return f"https://media.discordapp.net/attachments/{channel}/{aid}/{name}"
 
+
+def assemble_jumplink(server, channel, message):
+    return f"https://canary.discord.com/channels/{server}/{channel}/{message}"
 
 async def get_member(bot, guild, user_id):
     member = guild.get_member(user_id)

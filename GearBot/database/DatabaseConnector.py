@@ -12,6 +12,7 @@ class LoggedMessage(Model):
     server = fields.BigIntField()
     type = fields.IntField(null=True)
     pinned = fields.BooleanField(default=False)
+    reply_to = fields.BigIntField(null=True)
 
 
 class LoggedAttachment(Model):
