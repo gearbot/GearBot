@@ -692,7 +692,7 @@ class Moderation(BaseCog):
         await target.add_roles(role, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}",
             500))
-        if target.voice:
+        if target.voice and target.voice.channel:
             permissions = target.voice.channel.permissions_for(ctx.guild.me)
             if permissions.move_members:
                 await target.move_to(None, reason=f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}")
