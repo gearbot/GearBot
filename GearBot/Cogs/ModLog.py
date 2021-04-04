@@ -13,6 +13,7 @@ from discord.utils import snowflake_time
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
+from Util.Utils import assemble_jumplink
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
 
@@ -92,7 +93,10 @@ class ModLog(BaseCog):
             name = Utils.clean_user(user) if hasUser else str(message.author)
             _time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(data.message_id)).total_seconds(), guild.id)
             with_id = Configuration.get_var(guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
-            GearbotLogging.log_key(guild.id, 'message_removed_with_id' if with_id else 'message_removed', name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention, message_id=data.message_id, time=_time.strip())
+            reply_str = ""
+            if message.reply_to is not None:
+                reply_str = f"\n**{Translator.translate('in_reply_to', guild.id)}: **<{assemble_jumplink(guild.id, channel.id, message.reply_to)}>"
+            GearbotLogging.log_key(guild.id, 'message_removed_with_id' if with_id else 'message_removed', name=name, user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention, message_id=data.message_id, time=_time.strip(), reply=reply_str)
             type_string = None
             if message.type is not None:
                 if message.type == MessageType.new_member.value:
@@ -187,7 +191,10 @@ class ModLog(BaseCog):
             if hasUser and user.id not in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "IGNORED_USERS") and user.id != channel.guild.me.id:
                 _time = Utils.to_pretty_time((datetime.datetime.utcnow() - snowflake_time(message.messageid)).total_seconds(), channel.guild.id)
                 with_id = Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
-                GearbotLogging.log_key(channel.guild.id, 'edit_logging_with_id' if with_id else 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention, message_id=message.messageid, time=_time.strip())
+                reply_str = ""
+                if message.reply_to is not None:
+                    reply_str = f"\n**{Translator.translate('in_reply_to', c.guild.id)}: **<{assemble_jumplink(c.guild.id, channel.id, message.reply_to)}>"
+                GearbotLogging.log_key(channel.guild.id, 'edit_logging_with_id' if with_id else 'edit_logging', user=Utils.clean_user(user), user_id=user.id, channel=channel.mention, message_id=message.messageid, time=_time.strip(), reply=reply_str)
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = discord.Embed()
                     embed.set_author(name=user if hasUser else message.author,

@@ -3,7 +3,7 @@ import asyncio
 
 import discord.http
 
-# discord.http.Route.BASE = 'http://http-proxy/api/v6'
+discord.http.Route.BASE = 'http://http-proxy/api/v6'
 
 import os
 from argparse import ArgumentParser
@@ -105,9 +105,9 @@ if __name__ == '__main__':
         cluster = loop.run_until_complete(node_init(deployment.status.observed_generation, deployment.metadata.annotations["deployment.kubernetes.io/revision"]))
         num_clusters = deployment.spec.replicas
         args.update({
-            "shard_count": num_clusters,
+            "shard_count": num_clusters*2,
             "cluster": cluster,
-            "shard_ids": [cluster]
+            "shard_ids": [cluster * 2, (cluster * 2) + 1]
         })
 
         GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")

@@ -10,7 +10,7 @@ from database import DBUtils
 from database.DBUtils import fakeLoggedMessage
 from database.DatabaseConnector import LoggedMessage
 
-Message = namedtuple("Message", "messageid author content channel server attachments type pinned")
+Message = namedtuple("Message", "messageid author content channel server attachments type pinned reply_to")
 
 def is_cache_enabled(bot):
     return bot.redis_pool is not None
@@ -22,8 +22,9 @@ async def get_message_data(bot, message_id):
     message = None
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
-        if len(parts) is 6:
-            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1')
+        if len(parts) is 7:
+            reply = int(parts["reply"])
+            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1', reply_to=reply if reply is not 0 else None)
     if message is None:
         message = await LoggedMessage.get_or_none(messageid = message_id).prefetch_related("attachments")
     return message
@@ -37,8 +38,9 @@ async def insert_message(bot, message, redis=True):
             message_type = message_type.value
     if redis and is_cache_enabled(bot):
         pipe = bot.redis_pool.pipeline()
+        is_reply = message.reference is not None and message.reference.channel_id == message.channel.id
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
-                         channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((f"{str(a.id)}/{str(a.filename)}" for a in message.attachments)))
+                         channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((f"{str(a.id)}/{str(a.filename)}" for a in message.attachments)), reply=message.reference.message_id if is_reply else 0)
         if message_type is not None:
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
         pipe.expire(f"messages:{message.id}", 5*60+2)

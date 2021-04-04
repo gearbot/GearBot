@@ -39,6 +39,7 @@ class Censor(BaseCog):
     async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         m = await MessageUtils.get_message_data(self.bot, event.message_id)
+        reply = None
         if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED") or "content" not in event.data:
             return
         author_id=None
@@ -136,14 +137,14 @@ class Censor(BaseCog):
         clean_message = await Utils.clean(content, channel.guild, markdown=False)
         reply_str = ""
         if reply is not None:
-            reply_str = f"\n**{Translator.translate('in_reply_to', member.guild.id)}: **<{assemble_jumplink(member.guild.id, channel, reply)}>"
+            reply_str = f"\n**{Translator.translate('in_reply_to', member.guild.id)}: **<{assemble_jumplink(member.guild.id, channel.id, reply)}>"
 
         if attachments is None:
             attachments = await LoggedAttachment.filter(message=message_id)
 
         if len(attachments) > 0:
             attachments_str = f"**{Translator.translate('attachments', member.guild.id, count=len(attachments))}:** "
-            attachments_str += ', '.join(Utils.assemble_attachment(channel, attachment.id, attachment.filename if hasattr(attachment, "filename") else attachment.name) for attachment in attachments)
+            attachments_str += ', '.join(Utils.assemble_attachment(channel.id, attachment.id, attachment.filename if hasattr(attachment, "filename") else attachment.name) for attachment in attachments)
         else:
             attachments_str = ""
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
@@ -177,14 +178,14 @@ class Censor(BaseCog):
         clean_name = Utils.clean_user(member)
         reply_str = ""
         if reply is not None:
-            reply_str = f"\n**{Translator.translate('in_reply_to', member.guild.id)}: **<{assemble_jumplink(member.guild.id, channel, reply)}>"
+            reply_str = f"\n**{Translator.translate('in_reply_to', member.guild.id)}: **<{assemble_jumplink(member.guild.id, channel.id, reply)}>"
 
         if attachments is None:
             attachments = await LoggedAttachment.filter(message=message_id)
 
         if len(attachments) > 0:
             attachments_str = f"**{Translator.translate('attachments', member.guild.id, count=len(attachments))}:** "
-            attachments_str += ', '.join(Utils.assemble_attachment(channel, attachment.id, attachment.filename if hasattr(attachment, "filename") else attachment.name) for attachment in attachments)
+            attachments_str += ', '.join(Utils.assemble_attachment(channel.id, attachment.id, attachment.filename if hasattr(attachment, "filename") else attachment.name) for attachment in attachments)
         else:
             attachments_str = ""
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
@@ -198,7 +199,8 @@ class Censor(BaseCog):
             # we failed? guess we lost the race, log anyways
             GearbotLogging.log_key(member.guild.id, f'invite_censor_fail{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,
-                                   channel=channel.mention)
+                                   channel=channel.mention, attachments=attachments_str,
+                                   reply=reply_str)
             if message_id in self.bot.data["message_deletes"]:
                 self.bot.data["message_deletes"].remove(message_id)
         except discord.Forbidden:
