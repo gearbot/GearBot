@@ -332,13 +332,13 @@ class DurationHolder:
         if unit == 'd' or unit == 'day':
             length = length * 24
             unit = 'h'
-        if unit == 'h' or unit == 'hour':
+        if unit == 'h' or unit == 'hour' or unit == 'hr':
             length = length * 60
             unit = 'm'
-        if unit == 'm' or unit == 'minute':
+        if unit == 'm' or unit == 'minute' or unit == 'min':
             length = length * 60
             unit = 's'
-        if unit != 's' and unit != 'second':
+        if unit != 's' and unit != 'second' or unit != 'sec':
             raise PostParseError('Duration', 'Not a valid duration identifier')
         if length > 60 * 60 * 24 * 365:
             raise PostParseError('Duration', Translator.translate('max_duration', ctx))
