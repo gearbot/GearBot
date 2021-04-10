@@ -3,7 +3,7 @@ import asyncio
 
 import discord.http
 
-discord.http.Route.BASE = 'http://http-proxy/api/v6'
+# discord.http.Route.BASE = 'http://http-proxy/api/v6'
 
 import os
 from argparse import ArgumentParser
