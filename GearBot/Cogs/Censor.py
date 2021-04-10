@@ -14,7 +14,7 @@ from Util.Matchers import INVITE_MATCHER, URL_MATCHER
 from Util.Utils import assemble_jumplink
 from database.DatabaseConnector import LoggedAttachment
 
-EMOJI_REGEX = re.compile('([^<]*)<a?:(?:[^:]+):([0-9]+)>')
+EMOJI_REGEX = re.compile('<a?:(?:[^:]+):([0-9]+)>')
 messageholder = namedtuple('censored_message', 'id author channel guild')
 class Censor(BaseCog):
 
