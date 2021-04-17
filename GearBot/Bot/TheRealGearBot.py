@@ -65,7 +65,7 @@ async def initialize(bot, startup=False):
                 if socket == "":
                     bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
                 else:
-                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0)
+                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0, maxsize=3)
             except OSError:
                 GearbotLogging.error("==============Failed to connect to redis==============")
                 await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
