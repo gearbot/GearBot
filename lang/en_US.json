@@ -955,5 +955,6 @@
   "anti_spam_immune_roles_add_help": "Add a role to the immunity list",
   "anti_spam_immune_roles_remove_help": "Remove a role from the immunity list",
   "in_reply_to": "In reply to",
-  "attachments": "{count, plural, one {Attachment} other {Attachments}}"
+  "attachments": "{count, plural, one {Attachment} other {Attachments}}",
+  "use_message_author": "You provided a message id instead of a user id. Do you want to perform this action on the author of this message ({user}, `{user_id}`)?"
 }

@@ -1,9 +1,9 @@
 import discord
 from discord import NotFound, Forbidden, HTTPException
-from discord.ext.commands import UserConverter, BadArgument, Converter
+from discord.ext.commands import UserConverter, BadArgument, Converter, NoPrivateMessage, UserNotFound
 
 from Bot.TheRealGearBot import PostParseError
-from Util import Utils, Configuration, Translator
+from Util import Utils, Configuration, Translator, Confirmation
 from Util.Matchers import *
 from database import DBUtils
 from database.DatabaseConnector import LoggedMessage, Infraction
@@ -23,6 +23,68 @@ class BannedMember(Converter):
             raise TranslatedBadArgument("not_banned", ctx)
         return entity
 
+class ServerMember(Converter):
+    async def convert(self, ctx, argument):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
+        member = None
+        user_id = None
+        username = None
+        discrim = None
+        try:
+            user_id = int(argument)
+            member = ctx.guild.get_member(user_id)
+        except ValueError:
+            parts = argument.split('#')
+            if len(parts) == 2 and parts[1].isnumeric():
+                username = parts[0]
+                discrim = parts[1]
+            elif len(parts) == 1:
+                username = argument
+
+        if member is not None:
+            return member
+
+        if user_id is not None:
+            member = ctx.guild.get_member(await getMessageAuthor(ctx, ctx.guild.id, user_id))
+            if member is not None:
+                return member
+            else:
+                raise UserNotFound(argument)
+
+
+
+        for m in ctx.guild.members:
+            if username is not None:
+                potential = None
+                if (discrim is None and (m.user.name.startswith(username)  or (m.nickname is not None and m.nickname.startswith(username)))) or \
+                    (discrim is not None and (m.user.name == username or m.nickname == username)):
+                    potential = m
+                if potential is not None:
+                    if member is not None:
+                        raise TranslatedBadArgument('multiple_potential_targets', ctx)
+                    member = potential
+                    if discrim is not None:
+                        break
+        if member is not None:
+            return member
+        return m
+
+
+async def getMessageAuthor(ctx, guild_id, message_id):
+    message = await LoggedMessage.get_or_none(server=guild_id, messageid=message_id)
+    if message is not None:
+        user = ctx.bot.get_user(message.author)
+        if user is not None:
+            ok = False
+
+            def yes():
+                nonlocal ok
+                ok = True
+            await Confirmation.confirm(ctx, Translator.translate('use_message_author', ctx, user=Utils.clean_user(user), user_id=user.id), on_yes=yes(), confirm_cancel=False)
+            if ok:
+                return user
+    return None
 
 class DiscordUser(Converter):
 
@@ -32,6 +94,7 @@ class DiscordUser(Converter):
 
     async def convert(self, ctx, argument):
         user = None
+        user_id = None
         match = ID_MATCHER.match(argument)
         if match is not None:
             argument = match.group(1)
@@ -39,13 +102,17 @@ class DiscordUser(Converter):
             user = await UserConverter().convert(ctx, argument)
         except BadArgument:
             try:
-                user = await Utils.get_user(
-                    await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument))
+                user_id = await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument)
+                user = await Utils.get_user(user_id)
             except (ValueError, HTTPException):
                 pass
 
-        if user is None or (self.id_only and str(user.id) != argument):
-            raise TranslatedBadArgument('user_conversion_failed', ctx, arg=argument)
+        if user is None:
+            if user_id is not None:
+                user = ctx.bot.get_user(await getMessageAuthor(ctx, ctx.guild.id, argument))
+            if user is None or (self.id_only and str(user.id) != argument):
+                raise TranslatedBadArgument('user_conversion_failed', ctx, arg=argument)
+
         return user
 
 

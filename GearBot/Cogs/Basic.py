@@ -259,19 +259,19 @@ class Basic(BaseCog):
             self.bot.eaten += len(self.bot.users) / 20
 
             # update stats in redis
-            await self.bot.redis_pool.hmset_dict("botstats", {
-                "start_time": str(self.bot.start_time),
-                "user_mesages": str(self.bot.user_messages),
-                "bot_messages": str(self.bot.bot_messages),
-                "own_messages": str(self.bot.self_messages),
-                "total_members": str(sum(len(guild.members) for guild in self.bot.guilds)),
-                "unique_members": str(len(self.bot.users)),
-                "taco_count": str(round(self.bot.eaten)),
-                "random_number": random.randint(0, 5000),
-                "commands_executed": str(self.bot.commandCount),
-                "custom_commands_executed": str(self.bot.custom_command_count),
-                "guilds": len(self.bot.guilds)
-            })
+            # await self.bot.redis_pool.hmset_dict("botstats", {
+            #     "start_time": str(self.bot.start_time),
+            #     "user_mesages": str(self.bot.user_messages),
+            #     "bot_messages": str(self.bot.bot_messages),
+            #     "own_messages": str(self.bot.self_messages),
+            #     "total_members": str(sum(len(guild.members) for guild in self.bot.guilds)),
+            #     "unique_members": str(len(self.bot.users)),
+            #     "taco_count": str(round(self.bot.eaten)),
+            #     "random_number": random.randint(0, 5000),
+            #     "commands_executed": str(self.bot.commandCount),
+            #     "custom_commands_executed": str(self.bot.custom_command_count),
+            #     "guilds": len(self.bot.guilds)
+            # })
 
             await asyncio.sleep(15)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")

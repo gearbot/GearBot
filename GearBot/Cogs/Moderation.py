@@ -9,7 +9,6 @@ import discord
 from discord import Object, Emoji, Forbidden, NotFound, ActivityType, DMChannel, DiscordException
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
-from tortoise import Tortoise
 from tortoise.exceptions import MultipleObjectsReturned
 from tortoise.transactions import in_transaction
 
@@ -19,7 +18,7 @@ from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, E
     Archive, Confirmation, MessageUtils, Questions, server_info, Actions, Permissioncheckers
 from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message, RangedIntBan, VerificationLevel, Nickname
+    RangedInt, Message, RangedIntBan, VerificationLevel, Nickname, ServerMember
 from Util.Matchers import URL_MATCHER
 from Util.Permissioncheckers import bot_has_guild_permission
 from database import DBUtils
@@ -80,7 +79,7 @@ class Moderation(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    async def seen(self, ctx, user: discord.Member):
+    async def seen(self, ctx, user: ServerMember):
         """seen_help"""
         messages = await LoggedMessage.filter(author=user.id, server=ctx.guild.id).order_by("-messageid").limit(1).prefetch_related("attachments")
         if len(messages) is 0:
@@ -98,7 +97,7 @@ class Moderation(BaseCog):
     
     @nickname.command("add", aliases=["set", "update", "edit"])
     @commands.bot_has_permissions(manage_nicknames=True)
-    async def nickname_add(self, ctx, user: discord.Member, *, nick:Nickname):
+    async def nickname_add(self, ctx, user: ServerMember, *, nick:Nickname):
         """mod_nickname_add_help"""
         try:
             allowed, message = Actions.can_act("nickname", ctx, user)
@@ -125,7 +124,7 @@ class Moderation(BaseCog):
 
     @nickname.command("remove", aliases=["clear", "nuke", "reset"])
     @commands.bot_has_permissions(manage_nicknames=True)
-    async def nickname_remove(self, ctx, user: discord.Member):
+    async def nickname_remove(self, ctx, user: ServerMember):
         """mod_nickname_remove_help"""
         if user.nick is None:
             await MessageUtils.send_to(ctx, "WHAT", "mod_nickname_mia", user=Utils.clean_user(user))
@@ -195,7 +194,7 @@ class Moderation(BaseCog):
 
     @role.command()
     @commands.bot_has_permissions(manage_roles=True)
-    async def add(self, ctx, user: discord.Member, *, role: str):
+    async def add(self, ctx, user: ServerMember, *, role: str):
         """role_add_help"""
         await self.role_handler(ctx, user, role, "add")
 
@@ -208,7 +207,7 @@ class Moderation(BaseCog):
     @commands.command(aliases=["👢"])
     @commands.guild_only()
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, user: discord.Member, *, reason: Reason = ""):
+    async def kick(self, ctx, user: ServerMember, *, reason: Reason = ""):
         """kick_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -271,7 +270,7 @@ class Moderation(BaseCog):
     @commands.guild_only()
     @commands.command()
     @commands.bot_has_permissions(external_emojis=True, add_reactions=True)
-    async def bean(self, ctx, user: discord.Member, *, reason: Reason = ""):
+    async def bean(self, ctx, user: ServerMember, *, reason: Reason = ""):
         """bean_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -503,7 +502,7 @@ class Moderation(BaseCog):
     @commands.command(aliases=["softban"])
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
-    async def cleankick(self, ctx: commands.Context, user: discord.Member, *, reason: Reason = ""):
+    async def cleankick(self, ctx: commands.Context, user: ServerMember, *, reason: Reason = ""):
         """softban_help"""
         if reason == "":
             reason = Translator.translate("no_reason", ctx.guild.id)
@@ -720,7 +719,7 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.bot_has_guild_permissions(manage_roles=True)
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
-    async def mute(self, ctx: commands.Context, target: discord.Member, duration: Duration, *, reason: Reason = ""):
+    async def mute(self, ctx: commands.Context, target: ServerMember, duration: Duration, *, reason: Reason = ""):
         """mute_help"""
         if duration.unit is None:
             parts = reason.split(" ")
@@ -876,7 +875,7 @@ class Moderation(BaseCog):
     @commands.command()
     @commands.guild_only()
     @bot_has_guild_permission(manage_roles=True)
-    async def unmute(self, ctx: commands.Context, target: discord.Member, *, reason: Reason = ""):
+    async def unmute(self, ctx: commands.Context, target: ServerMember, *, reason: Reason = ""):
         """unmute_help"""
         await self._unmute(ctx, target, reason=reason, confirm=True)
 
@@ -1031,8 +1030,9 @@ class Moderation(BaseCog):
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
     @archive.command()
-    async def user(self, ctx, user: UserID, amount=100):
+    async def user(self, ctx, user: DiscordUser, amount=100):
         """archive_user_help"""
+        user = user.id
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
