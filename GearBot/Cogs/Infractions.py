@@ -12,7 +12,8 @@ from tortoise.query_utils import Q
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
     Confirmation, MessageUtils, ReactionManager, Pages, Actions
-from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID, DiscordUser
+from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID, DiscordUser, \
+    TranslatedBadArgument
 from database.DatabaseConnector import Infraction
 
 
@@ -34,8 +35,12 @@ class Infractions(BaseCog):
     async def warn(self, ctx: commands.Context, member: DiscordUser, *, reason: Reason):
         """warn_help"""
         # don't allow warning GearBot, get some feedback about issues instead
-        if member.id == self.bot.user.id:
 
+        reason += ",".join(Utils.assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+        if len(reason) > 1800:
+            raise TranslatedBadArgument('reason_too_long', ctx)
+
+        if member.id == self.bot.user.id:
             async def yes():
                 channel = self.bot.get_channel(Configuration.get_master_var("inbox", 0))
                 if channel is not None:
@@ -55,15 +60,19 @@ class Infractions(BaseCog):
             await MessageUtils.send_to(ctx, "THINK", "cant_warn_bot")
             return
 
+
+
         await Actions.act(ctx, "warning", member.id, self._warn, allow_bots=False, reason=reason, check_bot_ability=False, require_on_server=False)
 
     @commands.guild_only()
     @commands.command()
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
-    async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
+    async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason):
         """mwarn_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+
+        reason += ",".join(Utils.assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+        if len(reason) > 1800:
+            raise TranslatedBadArgument('reason_too_long', ctx)
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -141,6 +150,10 @@ class Infractions(BaseCog):
     @inf.command()
     async def update(self, ctx: commands.Context, infraction: ServerInfraction, *, reason: Reason):
         """inf_update_help"""
+        reason += ",".join(Utils.assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+        if len(reason) > 1800:
+            raise TranslatedBadArgument('reason_too_long', ctx)
+
         infraction.mod_id = ctx.author.id
         infraction.reason = reason
         await infraction.save()

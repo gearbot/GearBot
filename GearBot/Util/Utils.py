@@ -321,3 +321,10 @@ async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
             await user.send(out)
     except (discord.HTTPException, AttributeError):
         GearbotLogging.log_key(guild.id, f'{type}_could_not_dm', user=clean_user(user), userid=user.id)
+
+def enrich_reason(ctx, reason):
+    reason += ",".join(assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+    if len(reason) > 1800:
+        from Util.Converters import TranslatedBadArgument
+        raise TranslatedBadArgument('reason_too_long', ctx)
+    return reason

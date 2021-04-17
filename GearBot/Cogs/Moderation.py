@@ -18,7 +18,7 @@ from Util import Configuration, Utils, GearbotLogging, Pages, InfractionUtils, E
     Archive, Confirmation, MessageUtils, Questions, server_info, Actions, Permissioncheckers
 from Util.Actions import ActionFailed
 from Util.Converters import BannedMember, UserID, Reason, Duration, DiscordUser, PotentialID, RoleMode, Guild, \
-    RangedInt, Message, RangedIntBan, VerificationLevel, Nickname, ServerMember
+    RangedInt, Message, RangedIntBan, VerificationLevel, Nickname, ServerMember, TranslatedBadArgument
 from Util.Matchers import URL_MATCHER
 from Util.Permissioncheckers import bot_has_guild_permission
 from database import DBUtils
@@ -209,8 +209,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, user: ServerMember, *, reason: Reason = ""):
         """kick_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         await Actions.act(ctx, "kick", user.id, self._kick, reason=reason, message=True)
                     
@@ -237,9 +236,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(kick_members=True, add_reactions=True, external_emojis=True)
     async def mkick(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mkick_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
-
+        reason = Utils.enrich_reason(ctx, reason)
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -272,8 +269,8 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(external_emojis=True, add_reactions=True)
     async def bean(self, ctx, user: ServerMember, *, reason: Reason = ""):
         """bean_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
+
         allowed, message = Actions.can_act("bean", ctx, user)
         if allowed:
             await MessageUtils.send_to(ctx, "YES", "bean_confirmation", user=Utils.clean_user(user), user_id=user.id, reason=reason)
@@ -294,8 +291,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         member = await Utils.get_member(ctx.bot, ctx.guild, user.id)
         if member is not None:
@@ -323,8 +319,7 @@ class Moderation(BaseCog):
     async def _ban_command(self, ctx, user, reason, days):
         member = await Utils.get_member(ctx.bot, ctx.guild, user.id)
 
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         allowed, message = Actions.can_act("ban", ctx, member)
         if allowed:
@@ -342,8 +337,7 @@ class Moderation(BaseCog):
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
 
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         member = await Utils.get_member(self.bot, ctx.guild, user.id)
         if member is not None:
@@ -416,8 +410,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def mban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """mban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -437,8 +430,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def munban(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """munban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -458,8 +450,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def mcleanban(self, ctx, targets: Greedy[PotentialID], days: Optional[RangedIntBan]=1, *, reason: Reason = ""):
         """mcleanban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -504,8 +495,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True)
     async def cleankick(self, ctx: commands.Context, user: ServerMember, *, reason: Reason = ""):
         """softban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         allowed, message = Actions.can_act("softban", ctx, user)
         if allowed:
@@ -545,8 +535,7 @@ class Moderation(BaseCog):
     @commands.guild_only()
     async def verification(self, ctx: commands.Context, level: VerificationLevel, *, reason: Reason = ""):
         """verification_help"""
-        if reason == "":
-            reason = Translator.translate('no_reason', ctx)
+        reason = Utils.enrich_reason(ctx, reason)
         if ctx.guild.verification_level != level:
             try:
                 await ctx.guild.edit(verification_level=level, reason=reason)
@@ -563,8 +552,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def forceban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """forceban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         # check if the user is a member
         try:
             member = await commands.MemberConverter().convert(ctx, str(user.id))
@@ -626,8 +614,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True)
     async def unban(self, ctx, member: BannedMember, *, reason: Reason = ""):
         """unban_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         fid = f"{ctx.guild.id}-{member.user.id}"
         self.bot.data["unbans"].add(fid)
         try:
@@ -653,8 +640,7 @@ class Moderation(BaseCog):
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
@@ -725,8 +711,7 @@ class Moderation(BaseCog):
             parts = reason.split(" ")
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             await ctx.send(
@@ -856,8 +841,7 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
     async def munmute(self, ctx, targets: Greedy[PotentialID], *, reason: Reason = ""):
         """munmute_help"""
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
 
         async def yes():
             pmessage = await MessageUtils.send_to(ctx, "REFRESH", "processing")
@@ -882,8 +866,7 @@ class Moderation(BaseCog):
     async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=None):
         if dm_action is None:
             dm_action = Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE")
-        if reason == "":
-            reason = Translator.translate("no_reason", ctx.guild.id)
+        reason = Utils.enrich_reason(ctx, reason)
         roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid is 0:
             if confirm:
