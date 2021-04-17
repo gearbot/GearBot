@@ -324,6 +324,8 @@ async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
 
 def enrich_reason(ctx, reason):
     reason += ",".join(assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+    if reason == '':
+        reason = Translator.translate('no_reason', ctx)
     if len(reason) > 1800:
         from Util.Converters import TranslatedBadArgument
         raise TranslatedBadArgument('reason_too_long', ctx)
