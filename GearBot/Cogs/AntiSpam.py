@@ -260,10 +260,10 @@ class AntiSpam(BaseCog):
         reason = self.assemble_reason(v)
         i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Kick', reason,
                                            active=False)
-        self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, "1")
         try:
             if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_KICK"):
-                asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild.guild, 'BOOT', 'kick', "Spam"))
+                asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BOOT', 'kick', "Spam"))
             await v.guild.kick(v.member, reason=reason)
         except Forbidden:
             GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
@@ -278,7 +278,7 @@ class AntiSpam(BaseCog):
         reason = self.assemble_reason(v)
         duration = v.bucket["PUNISHMENT"]["DURATION"]
         until = time.time() + duration
-        self.bot.data["forced_exists"].add(f"{v.guild.id}-{v.member.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, 1)
         await v.guild.ban(v.member, reason=reason, delete_message_days=0)
         i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Tempban', reason,
                                            end=until)
@@ -292,7 +292,7 @@ class AntiSpam(BaseCog):
 
     async def ban_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
-        self.bot.data["forced_exits"].add(f"{v.guild.id}-{v.member.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, 1)
         await v.guild.ban(v.member, reason=reason, delete_message_days=0)
         await Infraction.filter(user_id=v.member.id, type="Unban", guild_id=v.guild.id).update(active=False)
         i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Ban', reason)

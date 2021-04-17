@@ -48,7 +48,6 @@ async def initialize(bot, startup=False):
         Utils.initialize(bot)
         InfractionUtils.initialize(bot)
         bot.data = {
-            "forced_exits": set(),
             "unbans": set(),
             "message_deletes": set(),
             "nickname_changes": set()

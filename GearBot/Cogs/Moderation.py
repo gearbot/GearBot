@@ -216,8 +216,8 @@ class Moderation(BaseCog):
         await Actions.act(ctx, "kick", user.id, self._kick, reason=reason, message=True)
                     
     async def _kick(self, ctx, user, reason, message, dm_action=True):
-        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
-        
+        await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
+
         if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
             await Utils.send_infraction(self.bot, user, ctx.guild, 'BOOT', 'kick', reason)
         
@@ -357,7 +357,7 @@ class Moderation(BaseCog):
                 if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
                     dur=f'{duration.length}{duration.unit}'
                     await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'tempban', reason, duration=dur)
-                self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+                await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
                 await ctx.guild.ban(user, reason=Utils.trim_message(
                     f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                                     delete_message_days=0)
@@ -377,9 +377,9 @@ class Moderation(BaseCog):
             await MessageUtils.send_to(ctx, "NO", message, translate=False)
 
     async def _ban(self, ctx, user, reason, confirm, days=0, dm_action=True):
-        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
                             
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
+        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
             await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'ban', reason)
                     
         await ctx.guild.ban(user, reason=Utils.trim_message(
@@ -510,7 +510,7 @@ class Moderation(BaseCog):
 
         allowed, message = Actions.can_act("softban", ctx, user)
         if allowed:
-            self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+            await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
             self.bot.data["unbans"].add(f"{ctx.guild.id}-{user.id}")
             i = await InfractionUtils.add_infraction(ctx.guild.id, user.id, ctx.author.id, "Softban", reason, active=False)
             await ctx.guild.ban(user, reason=Utils.trim_message(
@@ -589,8 +589,8 @@ class Moderation(BaseCog):
         if user.discriminator == '0000':
             await MessageUtils.send_to(ctx, 'NO', 'forceban_unable_sytem_user')
             return
-        
-        self.bot.data["forced_exits"].add(f"{ctx.guild.id}-{user.id}")
+
+        await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
         await ctx.guild.ban(user, reason=Utils.trim_message(
             f"Moderator: {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id}) Reason: {reason}", 500),
                             delete_message_days=0)

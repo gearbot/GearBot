@@ -234,26 +234,33 @@ class ModLog(BaseCog):
     async def on_member_remove(self, member: discord.Member):
         if member.id == self.bot.user.id: return
         timestamp = datetime.datetime.now()
-        exits = self.bot.data["forced_exits"]
-        fid = f"{member.guild.id}-{member.id}"
-        if fid in exits:
-            exits.remove(fid)
+        if await self.bot.redis_pool.get(f"forced_exits:{member.guild.id}-{member.id}") is not None:
             return
         if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
-                async for entry in member.guild.audit_logs(action=AuditLogAction.kick, limit=25):
-                    if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(
-                             time.time() - 30):
-                        break
-                    if entry.target == member:
-                        if entry.reason is None:
-                            reason = Translator.translate("no_reason", member.guild.id)
-                        else:
-                            reason = entry.reason
-                        i = await InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, "Kick", reason,
-                                                       active=False)
-                        GearbotLogging.log_key(member.guild.id, 'kick_log', user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason, inf=i.id, timestamp=timestamp)
-                        return
+                found = False
+                attempts = 0
+                while not found and attempts < 3:
+                    async for entry in member.guild.audit_logs(limit=25):
+                        if entry.action not in (AuditLogAction.kick, AuditLogAction.ban):
+                            continue
+                        if member.joined_at is None or member.joined_at > entry.created_at or entry.created_at < datetime.datetime.utcfromtimestamp(
+                                 time.time() - 30):
+                            break
+                        if entry.target == member:
+                            if entry.reason is None:
+                                reason = Translator.translate("no_reason", member.guild.id)
+                            else:
+                                reason = entry.reason
+                            inf_type = "Kick" if entry.reason is AuditLogAction.kick else "Ban"
+                            i = await InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, inf_type, reason,
+                                                           active=False)
+                            GearbotLogging.log_key(member.guild.id, f'{inf_type.lower()}_log', user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason, inf=i.id, timestamp=timestamp)
+                            return
+                        attempts += 1
+                        if attempts > 3:
+                            break
+                        await asyncio.sleep(2)
             except discord.Forbidden:
                 permissions = member.guild.me.guild_permissions
                 perm_info = ", ".join(f"{name}: {value}" for name, value in permissions)
@@ -265,29 +272,19 @@ class ModLog(BaseCog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        if user.id == self.bot.user.id or not Features.is_logged(guild.id, "MOD_ACTIONS"): return
-        timestamp = datetime.datetime.now()
-        fid = f"{guild.id}-{user.id}"
-        if fid in self.bot.data["forced_exits"]:
+        if user.id == self.bot.user.id or not Features.is_logged(guild.id, "MOD_ACTIONS"):
             return
-        self.bot.data["forced_exits"].add(fid)
+        timestamp = datetime.datetime.now()
+        if guild.me.guild_permissions.view_audit_log:
+            return
+
+        if await self.bot.redis_pool.get(f"forced_exits:{guild.id}-{user.id}") is not None:
+            return
+
+        await self.bot.redis_pool.psetex(f"forced_exits:{guild.id}-{user.id}", 8000, "1")
         await Infraction.filter(user_id=user.id, type="Unban", guild_id=guild.id).update(active=False)
-        limit = datetime.datetime.utcfromtimestamp(time.time() - 60)
-        log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
-        if log is None:
-            await asyncio.sleep(1) #is the api having a fit or so?
-            #this fails way to often for my liking, alternative is adding a delay but this seems to do the trick for now
-            log = await self.find_log(guild, AuditLogAction.ban, lambda e: e.target == user and e.created_at > limit)
-        if log is not None:
-            if log.reason is None:
-                reason = Translator.translate("no_reason", guild.id)
-            else:
-                reason = log.reason
-            i = await InfractionUtils.add_infraction(guild.id, log.target.id, log.user.id, "Ban", reason)
-            GearbotLogging.log_key(guild.id, 'ban_log', user=Utils.clean_user(user), user_id=user.id, moderator=Utils.clean_user(log.user), moderator_id=log.user.id, reason=reason, inf=i.id, timestamp=timestamp)
-        else:
-            i = await InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
-            GearbotLogging.log_key(guild.id, 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id, timestamp=timestamp)
+        i = await InfractionUtils.add_infraction(guild.id, user.id, 0, "Ban", "Manual ban")
+        GearbotLogging.log_key(guild.id, 'manual_ban_log', user=Utils.clean_user(user), user_id=user.id, inf=i.id, timestamp=timestamp)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild, user):

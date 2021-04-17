@@ -106,7 +106,7 @@ class Mute(RaidAction):
 class Kick(RaidAction):
 
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
-        bot.data["forced_exits"].add(f"{member.guild.id}-{member.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{member.guild.id}-{member.id}", 8000, 1)
         reason = f"Raider kicked by raid shield {shield['name']} in raid {raid_id}"
         try:
             await member.kick(reason=reason)
@@ -137,7 +137,7 @@ class Kick(RaidAction):
 class Ban(RaidAction):
 
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
-        bot.data["forced_exits"].add(f"{member.guild.id}-{member.id}")
+        await self.bot.redis_pool.psetex(f"forced_exits:{member.guild.id}-{member.id}", 8000, 1)
         reason = f"Raider banned by raid shield {shield['name']} in raid {raid_id}"
         try:
             await member.ban(reason=reason,
