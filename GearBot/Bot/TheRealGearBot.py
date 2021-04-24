@@ -294,7 +294,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         e = Emoji.get_chat_emoji('BUG')
         await send(ctx, f"{e} Command failed because the discord api responded with \"not found\" If you didn't delete anything manually and this keeps happening please report it on support server (DM me ``!about`` or check the website for an invite) {e}")
 
-    elif isinstance(error, NotFound):
+    elif isinstance(error, Forbidden):
         e = Emoji.get_chat_emoji('BUG')
         await ctx.send(f"{e} Command failed because the discord api responded with \"forbidden\" reply. Please make sure the bot has the permissions and roles required to perform this command {e}")
 
