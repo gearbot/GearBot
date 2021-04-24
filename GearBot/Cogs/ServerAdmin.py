@@ -10,6 +10,7 @@ from Cogs.BaseCog import BaseCog
 from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
     MessageUtils, Selfroles
 from Util.Converters import LoggingChannel, ListMode, SpamType, RangedInt, Duration, AntiSpamPunishment
+from database.DatabaseConnector import Infraction
 
 
 class ServerHolder(object):
@@ -175,6 +176,9 @@ class ServerAdmin(BaseCog):
         if role == ctx.guild.default_role:
             return await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'default_role_forbidden', ctx)}")
+        if role.tags is not None:
+            return await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'tagged_role_forbidden', ctx)}")
         guild:discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:
@@ -863,9 +867,12 @@ class ServerAdmin(BaseCog):
     @disable.command()
     async def mute(self, ctx:commands.Context):
         """disable_mute_help"""
+        await Infraction.filter(type="Mute", guild_id=ctx.guild.id, active=True).update(active=False)
+        infractions = await Infraction.filter(type="Mute", guild_id=ctx.guild.id, active=True)
         role = ctx.guild.get_role(Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE"))
-        if role is not None:
-            for member in role.members:
+        for i in infractions:
+            member = ctx.guild.get_member(i.user_id)
+            if member is not None:
                 await member.remove_roles(role, reason=f"Mute feature has been disabled")
         Configuration.set_var(ctx.guild.id, "ROLES", "MUTE_ROLE", 0)
         await ctx.send("Mute feature has been disabled, all people muted have been unmuted and the role can now be removed.")

@@ -956,5 +956,6 @@
   "anti_spam_immune_roles_remove_help": "Remove a role from the immunity list",
   "in_reply_to": "In reply to",
   "attachments": "{count, plural, one {Attachment} other {Attachments}}",
-  "use_message_author": "You provided a message id instead of a user id. Do you want to perform this action on the author of this message ({user}, `{user_id}`)?"
+  "use_message_author": "You provided a message id instead of a user id. Do you want to perform this action on the author of this message ({user}, `{user_id}`)?",
+  "tagged_role_forbidden": "You can not use an integration role as mute role"
 }
