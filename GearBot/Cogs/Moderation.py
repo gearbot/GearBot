@@ -291,7 +291,6 @@ class Moderation(BaseCog):
     @commands.bot_has_permissions(ban_members=True, add_reactions=True, external_emojis=True)
     async def ban(self, ctx: commands.Context, user: DiscordUser, *, reason: Reason = ""):
         """ban_help"""
-        reason = Utils.enrich_reason(ctx, reason)
 
         member = await Utils.get_member(ctx.bot, ctx.guild, user.id)
         if member is not None:

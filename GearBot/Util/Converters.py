@@ -53,7 +53,7 @@ class ServerMember(Converter):
         if user_id is not None:
             a = await getMessageAuthor(ctx, ctx.guild.id, user_id)
             if a is not None:
-                member = Utils.get_member(ctx.bot, ctx.guild, a.id)
+                member = await Utils.get_member(ctx.bot, ctx.guild, a.id)
             if member is not None:
                 return member
             else:

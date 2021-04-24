@@ -323,7 +323,8 @@ async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
         GearbotLogging.log_key(guild.id, f'{type}_could_not_dm', user=clean_user(user), userid=user.id)
 
 def enrich_reason(ctx, reason):
-    reason += ",".join(assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments)
+    if reason != "" and len(ctx.message.attachments) > 0:
+        reason += " " + ",".join([assemble_attachment(ctx.message.channel.id, attachment.id, attachment.filename) for attachment in ctx.message.attachments])
     if reason == '':
         reason = Translator.translate('no_reason', ctx)
     if len(reason) > 1800:

@@ -250,7 +250,7 @@ class ModLog(BaseCog):
                             reason = Translator.translate("no_reason", member.guild.id)
                         else:
                             reason = entry.reason
-                        inf_type = "Kick" if entry.reason is AuditLogAction.kick else "Ban"
+                        inf_type = "Kick" if entry.action == AuditLogAction.kick else "Ban"
                         i = await InfractionUtils.add_infraction(member.guild.id, entry.target.id, entry.user.id, inf_type, reason,
                                                        active=False)
                         GearbotLogging.log_key(member.guild.id, f'{inf_type.lower()}_log', user=Utils.clean_user(member), user_id=member.id, moderator=Utils.clean_user(entry.user), moderator_id=entry.user.id, reason=reason, inf=i.id, timestamp=timestamp)
