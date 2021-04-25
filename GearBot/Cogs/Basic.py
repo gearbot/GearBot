@@ -11,7 +11,7 @@ from Cogs.BaseCog import BaseCog
 from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
     MessageUtils, Selfroles, ReactionManager
 from Util.Converters import Message, DiscordUser
-from Util.Matchers import NUMBER_MATCHER
+from Util.Matchers import NUMBER_MATCHER, ID_NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
 
 
@@ -235,10 +235,13 @@ class Basic(BaseCog):
     async def uid(self, ctx, *, text: str):
         """uid_help"""
         parts = set()
-        for p in set(NUMBER_MATCHER.findall(text)):
+        for p in set(ID_NUMBER_MATCHER.findall(text)):
             try:
-                parts.add(str((await DiscordUser(id_only=True).convert(ctx, p)).id))
-            except BadArgument:
+                id = int(p)
+                if id not in parts:
+                    if await Utils.get_user(id) is not None:
+                        parts.add(p)
+            except ValueError:
                 pass
         if len(parts) > 0:
             await ctx.send("\n".join(parts))
