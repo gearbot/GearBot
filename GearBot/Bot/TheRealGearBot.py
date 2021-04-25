@@ -17,6 +17,7 @@ from aiohttp import ClientOSError, ServerDisconnectedError
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
 from discord.abc import PrivateChannel
 from discord.ext import commands
+from discord.ext.commands import UnexpectedQuoteError
 
 from Bot import GearBot
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
@@ -293,10 +294,12 @@ async def on_command_error(bot, ctx: commands.Context, error):
     elif isinstance(error, NotFound):
         e = Emoji.get_chat_emoji('BUG')
         await send(ctx, f"{e} Command failed because the discord api responded with \"not found\" If you didn't delete anything manually and this keeps happening please report it on support server (DM me ``!about`` or check the website for an invite) {e}")
-
     elif isinstance(error, Forbidden):
         e = Emoji.get_chat_emoji('BUG')
         await ctx.send(f"{e} Command failed because the discord api responded with \"forbidden\" reply. Please make sure the bot has the permissions and roles required to perform this command {e}")
+    elif isinstance(error, UnexpectedQuoteError):
+        e = Emoji.get_chat_emoji('BUG')
+        await ctx.send(f"{e} Command parsing failed, unexpected or unclosed quote encountered {e}")
 
     else:
         await handle_exception("Command execution failed", bot, error.original if hasattr(error, "original") else error, ctx=ctx)
