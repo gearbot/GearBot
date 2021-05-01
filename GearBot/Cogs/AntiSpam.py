@@ -21,7 +21,6 @@ from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, InfractionUtils, GearbotLogging, Utils, Translator, MessageUtils, \
     Permissioncheckers
-from Util.Converters import DurationHolder
 from Util.Matchers import MENTION_MATCHER, URL_MATCHER
 from Util.SpamBucket import SpamBucket
 from database.DatabaseConnector import Infraction
@@ -79,7 +78,7 @@ class AntiSpam(BaseCog):
             "ban": 5
         }
         self.extra_actions = WeakValueDictionary()
-        self.processed = deque(maxlen=500)
+        self.processed = deque(maxlen=7500)
         self.censor_processed = deque(maxlen=50)
         self.running = True
         bot.loop.create_task(self.censor_detector())
@@ -245,7 +244,7 @@ class AntiSpam(BaseCog):
                     await Utils.send_infraction(self.bot, v.member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
         else:
             i.end += duration
-            i.reason += f'+ {reason}'
+            i.reason += Utils.trim_message(f'+ {reason}', 2000)
             await i.save()
             GearbotLogging.log_key(v.guild.id, 'mute_duration_extended_log',
                                    user=Utils.clean_user(v.member),
