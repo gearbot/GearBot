@@ -23,5 +23,9 @@ class RaidShield:
 
     async def handle_actions(self, actions, bot, o, raid_id, raider_ids, shield):
         for a in actions:
-            action = RaidActions.handlers[a["type"]]
-            await action.execute(bot, o, a["action_data"], raid_id, raider_ids, shield)
+            try:
+                action = RaidActions.handlers[a["type"]]
+            except KeyError:
+                await GearbotLogging.bot_log(f"Corrupt action in shield on guild {o.id}")
+            else:
+                await action.execute(bot, o, a["action_data"], raid_id, raider_ids, shield)
