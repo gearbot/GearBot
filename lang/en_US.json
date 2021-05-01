@@ -276,8 +276,8 @@
   "censored_message_domain_blocked": "Censored message by {user} (`{user_id}`) in {channel}, domain `{sequence}` is not allowed.\n```{message}```",
   "censored_message_domain_blocked_edit": "Censored message after edit by {user} (`{user_id}`) in {channel} after edit, domain `{sequence}` is not allowed.{reply}\n```{message}```{attachment}",
   "censored_message_failed_domain_blocked": "Censored message by {user} (`{user_id}`) in {channel}, domain `{sequence}` is not allowed but I was unable to remove it.{reply}\n```{message}```{attachment}\n<{link}>",
-  "censor_trusted_bypass": "Censor Trusted Bypass has been {status}",
-  "censor_trusted_bypass_unchanged": "Trusted Censor Bypass is already {status}",
+  "invite_censor_trusted_bypass": "Invite censor bypass for trusted users is now {status}",
+  "invite_censor_trusted_bypass_unchanged": "Invite censor bypass for trusted users was already {status}",
   "warn_dm": "You have been warned in **{server}** (`{guild_id}`) for:",
   "kick_dm": "You have been kicked in **{server}** (`{guild_id}`) for:",
   "ban_dm": "You have been banned in **{server}** (`{guild_id}`) for:",
@@ -957,5 +957,11 @@
   "in_reply_to": "In reply to",
   "attachments": "{count, plural, one {Attachment} other {Attachments}}",
   "use_message_author": "You provided a message id instead of a user id. Do you want to perform this action on the author of this message ({user}, `{user_id}`)?",
-  "tagged_role_forbidden": "You can not use an integration role as mute role"
+  "tagged_role_forbidden": "You can not use an integration role as mute role",
+  "actual_censor_trusted_bypass": "Non-invite Censor bypass for trusted users is now {status}",
+  "actual_censor_trusted_bypass_unchanged": "Non-invite censor bypass for trusted users was already {status}",
+  "flag_trusted_bypass": "Flag bypass for trusted users is now {status}",
+  "flag_trusted_bypass_unchanged": "Flag censor bypass for trusted users was already {status}",
+  "trustedflagbypass_help": "Enable to no longer flag trusted users their messages",
+  "trustedcensorbypass_help": "Enable to no longer censor trusted users"
 }

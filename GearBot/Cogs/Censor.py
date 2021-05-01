@@ -133,6 +133,8 @@ class Censor(BaseCog):
 
 
     async def censor_message(self, message_id, content, channel, member, bad, key="", edit=False, reply="", attachments=""):
+        if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS") and Permissioncheckers.is_trusted(member):
+            return
         e = '_edit' if edit else ''
         clean_message = await Utils.clean(content, channel.guild, markdown=False)
         reply_str = ""
@@ -167,8 +169,7 @@ class Censor(BaseCog):
 
     async def censor_invite(self, member, message_id, channel, code, server_name, content, edit, reply, attachments):
         # Allow for users with a trusted role, or trusted users, to post invite links
-        if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(
-                member):
+        if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(member):
             return
 
         e = '_edit' if edit else ''

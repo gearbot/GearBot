@@ -262,18 +262,18 @@ class ServerAdmin(BaseCog):
     async def remove_from_allowed_list(self, ctx: commands.Context, server:int):
         await remove_item(ctx, ServerHolder(server), "allowed", list_name="invite_list", config_section="CENSORING")
 
-    @configure.command(name="censortrustedbypass")
-    async def enable_trusted_bypass(self, ctx: commands.Context, enabled_status: bool):
+    @configure.command(aliases=["trustedinvitebypass"])
+    async def trusted_invite_bypass(self, ctx: commands.Context, enabled_status: bool):
         """censortrustedbypass_help"""
         config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS")
 
         enabled_string = "enabled" if enabled_status else "disabled"
         enabled_string = Translator.translate(enabled_string, ctx.guild.id)
 
-        message = MessageUtils.assemble(ctx, "YES", "censor_trusted_bypass", status=enabled_string)
+        message = MessageUtils.assemble(ctx, "YES", "invite_censor_trusted_bypass", status=enabled_string)
 
         if enabled_status == config_status:
-            message = MessageUtils.assemble(ctx, "NO", f"censor_trusted_bypass_unchanged", status=enabled_string)
+            message = MessageUtils.assemble(ctx, "NO", f"invite_censor_trusted_bypass_unchanged", status=enabled_string)
         else:
             Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS", enabled_status)
 
@@ -1543,6 +1543,38 @@ class ServerAdmin(BaseCog):
             Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES", roles)
             message = MessageUtils.assemble(ctx, "YES", "role_no_longer_immune", role=role.name)
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
+
+    @configure.command(aliases=["trustedcensorbypass"])
+    async def trusted_censor_bypass(self, ctx: commands.Context, enabled_status: bool):
+        """trustedcensorbypass_help"""
+        config_status = Configuration.get_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS")
+
+        enabled_string = "enabled" if enabled_status else "disabled"
+        enabled_string = Translator.translate(enabled_string, ctx.guild.id)
+
+
+        if enabled_status == config_status:
+            message = MessageUtils.assemble(ctx, "NO", f"actual_censor_trusted_bypass_unchanged", status=enabled_string)
+        else:
+            message = MessageUtils.assemble(ctx, "YES", "actual_censor_trusted_bypass", status=enabled_string)
+            Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS", enabled_status)
+        await ctx.send(message)
+
+
+    @configure.command(aliases=["trustedflagbypass"])
+    async def trusted_flag_bypass(self, ctx: commands.Context, enabled_status: bool):
+        """trustedflagbypass_help"""
+        config_status = Configuration.get_var(ctx.guild.id, "FLAGGING", "TRUSTED_BYPASS")
+
+        enabled_string = "enabled" if enabled_status else "disabled"
+        enabled_string = Translator.translate(enabled_string, ctx.guild.id)
+
+        if enabled_status == config_status:
+            message = MessageUtils.assemble(ctx, "NO", f"actual_flag_trusted_bypass_unchanged", status=enabled_string)
+        else:
+            message = MessageUtils.assemble(ctx, "YES", "flag_trusted_bypass", status=enabled_string)
+            Configuration.set_var(ctx.guild.id, "FLAGGING", "TRUSTED_BYPASS", enabled_status)
+        await ctx.send(message)
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
