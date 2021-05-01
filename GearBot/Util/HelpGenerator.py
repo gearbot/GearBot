@@ -70,6 +70,8 @@ async def gen_cog_help(bot, ctx, cog):
     return [output]
 
 async def gen_command_help(bot, ctx, command):
+    if ctx is None:
+        return []
     if ctx.prefix is None:
         ctx.prefix = ""
     bot.help_command.context = ctx

@@ -17,7 +17,7 @@ from aiohttp import ClientOSError, ServerDisconnectedError
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
 from discord.abc import PrivateChannel
 from discord.ext import commands
-from discord.ext.commands import UnexpectedQuoteError
+from discord.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded
 
 from Bot import GearBot
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
@@ -107,6 +107,8 @@ async def on_ready(bot):
             for extension in Configuration.get_master_var("COGS"):
                 try:
                     bot.load_extension("Cogs." + extension)
+                except ExtensionAlreadyLoaded:
+                    pass
                 except Exception as e:
                     await handle_exception(f"Failed to load cog {extension}", bot, e)
             GearbotLogging.info("Cogs loaded")
