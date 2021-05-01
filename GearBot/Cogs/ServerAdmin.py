@@ -351,7 +351,7 @@ class ServerAdmin(BaseCog):
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_override_not_found', ctx, cog=cog)}")
 
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     async def command_overrides(self, ctx):
         """command_overrides_help"""
         if ctx.invoked_subcommand is None:
@@ -950,16 +950,18 @@ class ServerAdmin(BaseCog):
 
     @censor_list.command("add")
     async def censor_list_add(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
-        if word.lower() in censor_list:
+        if word in censor_list:
             await MessageUtils.send_to(ctx, "NO", "already_censored", word=word)
         else:
-            censor_list.append(word.lower())
+            censor_list.append(word)
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
 
     @censor_list.command("remove")
     async def censor_list_remove(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
         if word not in censor_list:
             await MessageUtils.send_to(ctx, "NO", "not_censored", word=word)
@@ -989,11 +991,12 @@ class ServerAdmin(BaseCog):
 
     @word_censor_list.command("add")
     async def word_censor_list_add(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
-        if word.lower() in censor_list:
+        if word in censor_list:
             await MessageUtils.send_to(ctx, "NO", "already_censored", word=word)
         else:
-            censor_list.append(word.lower())
+            censor_list.append(word)
             await MessageUtils.send_to(ctx, "YES", "entry_added", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
@@ -1001,11 +1004,12 @@ class ServerAdmin(BaseCog):
 
     @word_censor_list.command("remove")
     async def word_censor_list_remove(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
-        if word.lower() not in censor_list:
+        if word not in censor_list:
             await MessageUtils.send_to(ctx, "NO", "not_censored", word=word)
         else:
-            censor_list.remove(word.lower())
+            censor_list.remove(word)
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
@@ -1031,16 +1035,18 @@ class ServerAdmin(BaseCog):
 
     @flag_list.command("add")
     async def flag_list_add(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
-        if word.lower() in censor_list:
+        if word in censor_list:
             await MessageUtils.send_to(ctx, "NO", "already_flagged", word=word)
         else:
-            censor_list.append(word.lower())
+            censor_list.append(word)
             await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
             Configuration.save(ctx.guild.id)
 
     @flag_list.command("remove")
     async def flag_list_remove(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
         if word not in censor_list:
             await MessageUtils.send_to(ctx, "NO", "not_flagged", word=word)
@@ -1071,11 +1077,12 @@ class ServerAdmin(BaseCog):
 
     @word_flag_list.command("add")
     async def word_flag_list_add(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
-        if word.lower() in censor_list:
+        if word in censor_list:
             await MessageUtils.send_to(ctx, "NO", "already_flagged", word=word)
         else:
-            censor_list.append(word.lower())
+            censor_list.append(word)
             await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
@@ -1083,11 +1090,12 @@ class ServerAdmin(BaseCog):
 
     @word_flag_list.command("remove")
     async def word_flag_list_remove(self, ctx, *, word: str):
+        word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
-        if word.lower() not in censor_list:
+        if word not in censor_list:
             await MessageUtils.send_to(ctx, "NO", "not_flagged", word=word)
         else:
-            censor_list.remove(word.lower())
+            censor_list.remove(word)
             await MessageUtils.send_to(ctx, "YES", "flag_removed", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
