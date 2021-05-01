@@ -281,9 +281,9 @@ def assemble_attachment(channel, aid, name):
 def assemble_jumplink(server, channel, message):
     return f"https://canary.discord.com/channels/{server}/{channel}/{message}"
 
-async def get_member(bot, guild, user_id):
+async def get_member(bot, guild, user_id, fetch_if_missing=False):
     member = guild.get_member(user_id)
-    if member is None and guild.id in bot.missing_guilds:
+    if member is None and (fetch_if_missing or guild.id in bot.missing_guilds):
         try:
             member = await guild.fetch_member(user_id)
         except DiscordException:
