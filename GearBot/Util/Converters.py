@@ -444,7 +444,7 @@ class DurationIdentifier(Converter):
         if argument is None:
             argument = "seconds"
         if argument.lower() not in ["week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second",
-                                    "seconds", "w", "d", "h", "m", "s"]:
+                                    "seconds", "w", "d", "h", "m", "s", "min", "hr", "sec"]:
             raise BadArgument("Invalid duration, valid identifiers: week(s), day(s), hour(s), minute(s), second(s)")
         return argument
 
