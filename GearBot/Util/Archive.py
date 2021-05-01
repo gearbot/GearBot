@@ -25,7 +25,7 @@ async def pack_messages(messages):
         name = await Utils.username(message.author, clean=False)
         reply = ""
         if message.reply_to is not None:
-            reply = f" | In reply to https://discord.com/channels/{message.server}/{message.channel}/{message.messageid}"
+            reply = f" | In reply to https://discord.com/channels/{message.server}/{message.channel}/{message.reply_to}"
         out += f"{discord.Object(message.messageid).created_at} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content}{reply} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
