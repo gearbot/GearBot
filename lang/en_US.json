@@ -324,7 +324,7 @@
   "mass_action_too_many_people": "Sorry, but you can only action {max} people at the same time this way.",
   "mass_action_too_many_people_dm": "Sorry, but I can only DM {max} people at the same time regarding their punishment.",
   "mwarn_confirmation": "Successfully warned {count} people.",
-  "mass_action_duplicate": "This person was listed more then once. Assuming this was a copy paste error and ignoring.",
+  "mass_action_duplicate": "This person was listed more than once. Assuming this was a copy paste error and ignoring.",
   "mass_failures_kick": "I was unable to kick the following users ({page_num}/{pages}):",
   "mass_failures_warn": "I was unable to warn the following users ({page_num}/{pages}):",
   "mban_confirm": "Are you sure you want to ban those people?",
