@@ -237,7 +237,7 @@ class ModLog(BaseCog):
         if await self.bot.redis_pool.get(f"forced_exits:{member.guild.id}-{member.id}") is not None:
             return
         await asyncio.sleep(4)
-        if member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
+        if member.guild.me is not None and member.guild.me.guild_permissions.view_audit_log and Features.is_logged(member.guild.id, "MOD_ACTIONS"):
             try:
                 async for entry in member.guild.audit_logs(limit=25):
                     if entry.action not in (AuditLogAction.kick, AuditLogAction.ban):
