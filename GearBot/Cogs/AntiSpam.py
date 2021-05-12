@@ -82,6 +82,7 @@ class AntiSpam(BaseCog):
         self.censor_processed = deque(maxlen=50)
         self.running = True
         bot.loop.create_task(self.censor_detector())
+        bot.loop.create_task(self.voice_spam_detector())
 
     def cog_unload(self):
         self.running = False
@@ -181,12 +182,16 @@ class AntiSpam(BaseCog):
         a.count += v.count
 
         # Punish and Clean
-        GearbotLogging.log_key(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
+        if v.channel is not None:
+            GearbotLogging.log_key(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
                                check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention, punishment_type=t)
+        else:
+            GearbotLogging.log_key(v.guild.id, 'spam_violate_no_channel', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                   check=v.check.upper(), friendly=v.friendly, punishment_type=t)
 
         await self.punishments[t](v)
 
-        if v.bucket.get("CLEAN", True):
+        if v.bucket.get("CLEAN", True) and v.channel is not None:
             to_clean = AntiSpam._process_bucket_entries(v.offending_messages)
             by_channel = {}
             for (chan, msg) in to_clean:
@@ -254,6 +259,11 @@ class AntiSpam(BaseCog):
                                    duration=Utils.to_pretty_time(duration, v.guild.id),
                                    reason=reason, inf_id=i.id, end=i.end)
             InfractionUtils.clear_cache(v.guild.id)
+
+        if v.member.voice:
+            permissions = v.member.voice.channel.permissions_for(v.guild.me)
+            if permissions.move_members:
+                await v.member.move_to(None, reason=f"{reason}")
 
     async def kick_punishment(self, v: Violation):
         reason = self.assemble_reason(v)
@@ -338,6 +348,43 @@ class AntiSpam(BaseCog):
                 pass
             except Exception as e:
                 await TheRealGearBot.handle_exception("censor detector", self.bot, e)
+
+    async def voice_spam_detector(self):
+        while self.running:
+            try:
+                member = None
+                before = None
+                after = None
+                (member, before, after) = await self.bot.wait_for("voice_state_update")
+                # make sure our cog is still running so we don't handle it twice
+                if not self.running:
+                    return
+
+                # make sure anti-spam is enabled
+                cfg = Configuration.get_var(member.guild.id, "ANTI_SPAM")
+                if after.channel is None or member is None or not cfg.get("ENABLED", False) or self.is_exempt(member.guild.id, member):
+                    continue
+                buckets = Configuration.get_var(member.guild.id, "ANTI_SPAM", "BUCKETS", [])
+                count = 0
+                for b in buckets:
+                    t = b["TYPE"]
+                    if t == "voice_joins":
+                        now = int(datetime.datetime.utcnow().timestamp())
+                        bucket = self.get_bucket(member.guild.id, f"voice_channel_join", b, member.id)
+                        if bucket is not None and await bucket.check(member.id, now, message=now, amount=1):
+                            count = await bucket.count(member.id, now, expire=False)
+                            period = await bucket.size(member.id, now, expire=False)
+                            self.bot.loop.create_task(
+                                self.violate(Violation("max_voice_joins", member.guild, f"{Translator.translate('spam_max_voice_join', member.guild)} ({count}/{period}s)",
+                                                       member,
+                                                       None,
+                                                       set(),
+                                                       b, count)))
+
+            except CancelledError:
+                pass
+            except Exception as e:
+                await TheRealGearBot.handle_exception("voice spam join detector", self.bot, e)
 
 
     @staticmethod

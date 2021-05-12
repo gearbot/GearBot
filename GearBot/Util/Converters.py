@@ -481,7 +481,8 @@ anti_spam_types = {
     "max_mentions",
     "max_links",
     "max_emoji",
-    "censored"
+    "censored",
+    "voice_joins"
 }
 
 class SpamType(Converter):

@@ -963,5 +963,7 @@
   "flag_trusted_bypass": "Flag bypass for trusted users is now {status}",
   "flag_trusted_bypass_unchanged": "Flag censor bypass for trusted users was already {status}",
   "trustedflagbypass_help": "Enable to no longer flag trusted users their messages",
-  "trustedcensorbypass_help": "Enable to no longer censor trusted users"
+  "trustedcensorbypass_help": "Enable to no longer censor trusted users",
+  "spam_violate_no_channel": "{user} (`{user_id}`) has violated {check}: {friendly}, configured punishment: {punishment_type}",
+  "spam_max_voice_join": "Too many voice chat joins"
 }

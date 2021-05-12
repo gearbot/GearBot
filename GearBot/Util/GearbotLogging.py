@@ -242,7 +242,8 @@ LOGGING_INFO = {
         }
     },
     "SPAM_VIOLATION": {
-        "spam_violate": "BAD_USER"
+        "spam_violate": "BAD_USER",
+        "spam_violate_no_channel": "BAD_USER"
     },
     "TRAVEL_LOGS": {
         "join_logging": {

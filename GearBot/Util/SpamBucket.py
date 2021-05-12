@@ -23,8 +23,8 @@ class SpamBucket:
         await self.redis.expire(k, self.period)
         return await self.redis.zcount(k)
 
-    async def check(self, key, current_time, message, amount=1, expire=True):
-        amt = await self.incr(key, current_time, amount, message, expire)
+    async def check(self, key, current_time, amount, message, expire=True):
+        amt = await self.incr(key, current_time, amt=amount, message=message, expire=expire)
         return amt >= (self.max_actions + self.extra_actions.count)
 
     async def count(self, key, current_time, expire=True):
