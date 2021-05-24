@@ -43,7 +43,7 @@ async def insert_message(message):
     try:
         async with in_transaction():
             is_reply = message.reference is not None and message.reference.channel_id == message.channel.id
-            logged = await LoggedMessage.create(messageid=message.id, content=message.content,
+            logged = await LoggedMessage.create(messageid=message.id, content=message.content.replace('\x00', ''),
                                         author=message.author.id,
                                         channel=message.channel.id, server=message.guild.id,
                                         type=message_type, pinned=message.pinned,
