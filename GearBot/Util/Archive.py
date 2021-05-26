@@ -15,7 +15,7 @@ async def archive_purge(bot, guild_id, messages):
     archive_counter += 1
     channel = bot.get_channel(list(messages.values())[0].channel)
     out = f"purged at {datetime.datetime.now()} from {channel.name}\n"
-    out += await pack_messages(messages.values())
+    out += await pack_messages(messages.values(), guild_id)
     buffer = io.BytesIO()
     buffer.write(out.encode())
     GearbotLogging.log_key(guild_id, 'purged_log', count=len(messages), channel=channel.mention, file=(buffer, "Purged messages archive.txt"))

@@ -6,7 +6,7 @@ import aiohttp
 import discord
 import math
 
-from pil import Image
+from PIL import Image
 
 from Util import MessageUtils
 
