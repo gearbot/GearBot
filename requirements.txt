@@ -1,6 +1,6 @@
 discord.py==1.7.1
 tortoise-orm==0.16.17
-Pillow==7.2.0
+Pillow==8.2.0
 requests==2.24.0
 aioredis==1.3.1
 sentry-sdk==0.19.2
