@@ -1,11 +1,9 @@
-import importlib
 import os
 
 from discord.ext import commands
 
-from Bot import TheRealGearBot, Reloader
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Emoji, Translator, Utils, Pages, Configuration, DocUtils, Update
+from Util import GearbotLogging, Emoji, Utils, Pages, Configuration, DocUtils, Update
 
 
 class Reload(BaseCog):

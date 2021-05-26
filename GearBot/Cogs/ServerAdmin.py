@@ -1,4 +1,5 @@
 import asyncio
+import io
 
 import discord
 import pytz
@@ -938,8 +939,12 @@ class ServerAdmin(BaseCog):
 
     @staticmethod
     async def _censorlist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
-        return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        if len(censor_list) > 0:
+            pages = Pages.paginate("\n".join(censor_list))
+            return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+        else:
+            return Translator.translate('censor_list_empty', ctx), None, False
 
     @staticmethod
     async def _censorklist_update(ctx, message, page_num, action, data):
@@ -970,6 +975,57 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
+
+    @censor_list.command("get")
+    async def censor_list_get(self, ctx):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        if len(censor_list) > 0:
+            out = '\n'.join(censor_list)
+            buffer = io.BytesIO()
+            buffer.write(out.encode())
+            buffer.seek(0)
+            await MessageUtils.send_to(ctx, 'YES', 'censor_list_file', attachment=discord.File(buffer, filename="token_censorlist.txt"), server=ctx.guild.name)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'word_censor_list_empty')
+
+    @censor_list.command("upload")
+    async def censor_list_upload(self, ctx):
+        await self.receive_list(ctx, "CENSORING", "TOKEN_CENSORLIST", "censor")
+
+    async def receive_list(self, ctx, target_cat, target_key, prefix):
+        if len(ctx.message.attachments) != 1:
+            await MessageUtils.send_to(ctx, 'NO', 'censor_attachment_required')
+            return
+        else:
+            attachment = ctx.message.attachments[0]
+            if not attachment.filename.endswith(".txt"):
+                await MessageUtils.send_to(ctx, 'NO', 'censor_attachment_required')
+                return
+            elif attachment.size > 1_000_000:
+                await MessageUtils.send_to(ctx, 'NO', 'attachment_too_big')
+                return
+
+            b = await attachment.read()
+
+            try:
+                content = b.decode('utf-8')
+            except Exception:
+                await MessageUtils.send_to(ctx, 'NO', 'list_parsing_failed')
+                return
+
+            new_list = content.splitlines()
+            if len(new_list) > 250:
+                await MessageUtils.send_to(ctx, 'NO', 'list_too_long')
+                return
+
+            Configuration.set_var(ctx.guild.id, target_cat, target_key, new_list)
+            if ctx.guild.id in self.bot.get_cog("Censor").regexes:
+                del self.bot.get_cog("Censor").regexes[ctx.guild.id]
+
+            await MessageUtils.send_to(ctx, 'YES', f'{prefix}_list_set')
+
+
+
     @configure.group(aliases=["wordcensorlist", "wcl"], invoke_without_command=True)
     async def word_censor_list(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -977,9 +1033,13 @@ class ServerAdmin(BaseCog):
 
     @staticmethod
     async def _word_censorlist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")))
-        return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-            pages) > 1
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
+        if len(censor_list) > 0:
+            pages = Pages.paginate("\n".join(censor_list))
+            return f"**{Translator.translate(f'word_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+                pages) > 1
+        else:
+            return Translator.translate('word_censor_list_empty', ctx), None, False
 
     @staticmethod
     async def _word_censor_list_update(ctx, message, page_num, action, data):
@@ -1015,6 +1075,24 @@ class ServerAdmin(BaseCog):
             if ctx.guild.id in self.bot.get_cog("Censor").regexes:
                 del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
+    @word_censor_list.command("get")
+    async def word_censor_list_get(self, ctx):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
+        if len(censor_list) > 0:
+            out = '\n'.join(censor_list)
+            buffer = io.BytesIO()
+            buffer.write(out.encode())
+            buffer.seek(0)
+            await MessageUtils.send_to(ctx, 'YES', 'word_censor_list_file',
+                                       attachment=discord.File(buffer, filename="word_censorlist.txt"),
+                                       server=ctx.guild.name)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'word_censor_list_empty')
+
+    @word_censor_list.command("upload")
+    async def word_censor_list_upload(self, ctx):
+        await self.receive_list(ctx, "CENSORING", "WORD_CENSORLIST", "word_censor")
+
     @configure.group(aliases=["flaglist", "fl"], invoke_without_command=True)
     async def flag_list(self, ctx):
         """flag_list_help"""
@@ -1028,10 +1106,14 @@ class ServerAdmin(BaseCog):
 
     @staticmethod
     async def _flaglist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "FLAGGING", "TOKEN_LIST")))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**{Translator.translate(f'flagged_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        flagged_list = Configuration.get_var(message.channel.guild.id, "FLAGGING", "TOKEN_LIST")
+        if len(flagged_list) > 0:
+            pages = Pages.paginate("\n".join(flagged_list))
+            page, page_num = Pages.basic_pages(pages, page_num, action)
+            data["page"] = page_num
+            return f"**{Translator.translate(f'flagged_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'flag_list_empty')
 
     @flag_list.command("add")
     async def flag_list_add(self, ctx, *, word: str):
@@ -1043,6 +1125,9 @@ class ServerAdmin(BaseCog):
             censor_list.append(word)
             await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
             Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
+                del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
+
 
     @flag_list.command("remove")
     async def flag_list_remove(self, ctx, *, word: str):
@@ -1054,6 +1139,26 @@ class ServerAdmin(BaseCog):
             censor_list.remove(word)
             await MessageUtils.send_to(ctx, "YES", "flag_removed", entry=word)
             Configuration.save(ctx.guild.id)
+            if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
+                del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
+
+    @flag_list.command("upload")
+    async def flag_list_upload(self, ctx):
+        await self.receive_list(ctx, "FLAGGING", "TOKEN_LIST", "flag")
+
+    @flag_list.command("get")
+    async def flag_list_get(self, ctx):
+        flag_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
+        if len(flag_list) > 0:
+            out = '\n'.join(flag_list)
+            buffer = io.BytesIO()
+            buffer.write(out.encode())
+            buffer.seek(0)
+            await MessageUtils.send_to(ctx, 'YES', 'flag_list_file',
+                                       attachment=discord.File(buffer, filename="flag_list.txt"),
+                                       server=ctx.guild.name)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'flag_list_empty')
 
     @configure.group(aliases=["wordflaglist", "wfl"], invoke_without_command=True)
     async def word_flag_list(self, ctx):
@@ -1069,21 +1174,24 @@ class ServerAdmin(BaseCog):
 
     @staticmethod
     async def _word_flag_list_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate(
-            "\n".join(Configuration.get_var(message.channel.guild.id, "FLAGGING", "WORD_LIST")))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**{Translator.translate(f'flagged_word_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        flag_list = Configuration.get_var(message.channel.guild.id, "FLAGGING", "WORD_LIST")
+        if len(flag_list) > 0:
+            pages = Pages.paginate("\n".join(flag_list))
+            page, page_num = Pages.basic_pages(pages, page_num, action)
+            data["page"] = page_num
+            return f"**{Translator.translate(f'flagged_word_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
 
     @word_flag_list.command("add")
     async def word_flag_list_add(self, ctx, *, word: str):
         word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
         if word in censor_list:
-            await MessageUtils.send_to(ctx, "NO", "already_flagged", word=word)
+            await MessageUtils.send_to(ctx, "NO", "word_already_flagged", word=word)
         else:
             censor_list.append(word)
-            await MessageUtils.send_to(ctx, "YES", "flag_added", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "word_flag_added", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
                 del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
@@ -1093,13 +1201,31 @@ class ServerAdmin(BaseCog):
         word = word.lower()
         censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
         if word not in censor_list:
-            await MessageUtils.send_to(ctx, "NO", "not_flagged", word=word)
+            await MessageUtils.send_to(ctx, "NO", "word_not_flagged", word=word)
         else:
             censor_list.remove(word)
-            await MessageUtils.send_to(ctx, "YES", "flag_removed", entry=word)
+            await MessageUtils.send_to(ctx, "YES", "word_flag_removed", entry=word)
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
                 del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
+
+    @word_flag_list.command("upload")
+    async def word_flag_list_upload(self, ctx):
+        await self.receive_list(ctx, "FLAGGING", "WORD_LIST", "word_flag")
+
+    @word_flag_list.command("get")
+    async def word_flag_list_get(self, ctx):
+        flag_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
+        if len(flag_list) > 0:
+            out = '\n'.join(flag_list)
+            buffer = io.BytesIO()
+            buffer.write(out.encode())
+            buffer.seek(0)
+            await MessageUtils.send_to(ctx, 'YES', 'word_flag_list_file',
+                                       attachment=discord.File(buffer, filename="flag_list.txt"),
+                                       server=ctx.guild.name)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
 
 
     @configure.group( invoke_without_command=True)
