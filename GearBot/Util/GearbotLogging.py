@@ -394,7 +394,7 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
             targets.append(cid)
 
     # no targets? no logging
-    if len(targets) is 0:
+    if len(targets) == 0:
         return
     log_to(guild_id, targets, Utils.trim_message(message, 2000) if message is not None else None, embed, file, None)
 
@@ -411,7 +411,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, t
             targets.append(cid)
 
     # no targets? don't bother with assembly
-    if len(targets) is 0:
+    if len(targets) == 0:
         return
 
     message = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')

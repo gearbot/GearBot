@@ -104,13 +104,13 @@ class Infractions(BaseCog):
     async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
                      query: str = ""):
         """inf_search_help"""
-        if fields is None or len(fields) is 0:
+        if fields is None or len(fields) == 0:
             fields = ["[user]", "[mod]", "[reason]"]
         if isinstance(query, str):
             parts = query.split(" ")
             try:
                 amount = int(parts[-1])
-                if len(parts) is 2:
+                if len(parts) == 2:
                     try:
                         query = int(parts[0])
                     except ValueError:

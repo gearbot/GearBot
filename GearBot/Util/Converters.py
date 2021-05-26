@@ -228,7 +228,7 @@ class Message(Converter):
         channel_id = None
         if "-" in argument:
             parts = argument.split("-")
-            if len(parts) is 2:
+            if len(parts) == 2:
                 try:
                     channel_id = int(parts[0].strip(" "))
                     message_id = int(parts[1].strip(" "))
@@ -236,7 +236,7 @@ class Message(Converter):
                     pass
             else:
                 parts = argument.split(" ")
-                if len(parts) is 2:
+                if len(parts) == 2:
                     try:
                         channel_id = int(parts[0].strip(" "))
                         message_id = int(parts[1].strip(" "))

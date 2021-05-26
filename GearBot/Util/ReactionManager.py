@@ -28,7 +28,7 @@ async def paged(bot, message, user_id, reaction, **kwargs):
 async def self_roles(bot, message, user_id, reaction, **kwargs):
     user = await Utils.get_member(bot, message.channel.guild, user_id)
     if user is None:
-        if user_id is not 0:
+        if user_id != 0:
             await remove_reaction(message, reaction, Object(user_id))
             return kwargs
     bot.loop.create_task(remove_reaction(message, reaction, user))

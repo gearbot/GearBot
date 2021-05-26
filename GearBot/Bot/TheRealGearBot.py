@@ -275,7 +275,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await send(ctx, error)
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name is not "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
+        if ctx.command.qualified_name != "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
             await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await send(ctx, error)

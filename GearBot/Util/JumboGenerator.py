@@ -31,7 +31,7 @@ class EmojiHandler:
     async def fetch(self, eid, session: aiohttp.ClientSession):
         if eid not in EMOJI_LOCKS:
             async with session.get(self.link.format(eid=eid, extension=self.extension)) as r:
-                if r.status is not 200:
+                if r.status != 200:
                     return False
                 with open(f"emoji/{eid}.{self.extension}", "wb") as file:
                     file.write(await r.read())
@@ -105,7 +105,7 @@ class EmojiIterator:
                         self.height = (count * 2) - 1
                         self.row_size = 1
                         break
-                if left is 0:
+                if left == 0:
                     self.mode = "TRIANGLE"
                     self.width = self.height = count
                     self.row_size = 1
@@ -125,7 +125,7 @@ class EmojiIterator:
                 self.width = max(a, b)
                 self.height = min(a, b)
 
-            if emoji_count > 8 and self.height is 1:
+            if emoji_count > 8 and self.height == 1:
                 self.mode = "CROSS"
                 self.height = self.width = math.ceil(emoji_count / 2)
 

@@ -56,7 +56,7 @@ class Emoji(BaseCog):
         embed = Embed(color=0x2db1f3)
         embed.set_author(name=Translator.translate('emoji_server', guild, server=guild.name, page=page + 1,
                                                    pages=len(guild.emojis) + 1), url=guild.icon_url)
-        if page is 0:
+        if page == 0:
             for chunk in Utils.chunks(se, 18):
                 embed.add_field(name="\u200b", value=" ".join(str(e) for e in chunk))
             animated = set()
@@ -97,7 +97,7 @@ class Emoji(BaseCog):
     @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
     async def emoji_add(self, ctx, name: EmojiName, roles: Greedy[Role] = None):
         """emoji_upload_help"""
-        if len(ctx.message.attachments) is 0:
+        if len(ctx.message.attachments) == 0:
             await MessageUtils.send_to(ctx, "NO", "emoji_upload_no_attachments")
         use_counter = len(ctx.message.attachments) > 1
         counter = 1

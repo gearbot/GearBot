@@ -152,18 +152,18 @@ def log_validator(guild, key, value, preview, *_):
     perms = channel.permissions_for(guild.me)
     required = ["send_messages", "embed_links", "attach_files"]
     missing = [r for r in required if not getattr(perms, r)]
-    if len(missing) is not 0:
+    if len(missing) != 0:
         return "Missing the following permission(s): {}".format(", ".join(missing))
 
     # validate subsections
     required = ["CATEGORIES", "DISABLED_KEYS"]
     missing = [r for r in required if r not in value]
-    if len(missing) is not 0:
+    if len(missing) != 0:
         return "Missing the required attribute(s): {}".format(", ".join(missing))
 
     # make sure we are not getting extra junk
     excess = [k for k in value if k not in required]
-    if len(excess) is not 0:
+    if len(excess) != 0:
         return "Unknown attribute(s): {}".format(", ".join(excess))
 
     # validate categories
@@ -172,11 +172,11 @@ def log_validator(guild, key, value, preview, *_):
     if not isinstance(cats, list):
         return "CATEGORIES must be a list"
 
-    if len(cats) is 0:
+    if len(cats) == 0:
         return "CATEGORIES can not be empty"
 
     unknown_cats = [cat for cat in cats if cat not in GearbotLogging.LOGGING_INFO]
-    if len(unknown_cats) is not 0:
+    if len(unknown_cats) != 0:
         return "Invalid value(s) found in CATEGORIES: {}".format(", ".join(unknown_cats))
 
     # find unknown disabled keys
@@ -185,7 +185,7 @@ def log_validator(guild, key, value, preview, *_):
             [item for sublist in [subkey for subkey in {k: list(v.keys()) for k, v in GearbotLogging.LOGGING_INFO.items()}.values()]
         for item in sublist]
     ]
-    if len(unknown_keys) is not 0:
+    if len(unknown_keys) != 0:
         return "Unknown logging key(s) in DISABLED_KEYS: {}".format(", ".join(unknown_keys))
 
     # check if they didn't disable all subkeys
@@ -205,7 +205,7 @@ def log_validator(guild, key, value, preview, *_):
         if k in cats}.values()] 
         for item in sublist]
     ]
-    if len(keys) is not 0:
+    if len(keys) != 0:
         return "The following key(s) are disabled but the category they belong to isn't activated: ".format(
             ", ".join(keys))
 
@@ -216,7 +216,7 @@ VALIDATORS = {
     "GENERAL": {
         "PREFIX": multicheck(
             check_type(str),
-            lambda g, v, *_: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) is 0 else True),
+            lambda g, v, *_: "Prefix too long" if len(v) > 10 else "Prefix can't be blank" if len(v) == 0 else True),
 
         "LANG": lambda g, v, *_: v in Translator.LANGS or "Unknown language",
         "PERM_DENIED_MESSAGE": check_type(bool),
@@ -493,7 +493,7 @@ def update_config_section(guild, section, new_values, user, replace=False):
             if k not in new_values:
                 errors[k] = "Missing field"
 
-    if len(modified_values) is 0:
+    if len(modified_values) == 0:
         errors[section] = "Nothing to save!"
     if len(errors) > 0:
         raise ValidationException(errors)

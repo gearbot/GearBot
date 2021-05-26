@@ -506,8 +506,8 @@ class ModLog(BaseCog):
                         before_allowed, before_denied = override.pair()
                         has_allow = hasattr(e.before, "allow")
                         has_deny = hasattr(e.before, "deny")
-                        if not ((has_allow and before_allowed.value == e.before.allow.value) or ( (not has_allow) and before_allowed.value is 0)
-                            and (has_deny and before_denied.value == e.before.deny.value) or ( (not has_deny) and before_denied.value is 0)):
+                        if not ((has_allow and before_allowed.value == e.before.allow.value) or ( (not has_allow) and before_allowed.value == 0)
+                            and (has_deny and before_denied.value == e.before.deny.value) or ( (not has_deny) and before_denied.value == 0)):
                             return False
                         return True
 
@@ -529,9 +529,9 @@ class ModLog(BaseCog):
                     has_allow = hasattr(e.after, "allow")
                     has_deny = hasattr(e.after, "deny")
                     if not ((has_allow and after_allowed.value == e.after.allow.value) or (
-                            (not has_allow) and after_allowed.value is 0)
+                            (not has_allow) and after_allowed.value == 0)
                             and (has_deny and after_denied.value == e.after.deny.value) or (
-                                    (not has_deny) and after_denied.value is 0)):
+                                    (not has_deny) and after_denied.value == 0)):
                         return False
                     return True
 

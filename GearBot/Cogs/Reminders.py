@@ -82,7 +82,7 @@ class Reminders(BaseCog):
 
     async def delivery_service(self):
         # only let cluster 0 do this one
-        if self.bot.cluster is not 0:
+        if self.bot.cluster != 0:
             return
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")
         while self.running:

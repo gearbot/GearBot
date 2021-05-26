@@ -23,9 +23,9 @@ async def get_message_data(bot, message_id):
     message = None
     if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
         parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
-        if len(parts) is 7:
+        if len(parts) == 7:
             reply = int(parts["reply"])
-            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1', reply_to=reply if reply is not 0 else None)
+            message = Message(message_id, int(parts["author"]), parts["content"], int(parts["channel"]), int(parts["server"]), [attachment(a.split("/")[0], a.split("/")[1]) for a in parts["attachments"].split("|")] if len(parts["attachments"]) > 0 else [], type=int(parts["type"]) if "type" in parts else None, pinned=parts["pinned"] == '1', reply_to=reply if reply != 0 else None)
     if message is None:
         message = await LoggedMessage.get_or_none(messageid = message_id).prefetch_related("attachments")
     return message

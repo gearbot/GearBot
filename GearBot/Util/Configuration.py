@@ -63,7 +63,7 @@ def initial_migration(config):
 
     for key, settings in keys.items():
         cid = config[key]
-        if cid is not 0:
+        if cid != 0:
             found = False
             for channel, info in config["LOG_CHANNELS"].items():
                 if cid == channel:
@@ -227,7 +227,7 @@ def v13(config):
 
 
 def v14(config):
-    if len(config["ANTI_SPAM"]) is 0:
+    if len(config["ANTI_SPAM"]) == 0:
         config["ANTI_SPAM"] = {
             "ENABLED": False,
             "BUCKETS": [],
@@ -420,7 +420,7 @@ def load_config(guild):
         if "VERSION" not in config:
             config["VERSION"] = 0
         SERVER_CONFIGS[guild] = update_config(guild, config)
-    if len(config.keys()) is 0:
+    if len(config.keys()) == 0:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
         SERVER_CONFIGS[guild] = Utils.fetch_from_disk("template")
         save(guild)

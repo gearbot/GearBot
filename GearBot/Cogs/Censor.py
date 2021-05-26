@@ -75,7 +75,7 @@ class Censor(BaseCog):
         content = content.replace('\\', '')
         decoded_content = parse.unquote(content)
 
-        if len(guilds) is not 0:
+        if len(guilds) != 0:
             codes = INVITE_MATCHER.findall(decoded_content)
             for code in codes:
                 try:

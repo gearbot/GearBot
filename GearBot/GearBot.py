@@ -52,7 +52,7 @@ if __name__ == '__main__':
         token = os.environ['gearbotlogin']
     elif clargs.token:
         token = clargs.token
-    elif not Configuration.get_master_var("LOGIN_TOKEN", "0") is "0":
+    elif Configuration.get_master_var("LOGIN_TOKEN", "0") != "0":
         token = Configuration.get_master_var("LOGIN_TOKEN")
     else:
         token = input("Please enter your Discord token: ")

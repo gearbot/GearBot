@@ -162,7 +162,7 @@ async def inf_update(message, query, fields, amount, page_num):
     key = get_key(guild_id, query, fields, amount)
     # do we have pages?
     count = await bot.redis_pool.llen(key)
-    if count is 0:
+    if count == 0:
         count = await fetch_infraction_pages(guild_id, query, amount, fields, page_num)
         if page_num >= count:
             page_num = 0

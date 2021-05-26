@@ -108,7 +108,7 @@ def paginate_fields(input):
         page_fields = dict()
         for name, parts in page.items():
             base_name = name
-            if len(parts) is 1:
+            if len(parts) == 1:
                 if page_count + len(name) + len(parts[0]) > 4000:
                     real_pages.append(page_fields)
                     page_fields = dict()

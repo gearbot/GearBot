@@ -637,7 +637,7 @@ class ServerAdmin(BaseCog):
             await ctx.send(message, embed=embed)
             empty = []
             for cid, info in channels.items():
-                if len(info) is 0:
+                if len(info) == 0:
                     empty.append(cid)
             for e in empty:
                 del channels[e]
@@ -1222,7 +1222,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'word_flag_list_file',
-                                       attachment=discord.File(buffer, filename="flag_list.txt"),
+                                       attachment=discord.File(buffer, filename="word_flag_list.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
