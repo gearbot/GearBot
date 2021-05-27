@@ -1,11 +1,11 @@
 # force it to use v6 instead of v7
 import asyncio
+import os
 
 import discord.http
+if 'proxy_url' in os.environ:
+    discord.http.Route.BASE = os.environ['proxy_url']
 
-# discord.http.Route.BASE = 'http://http-proxy/api/v6'
-
-import os
 from argparse import ArgumentParser
 
 from Bot import TheRealGearBot
