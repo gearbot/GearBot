@@ -362,7 +362,7 @@ class AntiSpam(BaseCog):
 
                 # make sure anti-spam is enabled
                 cfg = Configuration.get_var(member.guild.id, "ANTI_SPAM")
-                if after.channel is None or member is None or not cfg.get("ENABLED", False) or self.is_exempt(member.guild.id, member):
+                if after.channel is None or before.channel == after.channel or member is None or not cfg.get("ENABLED", False) or self.is_exempt(member.guild.id, member):
                     continue
                 buckets = Configuration.get_var(member.guild.id, "ANTI_SPAM", "BUCKETS", [])
                 count = 0
