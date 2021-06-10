@@ -66,6 +66,16 @@ class Infractions(BaseCog):
 
     @commands.guild_only()
     @commands.command()
+    async def note(self, ctx, member: DiscordUser, reason: Reason):
+        i = await InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Note", reason)
+        name = Utils.clean_user(member)
+        await MessageUtils.send_to(ctx, 'YES', 'note_added', user=name, inf=i.id)
+        aname = Utils.clean_user(ctx.author)
+        GearbotLogging.log_key(ctx.guild.id, 'note_added_modlog', user=name, moderator=aname, reason=reason,
+                               user_id=member.id, moderator_id=ctx.author.id, inf=i.id)
+
+    @commands.guild_only()
+    @commands.command()
     @commands.bot_has_permissions(add_reactions=True, external_emojis=True)
     async def mwarn(self, ctx, targets: Greedy[PotentialID], *, reason: Reason):
         """mwarn_help"""

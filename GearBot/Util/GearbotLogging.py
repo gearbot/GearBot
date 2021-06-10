@@ -177,7 +177,8 @@ LOGGING_INFO = {
             "warning_added_modlog": "WARNING",
             "warn_could_not_dm": "WARNING"
         },
-        "inf_update_log": "WARNING"
+        "inf_update_log": "WARNING",
+        "note_added_modlog": "WARNING"
     },
     "NAME_CHANGES": {
         "nickname": {

@@ -1327,6 +1327,24 @@ class ServerAdmin(BaseCog):
         mode = "allow" if mode else "block"
         await MessageUtils.send_to(ctx, "YES", f"domain_list_mode_{mode}")
 
+    @domain_list.command("get")
+    async def censor_list_get(self, ctx):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
+        if len(censor_list) > 0:
+            out = '\n'.join(censor_list)
+            buffer = io.BytesIO()
+            buffer.write(out.encode())
+            buffer.seek(0)
+            await MessageUtils.send_to(ctx, 'YES', 'domain_censor_list_file',
+                                       attachment=discord.File(buffer, filename="domain_list.txt"),
+                                       server=ctx.guild.name)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'domain_list_empty')
+
+    @domain_list.command("upload")
+    async def censor_list_upload(self, ctx):
+        await self.receive_list(ctx, "CENSORING", "DOMAIN_LIST_ALLOWED", "domain")
+
     @configure.command()
     @commands.guild_only()
     async def timezone(self, ctx, new_zone=None):

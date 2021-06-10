@@ -349,7 +349,9 @@
   "word_entry_removed": "Successfully removed `{entry}` from the word censor list.",
   "censor_list": "Token censor list for {server} ({page_num}/{pages})",
   "censor_list_file": "Token censor list for {server}",
+  "domain_censor_list_file": "Domain list for {server}",
   "censor_list_empty": "The token censor list is empty",
+  "domain_list_empty": "The domain list is empty",
   "flag_list_file": "Flagged tokens list for {server}",
   "flag_list_empty": "The flagged tokens list is empty",
   "word_flag_list_file": "Flagged word list for {server}",
@@ -366,6 +368,7 @@
   "word_censor_list_set": "New word censor list applied!",
   "flag_list_set": "New flag list applied!",
   "word_flag_list_set": "New word flag list applied!",
+  "domain_list_set": "New domain list applied!",
   "inf_delete_confirmation": "Are you sure you would like to delete infraction #{id}?\n\nUser: {user} (`{user_id}`)\nReason: {reason}\n\n*This can not be undone.*",
   "inf_delete_deleted": "Infraction #{id} has been deleted.",
   "inf_delete_log": "{user} (`{user_id}`) deleted infraction #{id} to {target} (`{target_id}`) given by {mod} (`{mod_id}`) with reason:`{reason}`",
@@ -991,5 +994,7 @@
   "trustedflagbypass_help": "Enable to no longer flag trusted users their messages",
   "trustedcensorbypass_help": "Enable to no longer censor trusted users",
   "spam_violate_no_channel": "{user} (`{user_id}`) has violated {check}: {friendly}, configured punishment: {punishment_type}",
-  "spam_max_voice_join": "Too many voice chat joins"
+  "spam_max_voice_join": "Too many voice chat joins",
+  "note_added": "Note for {user} added (`#{inf}`)",
+  "note_added_modlog": "A note has been added to {user} (`{user_id}`) by {moderator} (`{moderator_id}`) for `{reason}` (`#{inf}`)"
 }

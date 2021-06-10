@@ -954,7 +954,7 @@ class Moderation(BaseCog):
                         inline=True)
         infs = ""
         if Configuration.get_master_var("global_inf_counter", True):
-            infractions = await Infraction.filter(user_id=user.id)
+            infractions = await Infraction.filter(user_id=user.id, type__not="Note")
             il = len(infractions)
             seen = []
             ild = 0
@@ -965,7 +965,7 @@ class Moderation(BaseCog):
             emoji = "SINISTER" if il >= 2 else "INNOCENT"
             infs += MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild) + "\n"
 
-        infractions = await Infraction.filter(user_id=user.id, guild_id=ctx.guild.id)
+        infractions = await Infraction.filter(user_id=user.id, guild_id=ctx.guild.id, type__not="Note")
         emoji = "SINISTER" if len(infractions) >= 2 else "INNOCENT"
         embed.add_field(name=Translator.translate("infractions", ctx),
                         value=infs + MessageUtils.assemble(ctx, emoji, "guild_infractions", count=len(infractions)))
