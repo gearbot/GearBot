@@ -974,10 +974,9 @@ class Moderation(BaseCog):
 
     @commands.command(aliases=["server"])
     @commands.bot_has_permissions(embed_links=True)
-    async def serverinfo(self, ctx, guild: Guild = None):
+    async def serverinfo(self, ctx, guild):
         """serverinfo_help"""
-        if guild is None:
-            guild = ctx.guild
+        guild = ctx.guild
         embed = server_info.server_info_embed(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
                          icon_url=ctx.author.avatar_url)
