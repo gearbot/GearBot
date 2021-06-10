@@ -627,6 +627,8 @@
   "unbans": "{count, plural, one {1 unban} other {# unbans}}",
   "kicks": "{count, plural, one {1 kick} other {# kicks}}",
   "tempbans": "{count, plural, one {1 tempban} other {# tempbans}}",
+  "note": "Note",
+  "notes": "{count, plural, one {1 note} other {# notes}}",
   "timestamp": "Timestamp",
   "type": "Type",
   "softbans": "{count, plural, one {1 softban} other {# softbans}}",
