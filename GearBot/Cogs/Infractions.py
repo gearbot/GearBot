@@ -66,7 +66,7 @@ class Infractions(BaseCog):
 
     @commands.guild_only()
     @commands.command()
-    async def note(self, ctx, member: DiscordUser, reason: Reason):
+    async def note(self, ctx, member: DiscordUser, *, reason: Reason):
         i = await InfractionUtils.add_infraction(ctx.guild.id, member.id, ctx.author.id, "Note", reason)
         name = Utils.clean_user(member)
         await MessageUtils.send_to(ctx, 'YES', 'note_added', user=name, inf=i.id)
