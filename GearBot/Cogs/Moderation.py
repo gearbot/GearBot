@@ -1381,7 +1381,7 @@ class Moderation(BaseCog):
 
         if len(word_list) > 0:
             if guild_id not in self.regexes:
-                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_list) + r")\b", re.IGNORECASE)
+                regex = re.compile(r"(?:\b| )(" + '|'.join(re.escape(word) for word in word_list) + r")(?:\b| )", re.IGNORECASE)
                 self.regexes[guild_id] = regex
             else:
                 regex = self.regexes[guild_id]

@@ -104,7 +104,7 @@ class Censor(BaseCog):
 
         if len(word_censorlist) > 0:
             if channel.guild.id not in self.regexes:
-                regex = re.compile(r"\b(" + '|'.join(re.escape(word) for word in word_censorlist) + r")\b", re.IGNORECASE)
+                regex = re.compile(r"(:?\b| )(" + '|'.join(re.escape(word) for word in word_censorlist) + r")(:?\b| )", re.IGNORECASE| re.MULTILINE)
                 self.regexes[channel.guild.id] = regex
             else:
                 regex = self.regexes[channel.guild.id]
