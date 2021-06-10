@@ -1,8 +1,10 @@
 import asyncio
+import concurrent
 import datetime
 import re
 import time
 import typing
+from asyncio import CancelledError
 from typing import Optional
 
 import discord
@@ -1223,21 +1225,27 @@ class Moderation(BaseCog):
     async def timed_actions(self):
         GearbotLogging.info("Started timed moderation action background task")
         while self.running:
-            # actions to handle and the function handling it
-            types = {
-                "Mute": self._lift_mute,
-                "Tempban": self._lift_tempban
-            }
-            now = time.time()
-            limit = time.time() + 30
-            for name, action in types.items():
+            working_on = None
+            try:
+                # actions to handle and the function handling it
+                types = {
+                    "Mute": self._lift_mute,
+                    "Tempban": self._lift_tempban
+                }
+                now = time.time()
+                limit = time.time() + 30
+                for name, action in types.items():
 
-                for infraction in await Infraction.filter(type = name, active = True, end__lt=limit):
-                    if infraction.id not in self.handling and ((infraction.guild_id >> 22) % self.bot.total_shards) in self.bot.shard_ids:
-                        self.handling.add(infraction.id)
-                        self.bot.loop.create_task(
-                            self.run_after(infraction.end - now, action(infraction)))
-            await asyncio.sleep(10)
+                    for infraction in await Infraction.filter(type = name, active = True, end__lt=limit):
+                        if infraction.id not in self.handling and ((infraction.guild_id >> 22) % self.bot.total_shards) in self.bot.shard_ids:
+                            self.handling.add(infraction.id)
+                            self.bot.loop.create_task(
+                                self.run_after(infraction.end - now, action(infraction)))
+                await asyncio.sleep(10)
+            except (CancelledError, concurrent.futures._base.CancelledError):
+                pass
+            except Exception as e:
+                await TheRealGearBot.handle_exception("moderation action cleanup task", self.bot, e)
         GearbotLogging.info("Timed moderation actions background task terminated")
 
     async def run_after(self, delay, action):
