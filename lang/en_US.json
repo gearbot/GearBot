@@ -525,6 +525,7 @@
   "inf_forced_ban": "{mod} force banned {user}",
   "inf_tempban": "{mod} tempbanned {user} for {duration}",
   "inf_unban": "{mod} unbanned {user}",
+  "inf_note": "{mod} added a note to {user}",
   "unknown_duration": "an unknown amount of time",
   "seconds": "{amount, plural, one {1 second} other {# seconds}} ",
   "hours_solo": "{amount, plural, one {1 hour} other {# hours}}",

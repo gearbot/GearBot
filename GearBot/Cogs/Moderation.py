@@ -976,7 +976,7 @@ class Moderation(BaseCog):
 
     @commands.command(aliases=["server"])
     @commands.bot_has_permissions(embed_links=True)
-    async def serverinfo(self, ctx, guild):
+    async def serverinfo(self, ctx):
         """serverinfo_help"""
         guild = ctx.guild
         embed = server_info.server_info_embed(guild, ctx.guild)
