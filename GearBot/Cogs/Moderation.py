@@ -1385,9 +1385,9 @@ class Moderation(BaseCog):
                 self.regexes[guild_id] = regex
             else:
                 regex = self.regexes[guild_id]
-            match = regex.findall(content)
-            if len(match):
-                await self.flag_message(content, match[0], guild_id, channel_id, message_id, author, "word")
+            match = regex.match(content)
+            if match is not None:
+                await self.flag_message(content, match.group(0), guild_id, channel_id, message_id, author, "word")
                 return
 
     async def flag_message(self, content, flagged, guild_id, channel_id, message_id, author=None, type=""):

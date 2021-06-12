@@ -108,9 +108,9 @@ class Censor(BaseCog):
                 self.regexes[channel.guild.id] = regex
             else:
                 regex = self.regexes[channel.guild.id]
-            match = regex.findall(content)
-            if len(match):
-                await self.censor_message(message_id, content, channel, member, match[0], "_word", edit=edit, reply=reply, attachments=attachments)
+            match = regex.match(content)
+            if match is not None:
+                await self.censor_message(message_id, content, channel, member, match.group(0), "_word", edit=edit, reply=reply, attachments=attachments)
                 return
 
         if len(domain_list) > 0:
