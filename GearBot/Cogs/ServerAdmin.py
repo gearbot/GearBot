@@ -1342,8 +1342,8 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, 'WARNING', 'domain_list_empty')
 
     @domain_list.command("upload")
-    async def censor_list_upload(self, ctx):
-        await self.receive_list(ctx, "CENSORING", "DOMAIN_LIST_ALLOWED", "domain")
+    async def domain_list_upload(self, ctx):
+        await self.receive_list(ctx, "CENSORING", "DOMAIN_LIST", "domain")
 
     @configure.command()
     @commands.guild_only()
