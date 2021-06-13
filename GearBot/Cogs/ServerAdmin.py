@@ -1328,8 +1328,8 @@ class ServerAdmin(BaseCog):
         await MessageUtils.send_to(ctx, "YES", f"domain_list_mode_{mode}")
 
     @domain_list.command("get")
-    async def censor_list_get(self, ctx):
-        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
+    async def domain_list_get(self, ctx):
+        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST")
         if len(censor_list) > 0:
             out = '\n'.join(censor_list)
             buffer = io.BytesIO()
