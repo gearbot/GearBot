@@ -26,7 +26,7 @@ class Censor(BaseCog):
     async def on_message(self, message: discord.Message):
         if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
-        member = message.guild.get_member(message.author.id) #d.py is weird
+        member = await Utils.get_member(self.bot, message.guild, message.author.id, fetch_if_missing=True)
         if member is None:
             return
         if message.reference is not None and message.reference.channel_id == message.channel.id:
@@ -108,9 +108,9 @@ class Censor(BaseCog):
                 self.regexes[channel.guild.id] = regex
             else:
                 regex = self.regexes[channel.guild.id]
-            match = regex.match(content)
-            if match is not None:
-                await self.censor_message(message_id, content, channel, member, match.group(0), "_word", edit=edit, reply=reply, attachments=attachments)
+            match = regex.findall(content)
+            if len(match) > 0:
+                await self.censor_message(message_id, content, channel, member, match[0][1], "_word", edit=edit, reply=reply, attachments=attachments)
                 return
 
         if len(domain_list) > 0:

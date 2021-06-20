@@ -1263,7 +1263,7 @@ class Moderation(BaseCog):
             return await self.end_infraction(infraction)
 
         role = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
-        member = await Utils.get_member(self.bot, guild, infraction.user_id)
+        member = await Utils.get_member(self.bot, guild, infraction.user_id, fetch_if_missing=True)
         role = guild.get_role(role)
         if role is None or member is None:
             return await self.end_infraction(infraction)  # role got removed or member left
@@ -1385,9 +1385,9 @@ class Moderation(BaseCog):
                 self.regexes[guild_id] = regex
             else:
                 regex = self.regexes[guild_id]
-            match = regex.match(content)
-            if match is not None:
-                await self.flag_message(content, match.group(0), guild_id, channel_id, message_id, author, "word")
+            match = regex.findall(content)
+            if len(match) > 0:
+                await self.flag_message(content, match[0][1], guild_id, channel_id, message_id, author, "word")
                 return
 
     async def flag_message(self, content, flagged, guild_id, channel_id, message_id, author=None, type=""):
