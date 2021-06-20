@@ -1377,6 +1377,8 @@ class Moderation(BaseCog):
         if Configuration.get_var("FLAGGING", "IGNORE_IDS"):
             content = re.sub(r'(<(?:@|#|@&|@!)[0-9]{15,20}>)', '', content)
             content = re.sub(r'<a?:[^: \n]+:([0-9]{15,20})>', '', content)
+            content = re.sub(r"(https://(?:canary|ptb)?\.?discord(?:app)?.com/channels/\d{15,20}/\d{15,20}/\d{15,20})",
+                             '', content)
 
         for bad in (t.lower() for t in token_list):
             if bad in content:
