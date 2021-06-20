@@ -78,7 +78,7 @@ class ModLog(BaseCog):
         if "@here" in message.content and message.mention_everyone is False:
             failed_mass_ping += 1
         roles = ROLE_ID_MATCHER.findall(message.content)
-        mentioned_roles = [role.id for role in message.role_mentions]
+        mentioned_roles = [str(role.id) for role in message.role_mentions]
         for role in roles:
             if role not in mentioned_roles:
                 failed_mass_ping += 1
