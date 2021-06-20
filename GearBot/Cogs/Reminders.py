@@ -2,13 +2,14 @@ import asyncio
 import time
 from datetime import datetime
 
-from discord import Embed, User, NotFound, Forbidden, DMChannel
+from discord import Embed, User, NotFound, Forbidden, DMChannel, MessageReference
 from discord.ext import commands
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
 from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_info
 from Util.Converters import Duration, ReminderText
+from Util.Utils import assemble_jumplink
 from database.DatabaseConnector import Reminder
 
 
@@ -29,7 +30,7 @@ class Reminders(BaseCog):
         """remind_help"""
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
-            
+
     @commands.bot_has_permissions(add_reactions=True)
     @remind.command("me", aliases=["add", "m", "a"])
     async def remind_me(self, ctx, duration: Duration, *, reminder: ReminderText):
@@ -94,7 +95,7 @@ class Reminders(BaseCog):
                     self.handling.add(r.id)
                     self.bot.loop.create_task(
                         self.run_after(r.time - now, self.deliver(r)))
-            await asyncio.sleep(10)
+            await asyncio.sleep(25)
         GearbotLogging.info("📪 Reminder delivery background task terminated 📪")
 
     async def run_after(self, delay, action):
@@ -121,28 +122,27 @@ class Reminders(BaseCog):
         try:
             if location is None:
                 return False
-            if package.guild_id is None:
-                jumplink_available = "Unavailable"
-            else:
-                jumplink_available = MessageUtils.construct_jumplink(package.guild_id, package.channel_id, package.message_id)
-            mode = "dm" if isinstance(location, User) else "channel"
+
+
+
+            tloc =  None if isinstance(location, User) or isinstance(location, DMChannel) else location
             now = datetime.utcfromtimestamp(time.time())
             send_time = datetime.utcfromtimestamp(package.send)
-            parts = {
-                "date": send_time.strftime('%c'),
-                "timediff": server_info.time_difference(now, send_time, None if isinstance(location, User) or isinstance(location, DMChannel) else location.guild.id),
-                "now_date": now.strftime('%c'),
-                "jump_link": jumplink_available,
-                "recipient": None if isinstance(location, User) else (await Utils.get_user(package.user_id)).mention
-            }
-            parcel = Translator.translate(f"reminder_delivery_{mode}", None if isinstance(location, User) or isinstance(location, DMChannel) else location, **parts)
-            content = f"```\n{package.to_remind}\n```"
+            desc = Translator.translate('reminder_delivery', tloc, date=send_time.strftime('%c'), timediff=server_info.time_difference(now, send_time, tloc)) + f"```\n{package.to_remind}\n```"
+            desc = Utils.trim_message(desc, 2048)
+            embed = Embed(
+                color=16698189,
+                title=Translator.translate('reminder_delivery_title', tloc),
+                description=desc
+            )
+            if location.id == package.channel_id or package.guild_id == '@me':
+                ref = MessageReference(guild_id=package.guild_id if package.guild_id != '@me' else None, channel_id=package.channel_id, message_id=package.message_id, fail_if_not_exists=False)
+            else:
+                ref = None
+                embed.add_field(name=Translator.translate('jump_link', tloc), value=f'[Click me!]({assemble_jumplink(package.guild_id, package.channel_id, package.message_id)})')
+
             try:
-                if len(parcel) + len(content) < 2000:
-                    await location.send(parcel + content)
-                else:
-                    await location.send(parcel)
-                    await location.send(content)
+                await location.send(embed=embed, reference=ref)
             except (Forbidden, NotFound):
                 return False
             else:
