@@ -37,7 +37,10 @@ cog_permissions = {
         "min": 1,
         "max": 6,
         "required": 2,
-        "commands": {}
+        "commands": {
+            "enable": {"required": 3, "min": 1, "max": 6, "commands": {}},
+            "disable": {"required": 3, "min": 1, "max": 6, "commands": {}},
+        }
     },
 
     "Basic": {
