@@ -73,6 +73,11 @@ class Censor(BaseCog):
         full_message_list = Configuration.get_var(member.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
         censor_emoji_message = Configuration.get_var(member.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES")
         content = content.replace('\\', '')
+
+        if Configuration.get_var("CENSORING", "IGNORE_IDS"):
+            content = re.sub(r'(<(?:@|#|@&|@!)[0-9]{15,20}>)', '', content)
+            content = re.sub(r'<a?:[^: \n]+:([0-9]{15,20})>', '', content)
+
         decoded_content = parse.unquote(content)
 
         if len(guilds) != 0:
@@ -152,7 +157,7 @@ class Censor(BaseCog):
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
         if channel.permissions_for(channel.guild.me).manage_messages:
             try:
-                self.bot.data["message_deletes"].add(message_id)
+                self.bot.deleted_messages.append(message_id)
                 await channel.delete_messages([discord.Object(message_id)])
             except discord.NotFound as ex:
                 pass
@@ -174,7 +179,7 @@ class Censor(BaseCog):
 
         e = '_edit' if edit else ''
 
-        self.bot.data["message_deletes"].add(message_id)
+        self.bot.deleted_messages.append(message_id)
         clean_message = await Utils.clean(content, member.guild)
         clean_name = Utils.clean_user(member)
         reply_str = ""
@@ -202,15 +207,15 @@ class Censor(BaseCog):
                                    message=clean_message, server_name=server_name, user_id=member.id,
                                    channel=channel.mention, attachments=attachments_str,
                                    reply=reply_str)
-            if message_id in self.bot.data["message_deletes"]:
-                self.bot.data["message_deletes"].remove(message_id)
+            if message_id in self.bot.deleted_messages:
+                self.bot.deleted_messages.remove(message_id)
         except discord.Forbidden:
             GearbotLogging.log_key(member.guild.id, f'invite_censor_forbidden{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,
                                    channel=channel.mention, attachments=attachments_str,
                                    reply=reply_str)
-            if message_id in self.bot.data["message_deletes"]:
-                self.bot.data["message_deletes"].remove(message_id)
+            if message_id in self.bot.deleted_messages:
+                self.bot.deleted_messages.remove(message_id)
 
         self.bot.dispatch("user_censored", messageholder(message_id, member, channel, channel.guild))
 

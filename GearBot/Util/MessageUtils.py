@@ -3,7 +3,6 @@ import time
 from collections import namedtuple
 from datetime import datetime
 
-import discord
 from discord import Object, HTTPException, MessageType, AllowedMentions
 
 from Util import Translator, Emoji, Archive, GearbotLogging

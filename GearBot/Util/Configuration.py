@@ -371,6 +371,15 @@ def v33(config):
     config["CENSORING"]["ALLOW_TRUSTED_CENSOR_BYPASS"] = False
     config["FLAGGING"]["TRUSTED_BYPASS"] = False
 
+def v34(config):
+    config["GENERAL"]["GHOST_MESSAGE_THRESHOLD"] = 10
+    config["GENERAL"]["GHOST_PING_THRESHOLD"] = 20
+    config["GENERAL"]["BOT_DELETED_STILL_GHOSTS"] = True
+    config["CENSORING"]["IGNORE_IDS"] = False
+    config["FLAGGING"]["IGNORE_IDS"] = False
+    add_logging(config, "FAILED_MASS_PINGS")
+
+
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
         if "FUTURE_LOGS" in info["CATEGORIES"]:
@@ -392,7 +401,7 @@ def move_keys(config, section, *keys):
             del config[key]
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28, v29, v30, v31, v32, v33]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34]
 
 BOT = None
 

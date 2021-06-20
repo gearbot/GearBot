@@ -3,13 +3,14 @@ import datetime
 import re
 from asyncio import CancelledError
 
+import discord
 import emoji
 
 import time
 from collections import deque
 from weakref import WeakValueDictionary
 
-from discord import Object, Forbidden, NotFound
+from discord import Object, Forbidden, NotFound, RawMessageDeleteEvent
 from discord.channel import TextChannel
 from discord.ext import commands
 from discord.guild import Guild
@@ -83,6 +84,7 @@ class AntiSpam(BaseCog):
         self.running = True
         bot.loop.create_task(self.censor_detector())
         bot.loop.create_task(self.voice_spam_detector())
+
 
     def cog_unload(self):
         self.running = False
@@ -385,6 +387,82 @@ class AntiSpam(BaseCog):
                 pass
             except Exception as e:
                 await TheRealGearBot.handle_exception("voice spam join detector", self.bot, e)
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
+        message = await MessageUtils.get_message_data(self.bot, data.message_id)
+        if message is None:
+            return  # can't do anything without the message data
+        member = await Utils.get_member(self.bot, self.bot.get_guild(data.guild_id), message.author)
+        if member is None:
+            return  # user no longer present, probably already actioned
+        if self.is_exempt(data.guild_id, member):
+            return  # don't action except users
+
+        if data.message_id in self.bot.deleted_messages and not Configuration.get_var("GENERAL", "BOT_DELETED_STILL_GHOSTS"):
+            return
+
+        ghost_message_threshold = Configuration.get_var(data.guild_id, "GENERAL", "GHOST_MESSAGE_THRESHOLD")
+        ghost_ping_threshold = Configuration.get_var(data.guild_id, "GENERAL", "GHOST_PING_THRESHOLD")
+        buckets = Configuration.get_var(data.guild_id, "ANTI_SPAM", "BUCKETS", [])
+        mentions = len(MENTION_MATCHER.findall(message.content))
+
+        msg_time = int(snowflake_time(message.messageid).timestamp())
+        is_ghost = (snowflake_time(message.messageid) - datetime.datetime.utcnow()).total_seconds() < ghost_message_threshold
+        is_ghost_ping = (snowflake_time(message.messageid) - datetime.datetime.utcnow()).total_seconds() < ghost_ping_threshold and mentions > 0
+
+        if is_ghost or is_ghost_ping:
+            for b in buckets:
+                t = b["TYPE"]
+                if t == "max_ghost_messages" and is_ghost:
+                    now = int(datetime.datetime.utcnow().timestamp())
+                    bucket = self.get_bucket(member.guild.id, f"max_ghost_messages", b, member.id)
+                    if bucket is not None and await bucket.check(member.id, now, message=f"{message.channel}-{message.messageid}", amount=1):
+                        count = await bucket.count(member.id, now, expire=False)
+                        period = await bucket.size(member.id, now, expire=False)
+                        self.bot.loop.create_task(
+                            self.violate(Violation("max_ghost_messages", member.guild,
+                                                   f"{Translator.translate('spam_max_ghost_messages', member.guild)} ({count}/{period}s)",
+                                                   member,
+                                                   self.bot.get_channel(data.channel_id),
+                                                   await bucket.get(message.author.id, msg_time, expire=False),
+                                                   b, count)))
+                elif t == "max_ghost_pings" and is_ghost_ping:
+                    bucket = self.get_bucket(member.guild.id, f"max_ghost_pings", b, member.id)
+                    if bucket is not None and await bucket.check(member.id, msg_time, message=f"{data.channel_id}-{data.message_id}", amount=mentions):
+                        count = await bucket.count(member.id, msg_time, expire=False)
+                        period = await bucket.size(member.id, msg_time, expire=False)
+                        self.bot.loop.create_task(
+                            self.violate(Violation("max_ghost_pings", member.guild,
+                                                   f"{Translator.translate('spam_max_ghost_pings', member.guild)} ({count}/{period}s)",
+                                                   member,
+                                                   self.bot.get_channel(data.channel_id),
+                                                   await bucket.get(message.author, msg_time, expire=False),
+                                                   b, count)))
+
+
+
+
+    async def handle_failed_ping(self, message: discord.Message, amount):
+        if self.is_exempt(message.guild.id, message.author):
+            return  # don't action except users
+        buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
+        msg_time = int(snowflake_time(message.id).timestamp())
+        for b in buckets:
+            t = b["TYPE"]
+            if t == "max_failed_mass_pings":
+                bucket = self.get_bucket(message.guild.id, f"max_failed_pings", b, message.author.id)
+                if bucket is not None and await bucket.check(message.author.id, msg_time, message=f"{message.channel.id}-{message.id}", amount=amount):
+                    count = await bucket.count(message.author.id, msg_time, expire=False)
+                    period = await bucket.size(message.author.id, msg_time, expire=False)
+                    self.bot.loop.create_task(
+                        self.violate(Violation("max_failed_pings", message.guild,
+                                               f"{Translator.translate('spam_failed_pings', message.guild)} ({count}/{period}s)",
+                                               message.author,
+                                               message.channel,
+                                               await bucket.get(message.author.id, msg_time, expire=False),
+                                               b, count)))
+
 
 
     @staticmethod

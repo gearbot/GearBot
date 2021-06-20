@@ -1,5 +1,6 @@
 import asyncio
 import time
+from collections import deque
 
 from discord.ext.commands import AutoShardedBot
 from prometheus_client import CollectorRegistry
@@ -33,6 +34,7 @@ class GearBot(AutoShardedBot):
     missing_guilds = []
     initial_fill_complete = False
     loading_task = None
+    deleted_messages = deque(maxlen=500)
 
     def __init__(self, *args, loop=None, **kwargs):
         super().__init__(*args, loop=loop, **kwargs)

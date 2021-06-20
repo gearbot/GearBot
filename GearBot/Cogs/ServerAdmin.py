@@ -65,7 +65,7 @@ async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>", con
     await ctx.send(embed=embed)
 
 
-def gen_override_strings(ctx, perm_dict, prefix = ""):
+def gen_override_strings(ctx, perm_dict, prefix=""):
     output = ""
     for command, d in perm_dict["commands"].items():
         lvl = d["required"]
@@ -92,7 +92,8 @@ class ServerAdmin(BaseCog):
         "SPAM_VIOLATION",
         "CONFIG_CHANGES",
         "MESSAGE_FLAGS",
-        "FUTURE_LOGS"
+        "FUTURE_LOGS",
+        "FAILED_MASS_PINGS"
     ]
 
     def __init__(self, bot):
@@ -106,25 +107,25 @@ class ServerAdmin(BaseCog):
         Pages.register("flag_list", self._flaglist_init, self._flaglist_update)
         Pages.register("word_flag_list", self._word_flaglist_init, self._word_flag_list_update)
 
-
-
     @commands.guild_only()
-    @commands.group(aliases = ["config", "cfg"], invoke_without_command=True)
-    async def configure(self, ctx:commands.Context):
+    @commands.group(aliases=["config", "cfg"], invoke_without_command=True)
+    async def configure(self, ctx: commands.Context):
         """configure_help"""
         if ctx.subcommand_passed is None:
             await ctx.send("See the subcommands (!help configure) for configurations.")
 
     @configure.command()
-    async def prefix(self, ctx:commands.Context, *, new_prefix:str = None):
+    async def prefix(self, ctx: commands.Context, *, new_prefix: str = None):
         """configure_prefix_help"""
         if new_prefix is None:
-            await ctx.send(f"{Translator.translate('current_server_prefix', ctx, prefix=Configuration.get_var(ctx.guild.id, 'GENERAL', 'PREFIX'))}")
+            await ctx.send(
+                f"{Translator.translate('current_server_prefix', ctx, prefix=Configuration.get_var(ctx.guild.id, 'GENERAL', 'PREFIX'))}")
         elif len(new_prefix) > 25:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('prefix_too_long', ctx)}")
         else:
             Configuration.set_var(ctx.guild.id, "GENERAL", "PREFIX", new_prefix)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('prefix_set', ctx, new_prefix=new_prefix)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('prefix_set', ctx, new_prefix=new_prefix)}")
 
     @configure.group(aliases=["adminroles"], invoke_without_command=True)
     async def admin_roles(self, ctx: commands.Context):
@@ -134,7 +135,7 @@ class ServerAdmin(BaseCog):
         Configuration.validate_config(ctx.guild.id)
 
     @admin_roles.command(name="add")
-    async def add_admin_role(self, ctx, *, role:discord.Role):
+    async def add_admin_role(self, ctx, *, role: discord.Role):
         await add_item(ctx, role, 'admin')
 
     @admin_roles.command(name="remove")
@@ -172,7 +173,7 @@ class ServerAdmin(BaseCog):
         await remove_item(ctx, role, 'trusted')
 
     @configure.command(aliases=["muterole"])
-    async def mute_role(self, ctx:commands.Context, role:discord.Role):
+    async def mute_role(self, ctx: commands.Context, role: discord.Role):
         """configure_mute_help"""
         if role == ctx.guild.default_role:
             return await ctx.send(
@@ -180,21 +181,24 @@ class ServerAdmin(BaseCog):
         if role.tags is not None:
             return await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'tagged_role_forbidden', ctx)}")
-        guild:discord.Guild = ctx.guild
+        guild: discord.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx)}")
             return
         if not guild.me.top_role > role:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
             return
         Configuration.set_var(ctx.guild.id, "ROLES", "MUTE_ROLE", int(role.id))
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_role_confirmation', ctx, role=role.mention)}")
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_role_confirmation', ctx, role=role.mention)}")
         failed = []
         for category in guild.categories:
             if category.permissions_for(guild.me).manage_channels:
                 try:
-                    await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False, speak=False, connect=False)
+                    await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
+                                                   send_messages=False, add_reactions=False, speak=False, connect=False)
                 except discord.Forbidden:
                     pass
 
@@ -205,7 +209,8 @@ class ServerAdmin(BaseCog):
             if channel.permissions_for(guild.me).manage_channels:
                 if channel.overwrites_for(role).is_empty():
                     try:
-                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), send_messages=False, add_reactions=False)
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
+                                                      send_messages=False, add_reactions=False)
                     except discord.Forbidden:
                         pass
             else:
@@ -214,7 +219,8 @@ class ServerAdmin(BaseCog):
             if channel.permissions_for(guild.me).manage_channels:
                 if channel.overwrites_for(role).is_empty():
                     try:
-                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False, connect=False)
+                        await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False,
+                                                      connect=False)
                     except discord.Forbidden:
                         pass
             else:
@@ -232,19 +238,19 @@ class ServerAdmin(BaseCog):
             await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('mute_setup_complete', ctx)}")
 
     @configure.group(aliases=["selfrole", "self_role"], invoke_without_command=True)
-    async def self_roles(self, ctx:commands.Context):
+    async def self_roles(self, ctx: commands.Context):
         """configure_self_roles_help"""
         if ctx.invoked_subcommand is None:
             await list_list(ctx, 'self', config_section="ROLES")
 
     @self_roles.command()
-    async def add(self, ctx:commands.Context, *, role:discord.Role):
+    async def add(self, ctx: commands.Context, *, role: discord.Role):
         await add_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @self_roles.command()
-    async def remove(self, ctx:commands.Context, *, role:discord.Role):
+    async def remove(self, ctx: commands.Context, *, role: discord.Role):
         await remove_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
@@ -256,11 +262,11 @@ class ServerAdmin(BaseCog):
             await list_list(ctx, "allowed", list_name="invite_list", wrapper="{item}", config_section="CENSORING")
 
     @allowed_invites.command(name="add")
-    async def add_to_allowed_list(self, ctx: commands.Context, server:int):
+    async def add_to_allowed_list(self, ctx: commands.Context, server: int):
         await add_item(ctx, ServerHolder(server), "allowed", list_name="invite_list", config_section="CENSORING")
 
     @allowed_invites.command(name="remove")
-    async def remove_from_allowed_list(self, ctx: commands.Context, server:int):
+    async def remove_from_allowed_list(self, ctx: commands.Context, server: int):
         await remove_item(ctx, ServerHolder(server), "allowed", list_name="invite_list", config_section="CENSORING")
 
     @configure.command(aliases=["trustedinvitebypass"])
@@ -287,15 +293,14 @@ class ServerAdmin(BaseCog):
             await list_list(ctx, "ignored", "users", "<@{item}>", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="add")
-    async def addIgnoredUser(self, ctx:commands.Context, user:discord.Member):
+    async def addIgnoredUser(self, ctx: commands.Context, user: discord.Member):
         await add_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="remove")
-    async def removeIgnoredUser(self, ctx:commands.Context, user:discord.User):
+    async def removeIgnoredUser(self, ctx: commands.Context, user: discord.User):
         await remove_item(ctx, user, "ignored", list_name="users", config_section="MESSAGE_LOGS")
 
-
-    @configure.group("cog_overrides",  invoke_without_command=True)
+    @configure.group("cog_overrides", invoke_without_command=True)
     async def configure_cog_overrides(self, ctx):
         """cog_overrides_help"""
         if ctx.invoked_subcommand is None:
@@ -311,17 +316,19 @@ class ServerAdmin(BaseCog):
             await ctx.send(embed=embed)
 
     @configure_cog_overrides.command(name="add")
-    async def add_cog_override(self, ctx, cog:str, perm_lvl:int):
+    async def add_cog_override(self, ctx, cog: str, perm_lvl: int):
         cog = cog
         if cog in ctx.bot.cogs.keys():
             cogo = ctx.bot.cogs[cog]
             if cogo.permissions is None:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('core_cog_no_override', ctx, cog=cog)}")
             elif perm_lvl in range(7):
                 min_lvl = cogo.permissions["min"]
                 max_lvl = cogo.permissions["max"]
                 if perm_lvl < min_lvl:
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=min_lvl, min_lvl_name=Translator.translate(f'perm_lvl_{min_lvl}', ctx))}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_min_perm_violation', ctx, cog=cog, min_lvl=min_lvl, min_lvl_name=Translator.translate(f'perm_lvl_{min_lvl}', ctx))}")
                 elif perm_lvl > max_lvl:
                     await ctx.send(
                         f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_max_perm_violation', ctx, cog=cog, max_lvl=max_lvl, max_lvl_name=Translator.translate(f'perm_lvl_{max_lvl}', ctx))}")
@@ -336,7 +343,8 @@ class ServerAdmin(BaseCog):
                     else:
                         overrides[cog]["required"] = perm_lvl
                     Configuration.save(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_applied', ctx, cog=cog, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_applied', ctx, cog=cog, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
             else:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('invalid_override_lvl', ctx)}")
         else:
@@ -348,9 +356,11 @@ class ServerAdmin(BaseCog):
         if cog in overrides:
             overrides[cog]["required"] = -1
             Configuration.save(ctx.guild.id)
-            await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_removed', ctx, cog=cog)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('YES')} {Translator.translate('cog_override_removed', ctx, cog=cog)}")
         else:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_override_not_found', ctx, cog=cog)}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('cog_override_not_found', ctx, cog=cog)}")
 
     @configure.group(invoke_without_command=True)
     async def command_overrides(self, ctx):
@@ -370,22 +380,25 @@ class ServerAdmin(BaseCog):
             await ctx.send(embed=embed)
 
     @command_overrides.command(name="set", aliases=["add"])
-    async def add_command_override(self, ctx, command:str, perm_lvl:int):
+    async def add_command_override(self, ctx, command: str, perm_lvl: int):
         command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog = command_object.cog
             cog_name = command_object.cog_name
             if cog.permissions is None:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_core_cog_no_override', ctx, command=command, cog_name=cog_name)}")
             elif perm_lvl in range(7):
                 perm_dict = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), cog.permissions)
                 if perm_lvl < perm_dict["min"]:
                     lvl = perm_dict["min"]
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_min_perm_violation', ctx, command=command, min_lvl=lvl, min_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
                 elif perm_lvl > perm_dict["max"]:
                     lvl = cog.permissions['max']
-                    await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_max_perm_violation', ctx, command=command, max_lvl=lvl, max_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_max_perm_violation', ctx, command=command, max_lvl=lvl, max_lvl_name=Translator.translate(f'perm_lvl_{lvl}', ctx))}")
                 else:
                     overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
                     if cog_name not in overrides:
@@ -408,14 +421,15 @@ class ServerAdmin(BaseCog):
                             override = override["commands"][part]
                     override["required"] = perm_lvl
                     Configuration.save(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_confirmation', ctx, command=command, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_confirmation', ctx, command=command, perm_lvl=perm_lvl, perm_lvl_name=Translator.translate(f'perm_lvl_{perm_lvl}', ctx))}")
             else:
                 await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('invalid_override_lvl', ctx)}")
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_not_found', ctx)}")
 
     @command_overrides.command(name="remove")
-    async def remove_command_override(self, ctx, command:str):
+    async def remove_command_override(self, ctx, command: str):
         command = command.lower()
         command_object = self.bot.get_command(command)
         if command_object is not None:
@@ -423,27 +437,31 @@ class ServerAdmin(BaseCog):
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
             found = False
             if cog_name in overrides:
-                override = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "), overrides[cog_name], True)
+                override = Permissioncheckers.get_perm_dict(command_object.qualified_name.split(" "),
+                                                            overrides[cog_name], True)
                 if override is not None:
                     found = True
                     override["required"] = -1
                     Configuration.save(ctx.guild.id)
-                    await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_removed', ctx, command=command)}")
+                    await ctx.send(
+                        f"{Emoji.get_chat_emoji('YES')} {Translator.translate('command_override_removed', ctx, command=command)}")
             if not found:
-                await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_override_not_found', ctx, command=command)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_override_not_found', ctx, command=command)}")
 
     @configure.command()
-    async def perm_denied_message(self, ctx, value:bool):
+    async def perm_denied_message(self, ctx, value: bool):
         """perm_denied_message_help"""
         Configuration.set_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE", value)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
-
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('configure_perm_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @configure.command()
-    async def language(self, ctx, lang_code:str = None):
+    async def language(self, ctx, lang_code: str = None):
         """language_help"""
         if lang_code is None:
-            await ctx.send(f"See https://crowdin.com/project/gearbot for all available languages and their translation statuses")
+            await ctx.send(
+                f"See https://crowdin.com/project/gearbot for all available languages and their translation statuses")
         else:
             code = None
             lang_code = lang_code.lower().replace("_", "-")
@@ -458,17 +476,18 @@ class ServerAdmin(BaseCog):
                         break
             if code is not None:
                 Configuration.set_var(ctx.guild.id, "GENERAL", "LANG", code)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=code, lang_name=Translator.LANG_NAMES[code])}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lang_changed', ctx.guild.id, lang=code, lang_name=Translator.LANG_NAMES[code])}")
             else:
                 await ctx.send(f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('lang_unknown', ctx.guild.id)}")
 
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     async def lvl4(self, ctx):
         """lvl4_help"""
         pass
 
     @lvl4.command(name="add")
-    async def add_lvl4(self, ctx, command:str, person:discord.Member):
+    async def add_lvl4(self, ctx, command: str, person: discord.Member):
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog_name = command_object.cog_name
@@ -493,7 +512,8 @@ class ServerAdmin(BaseCog):
                     override = override["commands"][part]
             if person.id not in override["people"]:
                 override["people"].append(person.id)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lvl4_added', ctx, member=person, command=command)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lvl4_added', ctx, member=person, command=command)}")
             else:
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('NO')} {Translator.translate('already_had_lvl4', ctx, member=person, command=command)}")
@@ -514,13 +534,14 @@ class ServerAdmin(BaseCog):
                     found = True
             if found:
                 lvl4_list["people"].remove(person.id)
-                await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lvl4_removed', ctx, member=person, command=command)}")
+                await ctx.send(
+                    f"{Emoji.get_chat_emoji('YES')} {Translator.translate('lvl4_removed', ctx, member=person, command=command)}")
                 Configuration.save(ctx.guild.id)
             else:
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('NO')} {Translator.translate('did_not_have_lvl4', ctx, member=person, command=command)}")
 
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def logging(self, ctx):
@@ -548,20 +569,19 @@ class ServerAdmin(BaseCog):
             if len(missing) == 0:
                 value += f"{Emoji.get_chat_emoji('YES')} {Translator.translate('full_channel_perms', ctx)}\n\n"
             else:
-                value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms = ', '.join(missing))}\n\n"
+                value += f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('missing_channel_perms', ctx, perms=', '.join(missing))}\n\n"
         value += f"**{Translator.translate('to_be_logged', ctx)}** \n{', '.join(info)}\n\n"
         return value
 
-
     @logging.command(name="add")
-    async def add_logging(self, ctx, channel:discord.TextChannel, *, types):
+    async def add_logging(self, ctx, channel: discord.TextChannel, *, types):
         cid = str(channel.id)
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
-           channels[cid] = {
-               "CATEGORIES": [],
-               "DISABLED_KEYS": []
-           }
+            channels[cid] = {
+                "CATEGORIES": [],
+                "DISABLED_KEYS": []
+            }
         info = channels[cid]["CATEGORIES"]
         added = []
         ignored = []
@@ -583,7 +603,8 @@ class ServerAdmin(BaseCog):
             message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
         embed = discord.Embed(color=6008770)
-        embed.add_field(name=channel.id, value=self.get_channel_properties(ctx, channel.id, channels[cid]["CATEGORIES"]))
+        embed.add_field(name=channel.id,
+                        value=self.get_channel_properties(ctx, channel.id, channels[cid]["CATEGORIES"]))
         await ctx.send(message, embed=embed)
         Configuration.save(ctx.guild.id)
 
@@ -596,14 +617,18 @@ class ServerAdmin(BaseCog):
         if len(features) > 0:
             async def yes():
                 await ctx.invoke(self.enable_feature, ", ".join(features))
-            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx.guild.id, 'WHAT', 'confirmation_enable_features', count=len(features)) + ', '.join(features), on_yes=yes)
+
+            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx.guild.id, 'WHAT', 'confirmation_enable_features',
+                                                                  count=len(features)) + ', '.join(features),
+                                       on_yes=yes)
 
     @logging.command(name="remove")
     async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
         channel = self.bot.get_channel(int(cid))
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
-            await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=f'<{cid}>')}")
+            await ctx.send(
+                f"{Emoji.get_chat_emoji('NO')} {Translator.translate('no_log_channel', ctx, channel=f'<{cid}>')}")
         else:
             info = channels[cid]["CATEGORIES"]
             removed = []
@@ -633,7 +658,7 @@ class ServerAdmin(BaseCog):
                 embed = discord.Embed(color=6008770)
                 embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, channels[cid]["CATEGORIES"]))
             else:
-                embed=None
+                embed = None
             await ctx.send(message, embed=embed)
             empty = []
             for cid, info in channels.items():
@@ -656,7 +681,7 @@ class ServerAdmin(BaseCog):
             embed.add_field(name=t, value=enabled if e else disabled)
         return embed
 
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     async def features(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -683,19 +708,23 @@ class ServerAdmin(BaseCog):
                 ignored.append(t)
             else:
                 enabled.append(t)
-                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", True)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED",
+                                      True)
                 if t == "EDIT_LOGS":
                     await ctx.send(Translator.translate('minor_log_caching_start', ctx))
                     # self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_enabled', count=len(enabled)) + ', '.join(enabled)
+            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_enabled', count=len(enabled)) + ', '.join(
+                enabled)
 
         if len(ignored) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_enabled', count=len(ignored)) + ', '.join(ignored)
+            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_enabled',
+                                             count=len(ignored)) + ', '.join(ignored)
 
         if len(unknown) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'logs_unknown', count=len(unknown)) + ', '.join(unknown)
+            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'logs_unknown', count=len(unknown)) + ', '.join(
+                unknown)
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 
@@ -716,14 +745,15 @@ class ServerAdmin(BaseCog):
                 if i not in counts:
                     counts[i] = 1
                 else:
-                    counts[i] +=1
-        return logging not in Features.requires_logging.values() or (logging in counts and counts[logging] > 1) or Configuration.get_var("MESSAGE_LOGS" if logging == "EDIT_LOGS" else "CENSORING", "ENABLED", False)
-
+                    counts[i] += 1
+        return logging not in Features.requires_logging.values() or (
+                logging in counts and counts[logging] > 1) or Configuration.get_var(
+            "MESSAGE_LOGS" if logging == "EDIT_LOGS" else "CENSORING", "ENABLED", False)
 
     @features.command(name="disable")
-    async def feature_disable(self, ctx, types:str):
+    async def feature_disable(self, ctx, types: str):
         types = types.upper()
-        disabled= []
+        disabled = []
         ignored = []
         known = []
         unknown = []
@@ -741,16 +771,20 @@ class ServerAdmin(BaseCog):
                 ignored.append(t)
             else:
                 disabled.append(t)
-                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED", False)
+                Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED",
+                                      False)
 
         if len(disabled) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_disabled', count=len(disabled)) + ', '.join(disabled)
+            message += MessageUtils.assemble(ctx.guild.id, 'YES', 'features_disabled', count=len(disabled)) + ', '.join(
+                disabled)
 
         if len(ignored) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_disabled', count=len(ignored)) + ', '.join(ignored)
+            message += MessageUtils.assemble(ctx.guild.id, 'WARNING', 'feature_already_disabled',
+                                             count=len(ignored)) + ', '.join(ignored)
 
         if len(unknown) > 0:
-            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'features_unknown', count=len(unknown)) + ', '.join(unknown)
+            message += MessageUtils.assemble(ctx.guild.id, 'NO', 'features_unknown', count=len(unknown)) + ', '.join(
+                unknown)
 
         await ctx.send(message, embed=self.get_features_status(ctx))
 
@@ -770,14 +804,14 @@ class ServerAdmin(BaseCog):
                         unknown.append(t)
         return types, unknown
 
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     async def ignored_channels(self, ctx):
         """ignored_channels_help"""
         if ctx.invoked_subcommand == self.ignored_channels:
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels")
 
-    @ignored_channels.group("changes",  invoke_without_command=True)
+    @ignored_channels.group("changes", invoke_without_command=True)
     @commands.guild_only()
     async def ignored_channels_changes(self, ctx):
         """ignored_channels_changes_help"""
@@ -785,11 +819,11 @@ class ServerAdmin(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels changes")
 
     @ignored_channels_changes.command("add")
-    async def ignored_channels_changes_add(self, ctx, channel:TextChannel):
+    async def ignored_channels_changes_add(self, ctx, channel: TextChannel):
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_CHANGES')
         if channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list')
+            await MessageUtils.send_to(ctx, 'NO', 'ignored_channels_already_on_list', channel=channel.mention)
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', 'ignored_channels_changes_added', channel=channel.mention)
@@ -819,7 +853,8 @@ class ServerAdmin(BaseCog):
         else:
             channels = Translator.translate('no_ignored_channels', ctx)
         embed = discord.Embed(color=ctx.guild.roles[-1].color, description=channels)
-        embed.set_author(name=Translator.translate(f'ignored_channels_list_{type}', ctx, guild=ctx.guild.name), icon_url=ctx.guild.icon_url)
+        embed.set_author(name=Translator.translate(f'ignored_channels_list_{type}', ctx, guild=ctx.guild.name),
+                         icon_url=ctx.guild.icon_url)
         await ctx.send(embed=embed)
 
     @ignored_channels.group("edits", aliases=["edit"], invoke_without_command=True)
@@ -856,17 +891,14 @@ class ServerAdmin(BaseCog):
         """ignored_channels_list_help"""
         await self.list_channels(ctx, "other")
 
-
-
-
-    @commands.group( invoke_without_command=True)
+    @commands.group(invoke_without_command=True)
     @commands.guild_only()
-    async def disable(self, ctx:commands.Context):
+    async def disable(self, ctx: commands.Context):
         """disable_help"""
         pass
 
     @disable.command()
-    async def mute(self, ctx:commands.Context):
+    async def mute(self, ctx: commands.Context):
         """disable_mute_help"""
         await Infraction.filter(type="Mute", guild_id=ctx.guild.id, active=True).update(active=False)
         infractions = await Infraction.filter(type="Mute", guild_id=ctx.guild.id, active=True)
@@ -876,49 +908,50 @@ class ServerAdmin(BaseCog):
             if member is not None:
                 await member.remove_roles(role, reason=f"Mute feature has been disabled")
         Configuration.set_var(ctx.guild.id, "ROLES", "MUTE_ROLE", 0)
-        await ctx.send("Mute feature has been disabled, all people muted have been unmuted and the role can now be removed.")
+        await ctx.send(
+            "Mute feature has been disabled, all people muted have been unmuted and the role can now be removed.")
+
+    async def dm_configure(self, ctx, kind, value):
+        config_key = f"DM_ON_{kind.upper()}"
+        current = Configuration.get_var(ctx.guild.id, "INFRACTIONS", config_key)
+        if value is None:
+            await MessageUtils.send_to(ctx, 'WRENCH', f'dm_on_{kind}_msg_is_' + ('enabled' if current else 'disabled'))
+        elif current != value:
+            Configuration.set_var(ctx.guild.id, "INFRACTIONS", config_key, value)
+            await MessageUtils.send_to(ctx, 'YES', f'dm_on_{kind}_msg_' + ('enabled' if value else 'disabled'))
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING',
+                                       f'dm_on_{kind}_msg_already_' + ('enabled' if value else 'disabled'))
 
     @configure.command()
-    async def dm_on_warn(self, ctx, value: bool):
+    async def dm_on_warn(self, ctx, value: bool = None):
         """dm_on_warn_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_warn_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
-    
-    @configure.command()            
-    async def dm_on_kick(self, ctx, value: bool):
+        await self.dm_configure(ctx, 'warn', value)
+
+    @configure.command()
+    async def dm_on_kick(self, ctx, value: bool = None):
         """dm_on_kick_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_kick_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await self.dm_configure(ctx, 'kick', value)
 
     @configure.command()
-    async def dm_on_ban(self, ctx, value: bool):
+    async def dm_on_ban(self, ctx, value: bool = None):
         """dm_on_ban_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_ban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await self.dm_configure(ctx, 'ban', value)
 
     @configure.command()
-    async def dm_on_tempban(self, ctx, value: bool):
+    async def dm_on_tempban(self, ctx, value: bool = None):
         """dm_on_tempban_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_tempban_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await self.dm_configure(ctx, 'tempban', value)
 
     @configure.command()
-    async def dm_on_mute(self, ctx, value: bool):
+    async def dm_on_mute(self, ctx, value: bool = None):
         """dm_on_mute_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_mute_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await self.dm_configure(ctx, 'mute', value)
 
     @configure.command()
-    async def dm_on_unmute(self, ctx, value: bool):
+    async def dm_on_unmute(self, ctx, value: bool = None):
         """dm_on_unmute_help"""
-        Configuration.set_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE", value)
-        await ctx.send(
-            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('dm_on_unmute_msg_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await self.dm_configure(ctx, 'unmute', value)
 
     @configure.command()
     async def log_embeds(self, ctx, value: bool):
@@ -929,7 +962,8 @@ class ServerAdmin(BaseCog):
     @configure.command(aliases=["log_message_id"])
     async def log_message_ids(self, ctx, value: bool):
         Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS", "MESSAGE_ID", value)
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('message_id_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
+        await ctx.send(
+            f"{Emoji.get_chat_emoji('YES')} {Translator.translate('message_id_log_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
     @configure.group(aliases=["censorlist", "cl"], invoke_without_command=True)
     async def censor_list(self, ctx):
@@ -942,13 +976,15 @@ class ServerAdmin(BaseCog):
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
         if len(censor_list) > 0:
             pages = Pages.paginate("\n".join(censor_list))
-            return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+            return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+                pages) > 1
         else:
             return Translator.translate('censor_list_empty', ctx), None, False
 
     @staticmethod
     async def _censorklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate("\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
+        pages = Pages.paginate(
+            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         data["page"] = page_num
         return f"**{Translator.translate(f'censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
@@ -975,7 +1011,6 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=word)
             Configuration.save(ctx.guild.id)
 
-
     @censor_list.command("get")
     async def censor_list_get(self, ctx):
         censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
@@ -984,7 +1019,9 @@ class ServerAdmin(BaseCog):
             buffer = io.BytesIO()
             buffer.write(out.encode())
             buffer.seek(0)
-            await MessageUtils.send_to(ctx, 'YES', 'censor_list_file', attachment=discord.File(buffer, filename="token_censorlist.txt"), server=ctx.guild.name)
+            await MessageUtils.send_to(ctx, 'YES', 'censor_list_file',
+                                       attachment=discord.File(buffer, filename="token_censorlist.txt"),
+                                       server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_censor_list_empty')
 
@@ -1023,8 +1060,6 @@ class ServerAdmin(BaseCog):
                 del self.bot.get_cog("Censor").regexes[ctx.guild.id]
 
             await MessageUtils.send_to(ctx, 'YES', f'{prefix}_list_set')
-
-
 
     @configure.group(aliases=["wordcensorlist", "wcl"], invoke_without_command=True)
     async def word_censor_list(self, ctx):
@@ -1102,7 +1137,8 @@ class ServerAdmin(BaseCog):
     @staticmethod
     async def _flaglist_init(ctx):
         pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")))
-        return f"**{Translator.translate(f'flagged_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+        return f"**{Translator.translate(f'flagged_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+            pages) > 1
 
     @staticmethod
     async def _flaglist_update(ctx, message, page_num, action, data):
@@ -1127,7 +1163,6 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
             if ctx.guild.id in self.bot.get_cog("Moderation").regexes:
                 del self.bot.get_cog("Moderation").regexes[ctx.guild.id]
-
 
     @flag_list.command("remove")
     async def flag_list_remove(self, ctx, *, word: str):
@@ -1227,8 +1262,7 @@ class ServerAdmin(BaseCog):
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
 
-
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def role_list(self, ctx):
@@ -1244,7 +1278,7 @@ class ServerAdmin(BaseCog):
             await ctx.send(embed=embed)
 
     @role_list.command("add")
-    async def role_list_add(self, ctx, *, role:discord.Role):
+    async def role_list_add(self, ctx, *, role: discord.Role):
         """configure_role_list_add"""
         roles = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
@@ -1255,8 +1289,8 @@ class ServerAdmin(BaseCog):
         else:
             roles.append(role.id)
             Configuration.save(ctx.guild.id)
-            await MessageUtils.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
-
+            await MessageUtils.send_to(ctx, "YES", f"role_list_add_confirmation_{mode}",
+                                       role=Utils.escape_markdown(role.name))
 
     @role_list.command("remove", aliases=["rmv"])
     async def role_list_remove(self, ctx, *, role: discord.Role):
@@ -1268,18 +1302,17 @@ class ServerAdmin(BaseCog):
         else:
             roles.remove(role.id)
             Configuration.save(ctx.guild.id)
-            await MessageUtils.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "YES", f"role_list_rmv_confirmation_{mode}",
+                                       role=Utils.escape_markdown(role.name))
 
     @role_list.command("mode")
-    async def role_list_mode(self, ctx, mode:ListMode):
+    async def role_list_mode(self, ctx, mode: ListMode):
         """configure_role_list_mode"""
         Configuration.set_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE", mode)
         mode = "allowed" if mode else "blocked"
         await MessageUtils.send_to(ctx, "YES", f"role_list_mode_{mode}")
 
-
-
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def domain_list(self, ctx):
@@ -1307,7 +1340,6 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
             await MessageUtils.send_to(ctx, "YES", f"domain_list_add_confirmation_{mode}", domain=domain)
 
-
     @domain_list.command("remove", aliases=["rmv"])
     async def domain_list_remove(self, ctx, *, domain):
         """configure_domain_list_remove"""
@@ -1321,7 +1353,7 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, "YES", f"domain_list_rmv_confirmation_{mode}", domain=domain)
 
     @domain_list.command("mode")
-    async def domain_list_mode(self, ctx, mode:ListMode):
+    async def domain_list_mode(self, ctx, mode: ListMode):
         """configure_domain_list_mode"""
         Configuration.set_var(ctx.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED", mode)
         mode = "allow" if mode else "block"
@@ -1351,7 +1383,7 @@ class ServerAdmin(BaseCog):
         """timezone_help"""
         current_zone = Configuration.get_var(ctx.guild.id, "GENERAL", "TIMEZONE")
         if new_zone is None:
-            #no new zone, spit out the current one
+            # no new zone, spit out the current one
             await MessageUtils.send_to(ctx, "CLOCK", "current_timezone", timezone=current_zone)
         else:
             try:
@@ -1365,9 +1397,7 @@ class ServerAdmin(BaseCog):
                     Configuration.set_var(ctx.guild.id, "GENERAL", "TIMEZONE", zone)
                     await MessageUtils.send_to(ctx, "YES", "timezone_set", timezone=zone)
 
-
-
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     async def full_message_censor_list(self, ctx):
         """full_message_censor_list_help"""
         if ctx.invoked_subcommand is None:
@@ -1376,7 +1406,8 @@ class ServerAdmin(BaseCog):
     @staticmethod
     async def _full_censorlist_init(ctx):
         pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")))
-        return f"**{Translator.translate(f'full_message_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(pages) > 1
+        return f"**{Translator.translate(f'full_message_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
+            pages) > 1
 
     @staticmethod
     async def _full_censor_list_update(ctx, message, page_num, action, data):
@@ -1406,7 +1437,6 @@ class ServerAdmin(BaseCog):
             await MessageUtils.send_to(ctx, "YES", "entry_removed", entry=message)
             Configuration.save(ctx.guild.id)
 
-
     @configure.command()
     async def censor_emoji_only_messages(self, ctx, value: bool):
         "censor_emoji_only_messages_help"
@@ -1414,9 +1444,7 @@ class ServerAdmin(BaseCog):
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('censor_emoji_messages_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
 
-
-
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def custom_commands_role_list(self, ctx):
@@ -1427,38 +1455,40 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"custom_commands_role_list_empty_{mode}", ctx)
             else:
                 desc = "\n".join(f"<@&{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx), description=desc)
+            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx),
+                                  description=desc)
             await ctx.send(embed=embed)
 
     @custom_commands_role_list.command("add")
-    async def custom_commands_role_list_add(self, ctx, *, role:discord.Role):
+    async def custom_commands_role_list_add(self, ctx, *, role: discord.Role):
         roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
         if role == ctx.guild.default_role:
             await MessageUtils.send_to(ctx, "NO", "default_role_forbidden")
         elif role.id in roles:
-            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_add_fail", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_add_fail",
+                                       role=Utils.escape_markdown(role.name))
         else:
             roles.append(role.id)
             Configuration.save(ctx.guild.id)
-            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_add_confirmation_{mode}", role=Utils.escape_markdown(role.name))
-
+            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_add_confirmation_{mode}",
+                                       role=Utils.escape_markdown(role.name))
 
     @custom_commands_role_list.command("remove", aliases=["rmv"])
     async def custom_commands_role_list_remove(self, ctx, *, role: discord.Role):
         roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
         if role.id not in roles:
-            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_rmv_fail_{mode}", role=Utils.escape_markdown(role.name))
+            await MessageUtils.send_to(ctx, "NO", f"custom_commands_role_list_rmv_fail_{mode}",
+                                       role=Utils.escape_markdown(role.name))
         else:
             roles.remove(role.id)
             Configuration.save(ctx.guild.id)
-            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_rmv_confirmation_{mode}", role=Utils.escape_markdown(role.name))
-
-
+            await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_rmv_confirmation_{mode}",
+                                       role=Utils.escape_markdown(role.name))
 
     @commands.guild_only()
-    @configure.group( invoke_without_command=True)
+    @configure.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True)
     async def custom_commands_channel_list(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -1468,15 +1498,17 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"custom_commands_channel_list_empty_{mode}", ctx)
             else:
                 desc = "\n".join(f"<#{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_channel_{mode}_list", ctx), description=desc)
+            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_channel_{mode}_list", ctx),
+                                  description=desc)
             await ctx.send(embed=embed)
 
     @custom_commands_channel_list.command("add")
-    async def custom_commands_ignored_channels_add(self, ctx, channel:TextChannel):
+    async def custom_commands_ignored_channels_add(self, ctx, channel: TextChannel):
         channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
         mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
         if channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list', channel=channel.mention)
+            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_already_on_{mode}_list',
+                                       channel=channel.mention)
         else:
             channels.append(channel.id)
             await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_added_{mode}', channel=channel.mention)
@@ -1487,27 +1519,24 @@ class ServerAdmin(BaseCog):
         channels = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", 'CHANNELS')
         mode = "use" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED") else "ignore"
         if not channel.id in channels:
-            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_not_on_{mode}_list', channel=channel.mention)
+            await MessageUtils.send_to(ctx, 'NO', f'custom_commands_channel_not_on_{mode}_list',
+                                       channel=channel.mention)
         else:
             channels.remove(channel.id)
             await MessageUtils.send_to(ctx, 'YES', f'custom_commands_channel_{mode}_removed', channel=channel.mention)
             Configuration.save(ctx.guild.id)
 
-
     @custom_commands_channel_list.command("mode")
-    async def custom_commands_channel_list_mode(self, ctx, mode:ListMode):
+    async def custom_commands_channel_list_mode(self, ctx, mode: ListMode):
         Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED", mode)
         mode = "use" if mode else "ignore"
         await MessageUtils.send_to(ctx, "YES", f"custom_commands_channel_list_mode_{mode}")
 
-
-
     @custom_commands_role_list.command("mode")
-    async def custom_commands_role_list_mode(self, ctx, mode:ListMode):
+    async def custom_commands_role_list_mode(self, ctx, mode: ListMode):
         Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED", mode)
         mode = "allowed" if mode else "blocked"
         await MessageUtils.send_to(ctx, "YES", f"custom_commands_role_list_mode_{mode}")
-
 
     @configure.command()
     async def custom_commands_mod_bypass(self, ctx, value: bool):
@@ -1515,7 +1544,6 @@ class ServerAdmin(BaseCog):
         Configuration.set_var(ctx.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS", value)
         await ctx.send(
             f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_commands_mod_bypass_' + ('enabled' if value else 'disabled'), ctx.guild.id)}")
-
 
     anti_spam_types = {
         "duplicates",
@@ -1525,7 +1553,10 @@ class ServerAdmin(BaseCog):
         "max_links",
         "max_emoji",
         "censored",
-        "voice_joins"
+        "voice_joins",
+        "max_ghost_pings",
+        "max_ghost_messages",
+        "max_failed_mass_pings"
     }
 
     anti_spam_punishments = [
@@ -1534,12 +1565,12 @@ class ServerAdmin(BaseCog):
         "temp_ban",
         "ban"
     ]
+
     @configure.group(invoke_without_command=True)
     async def anti_spam(self, ctx):
         """anti_spam_help"""
         if ctx.invoked_subcommand is None:
             await ctx.send(embed=await self.get_anti_spam_embed(ctx))
-
 
     async def get_anti_spam_embed(self, ctx):
         buckets = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
@@ -1562,12 +1593,11 @@ class ServerAdmin(BaseCog):
         users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
         desc = None
         if len(users) == 0:
-           desc = Translator.translate('no_ignored_spammers', ctx)
+            desc = Translator.translate('no_ignored_spammers', ctx)
         else:
             resolved_users = [await Utils.get_user(user) for user in users]
             desc = "\n".join(f"{str(user)} (`{user.id}`)" for user in resolved_users)
         embed.add_field(name=Translator.translate('ignored_spammers', ctx), value=desc)
-
 
         roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
         if len(roles) == 0:
@@ -1576,12 +1606,14 @@ class ServerAdmin(BaseCog):
             desc = "\n".join(f"<@&{role}>" for role in roles)
         embed.add_field(name=Translator.translate('ignored_roles', ctx), value=desc)
 
-        embed.set_footer(text=Translator.translate("mods_are_immune", ctx), icon_url='https://cdn.discordapp.com/emojis/585877748996636674.png?v=1')
+        embed.set_footer(text=Translator.translate("mods_are_immune", ctx),
+                         icon_url='https://cdn.discordapp.com/emojis/585877748996636674.png?v=1')
 
         return embed
 
     @anti_spam.command()
-    async def set(self, ctx, type: SpamType, amount: RangedInt(3, 150), seconds: RangedInt(1, 180), punishment: AntiSpamPunishment, duration: Duration = None):
+    async def set(self, ctx, type: SpamType, amount: RangedInt(2, 150), seconds: RangedInt(1, 180),
+                  punishment: AntiSpamPunishment, duration: Duration = None):
         """anti_spam_set_help"""
         duration_required = punishment in ("mute", "temp_ban")
         if duration_required is (duration is None):
@@ -1615,8 +1647,8 @@ class ServerAdmin(BaseCog):
 
         Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
 
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=await self.get_anti_spam_embed(ctx))
-
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}",
+                       embed=await self.get_anti_spam_embed(ctx))
 
     @anti_spam.command("disable")
     async def anti_spam_disable(self, ctx, type: SpamType):
@@ -1626,8 +1658,8 @@ class ServerAdmin(BaseCog):
             if existing[i]["TYPE"] == type:
                 del existing[i]
                 break
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}", embed=await self.get_anti_spam_embed(ctx))
-
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}",
+                       embed=await self.get_anti_spam_embed(ctx))
 
     @anti_spam.group("immune_users", invoke_without_command=True)
     async def immune_users(self, ctx):
@@ -1646,7 +1678,6 @@ class ServerAdmin(BaseCog):
             message = MessageUtils.assemble(ctx, "YES", "user_made_immune", user=Utils.clean_user(member))
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
-
     @immune_users.command("remove")
     async def immune_users_remove(self, ctx, member: discord.Member):
         """anti_spam_immune_users_remove_help"""
@@ -1658,7 +1689,6 @@ class ServerAdmin(BaseCog):
             Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS", users)
             message = MessageUtils.assemble(ctx, "YES", "user_no_longer_immune", user=Utils.clean_user(member))
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
-
 
     @anti_spam.group("immune_roles", invoke_without_command=True)
     async def immune_roles(self, ctx):
@@ -1697,14 +1727,12 @@ class ServerAdmin(BaseCog):
         enabled_string = "enabled" if enabled_status else "disabled"
         enabled_string = Translator.translate(enabled_string, ctx.guild.id)
 
-
         if enabled_status == config_status:
             message = MessageUtils.assemble(ctx, "NO", f"actual_censor_trusted_bypass_unchanged", status=enabled_string)
         else:
             message = MessageUtils.assemble(ctx, "YES", "actual_censor_trusted_bypass", status=enabled_string)
             Configuration.set_var(ctx.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS", enabled_status)
         await ctx.send(message)
-
 
     @configure.command(aliases=["trustedflagbypass"])
     async def trusted_flag_bypass(self, ctx: commands.Context, enabled_status: bool):
@@ -1721,6 +1749,56 @@ class ServerAdmin(BaseCog):
             Configuration.set_var(ctx.guild.id, "FLAGGING", "TRUSTED_BYPASS", enabled_status)
         await ctx.send(message)
 
+    @configure.command(aliases=["gmt"])
+    async def ghost_message_threshold(self, ctx, threshold: RangedInt(1, 60) = None):
+        """ghost_message_threshold_help"""
+        current = Configuration.get_var(ctx.guild.id, "GENERAL", "GHOST_MESSAGE_THRESHOLD")
+        if threshold is None:
+            await MessageUtils.send_to(ctx, 'WRENCH', 'ghost_message_threshold_current', threshold=current)
+        elif current != threshold:
+            Configuration.set_var(ctx.guild.id, "GENERAL", "GHOST_MESSAGE_THRESHOLD", threshold)
+            await MessageUtils.send_to(ctx, 'YES', 'ghost_message_threshold_current', threshold=threshold)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'ghost_message_threshold_unchanged', threshold=threshold)
+
+    @configure.command(aliases=["gpt"])
+    async def ghost_ping_threshold(self, ctx, threshold: RangedInt(1, 60) = None):
+        """ghost_ping_threshold_help"""
+        current = Configuration.get_var(ctx.guild.id, "GENERAL", "GHOST_PING_THRESHOLD")
+        if threshold is None:
+            await MessageUtils.send_to(ctx, 'WRENCH', 'ghost_ping_threshold_current', threshold=current)
+        elif current != threshold:
+            Configuration.set_var(ctx.guild.id, "GENERAL", "GHOST_PING_THRESHOLD", threshold)
+            await MessageUtils.send_to(ctx, 'YES', 'ghost_ping_threshold_current', threshold=threshold)
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING', 'ghost_message_threshold_unchanged', threshold=threshold)
+
+    @configure.command()
+    async def ignore_ids_for_censoring(self, ctx, value: bool = None):
+        current = Configuration.get_var(ctx.guild.id, 'CENSORING', 'IGNORE_IDS')
+        if value is None:
+            await MessageUtils.send_to(ctx, 'WRENCH',
+                                       f'censoring_ignore_ids_is_' + ('enabled' if current else 'disabled'))
+        elif current != value:
+            Configuration.set_var(ctx.guild.id, 'CENSORING', 'IGNORE_IDS', value)
+            await MessageUtils.send_to(ctx, 'YES', f'censoring_ignore_ids_' + ('enabled' if value else 'disabled'))
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING',
+                                       f'censoring_ignore_ids_already_' + ('enabled' if value else 'disabled'))
+
+    @configure.command()
+    async def ignore_ids_for_flagging(self, ctx, value: bool = None):
+        current = Configuration.get_var(ctx.guild.id, 'FLAGGING', 'IGNORE_IDS')
+        if value is None:
+            await MessageUtils.send_to(ctx, 'WRENCH',
+                                       f'flagging_ignore_ids_is_' + ('enabled' if current else 'disabled'))
+        elif current != value:
+            Configuration.set_var(ctx.guild.id, 'FLAGGING', 'IGNORE_IDS', value)
+            await MessageUtils.send_to(ctx, 'YES', f'flagging_ignore_ids_' + ('enabled' if value else 'disabled'))
+        else:
+            await MessageUtils.send_to(ctx, 'WARNING',
+                                       f'flagging_ignore_ids_already_' + ('enabled' if value else 'disabled'))
+
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
         changed = False
@@ -1731,7 +1809,6 @@ class ServerAdmin(BaseCog):
                 changed = True
         if changed:
             Configuration.save(channel.guild.id)
-
 
 
 def setup(bot):

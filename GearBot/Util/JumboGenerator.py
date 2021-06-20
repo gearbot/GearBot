@@ -6,7 +6,10 @@ import aiohttp
 import discord
 import math
 
-from PIL import Image
+try:
+    from PIL import Image
+except ModuleNotFoundError:
+    from pil import Image
 
 from Util import MessageUtils
 

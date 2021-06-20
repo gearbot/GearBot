@@ -116,6 +116,9 @@ LOGGING_INFO = {
         }
     },
     "FUTURE_LOGS": {},
+    "FAILED_MASS_PINGS": {
+        "failed_mass_ping": "PING"
+    },
     "MESSAGE_LOGS": {
         "edit_logging": "EDIT",
         "edit_logging_with_id": "EDIT",

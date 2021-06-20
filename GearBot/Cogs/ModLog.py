@@ -13,6 +13,7 @@ from discord.utils import snowflake_time
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
     MessageUtils
+from Util.Matchers import ROLE_ID_MATCHER
 from Util.Utils import assemble_jumplink
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
 
@@ -70,11 +71,29 @@ class ModLog(BaseCog):
             return
         if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (message.content != "" or len(message.attachments) > 0) and message.author.id != self.bot.user.id:
             await MessageUtils.insert_message(self.bot, message)
+        failed_mass_ping = 0
+
+        if "@everyone" in message.content and message.mention_everyone is False:
+            failed_mass_ping += 1
+        if "@here" in message.content and message.mention_everyone is False:
+            failed_mass_ping += 1
+        roles = ROLE_ID_MATCHER.findall(message.content)
+        mentioned_roles = [role.id for role in message.role_mentions]
+        for role in roles:
+            if role not in mentioned_roles:
+                failed_mass_ping += 1
+
+        if failed_mass_ping > 0:
+            GearbotLogging.log_key(message.guild.id, "failed_mass_ping", user=Utils.clean_user(message.author), message=Utils.replace_lookalikes(message.content), link=assemble_jumplink(message.guild.id, message.channel.id, message.id))
+            if self.bot.get_cog("AntiSpam") is not None:
+                await self.bot.get_cog("AntiSpam").handle_failed_ping(message, failed_mass_ping)
+
+
+
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, data: RawMessageDeleteEvent):
-        if data.message_id in self.bot.data["message_deletes"]:
-            self.bot.data["message_deletes"].remove(data.message_id)
+        if data.message_id in self.bot.deleted_messages:
             return
         c = self.bot.get_channel(data.channel_id)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (not Features.is_logged(c.guild.id, "MESSAGE_LOGS")) or data.channel_id in Configuration.get_var(c.guild.id, "MESSAGE_LOGS", "IGNORED_CHANNELS_OTHER"):

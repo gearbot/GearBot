@@ -1374,6 +1374,10 @@ class Moderation(BaseCog):
         token_list = Configuration.get_var(guild_id, "FLAGGING", "TOKEN_LIST")
         word_list = Configuration.get_var(guild_id, "FLAGGING", "WORD_LIST")
 
+        if Configuration.get_var("FLAGGING", "IGNORE_IDS"):
+            content = re.sub(r'(<(?:@|#|@&|@!)[0-9]{15,20}>)', '', content)
+            content = re.sub(r'<a?:[^: \n]+:([0-9]{15,20})>', '', content)
+
         for bad in (t.lower() for t in token_list):
             if bad in content:
                 await self.flag_message(content, bad, guild_id, channel_id, message_id, author, "token")

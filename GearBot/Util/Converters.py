@@ -23,6 +23,7 @@ class BannedMember(Converter):
             raise TranslatedBadArgument("not_banned", ctx)
         return entity
 
+
 class ServerMember(Converter):
     async def convert(self, ctx, argument):
         if ctx.guild is None:
@@ -59,13 +60,12 @@ class ServerMember(Converter):
             else:
                 raise UserNotFound(argument)
 
-
-
         for m in ctx.guild.members:
             if username is not None:
                 potential = None
-                if (discrim is None and (m.name.startswith(username)  or (m.nick is not None and m.nick.startswith(username)))) or \
-                    (discrim is not None and (m.name == username or m.nick == username)):
+                if (discrim is None and (
+                        m.name.startswith(username) or (m.nick is not None and m.nick.startswith(username)))) or \
+                        (discrim is not None and (m.name == username or m.nick == username)):
                     potential = m
                 if potential is not None:
                     if member is not None:
@@ -88,10 +88,13 @@ async def getMessageAuthor(ctx, guild_id, message_id):
             async def yes():
                 nonlocal ok
                 ok = True
-            await Confirmation.confirm(ctx, Translator.translate('use_message_author', ctx, user=Utils.clean_user(user), user_id=user.id), on_yes=yes, confirm_cancel=False)
+
+            await Confirmation.confirm(ctx, Translator.translate('use_message_author', ctx, user=Utils.clean_user(user),
+                                                                 user_id=user.id), on_yes=yes, confirm_cancel=False)
             if ok:
                 return user
     return None
+
 
 class DiscordUser(Converter):
 
@@ -467,6 +470,7 @@ class VerificationLevel(Converter):
             raise TranslatedBadArgument('unknown_verification_level', ctx)
         return level
 
+
 class Nickname(Converter):
     async def convert(self, ctx, argument):
         if len(argument) > 32:
@@ -482,14 +486,19 @@ anti_spam_types = {
     "max_links",
     "max_emoji",
     "censored",
-    "voice_joins"
+    "voice_joins",
+    "max_ghost_pings",
+    "max_ghost_messages",
+    "max_failed_mass_pings"
 }
+
 
 class SpamType(Converter):
     async def convert(self, ctx, argument):
         if argument not in anti_spam_types:
             raise TranslatedBadArgument('invalid_anti_spam_type', ctx, types=",".join(anti_spam_types))
         return argument
+
 
 anti_spam_punishments = {
     "mute",
@@ -498,9 +507,9 @@ anti_spam_punishments = {
     "ban"
 }
 
+
 class AntiSpamPunishment(Converter):
     async def convert(self, ctx, argument):
         if argument not in anti_spam_punishments:
             raise TranslatedBadArgument('invalid_anti_spam_punishment', ctx, types=",".join(anti_spam_punishments))
         return argument
-

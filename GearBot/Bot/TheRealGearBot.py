@@ -50,7 +50,6 @@ async def initialize(bot, startup=False):
         InfractionUtils.initialize(bot)
         bot.data = {
             "unbans": set(),
-            "message_deletes": set(),
             "nickname_changes": set()
         }
         await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))

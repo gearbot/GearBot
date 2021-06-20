@@ -1,12 +1,15 @@
 {
-	"VERSION": 34,
+	"VERSION": 35,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
 		"PREFIX": "!",
 		"TIMESTAMPS": true,
 		"NEW_USER_THRESHOLD": 86400,
-		"TIMEZONE": "Europe/Brussels"
+		"TIMEZONE": "Europe/Brussels",
+		"GHOST_MESSAGE_THRESHOLD": 10,
+		"GHOST_PING_THRESHOLD": 20,
+		"BOT_DELETED_STILL_GHOSTS": true
 	},
 	"ROLES": {
 		"SELF_ROLES": [],
@@ -33,12 +36,14 @@
 		"DOMAIN_LIST_ALLOWED": false,
 		"DOMAIN_LIST": [],
 		"FULL_MESSAGE_LIST": [],
-		"CENSOR_EMOJI_ONLY_MESSAGES": false
+		"CENSOR_EMOJI_ONLY_MESSAGES": false,
+		"IGNORE_IDS": false
 	},
 	"FLAGGING": {
 		"WORD_LIST": [],
 		"TOKEN_LIST": [],
-		"TRUSTED_BYPASS": false
+		"TRUSTED_BYPASS": false,
+		"IGNORE_IDS": false
 	},
 	"INFRACTIONS": {
 		"DM_ON_WARN": false,
