@@ -172,7 +172,7 @@ class Infractions(BaseCog):
         user = await Utils.get_user(infraction.user_id)
         GearbotLogging.log_key(ctx.guild.id, "inf_update_log", inf=infraction.id, user=Utils.clean_user(user), userid=user.id, mod=Utils.clean_user(ctx.author), modid=ctx.author.id, reason=reason)
 
-    @inf.command(aliases=["del", "remove"])
+    @inf.command(aliases=["del", "remove", "clear"])
     async def delete(self, ctx: commands.Context, infraction: ServerInfraction):
         """inf_delete_help"""
         reason = infraction.reason
