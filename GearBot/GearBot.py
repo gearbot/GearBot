@@ -123,3 +123,4 @@ if __name__ == '__main__':
     gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")
 
+GearbotLogging.info("GearBot shutdown completed cleanly")
