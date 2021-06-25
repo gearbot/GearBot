@@ -425,7 +425,7 @@ class AntiSpam(BaseCog):
                                                    f"{Translator.translate('spam_max_ghost_messages', member.guild)} ({count}/{period}s)",
                                                    member,
                                                    self.bot.get_channel(data.channel_id),
-                                                   await bucket.get(message.author.id, msg_time, expire=False),
+                                                   await bucket.get(message.author, msg_time, expire=False),
                                                    b, count)))
                 elif t == "max_ghost_pings" and is_ghost_ping:
                     bucket = self.get_bucket(member.guild.id, f"max_ghost_pings", b, member.id)

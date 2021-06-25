@@ -322,7 +322,7 @@ class Moderation(BaseCog):
 
         reason = Utils.enrich_reason(ctx, reason)
 
-        allowed, message = Actions.can_act("ban", ctx, member)
+        allowed, message = Actions.can_act("ban", ctx, member, require_on_server=False)
         if allowed:
             await self._ban(ctx, user, reason, True, days=days)
         else:
@@ -475,14 +475,13 @@ class Moderation(BaseCog):
                         await self._ban(ctx, user, reason, True, days=days)
                         valid += 1
                 else:
-                    allowed, message = Actions.can_act("ban", ctx, member)
+                    allowed, message = Actions.can_act("ban", ctx, member, require_on_server=False)
                     if allowed:
                         await self._ban(ctx, member, reason, True, days=days)
                         valid += 1
                     else:
                         failures.append(f"{f}: {message}")
             await pmessage.delete()
-            await MessageUtils.send_to(ctx, "YES", "mcleanban_confirmation", count=valid)
             if len(failures) > 0:
                 await Pages.create_new(self.bot, "mass_failures", ctx, action_type="ban",
                                        failures="----NEW PAGE----".join(Pages.paginate("\n".join(failures))))
@@ -1393,7 +1392,10 @@ class Moderation(BaseCog):
                 regex = self.regexes[guild_id]
             match = regex.findall(content)
             if len(match) > 0:
-                await self.flag_message(content, match[0][1], guild_id, channel_id, message_id, author, "word")
+                m = match[0]
+                if isinstance(m, tuple):
+                    m = m[1]
+                await self.flag_message(content, m, guild_id, channel_id, message_id, author, "word")
                 return
 
     async def flag_message(self, content, flagged, guild_id, channel_id, message_id, author=None, type=""):

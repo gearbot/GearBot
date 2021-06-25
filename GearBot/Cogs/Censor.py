@@ -116,7 +116,10 @@ class Censor(BaseCog):
                 regex = self.regexes[channel.guild.id]
             match = regex.findall(content)
             if len(match) > 0:
-                await self.censor_message(message_id, content, channel, member, match[0][1], "_word", edit=edit, reply=reply, attachments=attachments)
+                m = match[0]
+                if isinstance(m, tuple):
+                    m = m[1]
+                await self.censor_message(message_id, content, channel, member, m, "_word", edit=edit, reply=reply, attachments=attachments)
                 return
 
         if len(domain_list) > 0:
