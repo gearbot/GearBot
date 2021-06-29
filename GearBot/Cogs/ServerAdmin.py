@@ -954,6 +954,20 @@ class ServerAdmin(BaseCog):
         await self.dm_configure(ctx, 'unmute', value)
 
     @configure.command()
+    async def dm_on(self, ctx):
+        """dm_on_list_help"""
+        embed = discord.Embed(color=600870, title=Translator.translate('infraction_dm_settings', ctx))
+        enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
+        disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
+
+        for x in ["WARN", "UNMUTE", "MUTE", "KICK", "BAN", "TEMPBAN"]:
+                key = f"DM_ON_{x.upper()}"
+                v = Configuration.get_var(ctx.guild.id, "INFRACTIONS", key)
+                embed.add_field(name=key, value=enabled if v else disabled)
+        
+        await ctx.send(embed=embed)
+
+    @configure.command()
     async def log_embeds(self, ctx, value: bool):
         Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS", "EMBED", value)
         await ctx.send(

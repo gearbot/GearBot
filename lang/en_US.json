@@ -1051,5 +1051,7 @@
   "dm_on_unmute_msg_is_enabled": "DMing people when they are unmuted is enabled",
   "dm_on_unmute_msg_is_disabled": "DMing people when they are unmuted is disabled",
   "dm_on_unmute_msg_already_enabled": "DMing people when they are unmuted was already enabled",
-  "dm_on_unmute_msg_already_disabled": "DMing people when they are unmuted was already disabled"
+  "dm_on_unmute_msg_already_disabled": "DMing people when they are unmuted was already disabled",
+  "infraction_dm_settings": "Infraction DM Settings",
+  "dm_on_list_help": "Shows the current settings for infraction DMs"
 }
