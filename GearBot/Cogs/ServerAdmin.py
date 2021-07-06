@@ -953,9 +953,9 @@ class ServerAdmin(BaseCog):
         """dm_on_unmute_help"""
         await self.dm_configure(ctx, 'unmute', value)
 
-    @configure.command()
-    async def dm_on(self, ctx):
-        """dm_on_list_help"""
+    @configure.command(aliases=["dm_on"])
+    async def dm_notifications(self, ctx):
+        """dm_notifications_help"""
         embed = discord.Embed(color=600870, title=Translator.translate('infraction_dm_settings', ctx))
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
