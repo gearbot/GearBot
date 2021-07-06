@@ -961,7 +961,7 @@ class ServerAdmin(BaseCog):
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
 
         for x in ["WARN", "UNMUTE", "MUTE", "KICK", "BAN", "TEMPBAN"]:
-                key = f"DM_ON_{x.upper()}"
+                key = f"DM_ON_{x}"
                 v = Configuration.get_var(ctx.guild.id, "INFRACTIONS", key)
                 embed.add_field(name=key, value=enabled if v else disabled)
         
