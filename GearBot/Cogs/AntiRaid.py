@@ -140,7 +140,7 @@ class AntiRaid(BaseCog):
         initialized_at = datetime.utcfromtimestamp(time.time())
         while True:
             try:
-                await self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
+                await asyncio.wait_for(self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"]), timeout=data["time"])
                 diff = abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
                 if diff > 15 * 60:
                     GearbotLogging.log_key(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])

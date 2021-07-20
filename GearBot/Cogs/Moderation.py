@@ -573,7 +573,7 @@ class Moderation(BaseCog):
 
     async def _forceban(self, ctx, user, reason):
         # not banned, wack with the hammer
-        if user.discriminator == '0000':
+        if user.system:
             await MessageUtils.send_to(ctx, 'NO', 'forceban_unable_sytem_user')
             return
 
