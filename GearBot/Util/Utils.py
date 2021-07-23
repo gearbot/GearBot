@@ -28,9 +28,7 @@ def fetch_from_disk(filename, alternative=None):
         with open(f"{filename}.json", encoding="UTF-8") as file:
             return json.load(file)
     except FileNotFoundError:
-        if alternative is not None:
-            return fetch_from_disk(alternative)
-    except JSONDecodeError:
+        GearbotLogging.info(f"Tried to load {filename}.json but couldn't find it on disk")
         if alternative is not None:
             return fetch_from_disk(alternative)
     return dict()

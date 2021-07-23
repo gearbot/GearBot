@@ -1,3 +1,7 @@
+import asyncio
+from json import JSONDecodeError
+
+
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
 MASTER_LOADED = False
@@ -420,8 +424,14 @@ async def initialize(bot: commands.Bot):
 
 
 def load_config(guild):
+    from Bot.TheRealGearBot import handle_exception
     global SERVER_CONFIGS
-    config = Utils.fetch_from_disk(f'config/{guild}')
+    try:
+        config = Utils.fetch_from_disk(f'config/{guild}')
+    except JSONDecodeError as e:
+        GearbotLogging.error(f"Failed to deserialize config! {e}")
+        asyncio.create_task(handle_exception("loading config", BOT, e))
+        config = Utils.fetch_from_disk("template")
     if len(config.keys()) != 0 and "VERSION" not in config and len(config) < 15:
         GearbotLogging.info(f"The config for {guild} is to old to migrate, resetting")
         config = dict()
