@@ -1088,7 +1088,7 @@
   "all_description": "Show the complete command list",
   "help_cog_description": "Show help for only the {cog} cog",
   "full_censor_list_empty": "The full message censor list is empty",
-  "view_expired": "This message has expired, please run the command again instead"
+  "view_expired": "This message has expired, please run the command again instead",
   "dm_on_unmute_msg_already_disabled": "DMing people when they are unmuted was already disabled",
   "infraction_dm_settings": "Infraction DM Settings",
   "dm_notifications_help": "Shows the current settings for infraction DMs"
