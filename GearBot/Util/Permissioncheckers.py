@@ -98,6 +98,8 @@ def get_command_pieces(command_object):
 
 
 def get_required(command_object, perm_dict):
+    if perm_dict is None:
+        return 6
     pieces = get_command_pieces(command_object)
     required = perm_dict["required"]
     found = True

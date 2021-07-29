@@ -1,6 +1,6 @@
 import asyncio
 import time
-from datetime import datetime
+import datetime
 
 from discord import Embed, User, NotFound, Forbidden, DMChannel, MessageReference
 from discord.ext import commands
@@ -11,6 +11,7 @@ from Util import Utils, GearbotLogging, Emoji, Translator, MessageUtils, server_
 from Util.Converters import Duration, ReminderText
 from Util.Utils import assemble_jumplink
 from database.DatabaseConnector import Reminder
+from views.Reminder import ReminderView
 
 
 class Reminders(BaseCog):
@@ -31,7 +32,6 @@ class Reminders(BaseCog):
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.bot.get_command("help"), query="remind")
 
-    @commands.bot_has_permissions(add_reactions=True)
     @remind.command("me", aliases=["add", "m", "a"])
     async def remind_me(self, ctx, duration: Duration, *, reminder: ReminderText):
         """remind_me_help"""
@@ -45,41 +45,13 @@ class Reminders(BaseCog):
             return
         if ctx.guild is not None:
             message = f'{Emoji.get_chat_emoji("QUESTION")} {Translator.translate("remind_question", ctx)}'
-            one = Emoji.get_emoji("1")
-            two = Emoji.get_emoji("2")
-            no = Emoji.get_emoji("NO")
-            embed = Embed(description=f"""
-{Emoji.get_chat_emoji("1")} {Translator.translate("remind_option_here", ctx)}
-{Emoji.get_chat_emoji("2")} {Translator.translate("remind_option_dm", ctx)}
-{Emoji.get_chat_emoji("NO")} {Translator.translate("remind_option_cancel", ctx)}
-""")
-            m = await ctx.send(message, embed=embed)
-            for e in [one, two, no]:
-                await m.add_reaction(e)
 
-            try:
-                reaction = await ctx.bot.wait_for('raw_reaction_add', timeout=30, check=lambda reaction: reaction.user_id == ctx.message.author.id and reaction.emoji in [one, two, no])
-            except asyncio.TimeoutError:
-                await MessageUtils.send_to(ctx, "NO", "confirmation_timeout", timeout=30)
-                return
-            else:
-                if reaction.emoji == no:
-                    await MessageUtils.send_to(ctx, "NO", "command_canceled")
-                    return
-                else:
-                    dm = reaction.emoji == two
-            finally:
-                await m.delete()
+            async def timeout():
+                if m is not None:
+                    await m.edit(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
 
-        else:
-            dm = True
-        await Reminder.create(user_id=ctx.author.id, channel_id=ctx.channel.id, dm=dm,
-                        to_remind=await Utils.clean(reminder, markdown=False, links=False, emoji=False),
-                        time=time.time() + duration_seconds, send=datetime.now().timestamp(), status=1,
-                        guild_id=ctx.guild.id if ctx.guild is not None else "@me", message_id=ctx.message.id)
-        mode = "dm" if dm else "here"
-        await MessageUtils.send_to(ctx, "YES", f"reminder_confirmation_{mode}", duration=duration.length,
-                                     duration_identifier=duration.unit)
+            m = await ctx.send(message, view=ReminderView(guild_id=ctx.guild.id if ctx.guild is not None else "@me", reminder=reminder, channel_id=ctx.channel.id, user_id=ctx.author.id, message_id=ctx.message.id, duration=duration_seconds, timeout_callback=timeout))
+
 
     async def delivery_service(self):
         # only let cluster 0 do this one
@@ -88,7 +60,7 @@ class Reminders(BaseCog):
         GearbotLogging.info("📬 Starting reminder delivery background task 📬")
         while self.running:
             now = time.time()
-            limit = datetime.fromtimestamp(time.time() + 30).timestamp()
+            limit = datetime.datetime.fromtimestamp(time.time() + 30).timestamp()
 
             for r in await Reminder.filter(time__lt = limit, status = 1):
                 if r.id not in self.handling:
@@ -126,8 +98,8 @@ class Reminders(BaseCog):
 
 
             tloc =  None if isinstance(location, User) or isinstance(location, DMChannel) else location
-            now = datetime.utcfromtimestamp(time.time())
-            send_time = datetime.utcfromtimestamp(package.send)
+            now = datetime.datetime.fromtimestamp(time.time())
+            send_time = datetime.datetime.fromtimestamp(package.send)
             desc = Translator.translate('reminder_delivery', tloc, date=send_time.strftime('%c'), timediff=server_info.time_difference(now, send_time, tloc)) + f"```\n{package.to_remind}\n```"
             desc = Utils.trim_message(desc, 2048)
             embed = Embed(

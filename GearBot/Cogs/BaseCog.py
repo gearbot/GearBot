@@ -156,7 +156,8 @@ cog_permissions = {
                 "commands": {
                     "lvl4": {"required": 5, "min": 4, "max": 6}
                 }
-            }
+            },
+            "reset_guild_cache": {"required": 2, "min": 1, "max": 6}
         }
     }
 }

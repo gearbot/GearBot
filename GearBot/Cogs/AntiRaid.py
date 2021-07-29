@@ -1,6 +1,6 @@
 import asyncio
 import time
-from datetime import datetime
+import datetime
 
 import discord
 from discord.ext import commands
@@ -43,7 +43,7 @@ class AntiRaid(BaseCog):
         # cleaning pipe!
         pipeline = self.bot.redis_pool.pipeline()
 
-        now = datetime.utcfromtimestamp(time.time())
+        now = datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc)
         for user in potential_raiders:
             m = member.guild.get_member(int(user))
             # discard users who are no left already
@@ -137,18 +137,18 @@ class AntiRaid(BaseCog):
         await self.terminate_shield(guild_id, handler, shield)
 
     async def resetting(self, guild_id, handler, shield, data):
-        initialized_at = datetime.utcfromtimestamp(time.time())
+        initialized_at = datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc)
         while True:
             try:
-                await asyncio.wait_for(self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"]), timeout=data["time"])
-                diff = abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
+                await asyncio.wait_for(self.bot.wait_for("member_add", check=lambda m: m.guild.id == guild_id, timeout=data["time"])
+                diff = abs((datetime.datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds())
                 if diff > 15 * 60:
                     GearbotLogging.log_key(guild_id, 'shield_time_limit_reached', shield_name=shield["name"])
                     await self.terminate_shield(guild_id, handler, shield)
                     return
             except asyncio.TimeoutError:
                 # no more joins! turn off the handler
-                if abs((datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds()) >= shield["trigger"][
+                if abs((datetime.datetime.utcfromtimestamp(time.time()) - initialized_at).total_seconds()) >= shield["trigger"][
                     "seconds"]:
                     await self.terminate_shield(guild_id, handler, shield)
                     return  # don't leak tasks

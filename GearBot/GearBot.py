@@ -1,8 +1,18 @@
 # force it to use v6 instead of v7
 import asyncio
 import os
+import signal
+import datetime
 
+import aiohttp
+import aioredis
 import discord.http
+from discord.ext.commands import ExtensionAlreadyLoaded
+
+from Bot.TheRealGearBot import handle_exception
+from database import DatabaseConnector
+from views.InfSearch import InfSearch
+
 if 'proxy_url' in os.environ:
     discord.http.Route.BASE = os.environ['proxy_url']
 
@@ -10,7 +20,7 @@ from argparse import ArgumentParser
 
 from Bot import TheRealGearBot
 from Bot.GearBot import GearBot
-from Util import Configuration, GearbotLogging
+from Util import Configuration, GearbotLogging, InfractionUtils, Utils, Emoji, Translator
 from discord import Intents, MemberCacheFlags
 from kubernetes import client, config
 
@@ -37,6 +47,78 @@ async def node_init(generation, resource_version):
     else:
         return existing.shard
 
+
+async def initialize(bot):
+    await gearbot.login(token)
+    try:
+        await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
+        # database
+        GearbotLogging.info(f"Cluster {bot.cluster} connecting to the database.")
+        await DatabaseConnector.init()
+        GearbotLogging.info(f"Cluster {bot.cluster} database connection established.")
+
+        await Emoji.initialize(bot)
+        Utils.initialize(bot)
+        InfractionUtils.initialize(bot)
+        bot.data = {
+            "unbans": set(),
+            "nickname_changes": set()
+        }
+
+        c = await Utils.get_commit()
+        bot.version = c
+        GearbotLogging.info(f"GearBot cluster {bot.cluster} spinning up version {c}")
+        await GearbotLogging.bot_log(
+            f"{Emoji.get_chat_emoji('ALTER')} GearBot cluster {bot.cluster} spinning up version {c}")
+
+        socket = Configuration.get_master_var("REDIS_SOCKET", "")
+        if socket == "":
+            bot.redis_pool = await aioredis.create_redis_pool(
+                (Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)),
+                encoding="utf-8", db=0)
+        else:
+            bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0, maxsize=3)
+
+        GearbotLogging.info("Cluster {bot.cluster} redis connection established")
+        await GearbotLogging.bot_log(
+            f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} redis connection established, let's go full speed!")
+
+        bot.aiosession = aiohttp.ClientSession()
+
+        await Translator.initialize(bot)
+        bot.being_cleaned.clear()
+        await Configuration.initialize(bot)
+
+        bot.start_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+
+        for extension in Configuration.get_master_var("COGS"):
+            try:
+                GearbotLogging.info(f"Loading {extension} cog...")
+                bot.load_extension("Cogs." + extension)
+            except ExtensionAlreadyLoaded:
+                pass
+            except Exception as e:
+                await handle_exception(f"Failed to load cog {extension}", bot, e)
+        GearbotLogging.info("Cogs loaded")
+
+        to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
+        for c in to_unload:
+            bot.remove_command(c)
+
+        bot.add_view(InfSearch([], 1, 0))
+
+        bot.STARTUP_COMPLETE = True
+        info = await bot.application_info()
+        gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
+        a = " ".join(gears)
+        b = " ".join(reversed(gears))
+
+        await GearbotLogging.bot_log(message=f"{a} {info.name} initialization complete, going online! {b}")
+    except Exception as e:
+        await handle_exception("Startup failure", bot, e)
+        raise e
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--token", help="Specify your Discord token")
@@ -60,11 +142,7 @@ if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    args = {
-        "command_prefix": prefix_callable,
-        "case_insensitive": True,
-        "max_messages": None,
-        "intents": Intents(
+    intents = Intents(
             guilds=True,
             members=True,
             bans=True,
@@ -77,12 +155,13 @@ if __name__ == '__main__':
             messages=True,
             reactions=True,
             typing=False,
-        ),
-        "member_cache_flags": MemberCacheFlags(
-            online=False,
-            voice=True,
-            joined=True,
-        ),
+        )
+    args = {
+        "command_prefix": prefix_callable,
+        "case_insensitive": True,
+        "max_messages": None,
+        "intents": intents,
+        "member_cache_flags": MemberCacheFlags.from_intents(intents),
         "chunk_guilds_at_startup": False,
         "monitoring_prefix": Configuration.get_master_var("MONITORING_PREFIX", "gearbot")
     }
@@ -118,7 +197,20 @@ if __name__ == '__main__':
     gearbot = GearBot(**args)
 
     gearbot.remove_command("help")
+
+    # set shutdown hooks
+    try:
+        for signame in ('SIGINT', 'SIGTERM'):
+            asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
+                                                        lambda: asyncio.ensure_future(Utils.cleanExit(gearbot, signame)))
+    except Exception as e:
+        pass  # doesn't work on windows
+
+    # initialize
+    loop.run_until_complete(initialize(gearbot))
+
     gearbot.run(token)
+
     GearbotLogging.info("GearBot shutting down, cleaning up")
     gearbot.database_connection.close()
     GearbotLogging.info("Cleanup complete")

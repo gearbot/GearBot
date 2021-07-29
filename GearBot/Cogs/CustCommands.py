@@ -2,17 +2,20 @@ import re
 from collections import namedtuple
 
 import discord
-from discord import Member, Permissions, Embed
+from discord import Embed, Interaction
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Confirmation, Emoji, Translator, MessageUtils, Utils, Permissioncheckers, Pages
+from Util import Configuration, Emoji, Translator, MessageUtils, Utils, Permissioncheckers, Pages
 from database.DatabaseConnector import CustomCommand
+from views import SimplePager
+from views.Confirm import Confirm
 
 CommandInfo = namedtuple("CommandInfo", "content created_by")
 IMAGE_MATCHER = re.compile(
     r'((?:https?://)[a-z0-9]+(?:[-.][a-z0-9]+)*\.[a-z]{2,5}(?::[0-9]{1,5})?(?:/[^ \n<>]*)\.(?:png|apng|jpg|gif))',
     re.IGNORECASE)
+
 
 class CustCommands(BaseCog):
 
@@ -22,7 +25,6 @@ class CustCommands(BaseCog):
         self.commands = dict()
         self.bot.loop.create_task(self.reloadCommands())
         self.loaded = False
-        Pages.register("custom_command_list", self.command_list_init, self.command_list_update)
 
     async def reloadCommands(self):
         self.commands = dict()
@@ -41,7 +43,7 @@ class CustCommands(BaseCog):
 
     @commands.group(name="commands", aliases=['command'], invoke_without_command=True)
     @commands.guild_only()
-    @commands.bot_has_permissions(embed_links=True, external_emojis=True, add_reactions=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def command(self, ctx: commands.Context):
         """custom_commands_help"""
         if ctx.invoked_subcommand is None:
@@ -49,10 +51,12 @@ class CustCommands(BaseCog):
                 if len(self.commands[ctx.guild.id]) == 0:
                     await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
                 else:
-                    await Pages.create_new(self.bot, "custom_command_list", ctx)
+                    pages = self.get_command_pages(ctx.guild.id)
+                    content, view, _ = SimplePager.get_parts(pages, 0, ctx.guild.id, 'commands')
+                    page = self.gen_command_page(pages, 0, ctx.guild)
+                    await ctx.send(embed=page, view=view)
             else:
                 await ctx.send(Translator.translate("custom_command_no_commands", ctx.guild.id))
-
 
     def get_command_pages(self, guild_id):
         pages = []
@@ -66,22 +70,10 @@ class CustCommands(BaseCog):
             pages.append(page)
         return pages
 
-
-    async def command_list_init(self, ctx):
-        pages = self.get_command_pages(ctx.guild.id)
-        return None, self.gen_command_page(pages, 0, ctx.guild), len(pages) > 1
-
-    async def command_list_update(self, ctx, message, page_num, action, data):
-        pages = self.get_command_pages(message.guild.id)
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return None, self.gen_command_page(pages, page_num, message.guild), data
-
     def gen_command_page(self, pages, page_num, guild):
-        return Embed(description=pages[page_num], title=f"{Translator.translate('custom_command_list', guild.id,server_name=guild.name)} ({page_num+1}/{len(pages)})", color=0x663399)
-
-
-
+        return Embed(description=pages[page_num],
+                     title=f"{Translator.translate('custom_command_list', guild.id, server_name=guild.name)} ({page_num + 1}/{len(pages)})",
+                     color=0x663399)
 
     @command.command(aliases=["new", "add"])
     @commands.guild_only()
@@ -108,16 +100,24 @@ class CustCommands(BaseCog):
                 await ctx.send(
                     f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_added', ctx.guild.id, trigger=trigger)}")
             else:
-                async def yes():
-                    await ctx.send(Translator.translate('updating', ctx.guild.id))
+                message = None
+
+                async def yes(interaction: discord.Interaction):
+                    await interaction.response.edit_message(content=Translator.translate('updating', ctx.guild.id), view=None)
                     await ctx.invoke(self.update, trigger, reply=reply)
 
-                async def no():
-                    await ctx.send(Translator.translate('custom_command_not_updating', ctx.guild.id))
+                async def no(interaction):
+                    await interaction.response.edit_message(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
 
-                await Confirmation.confirm(ctx,
-                                           Translator.translate('custom_command_override_confirmation', ctx.guild.id),
-                                           on_yes=yes, on_no=no)
+                async def timeout():
+                    if message is not None:
+                        await message.edit(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
+
+                def check(interaction: Interaction):
+                    return ctx.author.id == interaction.user.id and interaction.message.id == message.id
+
+                message = await ctx.send(Translator.translate('custom_command_override_confirmation', ctx.guild.id),
+                                         view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
 
     @command.command(aliases=["del", "delete"])
     @commands.guild_only()
@@ -199,7 +199,8 @@ class CustCommands(BaseCog):
         if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix + trigger or (
-                        message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[len(prefix + trigger)] == " "):
+                        message.content.lower().startswith(trigger, len(prefix)) and message.content.lower()[
+                    len(prefix + trigger)] == " "):
                     info = self.commands[message.guild.id][trigger]
                     images = IMAGE_MATCHER.findall(info.content)
                     image = None
@@ -212,7 +213,7 @@ class CustCommands(BaseCog):
                     if info.created_by is not None:
                         creator = await Utils.get_user(info.created_by)
                         embed.set_footer(text=f"Created by {str(creator)} ({info.created_by})",
-                                         icon_url=creator.avatar_url)
+                                         icon_url=creator.avatar.url)
                     if image is not None:
                         embed.set_image(url=image)
                     await message.channel.send(embed=embed)

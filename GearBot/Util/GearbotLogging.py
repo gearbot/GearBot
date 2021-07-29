@@ -5,7 +5,7 @@ import sys
 import traceback
 from collections import namedtuple
 from concurrent.futures import CancelledError
-from datetime import datetime
+import datetime
 from logging.handlers import TimedRotatingFileHandler
 from queue import Queue
 
@@ -278,6 +278,28 @@ LOGGING_INFO = {
         "flagged_token": "THINK",
         "flagged_word_edit": "THINK",
         "flagged_token_edit": "THINK"
+    },
+    "THREAD_LOGS": {
+        "thread_created": "CREATE",
+        "thread_created_by_user": "CREATE",
+        "thread_deleted": "DELETE",
+        "thread_unknown_channel_deleted": "DELETE",
+        "thread_deleted_by_user": "DELETE",
+        "thread_unknown_channel_deleted_by_user": "DELETE",
+        "thread_unarchived": "ALTER",
+        "thread_unarchived_by": "ALTER",
+        "thread_archived": "ALTER",
+        "thread_archived_by": "ALTER",
+        "thread_archived_mod": "ALTER",
+        "thread_archived_by_mod": "ALTER",
+        "thread_update_simple": "ALTER",
+        "thread_update_simple_by": "ALTER",
+        "thread_archived_by_owner": "ALTER",
+        "thread_auto_archived": "ALTER",
+    },
+    "THREAD_TRAVEL_LOGS": {
+        "thread_member_add": "ROLE_ADD",
+        "thread_member_remove": "ROLE_REMOVE",
     }
 }
 
@@ -403,7 +425,7 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
     log_to(guild_id, targets, Utils.trim_message(message, 2000) if message is not None else None, embed, file, None)
 
 
-def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, timestamp=datetime.now(), **kwargs):
+def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, timestamp=datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc), **kwargs):
     # logging category, emoji and
     info = LOG_TYPES[key]
 
@@ -421,7 +443,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, t
     message = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
 
     if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
-        s = datetime.strftime(
+        s = datetime.datetime.strftime(
             timestamp.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
             '%H:%M:%S')
         stamp = f"[`{s}`] "

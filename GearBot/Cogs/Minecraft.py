@@ -40,7 +40,7 @@ class Minecraft(BaseCog):
                 GearbotLogging.info(f"Retrieved project data for {project_name}, adding to cache.")
                 self.cf_cache[project_name] = {
                     "info": info,
-                    "time": datetime.datetime.utcnow()
+                    "time": datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
                 }
             self.fetching.remove(project_name)
             if log:
@@ -128,7 +128,6 @@ class Minecraft(BaseCog):
         pass
 
     async def info(self, ctx, project_name: str):
-        await Pages.create_new("cf", ctx, project_name=project_name)
 
     # @cf.command()
     # async def latest(self, ctx, project_name: str, version: str):

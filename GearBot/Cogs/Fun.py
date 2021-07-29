@@ -1,6 +1,6 @@
 import asyncio
 import time
-from datetime import datetime
+import datetime
 
 import discord
 from discord.ext import commands
@@ -40,7 +40,7 @@ class Fun(BaseCog):
                 return
             else:
                 responsejson = await resp.json()
-                embed = discord.Embed(colour=discord.Colour(0x00cea2), timestamp=datetime.utcfromtimestamp(time.time()))
+                embed = discord.Embed(colour=discord.Colour(0x00cea2), timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
                 embed.add_field(name=Translator.translate('apexstats_username', ctx), value=await Utils.clean(responsejson["data"]["metadata"]["platformUserHandle"]))
                 for stat_type in responsejson["data"]["stats"]:
                     type_key_name = stat_type["metadata"]["key"]

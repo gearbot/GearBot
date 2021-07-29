@@ -68,7 +68,7 @@ create table userinfo
 
 create table dashsession
 (
-    id      varchar(50) primary key not null, #i'd name this token, but tortoise said no
+    id      varchar(50) primary key not null,
     user_id    bigint                  not null references userinfo (id),
     expires_at datetime                not null,
     index (user_id)

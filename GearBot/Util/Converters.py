@@ -1,12 +1,12 @@
 import discord
-from discord import NotFound, Forbidden, HTTPException
+from discord import NotFound, Forbidden, HTTPException, Interaction
 from discord.ext.commands import UserConverter, BadArgument, Converter, NoPrivateMessage, UserNotFound
 
 from Bot.TheRealGearBot import PostParseError
-from Util import Utils, Configuration, Translator, Confirmation
+from Util import Utils, Configuration, Translator, MessageUtils
 from Util.Matchers import *
-from database import DBUtils
 from database.DatabaseConnector import LoggedMessage, Infraction
+from views.Confirm import Confirm
 
 
 class TranslatedBadArgument(BadArgument):
@@ -85,12 +85,28 @@ async def getMessageAuthor(ctx, guild_id, message_id):
         if user is not None:
             ok = False
 
-            async def yes():
+            m = None
+            async def yes(interaction):
                 nonlocal ok
                 ok = True
+                await interaction.response.edit_message(content=MessageUtils.assemble(ctx, 'YES', 'substituting_message_author'),
+                                                        view=None)
+                ctx.bot.dispatch('message_author_confirmation', m.id)
 
-            await Confirmation.confirm(ctx, Translator.translate('use_message_author', ctx, user=Utils.clean_user(user),
-                                                                 user_id=user.id), on_yes=yes, confirm_cancel=False)
+            async def no(interaction):
+                await interaction.response.edit_message(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
+
+            async def timeout():
+                if m is not None:
+                    await m.edit(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
+
+            def check(interaction: Interaction):
+                return ctx.author.id == interaction.user.id and interaction.message.id == m.id
+
+            m = await ctx.send(Translator.translate('use_message_author', ctx, user=Utils.clean_user(user),
+                                                                 user_id=user.id), view=Confirm(guild_id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
+
+            await ctx.bot.wait_for("message_author_confirmation", check=lambda mid: mid == m.id)
             if ok:
                 return user
     return None

@@ -200,7 +200,7 @@ class DashLink(BaseCog):
         return_info = {
             "username": user_info.name,
             "discrim": user_info.discriminator,
-            "avatar_url": str(user_info.avatar_url_as(size=256)),
+            "avatar_url": str(user_info.avatar.with_size(256)),
             "bot_admin_status": await self.bot.is_owner(user_info) or user_id in Configuration.get_master_var(
                 "BOT_ADMINS", [])
         }

@@ -8,6 +8,7 @@ from discord.ext.commands import Greedy
 from Cogs.BaseCog import BaseCog
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
 from Util.Converters import EmojiName
+from views import SimplePager
 
 
 class Emoji(BaseCog):
@@ -15,7 +16,20 @@ class Emoji(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
 
-        Pages.register("emoji", self.emoji_list_init, self.emoji_list_update)
+        async def noop():
+            pass
+
+        async def migrate_emoji(ctx, message, page_num, action, data):
+            amount = len(ctx.guild.emojis) + 1
+            content, view, _ = SimplePager.get_parts(range(amount), 0, ctx.guild.id, 'emoji')
+            await message.edit(embed=self.gen_emoji_page(ctx.guild, 0), view=view)
+            try:
+                await message.clear_reactions()
+            except Exception:
+                pass
+
+        Pages.register("emoji", noop, migrate_emoji)
+
 
     def cog_unload(self):
         Pages.unregister("emoji")
@@ -32,30 +46,16 @@ class Emoji(BaseCog):
 
     @emoji.command("list")
     async def emoji_list(self, ctx):
-        await Pages.create_new(self.bot, "emoji", ctx)
-
-    async def emoji_list_init(self, ctx):
-        return None, self.gen_emoji_page(ctx.guild, 0), len(ctx.guild.emojis) > 0
-
-    async def emoji_list_update(self, ctx, message, page_num, action, data):
-        page_count = len(message.guild.emojis) + 1
-        if action == "PREV":
-            page_num -= 1
-        elif action == "NEXT":
-            page_num += 1
-        if page_num < 0:
-            page_num = page_count - 1
-        if page_num >= page_count:
-            page_num = 0
-        data["page"] = page_num
-        return None, self.gen_emoji_page(message.guild, page_num), data
+        amount = len(ctx.guild.emojis) + 1
+        content, view, _ = SimplePager.get_parts(range(amount), 0, ctx.guild.id, 'emoji')
+        await ctx.send(embed=self.gen_emoji_page(ctx.guild, 0), view=view)
 
     def gen_emoji_page(self, guild: discord.Guild, page):
         se = sorted(guild.emojis, key=lambda e: e.name)
 
         embed = Embed(color=0x2db1f3)
         embed.set_author(name=Translator.translate('emoji_server', guild, server=guild.name, page=page + 1,
-                                                   pages=len(guild.emojis) + 1), url=guild.icon_url)
+                                                   pages=len(guild.emojis) + 1), url=guild.icon.url)
         if page == 0:
             for chunk in Utils.chunks(se, 18):
                 embed.add_field(name="\u200b", value=" ".join(str(e) for e in chunk))

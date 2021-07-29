@@ -1,9 +1,7 @@
-import asyncio
 import re
-from datetime import datetime
+import datetime
 
 from discord import MessageType
-from tortoise import Tortoise
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 
@@ -15,7 +13,7 @@ from collections import namedtuple
 batch = dict()
 recent_list = set()
 previous_list = set()
-last_flush = datetime.now()
+last_flush = datetime.datetime.now()
 fakeLoggedMessage = namedtuple("BufferedMessage", "messageid content author channel server type pinned attachments")
 
 violation_regex = re.compile("duplicate key value violates unique constraint .* DETAIL: Key \(id\)=\((\d)\) already exists.*")
@@ -61,7 +59,7 @@ async def insert_message(message):
 
 async def flush(force=False):
     try:
-        if force or (datetime.now() - last_flush).total_seconds() > 4 * 60:
+        if force or (datetime.datetime.now() - last_flush).total_seconds() > 4 * 60:
             await do_flush()
     except Exception as e:
         await TheRealGearBot.handle_exception("Message flushing", None, e)

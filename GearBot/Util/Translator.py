@@ -37,7 +37,7 @@ def translate(key, location, **kwargs):
         else:
             lid = location
 
-    if lid is None:
+    if lid is None or lid == 0 or lid == "@me":
         lang_key = "en_US"
     else:
         lang_key = Configuration.get_var(lid, "GENERAL", "LANG")

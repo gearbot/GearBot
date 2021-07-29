@@ -1,7 +1,7 @@
 import asyncio
 import random
 import time
-from datetime import datetime
+import datetime
 
 import discord
 from discord.ext import commands
@@ -13,17 +13,17 @@ from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, 
 from Util.Converters import Message, DiscordUser
 from Util.Matchers import NUMBER_MATCHER, ID_NUMBER_MATCHER
 from database.DatabaseConnector import LoggedAttachment
+from views import Help
+from views.Help import HelpView
+from views.SelfRole import SelfRoleView
 
 
 class Basic(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-
-        Pages.register("help", self.init_help, self.update_help)
         self.running = True
         self.bot.loop.create_task(self.taco_eater())
-        self.bot.loop.create_task(self.selfrole_updater())
 
     def cog_unload(self):
         # cleanup
@@ -34,7 +34,7 @@ class Basic(BaseCog):
     @commands.bot_has_permissions(embed_links=True)
     async def about(self, ctx):
         """about_help"""
-        uptime = datetime.utcnow() - self.bot.start_time
+        uptime = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - self.bot.start_time
         hours, remainder = divmod(int(uptime.total_seconds()), 3600)
         days, hours = divmod(hours, 24)
         minutes, seconds = divmod(remainder, 60)
@@ -45,29 +45,38 @@ class Basic(BaseCog):
         total = str(sum(len(guild.members) for guild in self.bot.guilds))
         unique = str(len(self.bot.users))
         embed = discord.Embed(colour=discord.Colour(0x00cea2),
-                              timestamp=datetime.utcfromtimestamp(time.time()),
+                              timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(
+                                  tzinfo=datetime.timezone.utc),
                               description=f"Stats for cluster {self.bot.cluster}\n" +
-                              MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears',
-                                                    duration=Translator.translate('dhms', ctx, days=days, hours=hours,
-                                                                                  minutes=minutes,
-                                                                                  seconds=seconds)) + "\n" +
-                              MessageUtils.assemble(ctx, 'GOLD', 'about_messages', user_messages=user_messages,
-                                                    bot_messages=bot_messages, self_messages=self_messages) + "\n" +
-                              MessageUtils.assemble(ctx, 'IRON', 'about_grinders', errors=self.bot.errors) + "\n" +
-                              MessageUtils.assemble(ctx, 'STONE', 'about_commands', commandCount=self.bot.commandCount,
-                                                    custom_command_count=self.bot.custom_command_count) + "\n" +
-                              MessageUtils.assemble(ctx, 'WOOD', 'about_guilds', guilds=len(self.bot.guilds)) + "\n" +
-                              MessageUtils.assemble(ctx, 'INNOCENT', 'about_users', total=total, unique=unique) + "\n" +
-                              MessageUtils.assemble(ctx, 'TACO', 'about_tacos', tacos=tacos) + "\n" +
-                              MessageUtils.assemble(ctx, 'ALTER', 'commit_hash', hash=self.bot.version) + '\n' +
-                              MessageUtils.assemble(ctx, 'TODO', 'about_stats'))
+                                          MessageUtils.assemble(ctx, 'DIAMOND', 'about_spinning_gears',
+                                                                duration=Translator.translate('dhms', ctx, days=days,
+                                                                                              hours=hours,
+                                                                                              minutes=minutes,
+                                                                                              seconds=seconds)) + "\n" +
+                                          MessageUtils.assemble(ctx, 'GOLD', 'about_messages',
+                                                                user_messages=user_messages,
+                                                                bot_messages=bot_messages,
+                                                                self_messages=self_messages) + "\n" +
+                                          MessageUtils.assemble(ctx, 'IRON', 'about_grinders',
+                                                                errors=self.bot.errors) + "\n" +
+                                          MessageUtils.assemble(ctx, 'STONE', 'about_commands',
+                                                                commandCount=self.bot.commandCount,
+                                                                custom_command_count=self.bot.custom_command_count) + "\n" +
+                                          MessageUtils.assemble(ctx, 'WOOD', 'about_guilds',
+                                                                guilds=len(self.bot.guilds)) + "\n" +
+                                          MessageUtils.assemble(ctx, 'INNOCENT', 'about_users', total=total,
+                                                                unique=unique) + "\n" +
+                                          MessageUtils.assemble(ctx, 'TACO', 'about_tacos', tacos=tacos) + "\n" +
+                                          MessageUtils.assemble(ctx, 'ALTER', 'commit_hash',
+                                                                hash=self.bot.version) + '\n' +
+                                          MessageUtils.assemble(ctx, 'TODO', 'about_stats'))
 
         click_here = Translator.translate('click_here', ctx)
         embed.add_field(name=Translator.translate('support_server', ctx),
                         value=f"[{click_here}](https://discord.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
-        embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+        embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar.url)
 
         await ctx.send(embed=embed)
 
@@ -124,7 +133,7 @@ class Basic(BaseCog):
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
                                                 value=url)
                     user = message.author
-                    embed.set_author(name=user.name, icon_url=user.avatar_url)
+                    embed.set_author(name=user.name, icon_url=user.avatar.url)
                     embed.set_footer(
                         text=Translator.translate("quote_footer", ctx,
                                                   channel=message.channel.name,
@@ -150,12 +159,15 @@ class Basic(BaseCog):
             await ctx.send(Translator.translate("coinflip_no", ctx, thing=thing))
 
     @commands.command(aliases=["selfrole", "self_roles", "selfroles"])
-    @commands.bot_has_permissions(embed_links=True, external_emojis=True, add_reactions=True)
+    @commands.bot_has_permissions(embed_links=True)
     @commands.guild_only()
     async def self_role(self, ctx: commands.Context, *, role: str = None):
         """role_help"""
         if role is None:
-            await Selfroles.create_self_roles(self.bot, ctx)
+            # await Selfroles.create_self_roles(self.bot, ctx)
+            v = SelfRoleView(guild=ctx.guild, page=0)
+            await ctx.send(Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
+                                                page_count=v.pages), view=v)
         else:
             try:
                 role = await commands.RoleConverter().convert(ctx, role)
@@ -170,7 +182,8 @@ class Basic(BaseCog):
                             await ctx.send(Translator.translate("role_left", ctx, role_name=role.name, user=ctx.author))
                         else:
                             await ctx.author.add_roles(role)
-                            await ctx.send(Translator.translate("role_joined", ctx, role_name=role.name, user=ctx.author))
+                            await ctx.send(
+                                Translator.translate("role_joined", ctx, role_name=role.name, user=ctx.author))
                     except discord.Forbidden:
                         await ctx.send(
                             f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
@@ -178,58 +191,15 @@ class Basic(BaseCog):
                     await ctx.send(Translator.translate("role_not_allowed", ctx))
 
     @commands.command()
-    @commands.bot_has_permissions(external_emojis=True, add_reactions=True)
     async def help(self, ctx, *, query: str = None):
         """help_help"""
-        if query is not None and len(query) > 100:
-            return #bye bye spammers
+        if query is not None and len(query) > 75:
+            return  # bye bye spammers
         if query is not None:
             query = ''.join(query.splitlines())
-        data = {
-            "trigger": ctx.message.id
-        }
-        if query is not None:
-            data["query"] = query
-        await Pages.create_new(self.bot, "help", ctx, **data)
 
-    async def init_help(self, ctx, query=None, **kwargs):
-        pages = await self.get_help_pages(ctx, query)
-        if pages is None:
-            query_clean = await clean_content().convert(ctx, query)
-            return await clean_content().convert(ctx, Translator.translate(
-                "help_not_found" if len(query) < 1500 else "help_no_wall_allowed", ctx,
-                query=query_clean)), None, False
-        eyes = Emoji.get_chat_emoji('EYES')
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=1, pages=len(pages))}** {eyes}```diff\n{pages[0]}```", None, len(
-            pages) > 1
-
-    async def update_help(self, ctx, message, page_num, action, data):
-        pages = await self.get_help_pages(ctx, data.get("query", None))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        eyes = Emoji.get_chat_emoji('EYES')
-        data["page"] = page_num
-        return f"{eyes} **{Translator.translate('help_title', ctx, page_num=page_num + 1, pages=len(pages))}**{eyes}```diff\n{page}```", None, data
-
-    async def get_help_pages(self, ctx, query):
-        if query is None:
-            return await HelpGenerator.command_list(self.bot, ctx)
-        else:
-            if query in self.bot.cogs:
-                return await HelpGenerator.gen_cog_help(self.bot, ctx, query)
-            else:
-                target = self.bot
-                layers = query.split(" ")
-                while len(layers) > 0:
-                    layer = layers.pop(0)
-                    if hasattr(target, "all_commands") and layer in target.all_commands.keys():
-                        target = target.all_commands[layer]
-                    else:
-                        target = None
-                        break
-                if target is not None and target is not self.bot.all_commands:
-                    return await HelpGenerator.gen_command_help(self.bot, ctx, target)
-
-        return None
+        content, view = await Help.message_parts(self.bot, query, ctx.guild, ctx.author, 0)
+        await ctx.send(content, view=view)
 
     @commands.command()
     async def uid(self, ctx, *, text: str):
@@ -278,17 +248,6 @@ class Basic(BaseCog):
 
             await asyncio.sleep(15)
         GearbotLogging.info("Cog terminated, guess no more 🌮 for people")
-
-    async def selfrole_updater(self):
-        GearbotLogging.info("Selfrole view updater enabled")
-        while self.running:
-            guild_id = await self.bot.wait_for("self_roles_update")
-            # make sure we shouldn't have terminated yet
-            if not self.running:
-                return
-            todo = await Selfroles.self_cleaner(self.bot, guild_id)
-            for t in sorted(todo, key=lambda l: l[0], reverse=True):
-                await ReactionManager.on_reaction(self.bot, t[0], t[1], 0, "🔁")
 
 
 def setup(bot):

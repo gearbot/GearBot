@@ -8,10 +8,11 @@ from concurrent.futures._base import CancelledError
 import sys
 import time
 import traceback
-from datetime import datetime
+import datetime
 
 import aiohttp
 import aioredis
+import discord
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
 from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
@@ -19,12 +20,12 @@ from discord.abc import PrivateChannel
 from discord.ext import commands
 from discord.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded, InvalidEndOfQuotedStringError
 
-from Bot import GearBot
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
     server_info, DashConfig
 from Util.Permissioncheckers import NotCachedException
 from Util.Utils import to_pretty_time
 from database import DatabaseConnector, DBUtils
+from views.InfSearch import InfSearch
 
 
 def prefix_callable(bot, message):
@@ -36,149 +37,60 @@ def prefix_callable(bot, message):
         prefixes.append(Configuration.get_var(message.guild.id, "GENERAL", "PREFIX"))
     return prefixes
 
-async def initialize(bot, startup=False):
-    #lock event handling while we get ready
-    bot.locked = True
-    try:
-        #database
-        GearbotLogging.info(f"Cluster {bot.cluster} connecting to the database.")
-        await DatabaseConnector.init()
-        GearbotLogging.info(f"Cluster {bot.cluster} database connection established.")
-
-        await Emoji.initialize(bot)
-        Utils.initialize(bot)
-        InfractionUtils.initialize(bot)
-        bot.data = {
-            "unbans": set(),
-            "nickname_changes": set()
-        }
-        await GearbotLogging.initialize(bot, Configuration.get_master_var("BOT_LOG_CHANNEL"))
-        if startup:
-            c = await Utils.get_commit()
-            bot.version = c
-            GearbotLogging.info(f"GearBot cluster {bot.cluster} spinning up version {c}")
-            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('ALTER')} GearBot cluster {bot.cluster} spinning up version {c}")
-
-        if bot.redis_pool is None:
-            try:
-                socket = Configuration.get_master_var("REDIS_SOCKET", "")
-                if socket == "":
-                    bot.redis_pool = await aioredis.create_redis_pool((Configuration.get_master_var('REDIS_HOST', "localhost"), Configuration.get_master_var('REDIS_PORT', 6379)), encoding="utf-8", db=0)
-                else:
-                    bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0, maxsize=3)
-            except OSError:
-                GearbotLogging.error("==============Failed to connect to redis==============")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Failed to connect to redis, caching unavailable")
-            else:
-                GearbotLogging.info("Cluster {bot.cluster} redis connection established")
-                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} redis connection established, let's go full speed!")
-
-        if bot.aiosession is None:
-            bot.aiosession = aiohttp.ClientSession()
-
-        await Translator.initialize(bot)
-        bot.being_cleaned.clear()
-        await Configuration.initialize(bot)
-        DashConfig.initialize(bot)
-    except Exception as ex:
-        #make sure we always unlock, even when something went wrong!
-        bot.locked = False
-        raise ex
-    bot.locked = False
-
 
 
 async def on_ready(bot):
-    try:
-        if not bot.STARTUP_COMPLETE:
-            await initialize(bot, True)
-            #shutdown handler for clean exit on linux
-            try:
-                for signame in ('SIGINT', 'SIGTERM'):
-                    asyncio.get_event_loop().add_signal_handler(getattr(signal, signame),
-                                            lambda: asyncio.ensure_future(Utils.cleanExit(bot, signame)))
-            except Exception as e:
-                pass #doesn't work on windows
-
-
-            bot.start_time = datetime.utcnow()
-            GearbotLogging.info("Loading cogs...")
-            for extension in Configuration.get_master_var("COGS"):
-                try:
-                    bot.load_extension("Cogs." + extension)
-                except ExtensionAlreadyLoaded:
-                    pass
-                except Exception as e:
-                    await handle_exception(f"Failed to load cog {extension}", bot, e)
-            GearbotLogging.info("Cogs loaded")
-
-            to_unload = Configuration.get_master_var("DISABLED_COMMANDS", [])
-            for c in to_unload:
-                bot.remove_command(c)
-
-            bot.STARTUP_COMPLETE = True
-            info = await bot.application_info()
-            gears = [Emoji.get_chat_emoji(e) for e in ["WOOD", "STONE", "IRON", "GOLD", "DIAMOND"]]
-            a = " ".join(gears)
-            b = " ".join(reversed(gears))
-            await GearbotLogging.bot_log(message=f"{a} All gears turning at full speed, {info.name} ready to go! {b}")
-            await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
-        else:
-            await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
-
-        bot.missing_guilds = []
-        bot.missing_guilds = {g.id for g in bot.guilds}
-        if bot.loading_task is not None:
-            bot.loading_task.cancel()
-        bot.loading_task = asyncio.create_task(fill_cache(bot))
-
-        asyncio.create_task(message_flusher())
-
-    except Exception as e:
-        await handle_exception("Ready event failure", bot, e)
+    await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
+    await fill_cache(bot)
 
 
 async def fill_cache(bot):
-    try:
-        while len(bot.missing_guilds) > 0:
-            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('CLOCK')} Cluster {bot.cluster} requesting member info for {len(bot.missing_guilds)} guilds")
-            start_time = time.time()
-            old = len(bot.missing_guilds)
-            while len(bot.missing_guilds) > 0:
-                try:
-                    tasks = [asyncio.create_task(cache_guild(bot, guild_id)) for guild_id in bot.missing_guilds]
-                    await asyncio.wait_for(asyncio.gather(*tasks), 1800)
-                except (CancelledError, concurrent.futures._base.CancelledError):
-                    pass
-                except asyncio.exceptions.TimeoutError:
-                    if old == len(bot.missing_guilds):
-                        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
-                        for task in tasks:
-                            task.cancel()
-                        await asyncio.sleep(1)
-                        continue
-                except Exception as e:
-                    await handle_exception("Fetching member info", bot, e)
-                else:
-                    if old == len(bot.missing_guilds):
-                        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('NO')} Cluster {bot.cluster} timed out fetching member chunks canceling all pending fetches to try again!")
-                        for task in tasks:
-                            task.cancel()
-                        continue
-            end = time.time()
-            pretty_time = to_pretty_time(end - start_time, None)
-            await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} finished fetching member info in {pretty_time}")
-            bot.initial_fill_complete=True
-    except Exception as e:
-        await handle_exception("Guild fetching failed", bot, e)
-    finally:
-        bot.loading_task = None
+    # don't try to start a new one when one is already pending
+    if bot.chunker_pending:
+        return
 
-async def cache_guild(bot, guild_id):
-    if guild_id in bot.missing_guilds:
-        guild = bot.get_guild(guild_id)
-        bot.missing_guilds.remove(guild_id)
-        await guild.chunk(cache=True)
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('REFRESH')} Cluster {bot.cluster} cache reset initiated")
+
+    # claim the pending spot
+    bot.chunker_pending = True
+    # terminate running queue if needed
+    count = 0
+    while bot.chunker_active:
+        bot.chunker_should_terminate = True
+        await asyncio.sleep(0.5)
+        count += 1
+        if count > 120:
+            await GearbotLogging.bot_log("Failure to reset the chunker after a reconnect, assuming it is stuck and proceeding with the chunking to attempt to recover.")
+            break
+
+    # we are now the active chunker
+    bot.chunker_pending = False
+    bot.chunker_active = True
+    bot.chunker_should_terminate = False
+
+    # grab a copy of the current guild list as this can mutate while we work
+    guild_ids = [guild.id for guild in bot.guilds]
+
+    await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('LOADING')} Cache population in progress on cluster {bot.cluster}, fetching users from {len(bot.guilds)} guilds")
+
+    # chunk them all
+    # TODO: split per shard if this turns out to be too slow but the distribution between shards should be fairly even so the performance impact should be limited
+    done = 0
+    for gid in guild_ids:
+        if bot.chunker_should_terminate is True:
+            break
+        guild = bot.get_guild(gid)
+        if guild is None:
+            GearbotLogging.info(f"Tried to fetch {gid} for chunking but it no longer exists, assuming we where removed or it went unavailable")
+        else:
+            await guild.chunk()
+            done += 1
+    bot.chunker_active = False
+    if bot.chunker_should_terminate:
+        await GearbotLogging.bot_log(
+            f"{Emoji.get_chat_emoji('WARNING')} Cache population aborted for cluster {bot.cluster} with {len(guild_ids) - done} left to go!")
+    else:
+        await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('YES')} Cache population completed for cluster {bot.cluster}!")
 
 
 async def message_flusher():
@@ -197,7 +109,7 @@ async def on_message(bot, message:Message):
     bot.user_messages += 1
     if ctx.valid and ctx.command is not None:
         bot.commandCount = bot.commandCount + 1
-        if isinstance(ctx.channel, TextChannel) and not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages:
+        if isinstance(ctx.channel, TextChannel) and (not ctx.channel.permissions_for(ctx.channel.guild.me).send_messages):
             try:
                 await ctx.author.send("Hey, you tried triggering a command in a channel I'm not allowed to send messages in. Please grant me permissions to reply and try again.")
             except Forbidden:
@@ -393,7 +305,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
     if bot is not None:
         bot.errors = bot.errors + 1
     with sentry_sdk.push_scope() as scope:
-        embed = Embed(colour=Colour(0xff0000), timestamp=datetime.utcfromtimestamp(time.time()))
+        embed = Embed(colour=Colour(0xff0000), timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
 
         # something went wrong and it might have been in on_command_error, make sure we log to the log file first
         lines = [

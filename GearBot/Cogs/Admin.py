@@ -1,29 +1,31 @@
+import asyncio
 import contextlib
 import io
 import textwrap
 import traceback
-from datetime import datetime
+import datetime
 from time import time
 
 import discord
 from discord.ext import commands, tasks
 from discord.utils import time_snowflake
 
+from Bot.TheRealGearBot import fill_cache
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update, DocUtils
+from Util import GearbotLogging, Utils, Configuration, Pages, Emoji, MessageUtils, Update, DocUtils, Translator
 from Util.Converters import UserID, Guild, DiscordUser
 from database.DatabaseConnector import LoggedMessage, LoggedAttachment
+from views import SimplePager
 
 
 class Admin(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        Pages.register("eval", self.init_eval, self.update_eval)
         self.db_cleaner.start()
+        self.cache_guardian.start()
 
     def cog_unload(self):
-        Pages.unregister("eval")
         self.db_cleaner.cancel()
 
     async def cog_check(self, ctx):
@@ -104,7 +106,14 @@ class Admin(BaseCog):
                 else:
                     output = f'{value}{ret}'
         if output is not None:
-            await Pages.create_new(self.bot, "eval", ctx, pages="----NEW PAGE----".join(Pages.paginate(output)), code=code, trigger=ctx.message.id, sender=ctx.author.id)
+            pipe = self.bot.redis_pool.pipeline()
+            k = f'eval:{ctx.message.id}'
+            pipe.set(k, output)
+            pipe.expire(k, 7*24*60*60)
+            await pipe.execute()
+            pages = Pages.paginate(output, prefix='```py\n', suffix='```')
+            content, view, _ = SimplePager.get_parts(pages, 0, ctx.guild.id, f'eval:{ctx.message.id}')
+            await ctx.send(f'Eval output 1/{len(pages)}{content}', view=view)
         else:
             await ctx.message.add_reaction(Emoji.get_emoji("YES"))
 
@@ -113,14 +122,6 @@ class Admin(BaseCog):
         page = pages[0]
         num = len(pages)
         return f"**Eval output 1/{num}**\n```py\n{page}```", None, num > 1,
-
-    async def update_eval(self, ctx, message, page_num, action, data):
-        if action == "REFRESH" and ctx is not None:
-            await ctx.invoke(self.eval, code=data.get("code"))
-        pages = data["pages"].split("----NEW PAGE----")
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**Eval output {page_num + 1}/{len(pages)}**\n```py\n{page}```", None, data
 
 
     @commands.command(hidden=True)
@@ -175,14 +176,60 @@ class Admin(BaseCog):
     async def pendingchanges(self, ctx):
         await ctx.send(f'https://github.com/gearbot/GearBot/compare/{self.bot.version}...master')
 
+    @commands.command()
+    async def reset_cache(self, ctx):
+        await MessageUtils.send_to(ctx, "YES", f"Cache reset initiated", translate=False)
+        await fill_cache(self.bot)
+
+    @commands.command()
+    async def thread_migration(self, ctx):
+        await MessageUtils.send_to(ctx, "LOADING", "Thread migration initiated", translate=False)
+        for guild in self.bot.guilds:
+            role_id = Configuration.get_var(guild.id, 'ROLES', 'MUTE_ROLE')
+            if role_id != 0:
+                role = guild.get_role(role_id)
+                if role is not None:
+                    for category in guild.categories:
+                        if category.permissions_for(guild.me).manage_channels:
+                            try:
+                                current = category.overwrites_for(role)
+                                current.update(use_threads=False, use_private_threads=False)
+                                if not current.is_empty():
+                                    await category.set_permissions(role, reason='thread release migration',overwrite=current)
+                            except discord.Forbidden:
+                                await asyncio.sleep(0.1)
+
+                    # sleep a bit so we have time to receive the update events
+                    await asyncio.sleep(2)
+
+                    for channel in guild.text_channels:
+                        if channel.permissions_for(guild.me).manage_channels:
+                            if not channel.overwrites_for(role).is_empty():
+                                try:
+                                    current = channel.overwrites_for(role)
+                                    current.update(use_threads=False, use_private_threads=False)
+                                    if not current.is_empty():
+                                        await channel.set_permissions(role, reason='thread release migration',overwrite=current)
+                                except discord.Forbidden:
+                                    pass
+        await MessageUtils.send_to(ctx, 'YES', 'Thread migration completed!', translate=False)
+
     @tasks.loop(hours=1)
     async def db_cleaner(self):
         if Configuration.get_master_var("purge_db", True):
             # purge all messages older then 6 weeks
-            snowflake = time_snowflake(datetime.fromtimestamp(time() - 60*60*24*7*6))
+            snowflake = time_snowflake(datetime.datetime.utcfromtimestamp(time() - 60*60*24*7*6).replace(tzinfo=datetime.timezone.utc))
             purged_attachments = await LoggedAttachment.filter(id__lt=snowflake).delete()
             purged = await LoggedMessage.filter(messageid__lt=snowflake).delete()
             GearbotLogging.info(f"Purged {purged} old messages and {purged_attachments} attachments")
+
+    @tasks.loop(minutes=3)
+    async def cache_guardian(self):
+        if not self.bot.chunker_active and self.bot.is_ready():
+            min_cached_users = Configuration.get_master_var("min_cached_users", 0)
+            if min_cached_users != 0 and min_cached_users > len(self.bot.users):
+                await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('WARNING')} Incomplete cache detected, resetting to try and recover")
+                await fill_cache(self.bot)
 
 
 

@@ -1,5 +1,6 @@
 import asyncio
 import time
+from asyncio import Queue
 from collections import deque
 
 from discord.ext.commands import AutoShardedBot
@@ -31,9 +32,10 @@ class GearBot(AutoShardedBot):
     cluster = 0
     shard_count = 1
     shard_ids = [],
-    missing_guilds = []
-    initial_fill_complete = False
-    loading_task = None
+    chunker_active = False
+    chunker_pending = False
+    chunker_should_terminate = False
+    chunker_queue = Queue()
     deleted_messages = deque(maxlen=500)
 
     def __init__(self, *args, loop=None, **kwargs):
@@ -47,14 +49,6 @@ class GearBot(AutoShardedBot):
         if "socket" not in event_name not in ["message_edit"]:
             self.metrics.bot_event_counts.labels(event_name=event_name, cluster=self.cluster).inc()
         super().dispatch(event_name, *args, **kwargs)
-
-    async def _run_event(self, coro, event_name, *args, **kwargs):
-        """
-        intercept events, block them from running while locked and track
-        """
-        while (self.locked or not self.STARTUP_COMPLETE) and event_name != "on_ready":
-            await asyncio.sleep(0.2)
-        await super()._run_event(coro, event_name, *args, **kwargs)
 
     #### event handlers, basically bouncing everything to TheRealGearBot file so we can hotreload our listeners
 

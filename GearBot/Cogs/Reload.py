@@ -10,7 +10,7 @@ class Reload(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        Pages.register("pull", self.init_pull, self.update_pull)
+        # Pages.register("pull", self.init_pull, self.update_pull)
 
     async def cog_check (self, ctx):
         return await ctx.bot.is_owner(ctx.author) or ctx.author.id in Configuration.get_master_var("BOT_ADMINS", [])
@@ -78,7 +78,7 @@ class Reload(BaseCog):
                 else:
                     await message.edit(content=f"{Emoji.get_chat_emoji('NO')} Cloudflare cache purge failed")
 
-    @commands.command()
+    # @commands.command()
     async def pull(self, ctx):
         """Pulls from github so an upgrade can be performed without full restart"""
         async with ctx.typing():

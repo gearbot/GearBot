@@ -48,7 +48,7 @@ class Censor(BaseCog):
             reply = m.reply_to
         else:
             permissions = channel.permissions_for(channel.guild.me)
-            if permissions.read_messages and permissions.read_message_history:
+            if (permissions.read_messages and permissions.read_message_history) or permissions.administrator:
                 try:
                     message = await channel.fetch_message(event.message_id)
                 except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
@@ -159,7 +159,8 @@ class Censor(BaseCog):
         else:
             attachments_str = ""
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
-        if channel.permissions_for(channel.guild.me).manage_messages:
+        p = channel.permissions_for(channel.guild.me)
+        if p.manage_messages or p.administrator:
             try:
                 self.bot.deleted_messages.append(message_id)
                 await channel.delete_messages([discord.Object(message_id)])

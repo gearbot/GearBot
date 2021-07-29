@@ -1,15 +1,15 @@
 import collections
 
-from discord.ext.commands import CommandError, Context, GroupMixin
+from discord.ext.commands import GroupMixin
 
-from Util import Utils, Pages, Translator
+from Util import Utils, Pages, Translator, Permissioncheckers, Configuration
 
 
-async def command_list(bot, ctx:Context):
+async def command_list(bot, member, guild):
     command_tree = dict()
     longest = 0
     for cog in bot.cogs:
-        commands, l = await cog_commands(bot, ctx, cog)
+        commands, l = await cog_commands(bot, cog, member, guild)
         if commands is not None:
             command_tree[cog] = commands
             if l > longest:
@@ -24,35 +24,24 @@ async def command_list(bot, ctx:Context):
             output += "  " + command_name + (" " * (longest - len(command_name) + 2)) + info + "\n"
         output_tree[cog] = output
     # sometimes we get a null prefix for some reason?
-    prefix = (ctx.prefix.replace(ctx.me.mention, f"@{ctx.me.name}") if ctx is not None and ctx.prefix is not None else "@GearBot")
+    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX")
     return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{prefix}help <command>'\nCommands followed by ↪  have subcommands")
 
 
-async def cog_commands(bot, ctx, cog):
+async def cog_commands(bot, cog, member, guild):
     commands = bot.get_cog(cog).get_commands()
     if len(commands) == 0:
         return None, None
-    return await gen_commands_list(bot, ctx, commands)
+    return await gen_commands_list(bot, member, guild, commands)
 
-async def gen_commands_list(bot, ctx, list):
+async def gen_commands_list(bot, member, guild, list):
     longest = 0
     command_list = dict()
     for command in list:
-        try:
-            runnable = await command.can_run(ctx)
-        except CommandError:
-            # not sure if needed, lib does it prob best to catch it just in case
-            runnable = False
-        except Exception as ex:
-            if ctx is None:
-                # we don't always have a valid context, in this case assume all context dependant commands as not available
-                runnable = False
-            else:
-                # we have a context so error is not due to it being missing, raise it up
-                raise ex
+        runnable = member is not None and await Permissioncheckers.check_permission(command, guild, member, bot)
         if not command.hidden and runnable:
             indicator = "\n  ↪" if isinstance(command, GroupMixin) else ""
-            command_list[command.name] = Utils.trim_message(Translator.translate(command.short_doc, ctx), 120) + indicator
+            command_list[command.name] = Utils.trim_message(Translator.translate(command.short_doc, guild), 120) + indicator
             if len(command.name) > longest:
                 longest = len(command.name)
     if len(command_list) > 0:
@@ -61,31 +50,43 @@ async def gen_commands_list(bot, ctx, list):
         return None, None
 
 
-async def gen_cog_help(bot, ctx, cog):
-    commands, longest = await cog_commands(bot, ctx, cog)
+async def gen_cog_help(bot, cog, member, guild):
+    commands, longest = await cog_commands(bot, cog, member, guild)
     output = f'- {cog}\n'
     if commands is not None:
         for command_name, info in commands.items():
             output += command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
-    return [output]
+        return Pages.paginate(output)
+    else:
+        return None
 
-async def gen_command_help(bot, ctx, command):
-    if ctx is None:
-        return []
-    if ctx.prefix is None:
-        ctx.prefix = ""
-    bot.help_command.context = ctx
-    usage = ctx.bot.help_command.get_command_signature(command)
+async def gen_command_help(bot, member, guild, command):
+    signature = ""
+    parent = command.parent
+    while parent is not None:
+        if not parent.signature or parent.invoke_without_command:
+            signature = f"{parent.name} {signature}"
+        else:
+            signature = f"{parent.name} {parent.signature} {signature}"
+        parent = parent.parent
+
+    if len(command.aliases) > 0:
+        aliases = '|'.join(command.aliases)
+        signature = f"{signature} [{command.name}|{aliases}]"
+    else:
+        signature = f"{signature} {command.name}"
+    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX")
+    usage = f"{prefix}{signature}"
     sub_info = None
     if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
-        subcommands, longest = await gen_commands_list(bot, ctx, command.all_commands.values())
+        subcommands, longest = await gen_commands_list(bot, member, guild, command.all_commands.values())
         if subcommands is not None:
             sub_info = "\nSub commands:\n"
             for command_name, info in subcommands.items():
                 sub_info += "  " + command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
-            sub_info += Translator.translate('help_footer', ctx, prefix=ctx.prefix, signature=ctx.bot.help_command.get_command_signature(command).replace(ctx.prefix, ""))
+            sub_info += Translator.translate('help_footer', guild, prefix=prefix, signature=signature)
 
-    return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, ctx)}\n{'' if sub_info is None else sub_info}".replace(ctx.me.mention, f"@{ctx.me.name}"))
+    return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, guild)}\n{'' if sub_info is None else sub_info}".replace(bot.me.mention, f"@{bot.me.name}"))
 
 def dict_to_pages(dict, suffix=""):
     pages = []

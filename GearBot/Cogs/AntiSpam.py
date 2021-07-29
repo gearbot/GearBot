@@ -2,13 +2,13 @@ import asyncio
 import datetime
 import re
 from asyncio import CancelledError
+import hashlib
 
 import discord
 import emoji
 
 import time
 from collections import deque
-from weakref import WeakValueDictionary
 
 from discord import Object, Forbidden, NotFound, RawMessageDeleteEvent
 from discord.channel import TextChannel
@@ -40,7 +40,7 @@ class Violation:
         self.channel = channel
         self.offending_messages = offending_messages
         self.bucket = bucket
-        self.count = count
+        self.count = count,
 
 
 class ActionHolder:
@@ -78,7 +78,6 @@ class AntiSpam(BaseCog):
             "temp_ban": 4,
             "ban": 5
         }
-        self.extra_actions = WeakValueDictionary()
         self.processed = deque(maxlen=7500)
         self.censor_processed = deque(maxlen=50)
         self.running = True
@@ -89,19 +88,12 @@ class AntiSpam(BaseCog):
     def cog_unload(self):
         self.running = False
 
-    def get_extra_actions(self, key):
-        if key not in self.extra_actions:
-            a = ActionHolder(0)
-            self.extra_actions[key] = a
 
-        return self.extra_actions[key]
-
-    def get_bucket(self, guild_id, rule_name, bucket_info, member_id):
-        key = f"{guild_id}-{member_id}-{bucket_info['TYPE']}"
+    def get_bucket(self, guild_id, rule_name, bucket_info):
+        key = f"{guild_id}-{rule_name}"
         c = bucket_info.get("SIZE").get("COUNT")
         p = bucket_info.get("SIZE").get("PERIOD")
-        return SpamBucket(self.bot.redis_pool, "{}:{}:{}".format(guild_id, rule_name, "{}"), c, p,
-                          self.get_extra_actions(key))
+        return SpamBucket(self.bot.redis_pool, "{}:{}".format(key, "{}"), c, p)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
@@ -126,9 +118,10 @@ class AntiSpam(BaseCog):
             if amount == 0:
                 return
 
-            bucket = self.get_bucket(message.guild.id, check, b, message.author.id)
+            bucket = self.get_bucket(message.guild.id, check, b)
             if bucket is not None and await bucket.check(message.author.id, msg_time, amount,
-                                                         f"{message.channel.id}-{message.id}"):
+                                                         message=message.id, channel=message.channel.id,
+                                                         user=message.author.id):
                 count = await bucket.count(message.author.id, msg_time, expire=False)
                 period = await bucket.size(message.author.id, msg_time, expire=False)
                 self.bot.loop.create_task(
@@ -145,7 +138,9 @@ class AntiSpam(BaseCog):
             t = bucket["TYPE"]
             counter = counters.get(t, 0)
             if t == "duplicates":
-                await self.check_duplicates(message, counter, bucket)
+                await self.check_duplicates(message, bucket, True)
+            elif t == "duplicates_across_users":
+                await self.check_duplicates(message, bucket, False)
             else:
                 v = 0
                 if t in cache:
@@ -154,53 +149,58 @@ class AntiSpam(BaseCog):
                     v = self.generators[t](message)
                     cache[t] = v
                 if v != 0:
-                    await check_bucket(f"{t}:{counter}", Translator.translate(f"spam_{t}", message), v, bucket)
+                    await check_bucket(f"{t}:{message.author.id}", Translator.translate(f"spam_{t}", message), v,
+                                       bucket)
 
-    async def check_duplicates(self, message: Message, count: int, bucket):
+    async def check_duplicates(self, message: Message, bucket, per_user):
         rule = bucket["SIZE"]
-        key = f"{message.guild.id}-{message.author.id}-{bucket['TYPE']}"
-        full_content = message.content + "\n".join(str(a) for a in message.attachments)
-        spam_bucket = SpamBucket(self.bot.redis_pool,
-                                 f"spam:duplicates{count}:{message.guild.id}:{message.author.id}:{'{}'}", rule["COUNT"],
-                                 rule["PERIOD"], self.get_extra_actions(key))
+        full_content = message.content + "\n".join(str(a.filename) + str(a.content_type) for a in message.attachments)
+        content_hash = f"{len(full_content)}.{hashlib.sha256(full_content.encode('utf-8')).hexdigest()}"
+        if per_user:
+            key = f"duplicates:{message.guild.id}:{message.author.id}:{'{}'}"
+        else:
+            key = f"duplicates:{message.guild.id}:{'{}'}"
+        spam_bucket = SpamBucket(self.bot.redis_pool, key, rule["COUNT"], rule["PERIOD"])
         t = int(message.created_at.timestamp())
-        if await spam_bucket.check(full_content, t, 1, f"{message.channel.id}-{message.id}"):
-            count = await spam_bucket.count(full_content, t, expire=False)
+        if await spam_bucket.check(content_hash, t, 1, message=message.id, channel=message.channel.id,
+                                   user=message.author.id):
+            count = await spam_bucket.count(content_hash, t, expire=False)
             period = await spam_bucket.size(message.author.id, t, expire=False)
             st = Translator.translate('spam_max_duplicates', message)
             self.bot.loop.create_task(self.violate(Violation("max_duplicates", message.guild,
                                                              f"{st} ({count}/{period}s)",
                                                              message.author, message.channel,
-                                                             await spam_bucket.get(full_content, t, expire=False),
+                                                             await spam_bucket.get(content_hash, t, expire=False),
                                                              bucket, count)))
+
 
     async def violate(self, v: Violation):
         # deterining current punishment
         punish_info = v.bucket["PUNISHMENT"]
         t = punish_info["TYPE"]
         self.bot.dispatch('spam_violation', v)
-        key = f"{v.guild.id}-{v.member.id}-{v.bucket['TYPE']}"
-        a = self.get_extra_actions(key)
-        a.count += v.count
 
         # Punish and Clean
-        if v.channel is not None:
-            GearbotLogging.log_key(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
-                               check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention, punishment_type=t)
-        else:
-            GearbotLogging.log_key(v.guild.id, 'spam_violate_no_channel', user=Utils.clean_user(v.member), user_id=v.member.id,
-                                   check=v.check.upper(), friendly=v.friendly, punishment_type=t)
 
-        await self.punishments[t](v)
+        to_clean = AntiSpam._process_bucket_entries(v.offending_messages)
+        by_channel = {}
+        users = set()
+
+        for (message, channel, user) in to_clean:
+            if message == "0":
+                continue
+            by_channel.setdefault(channel, []).append(message)
+            member = Utils.get_member(self.bot, v.guild, user, fetch_if_missing=True)
+            if member is not None:
+                users.add(member)
+
+        for user in users:
+            await self.punishments[t](v, user, pipeline)
 
         if v.bucket.get("CLEAN", True) and v.channel is not None:
-            to_clean = AntiSpam._process_bucket_entries(v.offending_messages)
-            by_channel = {}
-            for (chan, msg) in to_clean:
-                by_channel.setdefault(chan, []).append(msg)
 
-            for (chan, msgs) in by_channel.items():
-                guild_chan = v.guild.get_channel(int(chan))
+            for (channel, msgs) in by_channel.items():
+                guild_chan = v.guild.get_channel(int(channel))
                 msgs = [Object(id=x) for x in msgs]
                 if guild_chan is not None:
                     # Ensure we only delete 100 at a time. Probably not necessary but you never know with people
@@ -210,108 +210,106 @@ class AntiSpam(BaseCog):
                         except NotFound:
                             pass
         await asyncio.sleep(v.bucket["SIZE"]["PERIOD"])
-        a = self.get_extra_actions(key)
-        a.count -= v.count
 
-    async def warn_punishment(self, v: Violation):
+    async def warn_punishment(self, v: Violation, member):
         reason = v.bucket["PUNISHMENT"].get("REASON", self.assemble_reason(v))
-        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Warn', reason)
-        GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(v.member),
+        i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Warn', reason)
+        GearbotLogging.log_key(v.guild.id, 'warning_added_modlog', user=Utils.clean_user(member),
                                moderator=Utils.clean_user(v.guild.me), reason=reason,
-                               user_id=v.member.id, moderator_id=v.guild.me.id, inf=i.id)
-        await Utils.send_infraction(self.bot, v.member, v.guild, 'WARNING', 'warning', "Spam")
+                               user_id=member.id, moderator_id=v.guild.me.id, inf=i.id)
+        await Utils.send_infraction(self.bot, member, v.guild, 'WARNING', 'warning', "Spam")
 
 
-    async def mute_punishment(self, v: Violation):
+    async def mute_punishment(self, v: Violation, member):
         duration = v.bucket["PUNISHMENT"]["DURATION"]
         until = time.time() + duration
         reason = self.assemble_reason(v)
         role = AntiSpam._get_mute_role(v.guild)
-        i = await Infraction.get_or_none(user_id = v.member.id, type = "Mute", guild_id = v.member.guild.id, active=True)
+        i = await Infraction.get_or_none(user_id = member.id, type = "Mute", guild_id = member.guild.id, active=True)
         if i is None:
-            i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Mute', reason,
+            i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Mute', reason,
                                                end=until)
             try:
-                await v.member.add_roles(role, reason=reason)
+                await member.add_roles(role, reason=reason)
             except Forbidden:
                 GearbotLogging.log_key(v.guild.id, 'mute_punishment_failure',
-                                       user=Utils.clean_user(v.member),
-                                       user_id=v.member.id,
+                                       user=Utils.clean_user(member),
+                                       user_id=member.id,
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
             else:
                 GearbotLogging.log_key(v.guild.id, 'mute_log',
-                                       user=Utils.clean_user(v.member),
-                                       user_id=v.member.id,
+                                       user=Utils.clean_user(member),
+                                       user_id=member.id,
                                        moderator=Utils.clean_user(v.guild.me),
                                        moderator_id=v.guild.me.id,
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
                 if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
-                    await Utils.send_infraction(self.bot, v.member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
+                    await Utils.send_infraction(self.bot, member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
         else:
             i.end += duration
             i.reason += Utils.trim_message(f'+ {reason}', 2000)
             await i.save()
             GearbotLogging.log_key(v.guild.id, 'mute_duration_extended_log',
-                                   user=Utils.clean_user(v.member),
-                                   user_id=v.member.id,
+                                   user=Utils.clean_user(member),
+                                   user_id=member.id,
                                    moderator=Utils.clean_user(v.guild.me),
                                    moderator_id=v.guild.me.id,
                                    duration=Utils.to_pretty_time(duration, v.guild.id),
                                    reason=reason, inf_id=i.id, end=i.end)
             InfractionUtils.clear_cache(v.guild.id)
 
-        if v.member.voice:
-            permissions = v.member.voice.channel.permissions_for(v.guild.me)
+        if member.voice:
+            permissions = member.voice.channel.permissions_for(v.guild.me)
             if permissions.move_members:
-                await v.member.move_to(None, reason=f"{reason}")
+                await member.move_to(None, reason=f"{reason}")
 
-    async def kick_punishment(self, v: Violation):
+    async def kick_punishment(self, v: Violation, member):
         reason = self.assemble_reason(v)
-        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Kick', reason,
+        i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Kick', reason,
                                            active=False)
-        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, "1")
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{member.id}", 8000, "1")
         try:
             if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_KICK"):
-                asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BOOT', 'kick', "Spam"))
-            await v.guild.kick(v.member, reason=reason)
+                asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BOOT', 'kick', "Spam"))
+            await v.guild.kick(member, reason=reason)
         except Forbidden:
-            GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(v.member), user_id=v.member.id,
+            GearbotLogging.log_key(v.guild.id, 'kick_punishment_failure', user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                    reason=reason, inf=i.id)
         else:
-            GearbotLogging.log_key(v.guild.id, 'kick_log', user=Utils.clean_user(v.member), user_id=v.member.id,
+            GearbotLogging.log_key(v.guild.id, 'kick_log', user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                    reason=reason, inf=i.id)
 
-    async def temp_ban_punishment(self, v: Violation):
+    async def temp_ban_punishment(self, v: Violation, member):
         reason = self.assemble_reason(v)
         duration = v.bucket["PUNISHMENT"]["DURATION"]
         until = time.time() + duration
-        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, 1)
-        await v.guild.ban(v.member, reason=reason, delete_message_days=0)
-        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Tempban', reason,
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{member.id}", 8000, 1)
+        await v.guild.ban(member, reason=reason, delete_message_days=0)
+        i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Tempban', reason,
                                            end=until)
         if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
             dur = Utils.to_pretty_time(duration, None)
-            asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BAN', 'tempban', "Spam", duration=dur))
-        GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(v.member),
-                               user_id=v.member.id, moderator=Utils.clean_user(v.guild.me),
+            asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BAN', 'tempban', "Spam", duration=dur))
+        GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(member),
+                               user_id=member.id, moderator=Utils.clean_user(v.guild.me),
                                moderator_id=v.guild.me.id, reason=reason,
-                               until=datetime.datetime.utcfromtimestamp(until), inf=i.id)
+                               until=datetime.datetime.utcfromtimestamp(until).replace(tzinfo=datetime.timezone.utc), inf=i.id)
 
-    async def ban_punishment(self, v: Violation):
+    async def ban_punishment(self, v: Violation, member):
         reason = self.assemble_reason(v)
-        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{v.member.id}", 8000, 1)
-        await v.guild.ban(v.member, reason=reason, delete_message_days=0)
-        await Infraction.filter(user_id=v.member.id, type="Unban", guild_id=v.guild.id).update(active=False)
-        i = await InfractionUtils.add_infraction(v.guild.id, v.member.id, self.bot.user.id, 'Ban', reason)
-        GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(v.member), user_id=v.member.id,
+        await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{member.id}", 8000, 1)
+        await v.guild.ban(member, reason=reason, delete_message_days=0)
+        await Infraction.filter(user_id=member.id, type="Unban", guild_id=v.guild.id).update(active=False)
+        i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Ban', reason)
+        GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
                                moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                reason=reason, inf=i.id)
         if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_BAN"):
-            asyncio.create_task(Utils.send_infraction(self.bot, v.member, v.guild, 'BAN', 'ban', "Spam"))
+            asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BAN', 'ban', "Spam"))
 
 
 
@@ -335,8 +333,8 @@ class AntiSpam(BaseCog):
                     t = b["TYPE"]
                     if t == "censored":
                         msg_time = int(snowflake_time(message.id).timestamp())
-                        bucket = self.get_bucket(message.guild.id, f"censored:{count}", b, message.author.id)
-                        if bucket is not None and await bucket.check(message.author.id, msg_time, 1, f"{message.channel.id}-{message.id}"):
+                        bucket = self.get_bucket(message.guild.id, "censored", b)
+                        if bucket is not None and await bucket.check(message.author.id, msg_time, 1, message=message.id, channel=message.channel.id, user=message.author.id):
                             count = await bucket.count(message.author.id, msg_time, expire=False)
                             period = await bucket.size(message.author.id, msg_time, expire=False)
                             self.bot.loop.create_task(
@@ -371,9 +369,9 @@ class AntiSpam(BaseCog):
                 for b in buckets:
                     t = b["TYPE"]
                     if t == "voice_joins":
-                        now = int(datetime.datetime.utcnow().timestamp())
-                        bucket = self.get_bucket(member.guild.id, f"voice_channel_join", b, member.id)
-                        if bucket is not None and await bucket.check(member.id, now, message=now, amount=1):
+                        now = int(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp())
+                        bucket = self.get_bucket(member.guild.id, f"voice_channel_join:{member.id}", b)
+                        if bucket is not None and await bucket.check(member.id, now, message=now, channel=0, user=member.id, amount=1):
                             count = await bucket.count(member.id, now, expire=False)
                             period = await bucket.size(member.id, now, expire=False)
                             self.bot.loop.create_task(
@@ -408,16 +406,18 @@ class AntiSpam(BaseCog):
         mentions = len(MENTION_MATCHER.findall(message.content))
 
         msg_time = int(snowflake_time(message.messageid).timestamp())
-        is_ghost = (snowflake_time(message.messageid) - datetime.datetime.utcnow()).total_seconds() < ghost_message_threshold
-        is_ghost_ping = (snowflake_time(message.messageid) - datetime.datetime.utcnow()).total_seconds() < ghost_ping_threshold and mentions > 0
+        is_ghost = (snowflake_time(message.messageid) - datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)).total_seconds() < ghost_message_threshold
+        is_ghost_ping = (snowflake_time(message.messageid) - datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)).total_seconds() < ghost_ping_threshold and mentions > 0
 
         if is_ghost or is_ghost_ping:
             for b in buckets:
                 t = b["TYPE"]
                 if t == "max_ghost_messages" and is_ghost:
-                    now = int(datetime.datetime.utcnow().timestamp())
-                    bucket = self.get_bucket(member.guild.id, f"max_ghost_messages", b, member.id)
-                    if bucket is not None and await bucket.check(member.id, now, message=f"{message.channel}-{message.messageid}", amount=1):
+                    now = int(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp())
+                    bucket = self.get_bucket(member.guild.id, f"max_ghost_messages:{member.id}", b)
+                    if bucket is not None and await bucket.check(member.id, now, message=message.id,
+                                                                 channel=message.channel.id, user=message.author.id,
+                                                                 amount=1):
                         count = await bucket.count(member.id, now, expire=False)
                         period = await bucket.size(member.id, now, expire=False)
                         self.bot.loop.create_task(
@@ -428,8 +428,10 @@ class AntiSpam(BaseCog):
                                                    await bucket.get(message.author, msg_time, expire=False),
                                                    b, count)))
                 elif t == "max_ghost_pings" and is_ghost_ping:
-                    bucket = self.get_bucket(member.guild.id, f"max_ghost_pings", b, member.id)
-                    if bucket is not None and await bucket.check(member.id, msg_time, message=f"{data.channel_id}-{data.message_id}", amount=mentions):
+                    bucket = self.get_bucket(member.guild.id, f"max_ghost_pings:{member.id}", b, )
+                    if bucket is not None and await bucket.check(member.id, msg_time, message=message.id,
+                                                                 channel=message.channel.id,
+                                                                 user=message.author.id, amount=mentions):
                         count = await bucket.count(member.id, msg_time, expire=False)
                         period = await bucket.size(member.id, msg_time, expire=False)
                         self.bot.loop.create_task(
@@ -451,8 +453,10 @@ class AntiSpam(BaseCog):
         for b in buckets:
             t = b["TYPE"]
             if t == "max_failed_mass_pings":
-                bucket = self.get_bucket(message.guild.id, f"max_failed_pings", b, message.author.id)
-                if bucket is not None and await bucket.check(message.author.id, msg_time, message=f"{message.channel.id}-{message.id}", amount=amount):
+                bucket = self.get_bucket(message.guild.id, f"max_failed_pings:{message.author.id}", b)
+                if bucket is not None and await bucket.check(message.author.id, msg_time, message=message.id,
+                                                             channel=message.channel.id, user=message.author.id,
+                                                             amount=amount):
                     count = await bucket.count(message.author.id, msg_time, expire=False)
                     period = await bucket.size(message.author.id, msg_time, expire=False)
                     self.bot.loop.create_task(
@@ -492,9 +496,9 @@ class AntiSpam(BaseCog):
     def _process_bucket_entries(entries):
         def extract_re(key):
             parts = key.split("-")
-            if len(parts) != 3:
+            if len(parts) != 4:
                 return None
-            return parts[0], parts[1]
+            return parts[0], parts[1], parts[2]
 
         return set(filter(lambda x: x is not None, map(extract_re, entries)))
 

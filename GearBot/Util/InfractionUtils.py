@@ -1,7 +1,7 @@
 import asyncio
 import re
 import time
-from datetime import datetime
+import datetime
 
 from aioredis import ReplyError
 from discord import NotFound
@@ -19,7 +19,7 @@ def initialize(gearbot):
 
 async def add_infraction(guild_id, user_id, mod_id, type, reason, end=None, active=True):
     i = await Infraction.create(guild_id=guild_id, user_id=user_id, mod_id=mod_id, type=type, reason=reason,
-                      start=datetime.now().timestamp(), end=end, active=active)
+                      start=datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp(), end=end, active=active)
     clear_cache(guild_id)
     return i
 
@@ -74,11 +74,12 @@ async def fetch_infraction_pages(guild_id, query, amount, fields, requested):
     title = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', guild_id, name=name, page_num=100, pages=100)}\n```md\n\n```"
     page_header = get_header(longest_id, 37, longest_type, longest_timestamp, guild_id)
     mcount = 2000 - len(header) - len(page_header) - len(title)
-    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {datetime.fromtimestamp(inf.start)} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
+    out = "\n".join(f"{Utils.pad(str(inf.id), longest_id)} | <@{Utils.pad(str(inf.user_id), 37)}> | <@{Utils.pad(str(inf.mod_id), 37)}> | {datetime.datetime.fromtimestamp(inf.start)} | {Utils.pad(Translator.translate(inf.type.lower(), guild_id), longest_type)} | {Utils.trim_message(inf.reason, 1000)}" for inf in infs)
     pages = Pages.paginate(out, max_chars=mcount)
     if bot.redis_pool is not None:
         GearbotLogging.debug(f"Pushing placeholders for {key}")
         pipe = bot.redis_pool.pipeline()
+        pipe.unlink(key)
         for page in pages:
             pipe.lpush(key, "---NO PAGE YET---")
         await pipe.execute()
@@ -154,52 +155,9 @@ def get_key(guild_id, query, fields, amount):
     key += f"_{amount}"
     return key
 
-async def inf_update(message, query, fields, amount, page_num):
-    if str(query).isnumeric():
-        query = int(query)
-    guild_id = message.channel.guild.id
-    old = message.content
-    key = get_key(guild_id, query, fields, amount)
-    # do we have pages?
-    count = await bot.redis_pool.llen(key)
-    if count == 0:
-        count = await fetch_infraction_pages(guild_id, query, amount, fields, page_num)
-        if page_num >= count:
-            page_num = 0
-        elif page_num < 0:
-            page_num = count-1
-        page = (await bot.wait_for("page_assembled", check=lambda l: l["key"] == key and l["page_num"] == page_num))["page"]
-    else:
-        if page_num >= count:
-            page_num = 0
-        elif page_num < 0:
-            page_num = count-1
-        page = await bot.redis_pool.lindex(key, page_num)
+async def assemble_message(guild_id, page, query, page_num, count):
     name = await Utils.username(query) if isinstance(query, int) else await Utils.clean(bot.get_guild(guild_id).name)
-    new = f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', message.channel.guild.id, name=name, page_num=page_num + 1, pages=count)}\n{page}"
-    if old != new:
-        try:
-            await message.edit(content=new)
-            if count > 1:
-                left = Emoji.get_emoji('LEFT')
-                if not any(left == r.emoji and r.me for r in message.reactions):
-                    await message.add_reaction(Emoji.get_emoji('LEFT'))
-                    await message.add_reaction(Emoji.get_emoji('RIGHT'))
-        except NotFound:
-            pass
-
-
-    parts = {
-        "page_num": page_num,
-        "cache_key": key,
-    }
-    if len(fields) != 0:
-        parts["fields"] = "-".join(fields)
-    if query is not None:
-        parts["query"] = query
-    if amount != 100:
-        parts["amount"] = 100
-    return parts
+    return f"{Emoji.get_chat_emoji('SEARCH')} {Translator.translate('inf_search_header', guild_id, name=name, page_num=page_num + 1, pages=count)}\n{page}"
 
 
 async def inf_cleaner(guild_id, reset_cache=False):

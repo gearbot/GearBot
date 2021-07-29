@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+import datetime
 
 import discord
 
@@ -11,7 +11,7 @@ def server_info_embed(guild, request_guild=None):
     if guild_features == "":
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.utcfromtimestamp(time.time()))
+    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
     embed.set_thumbnail(url=guild.icon_url_as())
     embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
@@ -28,7 +28,7 @@ def server_info_embed(guild, request_guild=None):
     )
     embed.add_field(
         name=Translator.translate('created_at', request_guild),
-        value=f"{guild_made} ({(datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
+        value=f"{guild_made} ({(datetime.datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
         inline=True
     )
     embed.add_field(
@@ -85,7 +85,7 @@ def server_info_raw(bot, guild):
         additional_text_channels=extra,
         voice_channels=len(guild.voice_channels),
         creation_date=guild.created_at.strftime("%d-%m-%Y"),  # TODO: maybe date and have the client do the displaying?
-        age_days=(datetime.fromtimestamp(time.time()) - guild.created_at).days,
+        age_days=(datetime.datetime.fromtimestamp(time.time()) - guild.created_at).days,
         vip_features=guild.features,
         role_list={
             r.id: {

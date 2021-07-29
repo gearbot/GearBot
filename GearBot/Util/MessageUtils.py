@@ -1,7 +1,7 @@
 import collections
 import time
 from collections import namedtuple
-from datetime import datetime
+import datetime
 
 from discord import Object, HTTPException, MessageType, AllowedMentions
 
@@ -12,15 +12,13 @@ from database.DatabaseConnector import LoggedMessage
 
 Message = namedtuple("Message", "messageid author content channel server attachments type pinned reply_to")
 
-def is_cache_enabled(bot):
-    return bot.redis_pool is not None
 
 
 attachment = namedtuple("attachment", "id name")
 
 async def get_message_data(bot, message_id):
     message = None
-    if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
+    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 5 * 60).replace(tzinfo=datetime.timezone.utc):
         parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
         if len(parts) == 7:
             reply = int(parts["reply"])
@@ -36,7 +34,7 @@ async def insert_message(bot, message, redis=True):
     else:
         if not isinstance(message_type, int):
             message_type = message_type.value
-    if redis and is_cache_enabled(bot):
+    if redis:
         pipe = bot.redis_pool.pipeline()
         is_reply = message.reference is not None and message.reference.channel_id == message.channel.id
         pipe.hmset_dict(f"messages:{message.id}", author=message.author.id, content=message.content,
@@ -48,7 +46,7 @@ async def insert_message(bot, message, redis=True):
     await DBUtils.insert_message(message)
 
 async def update_message(bot, message_id, content, pinned):
-    if is_cache_enabled(bot) and not Object(message_id).created_at <= datetime.utcfromtimestamp(time.time() - 5 * 60):
+    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 5 * 60).replace(tzinfo=datetime.timezone.utc):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message_id}", content=content)
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
@@ -74,9 +72,9 @@ async def archive_purge(bot, id_list, guild_id):
                                     collections.OrderedDict(sorted(message_list.items())))
 
 
-async def send_to(destination, emoji, message, delete_after=None, translate=True, embed=None, attachment=None, **kwargs):
+async def send_to(destination, emoji, message, translate=True, embed=None, attachment=None, **kwargs):
     translated = Translator.translate(message, destination.guild, **kwargs) if translate else message
-    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", delete_after=delete_after, embed=embed, allowed_mentions=AllowedMentions(everyone=False, users=True, roles=False), file=attachment)
+    return await destination.send(f"{Emoji.get_chat_emoji(emoji)} {translated}", embed=embed, allowed_mentions=AllowedMentions(everyone=False, users=True, roles=False), file=attachment)
 
 async def try_edit(message, emoji: str, string_name: str, embed=None, **kwargs):
     translated = Translator.translate(string_name, message.channel, **kwargs)

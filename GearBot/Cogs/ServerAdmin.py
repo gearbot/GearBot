@@ -3,15 +3,18 @@ import io
 
 import discord
 import pytz
-from discord import TextChannel
+from discord import TextChannel, Interaction
 from discord.ext import commands
+from discord.ext.commands import BucketType
 from pytz import UnknownTimeZoneError
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Confirmation, Pages, \
+from Util import Configuration, Permissioncheckers, Emoji, Translator, Features, Utils, Pages, \
     MessageUtils, Selfroles
 from Util.Converters import LoggingChannel, ListMode, SpamType, RangedInt, Duration, AntiSpamPunishment
 from database.DatabaseConnector import Infraction
+from views import SimplePager
+from views.Confirm import Confirm
 
 
 class ServerHolder(object):
@@ -93,19 +96,15 @@ class ServerAdmin(BaseCog):
         "CONFIG_CHANGES",
         "MESSAGE_FLAGS",
         "FUTURE_LOGS",
-        "FAILED_MASS_PINGS"
+        "FAILED_MASS_PINGS",
+        "THREAD_LOGS",
+        "THREAD_TRAVEL_LOGS"
     ]
 
     def __init__(self, bot):
         super().__init__(bot)
 
         bot.to_cache = []
-        Pages.register("censor_list", self._censorlist_init, self._censorklist_update)
-        Pages.register("word_censor_list", self._word_censorlist_init, self._word_censor_list_update)
-        Pages.register("full_message_censor_list", self._full_censorlist_init, self._full_censor_list_update)
-
-        Pages.register("flag_list", self._flaglist_init, self._flaglist_update)
-        Pages.register("word_flag_list", self._word_flaglist_init, self._word_flag_list_update)
 
     @commands.guild_only()
     @commands.group(aliases=["config", "cfg"], invoke_without_command=True)
@@ -198,7 +197,7 @@ class ServerAdmin(BaseCog):
             if category.permissions_for(guild.me).manage_channels:
                 try:
                     await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
-                                                   send_messages=False, add_reactions=False, speak=False, connect=False)
+                                                   send_messages=False, add_reactions=False, speak=False, connect=False, use_threads=False, use_private_threads=False)
                 except discord.Forbidden:
                     pass
 
@@ -210,7 +209,7 @@ class ServerAdmin(BaseCog):
                 if channel.overwrites_for(role).is_empty():
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
-                                                      send_messages=False, add_reactions=False)
+                                                      send_messages=False, add_reactions=False, use_threads=False, use_private_threads=False)
                     except discord.Forbidden:
                         pass
             else:
@@ -615,12 +614,24 @@ class ServerAdmin(BaseCog):
                 features.append(feature)
 
         if len(features) > 0:
-            async def yes():
-                await ctx.invoke(self.enable_feature, ", ".join(features))
+            message = None
 
-            await Confirmation.confirm(ctx, MessageUtils.assemble(ctx.guild.id, 'WHAT', 'confirmation_enable_features',
-                                                                  count=len(features)) + ', '.join(features),
-                                       on_yes=yes)
+            async def yes(interaction: discord.Interaction):
+                await self._enable_feature(ctx, ", ".join(features), interaction)
+
+            async def no(interaction):
+                await interaction.response.edit_message(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'),
+                                                        view=None)
+
+            async def timeout():
+                if message is not None:
+                    await message.edit(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'), view=None)
+
+            def check(interaction: Interaction):
+                return ctx.author.id == interaction.user.id and interaction.message.id == message.id
+
+            message = await ctx.send(Translator.translate('custom_command_override_confirmation', ctx.guild.id),
+                                     view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
 
     @logging.command(name="remove")
     async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
@@ -689,6 +700,9 @@ class ServerAdmin(BaseCog):
 
     @features.command(name="enable")
     async def enable_feature(self, ctx, types):
+        await self._enable_feature(ctx, types, None)
+
+    async def _enable_feature(self, ctx, types, interaction):
         types = types.upper()
         enabled = []
         ignored = []
@@ -711,7 +725,8 @@ class ServerAdmin(BaseCog):
                 Configuration.set_var(ctx.guild.id, "MESSAGE_LOGS" if t == "EDIT_LOGS" else "CENSORING", "ENABLED",
                                       True)
                 if t == "EDIT_LOGS":
-                    await ctx.send(Translator.translate('minor_log_caching_start', ctx))
+                    if interaction is None:
+                        await ctx.send(Translator.translate('minor_log_caching_start', ctx))
                     # self.bot.to_cache.append(ctx)
 
         if len(enabled) > 0:
@@ -726,7 +741,10 @@ class ServerAdmin(BaseCog):
             message += MessageUtils.assemble(ctx.guild.id, 'NO', 'logs_unknown', count=len(unknown)) + ', '.join(
                 unknown)
 
-        await ctx.send(message, embed=self.get_features_status(ctx))
+        if interaction is None:
+            await ctx.send(message, embed=self.get_features_status(ctx))
+        else:
+            interaction.response.edit_message(content=message, embed=self.get_features_status(ctx), view=None)
 
     @staticmethod
     def get_features_status(ctx):
@@ -983,25 +1001,13 @@ class ServerAdmin(BaseCog):
     async def censor_list(self, ctx):
         """censor_list_help"""
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "censor_list", ctx)
-
-    @staticmethod
-    async def _censorlist_init(ctx):
-        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
-        if len(censor_list) > 0:
-            pages = Pages.paginate("\n".join(censor_list))
-            return f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-                pages) > 1
-        else:
-            return Translator.translate('censor_list_empty', ctx), None, False
-
-    @staticmethod
-    async def _censorklist_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate(
-            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "TOKEN_CENSORLIST")))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**{Translator.translate(f'censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+            censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+            if len(censor_list) > 0:
+                pages = Pages.paginate("\n".join(censor_list))
+            else:
+                pages = [Translator.translate('censor_list_empty', ctx)]
+            content, view, page_num = SimplePager.get_parts(pages, 0, ctx.guild.id, 'censor_list')
+            await ctx.send(f"**{Translator.translate(f'censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", view=view)
 
     @censor_list.command("add")
     async def censor_list_add(self, ctx, *, word: str):
@@ -1078,25 +1084,15 @@ class ServerAdmin(BaseCog):
     @configure.group(aliases=["wordcensorlist", "wcl"], invoke_without_command=True)
     async def word_censor_list(self, ctx):
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "word_censor_list", ctx)
-
-    @staticmethod
-    async def _word_censorlist_init(ctx):
-        censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
-        if len(censor_list) > 0:
-            pages = Pages.paginate("\n".join(censor_list))
-            return f"**{Translator.translate(f'word_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-                pages) > 1
-        else:
-            return Translator.translate('word_censor_list_empty', ctx), None, False
-
-    @staticmethod
-    async def _word_censor_list_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate(
-            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "WORD_CENSORLIST")))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**{Translator.translate(f'censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+            censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "WORD_CENSORLIST")
+            if len(censor_list) > 0:
+                pages = Pages.paginate("\n".join(censor_list))
+            else:
+                pages = [Translator.translate('word_censor_list_empty', ctx)]
+            content, view, page_num = SimplePager.get_parts(pages, 0, ctx.guild.id, 'word_censor_list')
+            await ctx.send(
+                f"**{Translator.translate(f'word_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```",
+                view=view)
 
     @word_censor_list.command("add")
     async def word_censor_list_add(self, ctx, *, word: str):
@@ -1146,24 +1142,15 @@ class ServerAdmin(BaseCog):
     async def flag_list(self, ctx):
         """flag_list_help"""
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "flag_list", ctx)
-
-    @staticmethod
-    async def _flaglist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")))
-        return f"**{Translator.translate(f'flagged_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-            pages) > 1
-
-    @staticmethod
-    async def _flaglist_update(ctx, message, page_num, action, data):
-        flagged_list = Configuration.get_var(message.channel.guild.id, "FLAGGING", "TOKEN_LIST")
-        if len(flagged_list) > 0:
-            pages = Pages.paginate("\n".join(flagged_list))
-            page, page_num = Pages.basic_pages(pages, page_num, action)
-            data["page"] = page_num
-            return f"**{Translator.translate(f'flagged_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
-        else:
-            await MessageUtils.send_to(ctx, 'WARNING', 'flag_list_empty')
+            censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "TOKEN_LIST")
+            if len(censor_list) > 0:
+                pages = Pages.paginate("\n".join(censor_list))
+            else:
+                pages = [Translator.translate('flag_list_empty', ctx)]
+            content, view, page_num = SimplePager.get_parts(pages, 0, ctx.guild.id, 'flag_list')
+            await ctx.send(
+                f"**{Translator.translate(f'flagged_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```",
+                view=view)
 
     @flag_list.command("add")
     async def flag_list_add(self, ctx, *, word: str):
@@ -1213,24 +1200,15 @@ class ServerAdmin(BaseCog):
     async def word_flag_list(self, ctx):
         """word_flag_list_help"""
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "word_flag_list", ctx)
-
-    @staticmethod
-    async def _word_flaglist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")))
-        return f"**{Translator.translate(f'flagged_word_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-            pages) > 1
-
-    @staticmethod
-    async def _word_flag_list_update(ctx, message, page_num, action, data):
-        flag_list = Configuration.get_var(message.channel.guild.id, "FLAGGING", "WORD_LIST")
-        if len(flag_list) > 0:
-            pages = Pages.paginate("\n".join(flag_list))
-            page, page_num = Pages.basic_pages(pages, page_num, action)
-            data["page"] = page_num
-            return f"**{Translator.translate(f'flagged_word_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
-        else:
-            await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
+            censor_list = Configuration.get_var(ctx.guild.id, "FLAGGING", "WORD_LIST")
+            if len(censor_list) > 0:
+                pages = Pages.paginate("\n".join(censor_list))
+            else:
+                pages = [Translator.translate('word_flag_list_empty', ctx)]
+            content, view, page_num = SimplePager.get_parts(pages, 0, ctx.guild.id, 'word_flag_list')
+            await ctx.send(
+                f"**{Translator.translate(f'flagged_word_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```",
+                view=view)
 
     @word_flag_list.command("add")
     async def word_flag_list_add(self, ctx, *, word: str):
@@ -1415,21 +1393,15 @@ class ServerAdmin(BaseCog):
     async def full_message_censor_list(self, ctx):
         """full_message_censor_list_help"""
         if ctx.invoked_subcommand is None:
-            await Pages.create_new(self.bot, "full_message_censor_list", ctx)
-
-    @staticmethod
-    async def _full_censorlist_init(ctx):
-        pages = Pages.paginate("\n".join(Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")))
-        return f"**{Translator.translate(f'full_message_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```", None, len(
-            pages) > 1
-
-    @staticmethod
-    async def _full_censor_list_update(ctx, message, page_num, action, data):
-        pages = Pages.paginate(
-            "\n".join(Configuration.get_var(message.channel.guild.id, "CENSORING", "FULL_MESSAGE_LIST")))
-        page, page_num = Pages.basic_pages(pages, page_num, action)
-        data["page"] = page_num
-        return f"**{Translator.translate(f'full_message_censor_list', message.channel.guild.id, server=message.channel.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```", None, data
+            censor_list = Configuration.get_var(ctx.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+            if len(censor_list) > 0:
+                pages = Pages.paginate("\n".join(censor_list))
+            else:
+                pages = [Translator.translate('full_censor_list_empty', ctx)]
+            content, view, page_num = SimplePager.get_parts(pages, 0, ctx.guild.id, 'full_censor_list')
+            await ctx.send(
+                f"**{Translator.translate(f'full_message_censor_list', ctx, server=ctx.guild.name, page_num=1, pages=len(pages))}**```\n{pages[0]}```",
+                view=view)
 
     @full_message_censor_list.command("add")
     async def full_message_censor_list_add(self, ctx, *, message: str):
@@ -1561,6 +1533,7 @@ class ServerAdmin(BaseCog):
 
     anti_spam_types = {
         "duplicates",
+        "duplicates_across_users",
         "max_messages",
         "max_newlines",
         "max_mentions",
@@ -1609,7 +1582,7 @@ class ServerAdmin(BaseCog):
         if len(users) == 0:
             desc = Translator.translate('no_ignored_spammers', ctx)
         else:
-            resolved_users = [await Utils.get_user(user) for user in users]
+            resolved_users = [await Utils.get_user(user) for user in users if user is not None]
             desc = "\n".join(f"{str(user)} (`{user.id}`)" for user in resolved_users)
         embed.add_field(name=Translator.translate('ignored_spammers', ctx), value=desc)
 
@@ -1674,6 +1647,7 @@ class ServerAdmin(BaseCog):
                 break
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('anti_spam_updated', ctx)}",
                        embed=await self.get_anti_spam_embed(ctx))
+        Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS", existing)
 
     @anti_spam.group("immune_users", invoke_without_command=True)
     async def immune_users(self, ctx):
@@ -1693,15 +1667,17 @@ class ServerAdmin(BaseCog):
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
     @immune_users.command("remove")
-    async def immune_users_remove(self, ctx, member: discord.Member):
+    async def immune_users_remove(self, ctx, mid: int):
         """anti_spam_immune_users_remove_help"""
         users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
-        if member.id not in users:
-            await MessageUtils.send_to(ctx, 'NO', 'user_not_immune', user=Utils.clean_user(member))
+        user = await Utils.get_user(mid)
+        uname = Utils.clean_user(user)  if user is not None else mid
+        if mid not in users:
+            await MessageUtils.send_to(ctx, 'NO', 'user_not_immune', user=uname)
         else:
-            users.remove(member.id)
+            users.remove(mid)
             Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS", users)
-            message = MessageUtils.assemble(ctx, "YES", "user_no_longer_immune", user=Utils.clean_user(member))
+            message = MessageUtils.assemble(ctx, "YES", "user_no_longer_immune", user=uname)
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
     @anti_spam.group("immune_roles", invoke_without_command=True)
@@ -1722,15 +1698,16 @@ class ServerAdmin(BaseCog):
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
     @immune_roles.command("remove")
-    async def immune_roles_roles(self, ctx, role: discord.Role):
+    async def immune_roles_roles(self, ctx, role: int):
         """anti_spam_immune_roles_remove_help"""
         roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
-        if role.id not in roles:
-            await MessageUtils.send_to(ctx, 'NO', 'role_not_immune', role=role.name)
+        r = ctx.guild.get_role(role)
+        if role not in roles:
+            await MessageUtils.send_to(ctx, 'NO', 'role_not_immune', role=r.name if r is not None else role)
         else:
-            roles.remove(role.id)
+            roles.remove(role)
             Configuration.set_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES", roles)
-            message = MessageUtils.assemble(ctx, "YES", "role_no_longer_immune", role=role.name)
+            message = MessageUtils.assemble(ctx, "YES", "role_no_longer_immune", role=r.name if r is not None else role)
             await ctx.send(message, embed=await self.get_anti_spam_embed(ctx))
 
     @configure.command(aliases=["trustedcensorbypass"])
@@ -1823,6 +1800,20 @@ class ServerAdmin(BaseCog):
                 changed = True
         if changed:
             Configuration.save(channel.guild.id)
+
+    @commands.cooldown(1, 3600, BucketType.guild)
+    @commands.command(hidden=True)
+    async def reset_guild_cache(self, ctx):
+        if self.bot.is_ws_ratelimited():
+            await MessageUtils.send_to(ctx, "LOADING", "guild_cache_reset_queued")
+        while self.bot.is_ws_ratelimited():
+            await asyncio.sleep(1)
+        old = len(ctx.guild.members)
+        await ctx.guild.chunk()
+        new = len(ctx.guild.members)
+        await MessageUtils.send_to(ctx, "LOADING", "guild_cache_reset_complete", old=old, new=new)
+
+
 
 
 def setup(bot):
