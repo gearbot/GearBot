@@ -1,4 +1,4 @@
-discord.py==git+https://github.com/AEnterprise/discord.py@custom_v2
+git+https://github.com/AEnterprise/discord.py@custom_v2
 tortoise-orm==0.16.17
 Pillow==7.2.0
 requests==2.24.0

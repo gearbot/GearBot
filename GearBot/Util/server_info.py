@@ -12,7 +12,8 @@ def server_info_embed(guild, request_guild=None):
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
     embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
-    embed.set_thumbnail(url=guild.icon_url_as())
+    if guild.icon is not None:
+        embed.set_thumbnail(url=guild.icon.url)
     embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)
     embed.add_field(name=Translator.translate('id', request_guild), value=guild.id, inline=True)
     embed.add_field(name=Translator.translate('owner', request_guild), value=guild.owner, inline=True)
@@ -28,7 +29,7 @@ def server_info_embed(guild, request_guild=None):
     )
     embed.add_field(
         name=Translator.translate('created_at', request_guild),
-        value=f"{guild_made} ({(datetime.datetime.fromtimestamp(time.time()) - guild.created_at).days} days ago)",
+        value=f"{guild_made} ({(datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc) - guild.created_at).days} days ago)",
         inline=True
     )
     embed.add_field(
@@ -36,10 +37,10 @@ def server_info_embed(guild, request_guild=None):
         value=guild_features,
         inline=True
     )
-    if guild.icon_url_as() != "":
+    if guild.icon is not None:
         embed.add_field(
             name=Translator.translate('server_icon', request_guild),
-            value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon_url_as()})",
+            value=f"[{Translator.translate('server_icon', request_guild)}]({guild.icon.url})",
             inline=True
         )
 
@@ -57,10 +58,10 @@ def server_info_embed(guild, request_guild=None):
             value=emoji if len(emoji) < 1024 else f"{len(guild.emojis)} emoji"
         )
 
-    if guild.splash_url != "":
-        embed.set_image(url=guild.splash_url)
-    if guild.banner_url_as() != "":
-        embed.set_image(url=guild.banner_url_as())
+    if guild.splash is not None:
+        embed.set_image(url=guild.splash.url)
+    if guild.banner is not None:
+        embed.set_image(url=guild.banner.url)
 
     return embed
 

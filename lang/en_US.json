@@ -1091,5 +1091,6 @@
   "view_expired": "This message has expired, please run the command again instead",
   "dm_on_unmute_msg_already_disabled": "DMing people when they are unmuted was already disabled",
   "infraction_dm_settings": "Infraction DM Settings",
-  "dm_notifications_help": "Shows the current settings for infraction DMs"
+  "dm_notifications_help": "Shows the current settings for infraction DMs",
+  "no_runnable_commands": "There are no commands in this cog that you can use"
 }

@@ -190,12 +190,12 @@ class AntiSpam(BaseCog):
             if message == "0":
                 continue
             by_channel.setdefault(channel, []).append(message)
-            member = Utils.get_member(self.bot, v.guild, user, fetch_if_missing=True)
+            member = await Utils.get_member(self.bot, v.guild, user, fetch_if_missing=True)
             if member is not None:
                 users.add(member)
 
         for user in users:
-            await self.punishments[t](v, user, pipeline)
+            await self.punishments[t](v, user)
 
         if v.bucket.get("CLEAN", True) and v.channel is not None:
 
@@ -415,8 +415,8 @@ class AntiSpam(BaseCog):
                 if t == "max_ghost_messages" and is_ghost:
                     now = int(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).timestamp())
                     bucket = self.get_bucket(member.guild.id, f"max_ghost_messages:{member.id}", b)
-                    if bucket is not None and await bucket.check(member.id, now, message=message.id,
-                                                                 channel=message.channel.id, user=message.author.id,
+                    if bucket is not None and await bucket.check(member.id, now, message=message.messageid,
+                                                                 channel=message.channel, user=message.author,
                                                                  amount=1):
                         count = await bucket.count(member.id, now, expire=False)
                         period = await bucket.size(member.id, now, expire=False)
@@ -429,9 +429,8 @@ class AntiSpam(BaseCog):
                                                    b, count)))
                 elif t == "max_ghost_pings" and is_ghost_ping:
                     bucket = self.get_bucket(member.guild.id, f"max_ghost_pings:{member.id}", b, )
-                    if bucket is not None and await bucket.check(member.id, msg_time, message=message.id,
-                                                                 channel=message.channel.id,
-                                                                 user=message.author.id, amount=mentions):
+                    if bucket is not None and await bucket.check(member.id, msg_time, message=message.messageid,
+                                                                 channel=message.channel, user=message.author, amount=mentions):
                         count = await bucket.count(member.id, msg_time, expire=False)
                         period = await bucket.size(member.id, msg_time, expire=False)
                         self.bot.loop.create_task(

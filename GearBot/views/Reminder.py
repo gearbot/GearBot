@@ -47,7 +47,7 @@ class ReminderView(discord.ui.View):
                                   status=1,
                                   guild_id=self.guild_id, message_id=self.mid)
             await interaction.response.edit_message(
-                content=MessageUtils.assemble(self.guild_id, "YES", f"reminder_confirmation_dm",
+                content=MessageUtils.assemble(self.guild_id, "YES", f"reminder_confirmation_here",
                                               duration=Utils.to_pretty_time(self.duration, self.guild_id)), view=None)
             self.stop()
 

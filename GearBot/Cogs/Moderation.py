@@ -1480,7 +1480,8 @@ class Moderation(BaseCog):
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       send_messages=False,
-                                                      add_reactions=False)
+                                                      add_reactions=False,
+                                                      use_threads=False, use_private_threads=False)
                     except (discord.Forbidden, discord.NotFound):
                         pass
                 else:

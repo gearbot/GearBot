@@ -124,7 +124,7 @@ class ModLog(BaseCog):
                                    user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention,
                                    message_id=data.message_id, time=_time.strip(), reply=reply_str)
             type_string = None
-            if message.type is not None:
+            if message.type is not None and message.type not in [MessageType.reply.value, MessageType.application_command.value, MessageType.thread_starter_message.value]:
                 if message.type == MessageType.new_member.value:
                     type_string = Translator.translate('system_message_new_member', guild)
                 elif message.type == MessageType.pins_add.value:
@@ -679,10 +679,11 @@ class ModLog(BaseCog):
                 key = base_key
                 if ba != aa:
                     entry = await self.find_log(before.guild, action,
-                                                lambda e: e.target.id == before.id and hasattr(e.changes.before,
-                                                                                               attr) and getattr(
-                                                    e.changes.before, attr) == ba and getattr(e.changes.after,
-                                                                                              attr) == aa)
+                                                lambda
+                                                    e: e.target is not None and e.changes is not None and e.target.id == before.id and hasattr(
+                                                    e.changes.before, attr) and getattr(e.changes.before,
+                                                                                        attr) == ba and getattr(
+                                                    e.changes.after, attr) == aa)
                     parts = dict(before=self.prep_attr(ba), after=self.prep_attr(aa), thing=after, thing_id=after.id,
                                  attr=attr)
                     if entry is not None:
@@ -692,10 +693,12 @@ class ModLog(BaseCog):
 
     @commands.Cog.listener()
     async def on_raw_thread_create(self, thread: Thread):
-        if thread.archive_timestamp < (datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - datetime.timedelta(minutes=1)):
+        if thread.archive_timestamp < (
+                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - datetime.timedelta(minutes=1)):
             return
         t = self.convert_thread_type(thread.guild.id, thread.type)
-        entry = await self.find_log(thread.guild, AuditLogAction.thread_create, lambda e: e.target.id == thread.id)
+        entry = await self.find_log(thread.guild, AuditLogAction.thread_create,
+                                    lambda e: e.target is not None and e.target.id == thread.id)
         if entry is not None:
             GearbotLogging.log_key(thread.guild.id, "thread_created_by_user", channel=thread.parent.name,
                                    channel_id=thread.parent_id, owner=Utils.clean_user(entry.user),
@@ -712,7 +715,8 @@ class ModLog(BaseCog):
         if guild is None:
             return
         t = self.convert_thread_type(raw.guild_id, raw.thread_type)
-        entry = await self.find_log(guild, AuditLogAction.thread_delete, lambda e: e.target.id == raw.thread_id)
+        entry = await self.find_log(guild, AuditLogAction.thread_delete,
+                                    lambda e: e.target is not None and e.target.id == raw.thread_id)
         if entry is not None:
 
             if raw.thread is not None:
@@ -750,7 +754,7 @@ class ModLog(BaseCog):
             await self.unarchived_thread(after)
 
         if not before.archived and after.archived:
-            planned_archive = discord.utils.snowflake_time(after.last_message_id) + datetime.timedelta(
+            planned_archive = discord.utils.snowflake_time(after.last_message_id if after.last_message_id is not None else after.id) + datetime.timedelta(
                 minutes=after.auto_archive_duration) - datetime.timedelta(
                 seconds=1)  # somehow this sometimes seems to be off by a second
             if after.archive_timestamp >= planned_archive:
@@ -762,11 +766,11 @@ class ModLog(BaseCog):
                                        channel_id=after.parent_id)
             else:
                 entry = await self.find_log(after.guild, AuditLogAction.thread_update,
-                                            lambda e: e.target.id == after.id and
+                                            lambda e: e.target is not None and e.target.id == after.id and
                                                       hasattr(e.changes.after, "archived") and
                                                       e.changes.after.archived is True)
                 if entry is not None:
-                    GearbotLogging.log_key(after.guild.id, "thread_archived_by_mod}", thread_id=after.id, type=t,
+                    GearbotLogging.log_key(after.guild.id, "thread_archived_by_mod", thread_id=after.id, type=t,
                                            channel_id=after.parent_id, user=Utils.clean_user(entry.user),
                                            user_id=entry.user.id)
                 else:
@@ -781,8 +785,10 @@ class ModLog(BaseCog):
     async def unarchived_thread(self, thread: discord.Thread):
         t = self.convert_thread_type(thread.guild.id, thread.type)
         entry = await self.find_log(thread.guild, AuditLogAction.thread_update,
-                                    lambda e: e.target.id == thread.id and hasattr(e.changes.after,
-                                                                                   "archived") and e.changes.after.archived is False)
+                                    lambda
+                                        e: e.target is not None and e.changes is not None and e.target.id == thread.id and hasattr(
+                                        e.changes.after,
+                                        "archived") and e.changes.after.archived is False)
         if entry is not None:
             GearbotLogging.log_key(thread.guild.id, "thread_unarchived_by", thread_id=thread.id, type=t,
                                    channel_id=thread.parent_id, user=Utils.clean_user(entry.user),
@@ -795,13 +801,16 @@ class ModLog(BaseCog):
     async def on_thread_member_join(self, thread_member: discord.ThreadMember):
         member = await Utils.get_member(self.bot, thread_member.parent.guild, thread_member.id, fetch_if_missing=True)
         if member is not None:
-            GearbotLogging.log_key(thread_member.thread.guild.id, "thread_member_add", user=Utils.clean_user(member), user_id=thread_member.id, thread_id=thread_member.thread_id, channel_id=thread_member.thread.parent_id)
+            GearbotLogging.log_key(thread_member.thread.guild.id, "thread_member_add", user=Utils.clean_user(member),
+                                   user_id=thread_member.id, thread_id=thread_member.thread_id,
+                                   channel_id=thread_member.thread.parent_id)
 
     @commands.Cog.listener()
     async def on_raw_thread_member_leave(self, thread: discord.Thread, member_id):
         member = await Utils.get_member(self.bot, thread.guild, member_id, fetch_if_missing=True)
         if member is not None:
-            GearbotLogging.log_key(thread.guild.id, "thread_member_remove", user=Utils.clean_user(member), user_id=member.id, thread_id=thread.id, channel_id=thread.parent_id)
+            GearbotLogging.log_key(thread.guild.id, "thread_member_remove", user=Utils.clean_user(member),
+                                   user_id=member.id, thread_id=thread.id, channel_id=thread.parent_id)
 
     @staticmethod
     def convert_thread_type(guild_id, t):

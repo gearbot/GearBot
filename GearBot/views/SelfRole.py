@@ -19,6 +19,8 @@ def set_buttons(view: discord.ui.View, guild, page):
              role is not None]
     pages = [p for p in Utils.chunks(roles, 20)]
     view.pages = len(pages)
+    if len(pages) == 0:
+        return
     if page > len(pages) or page < 0:
         page = 0
     p = pages[page]

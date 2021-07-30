@@ -3,8 +3,7 @@ from discord import Interaction, InteractionType
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Cogs.Emoji import Emoji
-from Util import Configuration, MessageUtils, Translator, Pages
+from Util import Configuration, MessageUtils, Translator, Pages, Emoji
 from views import Help, SimplePager
 from views.SelfRole import SelfRoleView
 

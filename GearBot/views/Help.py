@@ -42,13 +42,18 @@ async def message_parts(bot, query, guild, member, page_num):
     view = None
     raw_pages = await get_help_pages(query, guild, member, bot)
     if raw_pages is None:
-        return Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", guild,
+        if query in [cog.lower() for cog in bot.cogs]:
+            raw_pages = [Translator.translate('no_runnable_commands', guild)]
+        else:
+            return Translator.translate("help_not_found" if len(query) < 1500 else "help_no_wall_allowed", guild,
                                     query=await Utils.clean(query, emoji=False)), None
+    if page_num >= len(raw_pages):
+        page_num = 0
     eyes = Emoji.get_chat_emoji('EYES')
     content = f"{eyes} **{Translator.translate('help_title', guild, page_num=page_num + 1, pages=len(raw_pages))}** {eyes}```diff\n{raw_pages[page_num]}```"
     cog_names = [cog.lower() for cog in bot.cogs]
     if query is None or query.lower() in cog_names or len(raw_pages) > 1:
-        view = HelpView(bot, guild.id, query, page_num, len(raw_pages), True)
+        view = HelpView(bot, guild, query, page_num, len(raw_pages), True)
     return content, view
 
 

@@ -505,7 +505,8 @@ anti_spam_types = {
     "voice_joins",
     "max_ghost_pings",
     "max_ghost_messages",
-    "max_failed_mass_pings"
+    "max_failed_mass_pings",
+    "duplicates_across_users"
 }
 
 

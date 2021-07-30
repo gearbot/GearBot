@@ -86,7 +86,7 @@ async def gen_command_help(bot, member, guild, command):
                 sub_info += "  " + command_name + (" " * (longest - len(command_name) + 4)) + info + "\n"
             sub_info += Translator.translate('help_footer', guild, prefix=prefix, signature=signature)
 
-    return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, guild)}\n{'' if sub_info is None else sub_info}".replace(bot.me.mention, f"@{bot.me.name}"))
+    return Pages.paginate(f"{usage}\n\n{Translator.translate(command.help, guild)}\n{'' if sub_info is None else sub_info}".replace(bot.user.mention, f"@{bot.user.name}"))
 
 def dict_to_pages(dict, suffix=""):
     pages = []
