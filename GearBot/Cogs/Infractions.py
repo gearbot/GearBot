@@ -173,8 +173,8 @@ class Infractions(BaseCog):
         pipe.expire(f"inf_track:{ctx.guild.id}", 60 * 60 * 24)
         await pipe.execute()
 
-        pages = await InfractionUtils.fetch_infraction_pages(ctx.guild.id, query, amount, fields, 1)
-        page = await self.bot.wait_for('page_assembled', check=lambda l: l['key'] == get_key(ctx.guild.id, query, fields, amount))
+        pages = await InfractionUtils.fetch_infraction_pages(ctx.guild.id, query, amount, fields, 0)
+        page = await self.bot.wait_for('page_assembled', check=lambda l: l['key'] == get_key(ctx.guild.id, query, fields, amount) and l['page_num'] == 0)
         await message.edit(
             content=await InfractionUtils.assemble_message(ctx.guild.id, page['page'], query, 0, pages),
                                                      view=InfSearch(filters=fields, pages=pages, guild_id=ctx.guild.id)

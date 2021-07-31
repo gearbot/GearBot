@@ -720,18 +720,22 @@ class ModLog(BaseCog):
         if entry is not None:
 
             if raw.thread is not None:
-                GearbotLogging.log_key(guild.id, "thread_deleted_by_user", channel=raw.thread.parent.name,
-                                       channel_id=raw.thread.parent_id, user=Utils.clean_user(entry.user),
-                                       user_id=entry.user.id, thread=raw.thread.name, thread_id=raw.thread_id, type=t)
+                channel = self.bot.get_channel(raw.thread.parent_id)
+                if channel is not None:
+                    GearbotLogging.log_key(guild.id, "thread_deleted_by_user", channel=channel.name,
+                                           channel_id=raw.thread.parent_id, user=Utils.clean_user(entry.user),
+                                           user_id=entry.user.id, thread=raw.thread.name, thread_id=raw.thread_id, type=t)
             else:
                 GearbotLogging.log_key(guild.id, "thread_unknown_channel_deleted_by_user",
                                        user=Utils.clean_user(entry.user),
                                        user_id=entry.user.id, thread_id=raw.thread_id, type=t)
         else:
             if raw.thread is not None:
-                GearbotLogging.log_key(guild.id, "thread_deleted", channel=raw.thread.parent.name,
-                                       channel_id=raw.thread.parent_id, thread=raw.thread.name, thread_id=raw.thread_id,
-                                       type=t)
+                channel = self.bot.get_channel(raw.thread.parent_id)
+                if channel is not None:
+                    GearbotLogging.log_key(guild.id, "thread_deleted", channel=channel.name,
+                                           channel_id=raw.thread.parent_id, thread=raw.thread.name, thread_id=raw.thread_id,
+                                           type=t)
             else:
                 GearbotLogging.log_key(guild.id, "thread_unknown_channel_deleted", thread_id=raw.thread_id, type=t)
 

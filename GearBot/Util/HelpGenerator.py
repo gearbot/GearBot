@@ -24,7 +24,7 @@ async def command_list(bot, member, guild):
             output += "  " + command_name + (" " * (longest - len(command_name) + 2)) + info + "\n"
         output_tree[cog] = output
     # sometimes we get a null prefix for some reason?
-    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX")
+    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX") if guild is not None else '!'
     return dict_to_pages(output_tree, f"You can get more info about a command (params and subcommands) by using '{prefix}help <command>'\nCommands followed by ↪  have subcommands")
 
 

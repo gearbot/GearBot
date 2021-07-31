@@ -1,4 +1,5 @@
 import asyncio
+import json
 import re
 import time
 import datetime
@@ -33,14 +34,8 @@ def clear_cache(guild_id):
 
 
 async def cleaner(guild_id):
-    # sleep a bit first, we're not in a rush
-    await asyncio.sleep(5)
     count = 0
     todo = await inf_cleaner(guild_id, reset_cache=True)
-    for view in sorted(todo, key=lambda l: l[0], reverse=True):
-        if count < 10:
-            await ReactionManager.on_reaction(bot, view[0], view[1], 0, "🔁")
-            count += 1
     if guild_id in cleaners:
         del cleaners[guild_id]
 
@@ -165,18 +160,16 @@ async def inf_cleaner(guild_id, reset_cache=False):
     key = f"inf_track:{guild_id}"
     reactors = await bot.redis_pool.smembers(key)
     for reactor in reactors:
-        pipeline.hget(f"reactor:{reactor}", "channel_id")
-        pipeline.hget(f"reactor:{reactor}", "cache_key")
+        pipeline.get(f"inf_meta:{reactor}")
     bits = await pipeline.execute()
     out = list()
     pipeline = bot.redis_pool.pipeline()
     for i in range(len(reactors)):
-        target = i * 2
+        target = i
         if bits[target] is None:
             pipeline.srem(key, reactors[i])
-        else:
-            out.append((reactors[i], int(bits[target])))
-        if reset_cache and bits[target + 1] is not None:
-            pipeline.unlink(bits[target + 1])
-    bot.loop.create_task(pipeline.execute())
+        if reset_cache:
+            data = json.loads(bits[target])
+            pipeline.unlink(get_key(guild_id, data['query'], data['fields'].split(' '), data['amount']))
+    await pipeline.execute()
     return out
