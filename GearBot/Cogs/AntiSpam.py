@@ -79,7 +79,8 @@ class AntiSpam(BaseCog):
             "ban": 5
         }
         self.processed = deque(maxlen=7500)
-        self.censor_processed = deque(maxlen=50)
+        self.censor_processed = deque(maxlen=7500)
+        self.clean_processed = deque(maxlen=7500)
         self.running = True
         bot.loop.create_task(self.censor_detector())
         bot.loop.create_task(self.voice_spam_detector())
@@ -187,8 +188,10 @@ class AntiSpam(BaseCog):
         users = set()
 
         for (message, channel, user) in to_clean:
-            if message == "0":
+            m = int(message)
+            if message == "0" or m in self.clean_processed:
                 continue
+            self.clean_processed.append(m)
             by_channel.setdefault(channel, []).append(message)
             member = await Utils.get_member(self.bot, v.guild, user, fetch_if_missing=True)
             if member is not None:
@@ -196,6 +199,14 @@ class AntiSpam(BaseCog):
 
         for user in users:
             await self.punishments[t](v, user)
+            if v.channel is not None:
+                GearbotLogging.log_key(v.guild.id, 'spam_violate', user=Utils.clean_user(v.member), user_id=v.member.id,
+                                       check=v.check.upper(), friendly=v.friendly, channel=v.channel.mention,
+                                       punishment_type=t)
+            else:
+                GearbotLogging.log_key(v.guild.id, 'spam_violate_no_channel', user=Utils.clean_user(v.member),
+                                       user_id=v.member.id,
+                                       check=v.check.upper(), friendly=v.friendly, punishment_type=t)
 
         if v.bucket.get("CLEAN", True) and v.channel is not None:
 
