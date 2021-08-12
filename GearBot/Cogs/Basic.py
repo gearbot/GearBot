@@ -4,6 +4,7 @@ import time
 import datetime
 
 import discord
+from discord import Embed
 from discord.ext import commands
 from discord.ext.commands import clean_content, BadArgument
 
@@ -204,17 +205,10 @@ class Basic(BaseCog):
     @commands.command()
     async def uid(self, ctx, *, text: str):
         """uid_help"""
-        parts = set()
-        for p in set(ID_NUMBER_MATCHER.findall(text)):
-            try:
-                id = int(p)
-                if id not in parts:
-                    if await Utils.get_user(id) is not None:
-                        parts.add(p)
-            except ValueError:
-                pass
+        parts = await Utils.get_user_ids(text)
         if len(parts) > 0:
-            await ctx.send("\n".join(parts))
+            embed = Embed(description="\n".join(parts), color=16698189)
+            await ctx.send(embed=embed)
         else:
             await MessageUtils.send_to(ctx, "NO", "no_uids_found")
 

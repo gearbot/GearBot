@@ -13,7 +13,7 @@ import math
 from discord import NotFound, DiscordException
 
 from Util import GearbotLogging, Translator, Emoji, Configuration
-from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER
+from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER, ID_NUMBER_MATCHER
 
 BOT = None
 
@@ -358,3 +358,15 @@ def enrich_reason(ctx, reason):
         from Util.Converters import TranslatedBadArgument
         raise TranslatedBadArgument('reason_too_long', ctx)
     return reason
+
+async def get_user_ids(text):
+    parts = set()
+    for p in set(ID_NUMBER_MATCHER.findall(text)):
+        try:
+            id = int(p)
+            if id not in parts:
+                if await get_user(id) is not None:
+                    parts.add(p)
+        except ValueError:
+            pass
+    return parts

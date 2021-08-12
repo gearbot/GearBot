@@ -1,9 +1,9 @@
 import discord
-from discord import Interaction, InteractionType
+from discord import Interaction, InteractionType, Embed, Forbidden
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, MessageUtils, Translator, Pages, Emoji
+from Util import Configuration, MessageUtils, Translator, Pages, Emoji, Utils
 from views import Help, SimplePager
 from views.SelfRole import SelfRoleView
 
@@ -166,6 +166,34 @@ class Interactions(BaseCog):
                                                                         f'mass_failures:{parts[3]}:{parts[4]}')
                         await interaction.response.edit_message(
                             content=f"**{Translator.translate(f'mass_failures_{parts[4]}', interaction.guild_id, page_num=page_num+1, pages=len(pages))}**{content}", view=view)
+        elif interaction.type == InteractionType.application_command:
+            if interaction.data["name"] == "Extract user IDs":
+                await interaction.response.defer(ephemeral=True)
+                parts = await Utils.get_user_ids(interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
+                if len(parts) > 0:
+                    embed = Embed(description="\n".join(parts), color=16698189)
+                    await interaction.followup.send(embed=embed)
+                else:
+                    await interaction.followup.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
+            elif interaction.data["name"] == "Send user IDs to DM":
+                await interaction.response.defer(ephemeral=True)
+                parts = await Utils.get_user_ids(
+                    interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
+                if len(parts) > 0:
+                    embed = Embed(description="\n".join(parts), color=16698189)
+                    try:
+                        await interaction.user.send(embed=embed)
+                    except Forbidden:
+                        await interaction.followup.send("Unable to send DM")
+                    else:
+                        await interaction.followup.send("IDs send in DM")
+                else:
+                    try:
+                        await interaction.user.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
+                    except Forbidden:
+                        await interaction.followup.send("Unable to send DM")
+                    else:
+                        await interaction.followup.send("IDs send in DM")
 
 
 def setup(bot):
