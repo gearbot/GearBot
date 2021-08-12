@@ -179,7 +179,7 @@ class Admin(BaseCog):
     @commands.command()
     async def reset_cache(self, ctx):
         await MessageUtils.send_to(ctx, "YES", f"Cache reset initiated", translate=False)
-        await fill_cache(self.bot)
+        asyncio.create_task(fill_cache(self.bot))
 
     @commands.command()
     async def thread_migration(self, ctx):

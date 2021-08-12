@@ -45,6 +45,9 @@ async def on_ready(bot):
 
 
 async def fill_cache(bot):
+    await asyncio.wait_for(actually_fill_cache(bot), 60*25)
+
+async def actually_fill_cache(bot):
     # don't try to start a new one when one is already pending
     if bot.chunker_pending:
         return
@@ -78,12 +81,13 @@ async def fill_cache(bot):
     done = 0
     for gid in guild_ids:
         if bot.chunker_should_terminate is True:
-            break
+            return
         guild = bot.get_guild(gid)
         if guild is None:
             GearbotLogging.info(f"Tried to fetch {gid} for chunking but it no longer exists, assuming we where removed or it went unavailable")
         else:
-            await guild.chunk()
+            await guild.chunk(cache=True)
+            await asyncio.sleep(0.1)
             done += 1
     bot.chunker_active = False
     if bot.chunker_should_terminate:

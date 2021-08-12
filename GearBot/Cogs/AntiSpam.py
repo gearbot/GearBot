@@ -456,7 +456,7 @@ class AntiSpam(BaseCog):
 
 
     async def handle_failed_ping(self, message: discord.Message, amount):
-        if self.is_exempt(message.guild.id, message.author):
+        if self.is_exempt(message.guild.id, message.author) or message.author.bot or message.webhook_id is not None:
             return  # don't action except users
         buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
         msg_time = int(snowflake_time(message.id).timestamp())

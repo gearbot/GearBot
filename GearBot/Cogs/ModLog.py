@@ -15,7 +15,7 @@ from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translato
     MessageUtils
 from Util.Matchers import ROLE_ID_MATCHER
 from Util.Utils import assemble_jumplink
-from database.DatabaseConnector import LoggedMessage, LoggedAttachment, Infraction
+from database.DatabaseConnector import LoggedMessage, Infraction
 
 
 class ModLog(BaseCog):
@@ -537,6 +537,8 @@ class ModLog(BaseCog):
 
         # checking overrides
 
+        if len(before.overwrites) > 25 or len(after.overwrites) > 25:
+            return
         for target, override in before.overwrites.items():
             if target in after.overwrites:
                 # still exists, check for modifications
@@ -741,7 +743,7 @@ class ModLog(BaseCog):
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, thread: discord.Thread):
-        if thread.archived is False:
+        if hasattr(thread, "archived") and thread.archived is False:
             self.potential_unarchived.append(thread.id)
             await asyncio.sleep(0.5)
             if thread.id in self.potential_unarchived:
@@ -810,7 +812,7 @@ class ModLog(BaseCog):
                                    channel_id=thread_member.thread.parent_id)
 
     @commands.Cog.listener()
-    async def on_raw_thread_member_leave(self, thread: discord.Thread, member_id):
+    async def on_raw_thread_member_remove(self, thread: discord.Thread, member_id):
         member = await Utils.get_member(self.bot, thread.guild, member_id, fetch_if_missing=True)
         if member is not None:
             GearbotLogging.log_key(thread.guild.id, "thread_member_remove", user=Utils.clean_user(member),
