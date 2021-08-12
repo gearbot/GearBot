@@ -112,7 +112,7 @@ class Admin(BaseCog):
             pipe.expire(k, 7*24*60*60)
             await pipe.execute()
             pages = Pages.paginate(output, prefix='```py\n', suffix='```')
-            content, view, _ = SimplePager.get_parts(pages, 0, ctx.guild.id, f'eval:{ctx.message.id}')
+            content, view, _ = SimplePager.get_parts(pages, 0, ctx.guild.id if ctx.guild is not None else 0, f'eval:{ctx.message.id}')
             await ctx.send(f'Eval output 1/{len(pages)}{content}', view=view)
         else:
             await ctx.message.add_reaction(Emoji.get_emoji("YES"))
