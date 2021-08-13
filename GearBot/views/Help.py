@@ -31,11 +31,11 @@ def set_components(view: View, guild_id, page, pages, query, bot, with_select):
             Button(label=Translator.translate('first_page', guild_id), disabled=page == 0,
                    custom_id=f"help:page:0:{query}"))
         view.add_item(Button(label=Translator.translate('prev_page', guild_id), disabled=page == 0,
-                             custom_id=f"help:page:{page - 1}:{query}"))
+                             custom_id=f"help:page:0{page - 1}:{query}"))
         view.add_item(Button(label=Translator.translate('next_page', guild_id), disabled=page == pages - 1,
                              custom_id=f"help:page:{page + 1}:{query}"))
         view.add_item(Button(label=Translator.translate('last_page', guild_id), disabled=page == pages - 1,
-                             custom_id=f"help:page:{pages - 1}:{query}"))
+                             custom_id=f"help:page:00{pages - 1}:{query}"))
 
 
 async def message_parts(bot, query, guild, member, page_num):

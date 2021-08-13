@@ -754,7 +754,7 @@ class Moderation(BaseCog):
 
     async def _forceban(self, ctx, user, reason, target):
         # not banned, wack with the hammer
-        if user.system:
+        if hasattr(user, "system") and user.system:
             await MessageUtils.send_to(ctx, 'NO', 'forceban_unable_sytem_user')
             return
 
