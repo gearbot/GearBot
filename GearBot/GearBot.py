@@ -11,6 +11,7 @@ from discord.ext.commands import ExtensionAlreadyLoaded
 
 from Bot.TheRealGearBot import handle_exception
 from database import DatabaseConnector
+from views.GlobalInfSearch import GlobalInfSearch
 from views.InfSearch import InfSearch
 
 if 'proxy_url' in os.environ:
@@ -106,6 +107,7 @@ async def initialize(bot):
             bot.remove_command(c)
 
         bot.add_view(InfSearch([], 1, 0))
+        bot.add_view(GlobalInfSearch([], 1, 0))
 
         bot.STARTUP_COMPLETE = True
         info = await bot.application_info()

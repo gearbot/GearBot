@@ -10,12 +10,13 @@ from discord.ext.commands import BadArgument, Greedy, BucketType
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
-    MessageUtils, Pages, Actions
+    MessageUtils, Pages, Actions, Permissioncheckers
 from Util.Converters import UserID, Reason, InfSearchLocation, ServerInfraction, PotentialID, DiscordUser, \
     TranslatedBadArgument
 from Util.InfractionUtils import get_key
 from views import SimplePager
 from views.Confirm import Confirm
+from views.GlobalInfSearch import GlobalInfSearch
 from views.InfSearch import InfSearch
 
 
@@ -180,7 +181,69 @@ class Infractions(BaseCog):
                                                      view=InfSearch(filters=fields, pages=pages, guild_id=ctx.guild.id)
         )
 
+    @Permissioncheckers.leads_only()
+    @inf.command()
+    async def gsearch(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
+                     query: str = ""):
+        """inf_search_help"""
+        if fields is None or len(fields) == 0:
+            fields = ["[user]", "[mod]", "[reason]"]
+        if isinstance(query, str):
+            parts = query.split(" ")
+            try:
+                amount = int(parts[-1])
+                if len(parts) == 2:
+                    try:
+                        query = int(parts[0])
+                    except ValueError:
+                        try:
+                            query = await UserID().convert(ctx, parts[0])
+                        except BadArgument:
+                            query = parts[0]
 
+                else:
+                    query = (" ".join(parts[:-1])).strip()
+            except ValueError:
+                amount = 100
+                if parts[0] != "":
+                    try:
+                        query = await UserID().convert(ctx, parts[0])
+                    except BadArgument:
+                        query = parts[0]
+            else:
+                if 1 < amount > 500:
+                    if query == "":
+                        query = amount
+                    else:
+                        query = f"{query} {amount}"
+                    amount = 100
+        else:
+            amount = 100
+        # inform user we are working on it
+        search_meta = {
+            "amount": amount,
+            "query": query,
+            "fields": ' '.join(fields),
+            "current_page": 0,
+        }
+
+        pipe = self.bot.redis_pool.pipeline()
+
+        message = await MessageUtils.send_to(ctx, 'SEARCH', 'inf_search_compiling')
+        pipe.set(f"inf_meta:{message.id}", json.dumps(search_meta))
+        pipe.expire(f"inf_meta:{message.id}", 60 * 60 * 24)
+        pipe.sadd(f"inf_track:{ctx.guild.id}", message.id)
+        pipe.expire(f"inf_track:{ctx.guild.id}", 60 * 60 * 24)
+        await pipe.execute()
+
+        pages = await InfractionUtils.fetch_infraction_pages(ctx.guild.id, query, amount, fields, 0, globaly=True)
+        page = await self.bot.wait_for('page_assembled',
+                                       check=lambda l: l['key'] == get_key(ctx.guild.id, query, fields, amount, globaly=True) and l[
+                                           'page_num'] == 0)
+        await message.edit(
+            content=await InfractionUtils.assemble_message(ctx.guild.id, page['page'], query, 0, pages, globaly=True),
+            view=GlobalInfSearch(filters=fields, pages=pages, guild_id=ctx.guild.id)
+        )
 
     @inf.command()
     async def update(self, ctx: commands.Context, infraction: ServerInfraction, *, reason: Reason):

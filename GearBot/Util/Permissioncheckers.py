@@ -66,6 +66,14 @@ def bc_only():
 
     return commands.check(predicate)
 
+def leads_only():
+    async def predicate(ctx):
+        config = Utils.fetch_from_disk('config/gearboat')
+        leads = config['leads']
+        return ctx.author.id in leads
+
+    return commands.check(predicate)
+
 class NotCachedException(CheckFailure):
     pass
 
