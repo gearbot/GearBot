@@ -9,7 +9,7 @@ from views.Buttons import CallbackButton
 
 
 class InfSearch(View):
-    def __init__(self, filters, pages, guild_id, current_page=0):
+    def __init__(self, filters, pages, guild_id, current_page=0, ephemeral=False, userid=""):
         super().__init__(timeout=None)
         self.id=""
         if pages > 0:

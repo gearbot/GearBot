@@ -1181,59 +1181,7 @@ class Moderation(BaseCog):
             user = member = ctx.author
         else:
             member = None if ctx.guild is None else await Utils.get_member(self.bot, ctx.guild, user.id)
-        embed = discord.Embed(color=member.top_role.color if member is not None else 0x00cea2,
-                              timestamp=ctx.message.created_at)
-        embed.set_thumbnail(url=user.avatar.url)
-        embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author.name),
-                         icon_url=ctx.author.avatar.url)
-        embed.add_field(name=Translator.translate('name', ctx),
-                        value=Utils.escape_markdown(f"{user.name}#{user.discriminator}"), inline=True)
-        embed.add_field(name=Translator.translate('id', ctx), value=user.id, inline=True)
-        embed.add_field(name=Translator.translate('bot_account', ctx), value=user.bot, inline=True)
-        embed.add_field(name=Translator.translate('animated_avatar', ctx), value=user.avatar.is_animated(), inline=True)
-        embed.add_field(name=Translator.translate('avatar_url', ctx),
-                        value=f"[{Translator.translate('avatar_url', ctx)}]({user.avatar.url})")
-        embed.add_field(name=Translator.translate("profile", ctx), value=user.mention)
-        if member is not None:
-            embed.add_field(name=Translator.translate('nickname', ctx), value=Utils.escape_markdown(member.nick),
-                            inline=True)
-
-            role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
-            if len(role_list) > 60:
-                embed.add_field(name=Translator.translate('all_roles', ctx),
-                                value=Translator.translate('too_many_many_roles', ctx), inline=False)
-            elif len(role_list) > 40:
-                embed.add_field(name=Translator.translate('all_roles', ctx),
-                                value=Translator.translate('too_many_roles', ctx), inline=False)
-            elif len(role_list) > 0:
-                embed.add_field(name=Translator.translate('all_roles', ctx), value=" ".join(role_list), inline=False)
-            else:
-                embed.add_field(name=Translator.translate('all_roles', ctx),
-                                value=Translator.translate("no_roles", ctx), inline=False)
-
-            embed.add_field(name=Translator.translate('joined_at', ctx),
-                            value=f"{(ctx.message.created_at - member.joined_at).days} days ago (``{member.joined_at}``)",
-                            inline=True)
-        embed.add_field(name=Translator.translate('account_created_at', ctx),
-                        value=f"{(ctx.message.created_at - user.created_at).days} days ago (``{user.created_at}``)",
-                        inline=True)
-        infs = ""
-        if Configuration.get_master_var("global_inf_counter", True):
-            infractions = await Infraction.filter(user_id=user.id, type__not="Note")
-            il = len(infractions)
-            seen = []
-            ild = 0
-            for i in infractions:
-                if i.guild_id not in seen:
-                    seen.append(i.guild_id)
-                ild += 1
-            emoji = "SINISTER" if il >= 2 else "INNOCENT"
-            infs += MessageUtils.assemble(ctx, emoji, "total_infractions", total=il, servers=ild) + "\n"
-
-        infractions = await Infraction.filter(user_id=user.id, guild_id=ctx.guild.id, type__not="Note")
-        emoji = "SINISTER" if len(infractions) >= 2 else "INNOCENT"
-        embed.add_field(name=Translator.translate("infractions", ctx),
-                        value=infs + MessageUtils.assemble(ctx, emoji, "guild_infractions", count=len(infractions)))
+        embed = await Utils.generate_userinfo_embed(user, member, ctx.guild, ctx.author)
 
         await ctx.send(embed=embed)
 

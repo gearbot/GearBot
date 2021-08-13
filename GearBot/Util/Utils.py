@@ -12,8 +12,9 @@ import discord
 import math
 from discord import NotFound, DiscordException
 
-from Util import GearbotLogging, Translator, Emoji, Configuration
+from Util import GearbotLogging, Translator, Emoji, Configuration, MessageUtils
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER, ID_NUMBER_MATCHER
+from database.DatabaseConnector import Infraction
 
 BOT = None
 
@@ -370,3 +371,61 @@ async def get_user_ids(text):
         except ValueError:
             pass
     return parts
+
+
+async def generate_userinfo_embed(user, member, guild, requested_by):
+    now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    embed = discord.Embed(color=member.top_role.color if member is not None else 0x00cea2,
+                          timestamp=now)
+    embed.set_thumbnail(url=user.avatar.url)
+    embed.set_footer(text=Translator.translate('requested_by', guild, user=requested_by.name),
+                     icon_url=requested_by.avatar.url)
+    embed.add_field(name=Translator.translate('name', guild),
+                    value=escape_markdown(f"{user.name}#{user.discriminator}"), inline=True)
+    embed.add_field(name=Translator.translate('id', guild), value=user.id, inline=True)
+    embed.add_field(name=Translator.translate('bot_account', guild), value=user.bot, inline=True)
+    embed.add_field(name=Translator.translate('animated_avatar', guild), value=user.avatar.is_animated(), inline=True)
+    embed.add_field(name=Translator.translate('avatar_url', guild),
+                    value=f"[{Translator.translate('avatar_url', guild)}]({user.avatar.url})")
+    embed.add_field(name=Translator.translate("profile", guild), value=user.mention)
+    if member is not None:
+        embed.add_field(name=Translator.translate('nickname', guild), value=escape_markdown(member.nick),
+                        inline=True)
+
+        role_list = [role.mention for role in reversed(member.roles) if role is not guild.default_role]
+        if len(role_list) > 60:
+            embed.add_field(name=Translator.translate('all_roles', guild),
+                            value=Translator.translate('too_many_many_roles', guild), inline=False)
+        elif len(role_list) > 40:
+            embed.add_field(name=Translator.translate('all_roles', guild),
+                            value=Translator.translate('too_many_roles', guild), inline=False)
+        elif len(role_list) > 0:
+            embed.add_field(name=Translator.translate('all_roles', guild), value=" ".join(role_list), inline=False)
+        else:
+            embed.add_field(name=Translator.translate('all_roles', guild),
+                            value=Translator.translate("no_roles", guild), inline=False)
+
+        embed.add_field(name=Translator.translate('joined_at', guild),
+                        value=f"{(now - member.joined_at).days} days ago (``{member.joined_at}``)",
+                        inline=True)
+    embed.add_field(name=Translator.translate('account_created_at', guild),
+                    value=f"{(now - user.created_at).days} days ago (``{user.created_at}``)",
+                    inline=True)
+    infs = ""
+    if Configuration.get_master_var("global_inf_counter", True):
+        infractions = await Infraction.filter(user_id=user.id, type__not="Note")
+        il = len(infractions)
+        seen = []
+        ild = 0
+        for i in infractions:
+            if i.guild_id not in seen:
+                seen.append(i.guild_id)
+            ild += 1
+        emoji = "SINISTER" if il >= 2 else "INNOCENT"
+        infs += MessageUtils.assemble(guild, emoji, "total_infractions", total=il, servers=ild) + "\n"
+
+    infractions = await Infraction.filter(user_id=user.id, guild_id=guild.id, type__not="Note")
+    emoji = "SINISTER" if len(infractions) >= 2 else "INNOCENT"
+    embed.add_field(name=Translator.translate("infractions", guild),
+                value=infs + MessageUtils.assemble(guild, emoji, "guild_infractions", count=len(infractions)))
+    return embed
