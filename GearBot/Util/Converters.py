@@ -125,13 +125,33 @@ class DiscordUser(Converter):
         if match is not None:
             argument = match.group(1)
         try:
-            user = await UserConverter().convert(ctx, argument)
-        except BadArgument:
-            try:
-                user_id = await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument)
-                user = await Utils.get_user(user_id)
-            except (ValueError, HTTPException):
-                pass
+            if match is not None:
+                user = await Utils.get_member(None, ctx.guild, user_id, fetch_if_missing=True)
+                if user is None:
+                    user = await Utils.get_user(user_id)
+            if user is None:
+                if argument[0] == '@':
+                    argument = argument[1:]
+                if len(argument) > 5 and argument[-5] == '#':
+                    username = argument[:-5]
+                    discriminator = argument[-4:]
+                else:
+                    username = argument
+                    discriminator = None
+                found = None
+                for member in ctx.guild.members:
+                    if discriminator is not None:
+                        if member.name == username and user.discriminator == discriminator:
+                            return member
+                    else:
+                        if member.name == username or member.nick == username:
+                            if found is not None:
+                                raise TranslatedBadArgument('multiple_potential_targets', ctx, arg=argument)
+                            found = member
+                user = found
+        except (ValueError, HTTPException) as v:
+            raise v
+            pass
 
         if user is None:
             if user_id is not None:
