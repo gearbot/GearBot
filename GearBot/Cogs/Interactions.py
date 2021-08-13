@@ -1,10 +1,13 @@
 import discord
-from discord import Interaction, InteractionType, Embed, Forbidden
+from discord import Interaction, InteractionType, Embed, Forbidden, Member, User
 from discord.ext import commands
 
 from Cogs.BaseCog import BaseCog
-from Util import Configuration, MessageUtils, Translator, Pages, Emoji, Utils
+from Util import Configuration, MessageUtils, Translator, Pages, Emoji, Utils, Permissioncheckers, InfractionUtils
+from Util.InfractionUtils import get_key
 from views import Help, SimplePager
+from views.EphemeralInfSearch import EphemeralInfSearch, get_ephemeral_cached_page
+from views.InfSearch import InfSearch
 from views.SelfRole import SelfRoleView
 
 
@@ -166,8 +169,47 @@ class Interactions(BaseCog):
                                                                         f'mass_failures:{parts[3]}:{parts[4]}')
                         await interaction.response.edit_message(
                             content=f"**{Translator.translate(f'mass_failures_{parts[4]}', interaction.guild_id, page_num=page_num+1, pages=len(pages))}**{content}", view=view)
+            elif cid.startswith('einf_search:'):
+                parts = cid.split(':')
+                uid = int(parts[1])
+                old_page = int(parts[2])
+                t = parts[3]
+
+                if t == 'first_page':
+                    page, current, pages, query, fields = await get_ephemeral_cached_page(interaction, uid, 0)
+                    await interaction.response.edit_message(
+                        content=await InfractionUtils.assemble_message(interaction.guild_id, page, query, current,
+                                                                       pages),
+                        view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
+                    )
+                elif t == 'prev_page':
+                    page, current, pages, query, fields = await get_ephemeral_cached_page(interaction, uid, old_page-1)
+                    await interaction.response.edit_message(
+                        content=await InfractionUtils.assemble_message(interaction.guild_id, page, query, current,
+                                                                       pages),
+                        view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
+                    )
+                elif t == 'blank':
+                    await interaction.response.send_message(Emoji.get_chat_emoji('AE'), ephemeral=True)
+                elif t == 'next_page':
+                    page, current, pages, query, fields = await get_ephemeral_cached_page(interaction, uid,
+                                                                                          old_page + 1)
+                    await interaction.response.edit_message(
+                        content=await InfractionUtils.assemble_message(interaction.guild_id, page, query, current,
+                                                                       pages),
+                        view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
+                    )
+                elif t == 'last_page':
+                    page, current, pages, query, fields = await get_ephemeral_cached_page(interaction, uid,
+                                                                                          1000)
+                    await interaction.response.edit_message(
+                        content=await InfractionUtils.assemble_message(interaction.guild_id, page, query, current,
+                                                                       pages),
+                        view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
+                    )
         elif interaction.type == InteractionType.application_command:
             if interaction.data["name"] == "Extract user IDs":
+                self.bot.metrics.uid_usage.labels(type="channel", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
                 parts = await Utils.get_user_ids(interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
                 if len(parts) > 0:
@@ -176,6 +218,7 @@ class Interactions(BaseCog):
                 else:
                     await interaction.followup.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
             elif interaction.data["name"] == "Send user IDs to DM":
+                self.bot.metrics.uid_usage.labels(type="DM", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
                 parts = await Utils.get_user_ids(
                     interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
@@ -186,14 +229,48 @@ class Interactions(BaseCog):
                     except Forbidden:
                         await interaction.followup.send("Unable to send DM")
                     else:
-                        await interaction.followup.send("IDs send in DM")
+                        await interaction.followup.send("IDs sent in DM")
                 else:
                     try:
                         await interaction.user.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
                     except Forbidden:
                         await interaction.followup.send("Unable to send DM")
                     else:
-                        await interaction.followup.send("IDs send in DM")
+                        await interaction.followup.send("IDs sent in DM")
+            elif interaction.data["name"] == "Userinfo":
+                if await Permissioncheckers.check_permission(self.bot.get_command("userinfo"), interaction.guild, interaction.user, self.bot):
+                    t = "allowed"
+                    target = interaction.data["target_id"]
+                    member = None
+                    user_dict = interaction.data["resolved"]["users"][target]
+                    user = User(data=user_dict, state=interaction._state)
+                    if "members" in interaction.data["resolved"] and target in interaction.data["resolved"]["members"]:
+                        member_dict = interaction.data["resolved"]["members"][target]
+                        member_dict["user"] = user_dict
+                        member = Member(data=member_dict, guild=interaction.guild, state=interaction._state)
+                    embed = await Utils.generate_userinfo_embed(user, member, interaction.guild, interaction.user)
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                else:
+                    t = "denied"
+                    await interaction.response.send_message(MessageUtils.assemble(interaction.guild, 'LOCK', 'permission_denied'), ephemeral=True)
+                self.bot.metrics.userinfo_usage.labels(type=t, cluster=self.bot.cluster).inc()
+            elif interaction.data["name"] == "Search Infractions":
+                if await Permissioncheckers.check_permission(self.bot.get_command("inf search"), interaction.guild, interaction.user, self.bot):
+                    uid = int(interaction.data["target_id"])
+                    t = "allowed"
+                    await interaction.response.send_message(MessageUtils.assemble(interaction.guild, 'SEARCH', 'inf_search_compiling'), ephemeral=True)
+
+                    pages = await InfractionUtils.fetch_infraction_pages(interaction.guild.id, uid, 100, ["[user]", "[mod]", "[reason]"], 0)
+                    page = await self.bot.wait_for('page_assembled',
+                                                   check=lambda l: l['key'] == get_key(interaction.guild.id, uid, ["[user]", "[mod]", "[reason]"], 100) and l['page_num'] == 0)
+                    await interaction.edit_original_message(
+                        content=await InfractionUtils.assemble_message(interaction.guild.id, page['page'], uid, 0, pages),
+                        view=EphemeralInfSearch(filters=["[user]", "[mod]", "[reason]"], pages=pages, guild_id=interaction.guild.id, userid=uid)
+                    )
+                else:
+                    t = "denied"
+                    await interaction.response.send_message(MessageUtils.assemble(interaction.guild, 'LOCK', 'permission_denied'), ephemeral=True)
+                self.bot.metrics.inf_search_usage.labels(type=t, cluster=self.bot.cluster).inc()
 
 
 def setup(bot):

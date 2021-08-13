@@ -23,6 +23,10 @@ class PromMonitors:
 
         self.bot_latency = prom.Gauge(f"{prefix}_latency", "Current bot latency", ["cluster"])
 
+        self.uid_usage = prom.Counter(f"{prefix}_context_uid_usage", "Times uid was used from the context command", ["type", "cluster"])
+        self.userinfo_usage = prom.Counter(f"{prefix}_context_userinfo_usage", "Times userinfo was used from the context command", ["type", "cluster"])
+        self.inf_search_usage = prom.Counter(f"{prefix}_context_inf_search_usage", "Times inf serach was used from the context command", ["type", "cluster"])
+
         bot.metrics_reg.register(self.command_counter)
         bot.metrics_reg.register(self.user_message_raw_count)
         bot.metrics_reg.register(self.bot_message_raw_count)
@@ -32,3 +36,4 @@ class PromMonitors:
         bot.metrics_reg.register(self.bot_event_counts)
         bot.metrics_reg.register(self.own_message_raw_count)
         bot.metrics_reg.register(self.bot_latency)
+        bot.metrics_reg.register(self.uid_usage)
