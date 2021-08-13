@@ -145,7 +145,7 @@ class DiscordUser(Converter):
                 found = None
                 for member in ctx.guild.members:
                     if discriminator is not None:
-                        if member.name == username and user.discriminator == discriminator:
+                        if member.name == username and member.discriminator == discriminator:
                             return member
                     else:
                         if member.name == username or member.nick == username:
