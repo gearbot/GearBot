@@ -125,6 +125,10 @@ class DiscordUser(Converter):
         if match is not None:
             argument = match.group(1)
         try:
+            user_id = await RangedInt(min=20000000000000000, max=9223372036854775807).convert(ctx, argument)
+        except Exception:
+            pass
+        try:
             if match is not None:
                 user = await Utils.get_member(None, ctx.guild, user_id, fetch_if_missing=True)
                 if user is None:

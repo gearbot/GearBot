@@ -170,6 +170,8 @@ def f():
 
 
 async def get_user(uid, fetch=True):
+    if uid is None or not isinstance(uid, int):
+        return None
     if uid > 9223372036854775807:
         return None
     user = BOT.get_user(uid)

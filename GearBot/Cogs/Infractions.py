@@ -42,7 +42,7 @@ class Infractions(BaseCog):
         if len(reason) > 1800:
             raise TranslatedBadArgument('reason_too_long', ctx)
 
-        if member.system:
+        if hasattr(member, 'system') and hasattr(member, 'system') and member.system:
             await MessageUtils.send_to(ctx, 'NO', 'cant_warn_system_user')
             return
 
