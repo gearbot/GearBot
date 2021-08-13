@@ -129,7 +129,7 @@ class DiscordUser(Converter):
         except Exception:
             pass
         try:
-            if match is not None:
+            if user_id is not None:
                 user = await Utils.get_member(None, ctx.guild, user_id, fetch_if_missing=True)
                 if user is None:
                     user = await Utils.get_user(user_id)
