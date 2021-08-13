@@ -75,7 +75,7 @@ async def gen_command_help(bot, member, guild, command):
         signature = f"{signature} [{command.name}|{aliases}]"
     else:
         signature = f"{signature} {command.name}"
-    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX")
+    prefix = Configuration.get_var(guild.id, "GENERAL", "PREFIX") if guild is not None else "!"
     usage = f"{prefix}{signature}"
     sub_info = None
     if isinstance(command, GroupMixin) and hasattr(command, "all_commands"):
