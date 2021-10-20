@@ -149,7 +149,7 @@
   "mute_missing_perm": "I require the `manage_roles` permission to be able to add the role to people.",
   "mute_role_confirmation": "{role} will now be used for muting people, denying send permissions for the role.",
   "voice_channel": "Voice channel {channel}",
-  "mute_setup_failures": "I was unable to configure muting in the following channels, there probably is an explicit deny on that channel for `manage channel` on those channels or their category (if they are synced) for one of my roles (includes everyone role). Please make sure I can manage those channels and run this command again or deny the `send_messages` and `add_reactions` permissions for {role} manually.",
+  "mute_setup_failures": "I was unable to configure muting in the following channels, there probably is an explicit deny on that channel for `manage channel` on those channels or their category (if they are synced) for one of my roles (includes everyone role). Please make sure I can manage those channels and run this command again or deny the `send_messages` and `add_reactions` permissions for the {role} role manually.",
   "mute_setup_complete": "Automatic mute setup complete.",
   "no_allowed_invite_list": "Invite censoring is disabled, add servers to the list to enable it.",
   "current_allowed_invite_list": "Current allowed invite list (Server IDs):",
@@ -513,7 +513,7 @@
 
   "bean_unable": "Unable to bean {user} as I do not have a higher role than them.",
   "bean_confirmation": "{user} (`{user_id}`) was beaned. Reason: `{reason}`",
-  "bean_not_allowed": "You are not allowed to bean {user}.",
+  "bean_not_allowed": "Bean is not allowed to {user}.",
   "reason_too_long": "Too long, I can only store reasons up to 1800 characters.",
   "reason": "Reason",
   "inf_warn": "{mod} warned {user}",
