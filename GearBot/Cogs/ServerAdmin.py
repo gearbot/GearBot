@@ -1,5 +1,6 @@
 import asyncio
 import io
+import typing
 
 import discord
 import pytz
@@ -618,6 +619,7 @@ class ServerAdmin(BaseCog):
 
             async def yes(interaction: discord.Interaction):
                 await self._enable_feature(ctx, ", ".join(features), interaction)
+                await interaction.response.edit_message(content="Features enabled", view=None)
 
             async def no(interaction):
                 await interaction.response.edit_message(content=MessageUtils.assemble(ctx, 'NO', 'command_canceled'),
@@ -630,8 +632,8 @@ class ServerAdmin(BaseCog):
             def check(interaction: Interaction):
                 return ctx.author.id == interaction.user.id and interaction.message.id == message.id
 
-            message = await ctx.send(Translator.translate('custom_command_override_confirmation', ctx.guild.id),
-                                     view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
+            message = await ctx.send(Translator.translate('confirmation_enable_features', ctx.guild.id, count=len(features)) + f"\n{', '.join(features)}",
+                                     view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check, timeout=60))
 
     @logging.command(name="remove")
     async def remove_logging(self, ctx, cid: LoggingChannel, *, types):
@@ -837,7 +839,7 @@ class ServerAdmin(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels changes")
 
     @ignored_channels_changes.command("add")
-    async def ignored_channels_changes_add(self, ctx, channel: TextChannel):
+    async def ignored_channels_changes_add(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_CHANGES')
         if channel.id in channels:
@@ -848,7 +850,7 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
 
     @ignored_channels_changes.command("remove")
-    async def ignored_channels_changes_remove(self, ctx, channel: TextChannel):
+    async def ignored_channels_changes_remove(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_CHANGES')
         if not channel.id in channels:
@@ -883,7 +885,7 @@ class ServerAdmin(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels other")
 
     @ignored_channels_edits.command("add")
-    async def ignored_channels_edits_add(self, ctx, channel: TextChannel):
+    async def ignored_channels_edits_add(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_OTHER')
         if channel.id in channels:
@@ -894,7 +896,7 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
 
     @ignored_channels_edits.command("remove")
-    async def ignored_channels_edits_remove(self, ctx, channel: TextChannel):
+    async def ignored_channels_edits_remove(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_OTHER')
         if channel.id not in channels:
@@ -1065,14 +1067,16 @@ class ServerAdmin(BaseCog):
             b = await attachment.read()
 
             try:
-                content = b.decode('utf-8')
+                content = b.decode('utf-8').lower()
             except Exception:
                 await MessageUtils.send_to(ctx, 'NO', 'list_parsing_failed')
                 return
 
+            max_length = Configuration.get_var(ctx.guild.id, target_cat, "MAX_LIST_LENGTH")
+
             new_list = content.splitlines()
-            if len(new_list) > 250:
-                await MessageUtils.send_to(ctx, 'NO', 'list_too_long')
+            if len(new_list) > max_length:
+                await MessageUtils.send_to(ctx, 'NO', 'list_too_long', length=max_length)
                 return
 
             Configuration.set_var(ctx.guild.id, target_cat, target_key, new_list)

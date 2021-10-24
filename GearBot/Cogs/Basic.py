@@ -207,8 +207,8 @@ class Basic(BaseCog):
         """uid_help"""
         parts = await Utils.get_user_ids(text)
         if len(parts) > 0:
-            embed = Embed(description="\n".join(parts), color=16698189)
-            await ctx.send(embed=embed)
+            for chunk in Pages.paginate("\n".join(parts), 200):
+                await ctx.send(chunk)
         else:
             await MessageUtils.send_to(ctx, "NO", "no_uids_found")
 

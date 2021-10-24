@@ -83,7 +83,7 @@ async def get_cached_page(interaction: Interaction, diff):
     meta = await get_meta(interaction.message.id)
     if meta is None:
         await interaction.response.send_message(MessageUtils.assemble(interaction.guild_id, 'NO', 'no_longer_valid'),
-                                                ephemeral=False)
+                                                ephemeral=True)
         return
     m = json.loads(meta)
     key = get_key(interaction.guild_id, m['query'], m['fields'].split(' '), m['amount'])

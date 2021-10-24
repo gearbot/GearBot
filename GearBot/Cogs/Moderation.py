@@ -604,8 +604,7 @@ class Moderation(BaseCog):
         def check(interaction: Interaction):
             return ctx.author.id == interaction.user.id and interaction.message.id == message.id
 
-        message = await ctx.send(Translator.translate('mban_confirm', ctx.guild.id),
-                                 view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
+        message = None
 
         async def yes(interaction: discord.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
@@ -652,7 +651,7 @@ class Moderation(BaseCog):
                     view=view)
 
         if len(targets) > 0:
-            message = await ctx.send(Translator.translate('mclenban_confirm', ctx.guild.id),
+            message = await ctx.send(Translator.translate('mcleanban_confirm', ctx.guild.id),
                                      view=Confirm(ctx.guild.id, on_yes=yes, on_no=no, on_timeout=timeout, check=check))
         else:
             await Utils.empty_list(ctx, "ban")
@@ -745,7 +744,7 @@ class Moderation(BaseCog):
                 if interaction is None:
                     await MessageUtils.send_to(ctx, 'BAD_USER', 'already_banned_user')
                 else:
-                    await interaction.followup.send(MessageUtils.assemble(ctx, 'BAD_USER', 'already_banned_user'))
+                    await interaction.edit_original_message(content = MessageUtils.assemble(ctx, 'BAD_USER', 'already_banned_user'), view=None)
 
         else:
             # they are here, reroute to regular ban
@@ -1322,7 +1321,6 @@ class Moderation(BaseCog):
 
     @clean.command("everywhere")
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_messages=True)
     async def clean_everywhere(self, ctx, users: Greedy[DiscordUser], amount: RangedInt(1) = 50):
         """clean_everywhere_help"""
         await self._clean_everywhere(ctx, users, amount)
@@ -1332,20 +1330,20 @@ class Moderation(BaseCog):
             if interaction is None:
                 await MessageUtils.send_to(ctx, 'NO', 'clean_missing_targets')
             else:
-                await interaction.followup.send(MessageUtils.assemble(ctx, 'NO', 'clean_missing_targets'))
+                await interaction.edit_original_message(content=MessageUtils.assemble(ctx, 'NO', 'clean_missing_targets'), view=None)
             return
         total = 0
         if any(channel.id in self.bot.being_cleaned for channel in ctx.guild.text_channels):
             if interaction is None:
                 await MessageUtils.send_to(ctx, "NO", "already_cleaning")
             else:
-                await interaction.followup.send(MessageUtils.assemble(ctx, "NO", "already_cleaning"))
+                await interaction.edit_original_message(content=MessageUtils.assemble(ctx, "NO", "already_cleaning"), view=None)
             return
         self.bot.being_cleaned[ctx.channel.id] = set()
         if interaction is None:
             message = await MessageUtils.send_to(ctx, "REFRESH", "processing")
         else:
-            message = await interaction.followup.send(MessageUtils.assemble(ctx, "REFRESH", "processing", wait=True))
+            await interaction.edit_original_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing", wait=True), view=None)
         failed = set()
         for channel in ctx.guild.text_channels:
             self.bot.being_cleaned[channel.id] = set()
@@ -1369,10 +1367,10 @@ class Moderation(BaseCog):
             await MessageUtils.try_edit(message, 'YES', 'purge_everywhere_complete', count=total,
                                         channels=len(ctx.guild.text_channels) - len(failed), failed=len(failed))
         else:
-            await interaction.followup.edit_message(message.id, content=MessageUtils.assemble(ctx, 'YES',
+            await interaction.edit_original_message(content=MessageUtils.assemble(ctx, 'YES',
                                                                                               'purge_everywhere_complete',
                                                                                               count=total, channels=len(
-                    ctx.guild.text_channels) - len(failed), failed=len(failed)))
+                    ctx.guild.text_channels) - len(failed), failed=len(failed)), view=None)
 
     async def _clean(self, ctx, amount, checker, before=None, after=None, check_amount=None):
         counter = 0

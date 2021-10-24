@@ -13,14 +13,14 @@ class SimplePagerView(View):
 def set_components(view, pages, guild_id, page, t):
     if pages > 2:
         view.add_item(
-            Button(label=Translator.translate('first_page', guild_id), disabled=page == 0, custom_id=f"pager:0:{t}"))
+            Button(label=Translator.translate('first_page', guild_id), disabled=page == 0, custom_id=f"pager:00:{t}"))
     view.add_item(Button(label=Translator.translate('prev_page', guild_id), disabled=page == 0,
                          custom_id=f"pager:{page - 1}:{t}"))
     view.add_item(Button(label=Translator.translate('next_page', guild_id), disabled=page == pages - 1,
                          custom_id=f"pager:{page + 1}:{t}"))
     if pages > 2:
         view.add_item(Button(label=Translator.translate('last_page', guild_id), disabled=page == pages - 1,
-                             custom_id=f"pager:{pages - 1}:{t}"))
+                             custom_id=f"pager:0{pages - 1}:{t}"))
 
 def get_parts(pages, page_num, guild_id, t):
     if page_num == len(pages):

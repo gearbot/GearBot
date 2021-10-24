@@ -120,7 +120,7 @@ class Kick(RaidAction):
                 user_id=member.id)
             await TheRealGearBot.handle_exception('RAID KICK FAILURE', bot, ex)
         finally:
-            i = await  InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
+            i = await InfractionUtils.add_infraction(member.guild.id, member.id, bot.user.id, 'Kick', reason, active=False)
             GearbotLogging.log_key(member.guild.id, 'kick_log',
                                    user=Utils.clean_user(member), user_id=member.id,
                                    moderator=Utils.clean_user(member.guild.me), moderator_id=bot.user.id,
