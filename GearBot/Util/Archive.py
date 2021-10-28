@@ -14,7 +14,9 @@ async def archive_purge(bot, guild_id, messages):
     global archive_counter
     archive_counter += 1
     channel = bot.get_channel(list(messages.values())[0].channel)
-    out = f"purged at {datetime.datetime.utcnow()} from {channel.name}\n"
+    timestamp = datetime.datetime.strftime(datetime.datetime.now().astimezone(
+        pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))), '%H:%M:%S')
+    out = f"purged at {timestamp} from {channel.name}\n"
     out += await pack_messages(messages.values(), guild_id)
     buffer = io.BytesIO()
     buffer.write(out.encode())

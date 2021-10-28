@@ -362,7 +362,7 @@
   "censor_attachment_required": "Please attach a single txt file with the new list",
   "attachment_too_big": "Attachment file is too big",
   "list_parsing_failed": "Unable to parse that list, please make sure it's UTF-8 encoded and try again",
-  "list_too_long": "List can only be up to 250 long",
+  "list_too_long": "List can only be up to {length} long",
   "censor_list_set": "New token censor list applied!",
   "word_censor_list_set": "New word censor list applied!",
   "flag_list_set": "New flag list applied!",

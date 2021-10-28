@@ -115,7 +115,6 @@ async def getMessageAuthor(ctx, guild_id, message_id):
 class DiscordUser(Converter):
 
     def __init__(self, id_only=False) -> None:
-        super().__init__()
         self.id_only = id_only
 
     async def convert(self, ctx, argument):
@@ -389,7 +388,6 @@ class CommandModifier(Converter):
     def __init__(self, allowed_values, should_lower=True) -> None:
         self.allowed_values = allowed_values
         self.should_lower = should_lower
-        super().__init__()
 
     async def convert(self, ctx, argument):
         if self.should_lower:
@@ -432,7 +430,6 @@ class ServerInfraction(Converter):
 class DurationHolder:
 
     def __init__(self, length, unit=None) -> None:
-        super().__init__()
         self.length = length
         self.unit = unit
 

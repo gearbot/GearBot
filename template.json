@@ -1,5 +1,5 @@
 {
-	"VERSION": 36,
+	"VERSION": 37,
 	"GENERAL": {
 		"LANG": "en_US",
 		"PERM_DENIED_MESSAGE": true,
@@ -37,13 +37,15 @@
 		"DOMAIN_LIST": [],
 		"FULL_MESSAGE_LIST": [],
 		"CENSOR_EMOJI_ONLY_MESSAGES": false,
-		"IGNORE_IDS": false
+		"IGNORE_IDS": false,
+		"MAX_LIST_LENGTH": 400
 	},
 	"FLAGGING": {
 		"WORD_LIST": [],
 		"TOKEN_LIST": [],
 		"TRUSTED_BYPASS": false,
-		"IGNORE_IDS": false
+		"IGNORE_IDS": false,
+		"MAX_LIST_LENGTH": 400
 	},
 	"INFRACTIONS": {
 		"DM_ON_WARN": false,

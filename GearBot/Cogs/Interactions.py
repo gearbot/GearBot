@@ -213,8 +213,8 @@ class Interactions(BaseCog):
                 await interaction.response.defer(ephemeral=True)
                 parts = await Utils.get_user_ids(interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
                 if len(parts) > 0:
-                    embed = Embed(description="\n".join(parts), color=16698189)
-                    await interaction.followup.send(embed=embed)
+                    for chunk in Pages.paginate("\n".join(parts), 200):
+                        await interaction.followup.send(chunk)
                 else:
                     await interaction.followup.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
             elif interaction.data["name"] == "Send user IDs to DM":
@@ -223,9 +223,9 @@ class Interactions(BaseCog):
                 parts = await Utils.get_user_ids(
                     interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
                 if len(parts) > 0:
-                    embed = Embed(description="\n".join(parts), color=16698189)
                     try:
-                        await interaction.user.send(embed=embed)
+                        for chunk in Pages.paginate("\n".join(parts), 200):
+                            await interaction.user.send(chunk)
                     except Forbidden:
                         await interaction.followup.send("Unable to send DM")
                     else:

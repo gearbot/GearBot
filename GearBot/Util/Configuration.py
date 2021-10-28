@@ -386,6 +386,20 @@ def v34(config):
 def v35(config):
     add_logging(config, 'THREAD_LOGS', 'THREAD_TRAVEL_LOGS')
 
+def v36(config):
+    force_lower(config, "CENSORING", "WORD_CENSORLIST")
+    force_lower(config, "CENSORING", "TOKEN_CENSORLIST")
+    force_lower(config, "FLAGGING", "WORD_LIST")
+    force_lower(config, "FLAGGING", "TOKEN_LIST")
+    config["CENSORING"]["MAX_LIST_LENGTH"] = 400
+    config["FLAGGING"]["MAX_LIST_LENGTH"] = 400
+
+def force_lower(config, cat, key):
+    new = []
+    for item in config[cat][key]:
+        new.append(item.lower())
+    config[cat][key] = new
+
 
 def add_logging(config, *args):
     for cid, info in config["LOG_CHANNELS"].items():
@@ -408,7 +422,7 @@ def move_keys(config, section, *keys):
             del config[key]
 
 # migrators for the configs, do NOT increase the version here, this is done by the migration loop
-MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35]
+MIGRATORS = [initial_migration, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36]
 
 BOT = None
 

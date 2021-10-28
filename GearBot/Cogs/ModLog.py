@@ -71,16 +71,18 @@ class ModLog(BaseCog):
         if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (
                 message.content != "" or len(message.attachments) > 0) and message.author.id != self.bot.user.id:
             await MessageUtils.insert_message(self.bot, message)
+        else:
+            return
         failed_mass_ping = 0
 
-        if "@everyone" in message.content and message.mention_everyone is False:
+        if "@everyone" in message.content and message.mention_everyone is False and message.author.id != self.bot.user.id and message.webhook_id is not None:
             failed_mass_ping += 1
-        if "@here" in message.content and message.mention_everyone is False:
+        if "@here" in message.content and message.mention_everyone is False and message.author.id != self.bot.user.id and message.webhook_id is not None:
             failed_mass_ping += 1
         roles = ROLE_ID_MATCHER.findall(message.content)
         mentioned_roles = [str(role.id) for role in message.role_mentions]
         for role in roles:
-            if role not in mentioned_roles:
+            if role not in mentioned_roles and message.author.id != self.bot.user.id:
                 failed_mass_ping += 1
 
         if failed_mass_ping > 0:

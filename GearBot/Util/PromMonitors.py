@@ -37,3 +37,5 @@ class PromMonitors:
         bot.metrics_reg.register(self.own_message_raw_count)
         bot.metrics_reg.register(self.bot_latency)
         bot.metrics_reg.register(self.uid_usage)
+        bot.metrics_reg.register(self.userinfo_usage)
+        bot.metrics_reg.register(self.inf_search_usage)
