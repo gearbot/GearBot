@@ -500,6 +500,13 @@ async def log_task(guild_id, target):
                 del LOG_QUEUE[target]
                 Configuration.validate_config(guild_id)
                 return
+
+            permissions = channel.permissions_for(channel.guild.me)
+            if not (permissions.send_messages and permissions.read_messages):
+                # we can't send to this channel log and abort before we get ip banned again!
+                del LOG_QUEUE[target]
+                info(f"Unable to log to logging target channel {target} due to missing permissions!")
+                return
             # pull message from queue
             todo = LOG_QUEUE[target].get(block=False)
             if (len(to_send) + len(todo.message) if todo.message is not None else 0) < 2000:
@@ -511,10 +518,6 @@ async def log_task(guild_id, target):
             if todo.embed is not None or todo.file is not None or LOG_QUEUE[target].empty():
                 await channel.send(to_send, embed=todo.embed, file=todo.file, allowed_mentions=AllowedMentions(everyone=False, users=False, roles=False))
                 to_send = ""
-        except discord.Forbidden:
-            # someone screwed up their permissions, not my problem, will show an error in the dashboard
-            del LOG_QUEUE[target]
-            return
         except CancelledError:
             return  # bot is terminating
         except Exception as e:

@@ -120,7 +120,8 @@ async def on_message(bot, message:Message):
                 pass  # closed DMs
         elif ctx.author.id in Configuration.get_persistent_var("user_blocklist", []):
             try:
-                await MessageUtils.send_to(ctx, "BAD_USER", "You have been globally blocked from using this bot due to abuse", translate=False)
+                if message.channel.permissions_for(ctx.channel.guild.me).send_messages:
+                    await MessageUtils.send_to(ctx, "BAD_USER", "You have been globally blocked from using this bot due to abuse", translate=False)
             except Forbidden:
                 pass  # closed DMs
         else:
