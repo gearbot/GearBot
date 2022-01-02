@@ -201,21 +201,22 @@ class Censor(BaseCog):
             attachments_str = ""
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
         try:
-            await channel.delete_messages([discord.Object(message_id)])
-            GearbotLogging.log_key(member.guild.id, f'censored_invite{e}', user=clean_name, code=code, message=clean_message,
-                                   server_name=server_name, user_id=member.id,
-                                   channel=channel.mention, attachments=attachments_str,
-                                   reply=reply_str)
+            if channel.permissions_for(channel.guild.me).manage_messages:
+                await channel.delete_messages([discord.Object(message_id)])
+                GearbotLogging.log_key(member.guild.id, f'censored_invite{e}', user=clean_name, code=code, message=clean_message,
+                                       server_name=server_name, user_id=member.id,
+                                       channel=channel.mention, attachments=attachments_str,
+                                       reply=reply_str)
+            else:
+                GearbotLogging.log_key(member.guild.id, f'invite_censor_forbidden{e}', user=clean_name, code=code,
+                                       message=clean_message, server_name=server_name, user_id=member.id,
+                                       channel=channel.mention, attachments=attachments_str,
+                                       reply=reply_str)
+                if message_id in self.bot.deleted_messages:
+                    self.bot.deleted_messages.remove(message_id)
         except discord.NotFound:
             # we failed? guess we lost the race, log anyways
             GearbotLogging.log_key(member.guild.id, f'invite_censor_fail{e}', user=clean_name, code=code,
-                                   message=clean_message, server_name=server_name, user_id=member.id,
-                                   channel=channel.mention, attachments=attachments_str,
-                                   reply=reply_str)
-            if message_id in self.bot.deleted_messages:
-                self.bot.deleted_messages.remove(message_id)
-        except discord.Forbidden:
-            GearbotLogging.log_key(member.guild.id, f'invite_censor_forbidden{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,
                                    channel=channel.mention, attachments=attachments_str,
                                    reply=reply_str)
