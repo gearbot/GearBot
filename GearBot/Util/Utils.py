@@ -207,9 +207,9 @@ async def get_user(uid, fetch=True):
                                         id=user.id,
                                         discriminator=user.discriminator,
                                         bot=int(user.bot),
-                                        avatar_url=str(user.avatar.url),
+                                        avatar_url=str(user.display_avatar.url),
                                         created_at=user.created_at.timestamp(),
-                                        is_avatar_animated=int(user.avatar.is_animated()),
+                                        is_avatar_animated=int(user.display_avatar.is_animated()),
                                         mention=user.mention
                                         )
 
@@ -381,16 +381,16 @@ async def generate_userinfo_embed(user, member, guild, requested_by):
     now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
     embed = disnake.Embed(color=member.top_role.color if member is not None else 0x00cea2,
                           timestamp=now)
-    embed.set_thumbnail(url=user.avatar.url)
+    embed.set_thumbnail(url=user.display_avatar.url)
     embed.set_footer(text=Translator.translate('requested_by', guild, user=requested_by.name),
                      icon_url=requested_by.avatar.url)
     embed.add_field(name=Translator.translate('name', guild),
                     value=escape_markdown(f"{user.name}#{user.discriminator}"), inline=True)
     embed.add_field(name=Translator.translate('id', guild), value=user.id, inline=True)
     embed.add_field(name=Translator.translate('bot_account', guild), value=user.bot, inline=True)
-    embed.add_field(name=Translator.translate('animated_avatar', guild), value=user.avatar.is_animated if isinstance(user.avatar.is_animated, bool) else user.avatar.is_animated(), inline=True)
+    embed.add_field(name=Translator.translate('animated_avatar', guild), value=user.display_avatar.is_animated if isinstance(user.display_avatar.is_animated, bool) else user.display_avatar.is_animated(), inline=True)
     embed.add_field(name=Translator.translate('avatar_url', guild),
-                    value=f"[{Translator.translate('avatar_url', guild)}]({user.avatar.url})")
+                    value=f"[{Translator.translate('avatar_url', guild)}]({user.display_avatar.url})")
     embed.add_field(name=Translator.translate("profile", guild), value=user.mention)
     if member is not None:
         embed.add_field(name=Translator.translate('nickname', guild), value=escape_markdown(member.nick),

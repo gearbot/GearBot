@@ -267,7 +267,7 @@ class Infractions(BaseCog):
             name=Translator.translate(key, ctx, mod=Utils.username_from_user(mod), user=Utils.username_from_user(user),
                                       duration=duration),
             icon_url=mod.avatar.url)
-        embed.set_thumbnail(url=user.avatar.url)
+        embed.set_thumbnail(url=user.display_avatar.url)
         embed.add_field(name=Translator.translate('moderator', ctx), value=Utils.clean_user(mod))
         embed.add_field(name=Translator.translate('user', ctx), value=Utils.clean_user(user))
         embed.add_field(name=Translator.translate('mod_id', ctx), value=infraction.mod_id)

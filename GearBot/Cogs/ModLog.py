@@ -147,7 +147,7 @@ class ModLog(BaseCog):
                     timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc),
                     description=embed_content)
                 embed.set_author(name=user.name if hasUser else message.author,
-                                 icon_url=user.avatar.url if hasUser else EmptyEmbed)
+                                 icon_url=user.display_avatar.url if hasUser else EmptyEmbed)
 
                 embed.set_footer(text=Translator.translate('sent_in', guild, channel=channel.name))
                 if len(message.attachments) > 0:
@@ -243,7 +243,7 @@ class ModLog(BaseCog):
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = disnake.Embed()
                     embed.set_author(name=user if hasUser else message.author,
-                                     icon_url=user.avatar.url if hasUser else EmptyEmbed)
+                                     icon_url=user.display_avatar.url if hasUser else EmptyEmbed)
                     embed.set_footer(
                         text=Translator.translate('sent_in', channel.guild.id, channel=f"#{channel.name}"))
                     embed.add_field(name=Translator.translate('before', channel.guild.id),

@@ -1427,7 +1427,7 @@ class Moderation(BaseCog):
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       send_messages=False,
                                                       add_reactions=False,
-                                                      use_threads=False, use_private_threads=False)
+                                                      send_messages_in_threads=False, create_public_threads=False, create_private_threads=False)
                     except (disnake.Forbidden, disnake.NotFound):
                         pass
                 else:
@@ -1580,9 +1580,9 @@ class Moderation(BaseCog):
                             id=member.id,
                             discriminator=member.discriminator,
                             bot=int(member.bot),
-                            avatar_url=str(member.avatar.url),
+                            avatar_url= str(member.display_avatar.url),
                             created_at=member.created_at.timestamp(),
-                            is_avatar_animated=int(member.avatar.is_animated()),
+                            is_avatar_animated=int(member.display_avatar.is_animated()),
                             mention=member.mention
                             )
 

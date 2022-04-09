@@ -193,7 +193,7 @@ class Admin(BaseCog):
                         if category.permissions_for(guild.me).manage_channels:
                             try:
                                 current = category.overwrites_for(role)
-                                current.update(use_threads=False, use_private_threads=False)
+                                current.update(send_messages_in_threads=False, create_public_threads=False, create_private_threads=False)
                                 if not current.is_empty():
                                     await category.set_permissions(role, reason='thread release migration',overwrite=current)
                             except disnake.Forbidden:
@@ -207,7 +207,7 @@ class Admin(BaseCog):
                             if not channel.overwrites_for(role).is_empty():
                                 try:
                                     current = channel.overwrites_for(role)
-                                    current.update(use_threads=False, use_private_threads=False)
+                                    current.update(send_messages_in_threads=False, create_public_threads=False, create_private_threads=False)
                                     if not current.is_empty():
                                         await channel.set_permissions(role, reason='thread release migration',overwrite=current)
                                 except disnake.Forbidden:

@@ -198,7 +198,7 @@ class ServerAdmin(BaseCog):
             if category.permissions_for(guild.me).manage_channels:
                 try:
                     await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
-                                                   send_messages=False, add_reactions=False, speak=False, connect=False, use_threads=False, use_private_threads=False)
+                                                   send_messages=False, add_reactions=False, speak=False, connect=False, send_messages_in_threads=False, create_public_threads=False, create_private_threads=False)
                 except disnake.Forbidden:
                     pass
 
@@ -210,7 +210,7 @@ class ServerAdmin(BaseCog):
                 if channel.overwrites_for(role).is_empty():
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
-                                                      send_messages=False, add_reactions=False, use_threads=False, use_private_threads=False)
+                                                      send_messages=False, add_reactions=False, send_messages_in_threads=False, create_public_threads=False, create_private_threads=False)
                     except disnake.Forbidden:
                         pass
             else:

@@ -1,5 +1,5 @@
 import disnake
-from disnake import Interaction, InteractionType, Embed, Forbidden, Member, User
+from disnake import Interaction, InteractionType, Embed, Forbidden, Member, User, MessageInteractionData
 from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
@@ -12,10 +12,12 @@ from views.SelfRole import SelfRoleView
 
 
 class Interactions(BaseCog):
+
     @commands.Cog.listener()
-    async def on_interaction(self, interaction: Interaction):
+    async def on_interaction(self, interaction):
+        guild = self.bot.get_guild(interaction.guild_id)
         if interaction.type == InteractionType.component:
-            cid = interaction.data.get('custom_id')
+            cid = interaction.data.custom_id
             if cid.startswith('self_role'):
                 parts = cid.split(':')
                 if parts[1] == 'role':
@@ -24,14 +26,14 @@ class Interactions(BaseCog):
                         rid = int(rid)
                         roles = Configuration.get_var(interaction.guild_id, "ROLES", "SELF_ROLES")
                         if rid in roles:
-                            role = interaction.guild.get_role(rid)
+                            role = guild.get_role(rid)
                             if role is None:
                                 roles.remove(rid)
                                 Configuration.set_var(interaction.guild_id, "ROLES", "SELF_ROLES", roles)
-                                v = SelfRoleView(guild=interaction.guild, page=0)
+                                v = SelfRoleView(guild=guild, page=0)
                                 interaction.response.edit_message(
                                     content=Translator.translate("assignable_roles", interaction.guild_id,
-                                                                 server_name=interaction.guild.name, page_num=1,
+                                                                 server_name=guild.name, page_num=1,
                                                                  page_count=v.pages), view=v)
                                 interaction.followup.send_message(
                                     MessageUtils.assemble(interaction.guild_id, 'WARNING', 'self_role_missing'),
@@ -63,13 +65,13 @@ class Interactions(BaseCog):
                 parts = cid.split(':')
                 if parts[1] == 'page':
                     q = parts[3] if parts[3] != 'None' else None
-                    content, view = await Help.message_parts(self.bot, q, interaction.guild, interaction.user,
+                    content, view = await Help.message_parts(self.bot, q, guild, interaction.user,
                                                              int(parts[2]))
                     await interaction.response.edit_message(content=content, view=view)
                 elif parts[1] == 'selector':
-                    q = interaction.data.get('values')[0]
+                    q = interaction.values[0]
                     q = q if q != 'None' else None
-                    content, view = await Help.message_parts(self.bot, q, interaction.guild, interaction.user, 0)
+                    content, view = await Help.message_parts(self.bot, q, guild, interaction.user, 0)
                     await interaction.response.edit_message(content=content, view=view)
             elif cid.startswith('pager:'):
                 parts = cid.split(':')
@@ -90,26 +92,26 @@ class Interactions(BaseCog):
                     cog = self.bot.get_command("CustCommands")
                     if cog is not None:
                         pages = cog.get_command_pages(interaction.guild_id)
-                        content, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
+                        content, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                         'commands')
                         page = cog.gen_command_page(pages, page_num, interaction.guild)
                         await interaction.response.edit_message(embed=page, view=view)
                 elif t == 'emoji':
                     cog = self.bot.get_cog('Emoji')
                     if cog is not None:
-                        amount = len(interaction.guild.emojis) + 1
+                        amount = len(guild.emojis) + 1
                         content, view, page_num = SimplePager.get_parts(range(amount), int(parts[1]),
                                                                         interaction.guild.id, 'emoji')
-                        await interaction.response.edit_message(embed=cog.gen_emoji_page(interaction.guild, page_num),
+                        await interaction.response.edit_message(embed=cog.gen_emoji_page(guild, page_num),
                                                                 view=view)
                 elif t == 'role_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
                         pages = cog.gen_roles_pages(interaction.guild, parts[3])
-                        content, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
+                        content, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                         f'role_list:{parts[3]}')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate('roles', interaction.guild_id, server_name=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{pages[page_num]}```",
+                            content=f"**{Translator.translate('roles', interaction.guild_id, server_name=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{pages[page_num]}```",
                             view=view)
                 elif t == 'censor_list':
                     cog = self.bot.get_cog('Moderation')
@@ -119,45 +121,45 @@ class Interactions(BaseCog):
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
                                                                      'censor_list')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate(f'censor_list', interaction.guild, server=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
+                            content=f"**{Translator.translate(f'censor_list', guild, server=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
                             view=view)
                 elif t == 'word_censor_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(interaction.guild.id, "CENSORING", "WORD_CENSORLIST")
+                        censor_list = Configuration.get_var(guild.id, "CENSORING", "WORD_CENSORLIST")
                         pages = Pages.paginate("\n".join(censor_list))
-                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
+                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                      'word_censor_list')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate(f'word_censor_list', interaction.guild, server=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
+                            content=f"**{Translator.translate(f'word_censor_list', guild, server=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
                             view=view)
                 elif t == 'full_censor_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(interaction.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+                        censor_list = Configuration.get_var(guild.id, "CENSORING", "FULL_MESSAGE_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
-                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
+                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                      'full_censor_list')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate(f'full_censor_list', interaction.guild, server=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
+                            content=f"**{Translator.translate(f'full_censor_list', guild, server=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
                             view=view)
                 elif t == 'flag_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(interaction.guild.id, "FLAGGING", "TOKEN_LIST")
+                        censor_list = Configuration.get_var(guild.id, "FLAGGING", "TOKEN_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
-                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id, 'flag_list')
+                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id, 'flag_list')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate(f'flagged_list', interaction.guild, server=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
+                            content=f"**{Translator.translate(f'flagged_list', guild, server=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
                             view=view)
                 elif t == 'word_flag_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(interaction.guild.id, "FLAGGING", "WORD_LIST")
+                        censor_list = Configuration.get_var(guild.id, "FLAGGING", "WORD_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
-                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id, 'word_flag_list')
+                        page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id, 'word_flag_list')
                         await interaction.response.edit_message(
-                            content=f"**{Translator.translate(f'flagged_word_list', interaction.guild, server=interaction.guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
+                            content=f"**{Translator.translate(f'flagged_word_list', guild, server=guild.name, page_num=page_num + 1, pages=len(pages))}**```\n{page}```",
                             view=view)
                 elif t == 'mass_failures':
                     output = await self.bot.redis_pool.get(f'mass_failures:{parts[3]}')
@@ -208,10 +210,10 @@ class Interactions(BaseCog):
                         view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
                     )
         elif interaction.type == InteractionType.application_command:
-            if interaction.data["name"] == "Extract user IDs":
+            if interaction.name == "Extract user IDs":
                 self.bot.metrics.uid_usage.labels(type="channel", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
-                parts = await Utils.get_user_ids(interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
+                parts = await Utils.get_user_ids(interaction.data.resolved.messages[interaction.data.target_id].content)
                 if len(parts) > 0:
                     for chunk in Pages.paginate("\n".join(parts), 200):
                         await interaction.followup.send(chunk)

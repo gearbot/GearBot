@@ -77,7 +77,7 @@ class Basic(BaseCog):
                         value=f"[{click_here}](https://disnake.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
-        embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar.url)
+        embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.display_avatar.url)
 
         await ctx.send(embed=embed)
 
@@ -134,7 +134,7 @@ class Basic(BaseCog):
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
                                                 value=url)
                     user = message.author
-                    embed.set_author(name=user.name, icon_url=user.avatar.url)
+                    embed.set_author(name=user.name, icon_url=user.display_avatar.url)
                     embed.set_footer(
                         text=Translator.translate("quote_footer", ctx,
                                                   channel=message.channel.name,
