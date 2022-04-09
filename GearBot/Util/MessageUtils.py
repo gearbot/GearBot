@@ -89,4 +89,4 @@ def day_difference(a, b, location):
     return Translator.translate('days_ago', location, days=diff.days, date=a)
 
 def construct_jumplink(guild_id, channel_id, message_id):
-    return f"https://disnake.com/channels/{guild_id}/{channel_id}/{message_id}"
+    return f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"

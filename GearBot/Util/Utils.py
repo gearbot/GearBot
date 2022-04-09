@@ -157,7 +157,7 @@ async def username(uid, fetch=True, clean=True):
         return f"{user.name}#{user.discriminator}"
 
 
-UserClass = namedtuple("UserClass", "name id discriminator bot avatar created_at mention")
+UserClass = namedtuple("UserClass", "name id discriminator bot display_avatar created_at mention")
 UserAvatar = namedtuple("UserAvatar", "url is_animated")
 
 
@@ -307,7 +307,7 @@ def assemble_attachment(channel, aid, name):
 
 
 def assemble_jumplink(server, channel, message):
-    return f"https://canary.disnake.com/channels/{server}/{channel}/{message}"
+    return f"https://discord.com/channels/{server}/{channel}/{message}"
 
 
 async def get_member(bot, guild, user_id, fetch_if_missing=False):

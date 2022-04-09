@@ -173,7 +173,7 @@ class Censor(BaseCog):
         else:
             GearbotLogging.log_key(channel.guild.id, f'censored_message_failed{key}{e}', user=member,
                                    user_id=member.id, message=clean_message, sequence=bad,
-                                   link='https://disnake.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id),
+                                   link='https://discord.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id),
                                    reply=reply_str, attachments=attachments_str)
         self.bot.dispatch("user_censored", messageholder(message_id, member, channel, channel.guild))
 
