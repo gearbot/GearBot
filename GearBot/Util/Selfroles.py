@@ -1,4 +1,4 @@
-from discord import Embed, Colour, Forbidden
+from disnake import Embed, Colour, Forbidden
 
 from Util import Configuration, Pages, Translator, ReactionManager, Emoji
 

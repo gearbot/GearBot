@@ -1,7 +1,7 @@
 import time
 from abc import ABC, abstractmethod
 
-from discord import Forbidden, NotFound
+from disnake import Forbidden, NotFound
 
 from Bot import TheRealGearBot
 from Util import GearbotLogging, Utils, Configuration, InfractionUtils

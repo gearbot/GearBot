@@ -1,5 +1,5 @@
-from discord.ext import commands
-from discord.ext.commands import NoPrivateMessage, BotMissingPermissions, CheckFailure
+from disnake.ext import commands
+from disnake.ext.commands import NoPrivateMessage, BotMissingPermissions, CheckFailure
 
 from Util import Configuration, Utils
 

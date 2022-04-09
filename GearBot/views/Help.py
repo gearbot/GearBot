@@ -1,5 +1,5 @@
-from discord import Interaction, ButtonStyle, SelectOption, SelectMenu
-from discord.ui import Button, View, Select
+from disnake import Interaction, ButtonStyle, SelectOption, SelectMenu
+from disnake.ui import Button, View, Select
 
 from Cogs import BaseCog
 from Util import Translator, Emoji, HelpGenerator, Utils, Pages

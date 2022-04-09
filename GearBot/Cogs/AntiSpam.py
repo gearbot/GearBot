@@ -4,19 +4,19 @@ import re
 from asyncio import CancelledError
 import hashlib
 
-import discord
+import disnake
 import emoji
 
 import time
 from collections import deque
 
-from discord import Object, Forbidden, NotFound, RawMessageDeleteEvent
-from discord.channel import TextChannel
-from discord.ext import commands
-from discord.guild import Guild
-from discord.member import Member
-from discord.message import Message
-from discord.utils import snowflake_time
+from disnake import Object, Forbidden, NotFound, RawMessageDeleteEvent
+from disnake.channel import TextChannel
+from disnake.ext import commands
+from disnake.guild import Guild
+from disnake.member import Member
+from disnake.message import Message
+from disnake.utils import snowflake_time
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog
@@ -455,7 +455,7 @@ class AntiSpam(BaseCog):
 
 
 
-    async def handle_failed_ping(self, message: discord.Message, amount):
+    async def handle_failed_ping(self, message: disnake.Message, amount):
         if self.is_exempt(message.guild.id, message.author) or message.author.bot or message.webhook_id is not None:
             return  # don't action except users
         buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])

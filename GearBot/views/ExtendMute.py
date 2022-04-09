@@ -1,11 +1,11 @@
-import discord
-from discord import ButtonStyle
+import disnake
+from disnake import ButtonStyle
 
 from Util import Translator
 from views.Buttons import InvokerOnlyCallbackButton
 
 
-class ExtendMuteView(discord.ui.View):
+class ExtendMuteView(disnake.ui.View):
     def __init__(self, extend, until, overwrite, duration, guild_id, user_id):
         super().__init__(timeout=30)
 

@@ -1,7 +1,7 @@
 import asyncio
 from collections import namedtuple
 
-from discord import Embed, Reaction, NotFound
+from disnake import Embed, Reaction, NotFound
 
 from Util import MessageUtils
 

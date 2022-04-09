@@ -3,7 +3,7 @@ import datetime
 import io
 import os
 
-import discord
+import disnake
 import pytz
 
 from Util import Utils, GearbotLogging, Translator, Emoji, Configuration
@@ -28,8 +28,8 @@ async def pack_messages(messages, guild_id):
         name = await Utils.username(message.author, clean=False)
         reply = ""
         if message.reply_to is not None:
-            reply = f" | In reply to https://discord.com/channels/{message.server}/{message.channel}/{message.reply_to}"
-        timestamp = datetime.datetime.strftime(discord.Object(message.messageid).created_at.astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),'%H:%M:%S')
+            reply = f" | In reply to https://disnake.com/channels/{message.server}/{message.channel}/{message.reply_to}"
+        timestamp = datetime.datetime.strftime(disnake.Object(message.messageid).created_at.astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),'%H:%M:%S')
         out += f"{timestamp} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content}{reply} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
@@ -51,6 +51,6 @@ async def ship_messages(ctx, messages, t, filename="Message archive", filtered=F
         buffer.write(out.encode())
         buffer.seek(0)
 
-        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))} {addendum}", file=discord.File(fp=buffer, filename=f"{filename}.txt"))
+        await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))} {addendum}", file=disnake.File(fp=buffer, filename=f"{filename}.txt"))
     else:
         await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)} {addendum}")

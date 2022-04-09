@@ -49,7 +49,7 @@ def get_master_var(key, default=None):
 import json
 import os
 
-from discord.ext import commands
+from disnake.ext import commands
 
 from Util import GearbotLogging, Utils, Features
 

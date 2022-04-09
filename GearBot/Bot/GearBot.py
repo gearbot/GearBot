@@ -3,7 +3,7 @@ import time
 from asyncio import Queue
 from collections import deque
 
-from discord.ext.commands import AutoShardedBot
+from disnake.ext.commands import AutoShardedBot
 from prometheus_client import CollectorRegistry
 
 from Bot import TheRealGearBot

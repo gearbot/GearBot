@@ -6,9 +6,9 @@ import traceback
 import datetime
 from time import time
 
-import discord
-from discord.ext import commands, tasks
-from discord.utils import time_snowflake
+import disnake
+from disnake.ext import commands, tasks
+from disnake.utils import time_snowflake
 
 from Bot.TheRealGearBot import fill_cache
 from Cogs.BaseCog import BaseCog
@@ -54,7 +54,7 @@ class Admin(BaseCog):
     @commands.command()
     async def setstatus(self, ctx, type:int, *, status:str):
         """Sets a playing/streaming/listening/watching status"""
-        await self.bot.change_presence(activity=discord.Activity(name=status, type=type))
+        await self.bot.change_presence(activity=disnake.Activity(name=status, type=type))
         await ctx.send("Status updated")
 
     @commands.command()
@@ -129,7 +129,7 @@ class Admin(BaseCog):
         with open(f"{name}.txt", "r") as file:
             pages = Pages.paginate("".join(file.readlines()), 500, 2000)
             await ctx.channel.purge(limit=len(pages) + 2)
-            await ctx.send(file=discord.File(f"{name}.png"))
+            await ctx.send(file=disnake.File(f"{name}.png"))
             for page in pages:
                 await ctx.send(page)
 
@@ -196,7 +196,7 @@ class Admin(BaseCog):
                                 current.update(use_threads=False, use_private_threads=False)
                                 if not current.is_empty():
                                     await category.set_permissions(role, reason='thread release migration',overwrite=current)
-                            except discord.Forbidden:
+                            except disnake.Forbidden:
                                 await asyncio.sleep(0.1)
 
                     # sleep a bit so we have time to receive the update events
@@ -210,7 +210,7 @@ class Admin(BaseCog):
                                     current.update(use_threads=False, use_private_threads=False)
                                     if not current.is_empty():
                                         await channel.set_permissions(role, reason='thread release migration',overwrite=current)
-                                except discord.Forbidden:
+                                except disnake.Forbidden:
                                     pass
         await MessageUtils.send_to(ctx, 'YES', 'Thread migration completed!', translate=False)
 

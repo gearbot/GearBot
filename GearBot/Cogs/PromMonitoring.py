@@ -1,8 +1,8 @@
 import asyncio
 
-import discord
+import disnake
 from aiohttp import web
-from discord.ext import commands
+from disnake.ext import commands
 from prometheus_client.exposition import generate_latest
 
 from Cogs.BaseCog import BaseCog
@@ -29,7 +29,7 @@ class PromMonitoring(BaseCog):
         ).inc()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         m = self.bot.metrics
 
 

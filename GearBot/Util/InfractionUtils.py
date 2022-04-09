@@ -5,7 +5,7 @@ import time
 import datetime
 
 from aioredis import ReplyError
-from discord import NotFound
+from disnake import NotFound
 from tortoise.query_utils import Q
 
 from Bot import GearBot

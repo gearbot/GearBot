@@ -1,5 +1,5 @@
-import discord
-from discord import NotFound, Forbidden
+import disnake
+from disnake import NotFound, Forbidden
 
 from Util import Emoji, ReactionManager, MessageUtils
 
@@ -20,16 +20,16 @@ def unregister(type_handler):
 
 async def create_new(bot, type, ctx, **kwargs):
     text, embed, has_pages = await page_handlers[type]["init"](ctx, **kwargs)
-    message: discord.Message = await ctx.channel.send(text, embed=embed)
+    message: disnake.Message = await ctx.channel.send(text, embed=embed)
     if has_pages:
         await ReactionManager.register(bot, message.id, message.channel.id, "paged", subtype=type, **kwargs)
         try:
             if has_pages: await message.add_reaction(Emoji.get_emoji('LEFT'))
             if has_pages: await message.add_reaction(Emoji.get_emoji('RIGHT'))
-        except discord.Forbidden:
+        except disnake.Forbidden:
             await MessageUtils.send_to(ctx, 'WARNING', 'paginator_missing_perms', prev=Emoji.get_chat_emoji('LEFT'),
                                        next=Emoji.get_chat_emoji('RIGHT'))
-        except discord.NotFound:
+        except disnake.NotFound:
             await MessageUtils.send_to(ctx, 'WARNING', 'fix_censor')
 
 

@@ -7,8 +7,8 @@ from datetime import datetime
 
 import aioredis
 from aioredis.pubsub import Receiver
-from discord import Embed, Color, Forbidden
-from discord.ext import commands
+from disnake import Embed, Color, Forbidden
+from disnake.ext import commands
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog

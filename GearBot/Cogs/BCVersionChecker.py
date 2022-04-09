@@ -6,9 +6,9 @@ import traceback
 from concurrent.futures import CancelledError
 
 import aiohttp
-import discord
-from discord import Embed, File
-from discord.ext import commands
+import disnake
+from disnake import Embed, File
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, VersionInfo, Permissioncheckers, Configuration, Utils, Emoji, Pages
@@ -52,7 +52,7 @@ class BCVersionChecker(BaseCog):
                     latestBCCinfo = await self.getVersionDetails("BuildCraftCompat", latestBCC)
                     info = f"{info}\n\nBuildcraft Compat {latestBCC}:\n[Changelog](https://www.mod-buildcraft.com/pages/buildinfo/BuildCraftCompat/changelog/{latestBCC}.html) | [Blog]({latestBCCinfo['blog_entry'] if 'blog_entry' in latestBCCinfo else 'https://www.mod-buildcraft.com'}) | [Direct download]({latestBCCinfo['downloads']['main']})"
 
-                embed = discord.Embed(colour=discord.Colour(0x54d5ff), timestamp=datetime.datetime.utcfromtimestamp(time.time()),
+                embed = disnake.Embed(colour=disnake.Colour(0x54d5ff), timestamp=datetime.datetime.utcfromtimestamp(time.time()),
                                       description=info)
                 embed.set_author(name=f"BuildCraft releases for {version}", url="https://www.mod-buildcraft.com/pages/download.html", icon_url="https://i.imgur.com/YKGkDDZ.png")
                 await ctx.send(embed=embed)
@@ -81,21 +81,21 @@ class BCVersionChecker(BaseCog):
     # @Permissioncheckers.devOnly()
     # async def request_testing(self, ctx:commands.Context, roleName):
     #     """Make a role pingable for announcements"""
-    #     role = discord.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
+    #     role = disnake.utils.find(lambda r: r.name == roleName, ctx.guild.roles)
     #     if role is None:
     #         await ctx.send("Unable to find that role")
     #     else:
     #         await role.edit(mentionable=True)
     #         await ctx.send("Role is now mentionable and awaiting your announcement")
     #
-    #         def check(message:discord.Message):
+    #         def check(message:disnake.Message):
     #             return role in message.role_mentions
     #         until = datetime.datetime.now() + datetime.timedelta(minutes=1)
     #
     #         done = False
     #         while not done:
     #             try:
-    #                 message:discord.Message = await self.bot.wait_for('message', check=check, timeout=(until - datetime.datetime.now()).seconds)
+    #                 message:disnake.Message = await self.bot.wait_for('message', check=check, timeout=(until - datetime.datetime.now()).seconds)
     #                 if message.author == ctx.author:
     #                     await message.pin()
     #                     done = True
@@ -129,7 +129,7 @@ async def updater(cog:BCVersionChecker):
                     highestMC = VersionInfo.getLatest(cog.BC_VERSION_LIST.keys())
                     latestBC = VersionInfo.getLatest(cog.BC_VERSION_LIST[highestMC])
                     generalID = 309218657798455298
-                    channel:discord.TextChannel = cog.bot.get_channel(generalID)
+                    channel:disnake.TextChannel = cog.bot.get_channel(generalID)
                     old_latest = Configuration.get_persistent_var("latest_bc", "0.0.0")
                     Configuration.set_persistent_var("latest_bc", latestBC) # save already so we don't get stuck and keep trying over and over if something goes wrong
                     if channel is not None and latestBC != old_latest:
@@ -195,7 +195,7 @@ async def updater(cog:BCVersionChecker):
             cog.bot.errors = cog.bot.errors + 1
             GearbotLogging.error("Something went wrong in the BC version checker task")
             GearbotLogging.error(traceback.format_exc())
-            embed = discord.Embed(colour=discord.Colour(0xff0000),
+            embed = disnake.Embed(colour=disnake.Colour(0xff0000),
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))
             embed.set_author(name="Something went wrong in the BC version checker task:")
             embed.add_field(name="Exception", value=str(ex))

@@ -1,4 +1,4 @@
-from discord.ui import View, Button
+from disnake.ui import View, Button
 
 from Util import Translator
 

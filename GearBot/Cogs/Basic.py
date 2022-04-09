@@ -3,10 +3,10 @@ import random
 import time
 import datetime
 
-import discord
-from discord import Embed
-from discord.ext import commands
-from discord.ext.commands import clean_content, BadArgument
+import disnake
+from disnake import Embed
+from disnake.ext import commands
+from disnake.ext.commands import clean_content, BadArgument
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Pages, HelpGenerator, Emoji, Translator, Utils, GearbotLogging, \
@@ -45,7 +45,7 @@ class Basic(BaseCog):
         self_messages = str(self.bot.self_messages)
         total = str(sum(len(guild.members) for guild in self.bot.guilds))
         unique = str(len(self.bot.users))
-        embed = discord.Embed(colour=discord.Colour(0x00cea2),
+        embed = disnake.Embed(colour=disnake.Colour(0x00cea2),
                               timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(
                                   tzinfo=datetime.timezone.utc),
                               description=f"Stats for cluster {self.bot.cluster}\n" +
@@ -74,7 +74,7 @@ class Basic(BaseCog):
 
         click_here = Translator.translate('click_here', ctx)
         embed.add_field(name=Translator.translate('support_server', ctx),
-                        value=f"[{click_here}](https://discord.gg/vddW3D9)")
+                        value=f"[{click_here}](https://disnake.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.avatar.url)
@@ -110,7 +110,7 @@ class Basic(BaseCog):
                     attachments = await LoggedAttachment.filter(message_id=message.id)
                     if len(attachments) == 1:
                         attachment = attachments[0]
-                    embed = discord.Embed(colour=discord.Color(0xd5fff),
+                    embed = disnake.Embed(colour=disnake.Color(0xd5fff),
                                           timestamp=message.created_at)
                     if message.content is None or message.content == "":
                         if attachment is not None:
@@ -122,7 +122,7 @@ class Basic(BaseCog):
                                                 value=url)
                     else:
                         description = message.content
-                        embed = discord.Embed(colour=discord.Color(0xd5fff), description=description,
+                        embed = disnake.Embed(colour=disnake.Color(0xd5fff), description=description,
                                               timestamp=message.created_at)
                         embed.add_field(name="​",
                                         value=f"[Jump to message]({message.jump_url})")
@@ -185,7 +185,7 @@ class Basic(BaseCog):
                             await ctx.author.add_roles(role)
                             await ctx.send(
                                 Translator.translate("role_joined", ctx, role_name=role.name, user=ctx.author))
-                    except discord.Forbidden:
+                    except disnake.Forbidden:
                         await ctx.send(
                             f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', ctx, role=role.name)}")
                 else:
@@ -213,7 +213,7 @@ class Basic(BaseCog):
             await MessageUtils.send_to(ctx, "NO", "no_uids_found")
 
     @commands.Cog.listener()
-    async def on_guild_role_delete(self, role: discord.Role):
+    async def on_guild_role_delete(self, role: disnake.Role):
         roles = Configuration.get_var(role.guild.id, "ROLES", "SELF_ROLES")
         if role.id in roles:
             roles.remove(role.id)

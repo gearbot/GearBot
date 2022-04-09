@@ -2,11 +2,11 @@ import asyncio
 import io
 import typing
 
-import discord
+import disnake
 import pytz
-from discord import TextChannel, Interaction
-from discord.ext import commands
-from discord.ext.commands import BucketType
+from disnake import TextChannel, Interaction
+from disnake.ext import commands
+from disnake.ext.commands import BucketType
 from pytz import UnknownTimeZoneError
 
 from Cogs.BaseCog import BaseCog
@@ -65,7 +65,7 @@ async def list_list(ctx, item_type, list_name="roles", wrapper="<@&{item}>", con
         desc = Translator.translate(f"no_{item_type}_{list_name}", ctx)
     else:
         desc = "\n".join(wrapper.format(item=item) for item in items)
-    embed = discord.Embed(title=Translator.translate(f"current_{item_type}_{list_name}", ctx), description=desc)
+    embed = disnake.Embed(title=Translator.translate(f"current_{item_type}_{list_name}", ctx), description=desc)
     await ctx.send(embed=embed)
 
 
@@ -135,11 +135,11 @@ class ServerAdmin(BaseCog):
         Configuration.validate_config(ctx.guild.id)
 
     @admin_roles.command(name="add")
-    async def add_admin_role(self, ctx, *, role: discord.Role):
+    async def add_admin_role(self, ctx, *, role: disnake.Role):
         await add_item(ctx, role, 'admin')
 
     @admin_roles.command(name="remove")
-    async def remove_admin_role(self, ctx, *, role: discord.Role):
+    async def remove_admin_role(self, ctx, *, role: disnake.Role):
         await remove_item(ctx, role, 'admin')
 
     @configure.group(aliases=["modroles"], invoke_without_command=True)
@@ -150,11 +150,11 @@ class ServerAdmin(BaseCog):
         Configuration.validate_config(ctx.guild.id)
 
     @mod_roles.command(name="add")
-    async def add_mod_role(self, ctx, *, role: discord.Role):
+    async def add_mod_role(self, ctx, *, role: disnake.Role):
         await add_item(ctx, role, 'mod')
 
     @mod_roles.command(name="remove")
-    async def remove_mod_role(self, ctx, *, role: discord.Role):
+    async def remove_mod_role(self, ctx, *, role: disnake.Role):
         await remove_item(ctx, role, 'mod')
 
     @configure.group(aliases=["trustedroles"], invoke_without_command=True)
@@ -165,15 +165,15 @@ class ServerAdmin(BaseCog):
         Configuration.validate_config(ctx.guild.id)
 
     @trusted_roles.command(name="add")
-    async def add_trusted_role(self, ctx, *, role: discord.Role):
+    async def add_trusted_role(self, ctx, *, role: disnake.Role):
         await add_item(ctx, role, 'trusted')
 
     @trusted_roles.command(name="remove")
-    async def remove_trusted_role(self, ctx, *, role: discord.Role):
+    async def remove_trusted_role(self, ctx, *, role: disnake.Role):
         await remove_item(ctx, role, 'trusted')
 
     @configure.command(aliases=["muterole"])
-    async def mute_role(self, ctx: commands.Context, role: discord.Role):
+    async def mute_role(self, ctx: commands.Context, role: disnake.Role):
         """configure_mute_help"""
         if role == ctx.guild.default_role:
             return await ctx.send(
@@ -181,7 +181,7 @@ class ServerAdmin(BaseCog):
         if role.tags is not None:
             return await ctx.send(
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate(f'tagged_role_forbidden', ctx)}")
-        guild: discord.Guild = ctx.guild
+        guild: disnake.Guild = ctx.guild
         perms = guild.me.guild_permissions
         if not perms.manage_roles:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('mute_missing_perm', ctx)}")
@@ -199,7 +199,7 @@ class ServerAdmin(BaseCog):
                 try:
                     await category.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
                                                    send_messages=False, add_reactions=False, speak=False, connect=False, use_threads=False, use_private_threads=False)
-                except discord.Forbidden:
+                except disnake.Forbidden:
                     pass
 
         # sleep a bit so we have time to receive the update events
@@ -211,7 +211,7 @@ class ServerAdmin(BaseCog):
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx),
                                                       send_messages=False, add_reactions=False, use_threads=False, use_private_threads=False)
-                    except discord.Forbidden:
+                    except disnake.Forbidden:
                         pass
             else:
                 failed.append(channel.mention)
@@ -221,7 +221,7 @@ class ServerAdmin(BaseCog):
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', ctx), speak=False,
                                                       connect=False)
-                    except discord.Forbidden:
+                    except disnake.Forbidden:
                         pass
             else:
                 failed.append(Translator.translate('voice_channel', ctx, channel=channel.name))
@@ -244,13 +244,13 @@ class ServerAdmin(BaseCog):
             await list_list(ctx, 'self', config_section="ROLES")
 
     @self_roles.command()
-    async def add(self, ctx: commands.Context, *, role: discord.Role):
+    async def add(self, ctx: commands.Context, *, role: disnake.Role):
         await add_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
 
     @self_roles.command()
-    async def remove(self, ctx: commands.Context, *, role: discord.Role):
+    async def remove(self, ctx: commands.Context, *, role: disnake.Role):
         await remove_item(ctx, role, 'self', config_section="ROLES")
         Selfroles.validate_self_roles(self.bot, ctx.guild)
         self.bot.dispatch("self_roles_update", ctx.guild.id)
@@ -293,11 +293,11 @@ class ServerAdmin(BaseCog):
             await list_list(ctx, "ignored", "users", "<@{item}>", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="add")
-    async def addIgnoredUser(self, ctx: commands.Context, user: discord.Member):
+    async def addIgnoredUser(self, ctx: commands.Context, user: disnake.Member):
         await add_item(ctx, user, "ignored", "users", config_section="MESSAGE_LOGS")
 
     @ignored_users.command(name="remove")
-    async def removeIgnoredUser(self, ctx: commands.Context, user: discord.User):
+    async def removeIgnoredUser(self, ctx: commands.Context, user: disnake.User):
         await remove_item(ctx, user, "ignored", list_name="users", config_section="MESSAGE_LOGS")
 
     @configure.group("cog_overrides", invoke_without_command=True)
@@ -312,7 +312,7 @@ class ServerAdmin(BaseCog):
                     desc += f"{k}: {lvl} ({Translator.translate(f'perm_lvl_{lvl}', ctx)})\n"
             if desc == "":
                 desc = Translator.translate('no_overrides', ctx)
-            embed = discord.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
+            embed = disnake.Embed(color=6008770, title=Translator.translate('cog_overrides', ctx), description=desc)
             await ctx.send(embed=embed)
 
     @configure_cog_overrides.command(name="add")
@@ -367,7 +367,7 @@ class ServerAdmin(BaseCog):
         """command_overrides_help"""
         if ctx.invoked_subcommand is None:
             overrides = Configuration.get_var(ctx.guild.id, "PERM_OVERRIDES")
-            embed = discord.Embed(color=6008770, title=Translator.translate('command_overrides', ctx))
+            embed = disnake.Embed(color=6008770, title=Translator.translate('command_overrides', ctx))
             has_overrides = False
             for cog in self.bot.cogs:
                 if cog in overrides:
@@ -487,7 +487,7 @@ class ServerAdmin(BaseCog):
         pass
 
     @lvl4.command(name="add")
-    async def add_lvl4(self, ctx, command: str, person: discord.Member):
+    async def add_lvl4(self, ctx, command: str, person: disnake.Member):
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog_name = command_object.cog_name
@@ -522,7 +522,7 @@ class ServerAdmin(BaseCog):
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('command_not_found', ctx)}")
 
     @lvl4.command(name="remove")
-    async def remove_lvl4(self, ctx, command: str, person: discord.Member):
+    async def remove_lvl4(self, ctx, command: str, person: disnake.Member):
         command_object = self.bot.get_command(command)
         if command_object is not None:
             cog_name = command_object.cog_name
@@ -546,7 +546,7 @@ class ServerAdmin(BaseCog):
     @commands.bot_has_permissions(embed_links=True)
     async def logging(self, ctx):
         if ctx.invoked_subcommand is None:
-            embed = discord.Embed(color=6008770, title=Translator.translate('log_channels', ctx))
+            embed = disnake.Embed(color=6008770, title=Translator.translate('log_channels', ctx))
             channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
             if len(channels) > 0:
                 for cid, info in channels.items():
@@ -574,7 +574,7 @@ class ServerAdmin(BaseCog):
         return value
 
     @logging.command(name="add")
-    async def add_logging(self, ctx, channel: discord.TextChannel, *, types):
+    async def add_logging(self, ctx, channel: disnake.TextChannel, *, types):
         cid = str(channel.id)
         channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
         if cid not in channels:
@@ -602,7 +602,7 @@ class ServerAdmin(BaseCog):
         if len(unknown) > 0:
             message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
-        embed = discord.Embed(color=6008770)
+        embed = disnake.Embed(color=6008770)
         embed.add_field(name=channel.id,
                         value=self.get_channel_properties(ctx, channel.id, channels[cid]["CATEGORIES"]))
         await ctx.send(message, embed=embed)
@@ -617,7 +617,7 @@ class ServerAdmin(BaseCog):
         if len(features) > 0:
             message = None
 
-            async def yes(interaction: discord.Interaction):
+            async def yes(interaction: disnake.Interaction):
                 await self._enable_feature(ctx, ", ".join(features), interaction)
                 await interaction.response.edit_message(content="Features enabled", view=None)
 
@@ -668,7 +668,7 @@ class ServerAdmin(BaseCog):
                 message += f"\n {Emoji.get_chat_emoji('NO')}{Translator.translate('logs_unknown', ctx)}{', '.join(unknown)}"
 
             if len(info) > 0:
-                embed = discord.Embed(color=6008770)
+                embed = disnake.Embed(color=6008770)
                 embed.add_field(name=cid, value=self.get_channel_properties(ctx, cid, channels[cid]["CATEGORIES"]))
             else:
                 embed = None
@@ -688,7 +688,7 @@ class ServerAdmin(BaseCog):
     def get_logging_status(self, ctx):
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
-        embed = discord.Embed(color=6008770, title=Translator.translate('log_types', ctx))
+        embed = disnake.Embed(color=6008770, title=Translator.translate('log_types', ctx))
         for t in self.LOGGING_TYPES:
             e = Features.is_logged(ctx.guild.id, t)
             embed.add_field(name=t, value=enabled if e else disabled)
@@ -752,7 +752,7 @@ class ServerAdmin(BaseCog):
     def get_features_status(ctx):
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
-        embed = discord.Embed(color=6008770, title=Translator.translate('features', ctx))
+        embed = disnake.Embed(color=6008770, title=Translator.translate('features', ctx))
         for f, t in Features.requires_logging.items():
             e = Configuration.get_var(ctx.guild.id, t, "ENABLED", f)
             embed.add_field(name=f, value=enabled if e else disabled)
@@ -839,7 +839,7 @@ class ServerAdmin(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels changes")
 
     @ignored_channels_changes.command("add")
-    async def ignored_channels_changes_add(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
+    async def ignored_channels_changes_add(self, ctx, channel: typing.Union[disnake.TextChannel, disnake.VoiceChannel]):
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_CHANGES')
         if channel.id in channels:
@@ -850,7 +850,7 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
 
     @ignored_channels_changes.command("remove")
-    async def ignored_channels_changes_remove(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
+    async def ignored_channels_changes_remove(self, ctx, channel: typing.Union[disnake.TextChannel, disnake.VoiceChannel]):
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_CHANGES')
         if not channel.id in channels:
@@ -872,9 +872,9 @@ class ServerAdmin(BaseCog):
             channels = "\n".join(ctx.guild.get_channel(c).mention for c in channel_list)
         else:
             channels = Translator.translate('no_ignored_channels', ctx)
-        embed = discord.Embed(color=ctx.guild.roles[-1].color, description=channels)
+        embed = disnake.Embed(color=ctx.guild.roles[-1].color, description=channels)
         embed.set_author(name=Translator.translate(f'ignored_channels_list_{type}', ctx, guild=ctx.guild.name),
-                         icon_url=ctx.guild.icon_url)
+                         icon_url=ctx.guild.icon.url)
         await ctx.send(embed=embed)
 
     @ignored_channels.group("edits", aliases=["edit"], invoke_without_command=True)
@@ -885,7 +885,7 @@ class ServerAdmin(BaseCog):
             await ctx.invoke(self.bot.get_command("help"), query="configure ignored_channels other")
 
     @ignored_channels_edits.command("add")
-    async def ignored_channels_edits_add(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
+    async def ignored_channels_edits_add(self, ctx, channel: typing.Union[disnake.TextChannel, disnake.VoiceChannel]):
         """ignored_channels_add_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_OTHER')
         if channel.id in channels:
@@ -896,7 +896,7 @@ class ServerAdmin(BaseCog):
             Configuration.save(ctx.guild.id)
 
     @ignored_channels_edits.command("remove")
-    async def ignored_channels_edits_remove(self, ctx, channel: typing.Union[discord.TextChannel, discord.VoiceChannel]):
+    async def ignored_channels_edits_remove(self, ctx, channel: typing.Union[disnake.TextChannel, disnake.VoiceChannel]):
         """ignored_channels_remove_help"""
         channels = Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", 'IGNORED_CHANNELS_OTHER')
         if channel.id not in channels:
@@ -976,7 +976,7 @@ class ServerAdmin(BaseCog):
     @configure.command(aliases=["dm_on"])
     async def dm_notifications(self, ctx):
         """dm_notifications_help"""
-        embed = discord.Embed(color=600870, title=Translator.translate('infraction_dm_settings', ctx))
+        embed = disnake.Embed(color=600870, title=Translator.translate('infraction_dm_settings', ctx))
         enabled = f"{Emoji.get_chat_emoji('YES')} {Translator.translate('enabled', ctx)}"
         disabled = f"{Emoji.get_chat_emoji('NO')} {Translator.translate('disabled', ctx)}"
 
@@ -1042,7 +1042,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'censor_list_file',
-                                       attachment=discord.File(buffer, filename="token_censorlist.txt"),
+                                       attachment=disnake.File(buffer, filename="token_censorlist.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_censor_list_empty')
@@ -1133,7 +1133,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'word_censor_list_file',
-                                       attachment=discord.File(buffer, filename="word_censorlist.txt"),
+                                       attachment=disnake.File(buffer, filename="word_censorlist.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_censor_list_empty')
@@ -1195,7 +1195,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'flag_list_file',
-                                       attachment=discord.File(buffer, filename="flag_list.txt"),
+                                       attachment=disnake.File(buffer, filename="flag_list.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'flag_list_empty')
@@ -1253,7 +1253,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'word_flag_list_file',
-                                       attachment=discord.File(buffer, filename="word_flag_list.txt"),
+                                       attachment=disnake.File(buffer, filename="word_flag_list.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'word_flag_list_empty')
@@ -1270,11 +1270,11 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"no_role_{mode}", ctx)
             else:
                 desc = "\n".join(f"<@&{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"current_role_{mode}_list", ctx), description=desc)
+            embed = disnake.Embed(title=Translator.translate(f"current_role_{mode}_list", ctx), description=desc)
             await ctx.send(embed=embed)
 
     @role_list.command("add")
-    async def role_list_add(self, ctx, *, role: discord.Role):
+    async def role_list_add(self, ctx, *, role: disnake.Role):
         """configure_role_list_add"""
         roles = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
@@ -1289,7 +1289,7 @@ class ServerAdmin(BaseCog):
                                        role=Utils.escape_markdown(role.name))
 
     @role_list.command("remove", aliases=["rmv"])
-    async def role_list_remove(self, ctx, *, role: discord.Role):
+    async def role_list_remove(self, ctx, *, role: disnake.Role):
         """configure_role_list_remove"""
         roles = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE") else "block"
@@ -1320,7 +1320,7 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"empty_domain_list", ctx)
             else:
                 desc = "\n".join(f"{item}" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"current_domain_list_{mode}", ctx), description=desc)
+            embed = disnake.Embed(title=Translator.translate(f"current_domain_list_{mode}", ctx), description=desc)
             await ctx.send(embed=embed)
 
     @domain_list.command("add")
@@ -1364,7 +1364,7 @@ class ServerAdmin(BaseCog):
             buffer.write(out.encode())
             buffer.seek(0)
             await MessageUtils.send_to(ctx, 'YES', 'domain_censor_list_file',
-                                       attachment=discord.File(buffer, filename="domain_list.txt"),
+                                       attachment=disnake.File(buffer, filename="domain_list.txt"),
                                        server=ctx.guild.name)
         else:
             await MessageUtils.send_to(ctx, 'WARNING', 'domain_list_empty')
@@ -1445,12 +1445,12 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"custom_commands_role_list_empty_{mode}", ctx)
             else:
                 desc = "\n".join(f"<@&{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx),
+            embed = disnake.Embed(title=Translator.translate(f"custom_commands_current_role_{mode}_list", ctx),
                                   description=desc)
             await ctx.send(embed=embed)
 
     @custom_commands_role_list.command("add")
-    async def custom_commands_role_list_add(self, ctx, *, role: discord.Role):
+    async def custom_commands_role_list_add(self, ctx, *, role: disnake.Role):
         roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
         if role == ctx.guild.default_role:
@@ -1465,7 +1465,7 @@ class ServerAdmin(BaseCog):
                                        role=Utils.escape_markdown(role.name))
 
     @custom_commands_role_list.command("remove", aliases=["rmv"])
-    async def custom_commands_role_list_remove(self, ctx, *, role: discord.Role):
+    async def custom_commands_role_list_remove(self, ctx, *, role: disnake.Role):
         roles = Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLES")
         mode = "allow" if Configuration.get_var(ctx.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED") else "block"
         if role.id not in roles:
@@ -1488,7 +1488,7 @@ class ServerAdmin(BaseCog):
                 desc = Translator.translate(f"custom_commands_channel_list_empty_{mode}", ctx)
             else:
                 desc = "\n".join(f"<#{item}>" for item in items)
-            embed = discord.Embed(title=Translator.translate(f"custom_commands_current_channel_{mode}_list", ctx),
+            embed = disnake.Embed(title=Translator.translate(f"custom_commands_current_channel_{mode}_list", ctx),
                                   description=desc)
             await ctx.send(embed=embed)
 
@@ -1565,7 +1565,7 @@ class ServerAdmin(BaseCog):
 
     async def get_anti_spam_embed(self, ctx):
         buckets = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "BUCKETS")
-        embed = discord.Embed()
+        embed = disnake.Embed()
         limit = Translator.translate("limit", ctx)
         timeframe = Translator.translate("timeframe", ctx)
         punishment = Translator.translate("punishment", ctx)
@@ -1659,7 +1659,7 @@ class ServerAdmin(BaseCog):
         pass
 
     @immune_users.command("add")
-    async def immune_users_add(self, ctx, member: discord.Member):
+    async def immune_users_add(self, ctx, member: disnake.Member):
         """anti_spam_immune_users_add_help"""
         users = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_USERS")
         if member.id in users:
@@ -1690,7 +1690,7 @@ class ServerAdmin(BaseCog):
         pass
 
     @immune_roles.command("add")
-    async def immune_roles_add(self, ctx, role: discord.Role):
+    async def immune_roles_add(self, ctx, role: disnake.Role):
         """anti_spam_immune_roles_add_help"""
         roles = Configuration.get_var(ctx.guild.id, "ANTI_SPAM", "EXEMPT_ROLES")
         if role.id in roles:

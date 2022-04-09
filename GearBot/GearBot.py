@@ -6,22 +6,22 @@ import datetime
 
 import aiohttp
 import aioredis
-import discord.http
-from discord.ext.commands import ExtensionAlreadyLoaded
+import disnake.http
+from disnake.ext.commands import ExtensionAlreadyLoaded
 
 from Bot.TheRealGearBot import handle_exception
 from database import DatabaseConnector
 from views.InfSearch import InfSearch
 
 if 'proxy_url' in os.environ:
-    discord.http.Route.BASE = os.environ['proxy_url']
+    disnake.http.Route.BASE = os.environ['proxy_url']
 
 from argparse import ArgumentParser
 
 from Bot import TheRealGearBot
 from Bot.GearBot import GearBot
 from Util import Configuration, GearbotLogging, InfractionUtils, Utils, Emoji, Translator
-from discord import Intents, MemberCacheFlags
+from disnake import Intents, MemberCacheFlags
 from kubernetes import client, config
 
 def prefix_callable(bot, message):
@@ -155,6 +155,8 @@ if __name__ == '__main__':
             messages=True,
             reactions=True,
             typing=False,
+            guild_scheduled_events=False,
+            message_content=True,
         )
     args = {
         "command_prefix": prefix_callable,

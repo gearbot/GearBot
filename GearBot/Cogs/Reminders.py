@@ -2,8 +2,8 @@ import asyncio
 import time
 import datetime
 
-from discord import Embed, User, NotFound, Forbidden, DMChannel, MessageReference
-from discord.ext import commands
+from disnake import Embed, User, NotFound, Forbidden, DMChannel, MessageReference
+from disnake.ext import commands
 
 from Bot import TheRealGearBot
 from Cogs.BaseCog import BaseCog

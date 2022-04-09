@@ -12,13 +12,13 @@ import datetime
 
 import aiohttp
 import aioredis
-import discord
+import disnake
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from discord import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
-from discord.abc import PrivateChannel
-from discord.ext import commands
-from discord.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded, InvalidEndOfQuotedStringError
+from disnake import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
+from disnake.abc import PrivateChannel
+from disnake.ext import commands
+from disnake.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded, InvalidEndOfQuotedStringError
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
     server_info, DashConfig

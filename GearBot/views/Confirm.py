@@ -1,6 +1,6 @@
-import discord
-from discord import ButtonStyle, Interaction
-from discord.ui import Button
+import disnake
+from disnake import ButtonStyle, Interaction
+from disnake.ui import Button
 
 from Util import  MessageUtils
 
@@ -21,7 +21,7 @@ class NoButton(Button):
         await self.view.no_callback(interaction)
 
 
-class Confirm(discord.ui.View):
+class Confirm(disnake.ui.View):
     def __init__(self, guild_id, on_yes, on_no, on_timeout, check, timeout=30):
         super().__init__(timeout=timeout)
         self.add_item(YesButton())

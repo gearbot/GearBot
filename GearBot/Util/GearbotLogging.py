@@ -9,12 +9,12 @@ import datetime
 from logging.handlers import TimedRotatingFileHandler
 from queue import Queue
 
-import discord
+import disnake
 import pytz
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from discord import ConnectionClosed, AllowedMentions
-from discord.ext import commands
+from disnake import ConnectionClosed, AllowedMentions
+from disnake.ext import commands
 
 from Bot import TheRealGearBot
 from Util import Configuration, Utils, MessageUtils
@@ -22,7 +22,7 @@ from Util import Configuration, Utils, MessageUtils
 LOGGER = logging.getLogger('gearbot')
 DISCORD_LOGGER = logging.getLogger('discord')
 
-BOT_LOG_CHANNEL: discord.TextChannel = None
+BOT_LOG_CHANNEL: disnake.TextChannel = None
 STARTUP_ERRORS = []
 BOT: commands.AutoShardedBot = None
 LOG_ERRORS = 0
@@ -345,7 +345,7 @@ def init_logger(cluster):
     DISCORD_LOGGER.addHandler(handler)
     LOGGER.addHandler(handler)
 
-    # handler = TimedRotatingFileHandler(filename='logs/discord.log', encoding='utf-8', when="h", interval=1, backupCount=24)
+    # handler = TimedRotatingFileHandler(filename='logs/disnake.log', encoding='utf-8', when="h", interval=1, backupCount=24)
 
     # DISCORD_LOGGER.addHandler(handler)
 
@@ -478,7 +478,7 @@ def log_to(guild_id, targets, message, embed, file, tag_on=None):
             for line in buffer.readlines():
                 b2.write(line)
             b2.seek(0)
-            f = discord.File(b2, name)
+            f = disnake.File(b2, name)
 
         # actually adding to the queue
         if tag_on is None:

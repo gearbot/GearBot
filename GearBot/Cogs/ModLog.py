@@ -3,12 +3,12 @@ import collections
 import datetime
 import time
 
-import discord
-from discord import AuditLogAction, Role, DMChannel, MessageType, Thread, ChannelType
-from discord.embeds import EmptyEmbed
-from discord.ext import commands
-from discord.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent, RawThreadDeleteEvent
-from discord.utils import snowflake_time
+import disnake
+from disnake import AuditLogAction, Role, DMChannel, MessageType, Thread, ChannelType
+from disnake.embeds import EmptyEmbed
+from disnake.ext import commands
+from disnake.raw_models import RawMessageDeleteEvent, RawMessageUpdateEvent, RawThreadDeleteEvent
+from disnake.utils import snowflake_time
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Configuration, Utils, Archive, Emoji, Translator, InfractionUtils, Features, \
@@ -32,7 +32,7 @@ class ModLog(BaseCog):
     def cog_unload(self):
         self.running = False
 
-    async def buildCache(self, guild: discord.Guild, limit=None, startup=False):
+    async def buildCache(self, guild: disnake.Guild, limit=None, startup=False):
         if limit is None:
             limit = 500 if startup else 50
         GearbotLogging.info(f"Populating modlog with missed messages during downtime for {guild.name} ({guild.id}).")
@@ -65,7 +65,7 @@ class ModLog(BaseCog):
             f"Discovered {newCount} new messages and {editCount} edited in {guild.name} (checked {count})")
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
         if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (
@@ -109,7 +109,7 @@ class ModLog(BaseCog):
                 self.bot.being_cleaned[message.channel].add(data.message_id)
                 return
             guild = self.bot.get_guild(message.server)
-            user: discord.User = await Utils.get_user(message.author)
+            user: disnake.User = await Utils.get_user(message.author)
             hasUser = user is not None
             if not hasUser or user.id in Configuration.get_var(guild.id, "MESSAGE_LOGS",
                                                                "IGNORED_USERS") or user.id == guild.me.id:
@@ -126,7 +126,9 @@ class ModLog(BaseCog):
                                    user_id=user.id if hasUser else 'WEBHOOK', channel=channel.mention,
                                    message_id=data.message_id, time=_time.strip(), reply=reply_str)
             type_string = None
-            if message.type is not None and message.type not in [MessageType.reply.value, MessageType.application_command.value, MessageType.thread_starter_message.value]:
+            if message.type is not None and message.type not in [MessageType.reply.value,
+                                                                 MessageType.application_command.value,
+                                                                 MessageType.thread_starter_message.value]:
                 if message.type == MessageType.new_member.value:
                     type_string = Translator.translate('system_message_new_member', guild)
                 elif message.type == MessageType.pins_add.value:
@@ -141,7 +143,7 @@ class ModLog(BaseCog):
                 if len(embed_content) == 0:
                     embed_content = Translator.translate('no_content_embed', guild)
 
-                embed = discord.Embed(
+                embed = disnake.Embed(
                     timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc),
                     description=embed_content)
                 embed.set_author(name=user.name if hasUser else message.author,
@@ -189,10 +191,10 @@ class ModLog(BaseCog):
             return
         message = await MessageUtils.get_message_data(self.bot, event.message_id)
         if message is not None and "content" in event.data:
-            channel: discord.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
+            channel: disnake.TextChannel = self.bot.get_channel(int(event.data["channel_id"]))
             if channel.guild is None:
                 return
-            user: discord.User = self.bot.get_user(message.author)
+            user: disnake.User = self.bot.get_user(message.author)
             hasUser = user is not None
             if message.content == event.data["content"]:
                 # either pinned or embed data arrived, if embed data arrives it's gona be a recent one so we'll have the cached message to compare to
@@ -239,7 +241,7 @@ class ModLog(BaseCog):
                                        user=Utils.clean_user(user), user_id=user.id, channel=channel.mention,
                                        message_id=message.messageid, time=_time.strip(), reply=reply_str)
                 if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
-                    embed = discord.Embed()
+                    embed = disnake.Embed()
                     embed.set_author(name=user if hasUser else message.author,
                                      icon_url=user.avatar.url if hasUser else EmptyEmbed)
                     embed.set_footer(
@@ -257,7 +259,7 @@ class ModLog(BaseCog):
             await MessageUtils.update_message(self.bot, event.message_id, after, event.data["pinned"])
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member: disnake.Member):
         if Features.is_logged(member.guild.id, "TRAVEL_LOGS"):
             dif = (datetime.datetime.utcfromtimestamp(time.time()).replace(
                 tzinfo=datetime.timezone.utc) - member.created_at)
@@ -277,7 +279,7 @@ class ModLog(BaseCog):
                                        user_id=member.id, age=age)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
+    async def on_member_remove(self, member: disnake.Member):
         if member.id == self.bot.user.id: return
         timestamp = datetime.datetime.utcnow()
         if await self.bot.redis_pool.get(f"forced_exits:{member.guild.id}-{member.id}") is not None:
@@ -307,7 +309,7 @@ class ModLog(BaseCog):
                                                reason=reason, inf=i.id, timestamp=timestamp)
                         return
                     await asyncio.sleep(2)
-            except discord.Forbidden:
+            except disnake.Forbidden:
                 permissions = member.guild.me.guild_permissions
                 perm_info = ", ".join(f"{name}: {value}" for name, value in permissions)
                 await GearbotLogging.bot_log(
@@ -363,7 +365,7 @@ class ModLog(BaseCog):
                                    timestamp=timestamp)
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after):
+    async def on_member_update(self, before: disnake.Member, after):
         guild = before.guild
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         # nickname changes
@@ -443,7 +445,7 @@ class ModLog(BaseCog):
                                                user_id=before.id, timestamp=timestamp)
 
     @commands.Cog.listener()
-    async def on_user_update(self, before: discord.User, after):
+    async def on_user_update(self, before: disnake.User, after):
         # Username and discriminator changes
         if before.name != after.name or before.discriminator != after.discriminator:
             for guild in self.bot.guilds:
@@ -478,7 +480,7 @@ class ModLog(BaseCog):
                 GearbotLogging.log_key(member.guild.id, key, **parts)
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, event: discord.RawBulkMessageDeleteEvent):
+    async def on_raw_bulk_message_delete(self, event: disnake.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "MESSAGE_LOGS"):
             if event.channel_id in Configuration.get_var(event.guild_id, "MESSAGE_LOGS", "IGNORED_CHANNELS_OTHER"):
                 return
@@ -640,7 +642,7 @@ class ModLog(BaseCog):
             GearbotLogging.log_key(role.guild.id, 'role_created_by', role=role.name,
                                    person=Utils.clean_user(entry.user), person_id=entry.user.id, timestamp=timestamp)
 
-    async def on_guild_role_delete(self, role: discord.Role):
+    async def on_guild_role_delete(self, role: disnake.Role):
         if not Features.is_logged(role.guild.id, "ROLE_CHANGES"): return
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         entry = await self.find_log(role.guild, AuditLogAction.role_delete, lambda e: e.target.id == role.id,
@@ -652,7 +654,7 @@ class ModLog(BaseCog):
                                    person=Utils.clean_user(entry.user), person_id=entry.user.id, timestamp=timestamp)
 
     @commands.Cog.listener()
-    async def on_guild_role_update(self, before: discord.Role, after):
+    async def on_guild_role_update(self, before: disnake.Role, after):
         if not Features.is_logged(before.guild.id, "ROLE_CHANGES"): return
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         await self.handle_simple_changes(before, after, "role_update_simple", AuditLogAction.role_update,
@@ -696,10 +698,7 @@ class ModLog(BaseCog):
                     GearbotLogging.log_key(before.guild.id, key, timestamp=timestamp, **parts)
 
     @commands.Cog.listener()
-    async def on_raw_thread_create(self, thread: Thread):
-        if thread.archive_timestamp < (
-                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - datetime.timedelta(minutes=1)):
-            return
+    async def on_thread_create(self, thread: Thread):
         t = self.convert_thread_type(thread.guild.id, thread.type)
         entry = await self.find_log(thread.guild, AuditLogAction.thread_create,
                                     lambda e: e.target is not None and e.target.id == thread.id)
@@ -728,7 +727,8 @@ class ModLog(BaseCog):
                 if channel is not None:
                     GearbotLogging.log_key(guild.id, "thread_deleted_by_user", channel=channel.name,
                                            channel_id=raw.thread.parent_id, user=Utils.clean_user(entry.user),
-                                           user_id=entry.user.id, thread=raw.thread.name, thread_id=raw.thread_id, type=t)
+                                           user_id=entry.user.id, thread=raw.thread.name, thread_id=raw.thread_id,
+                                           type=t)
             else:
                 GearbotLogging.log_key(guild.id, "thread_unknown_channel_deleted_by_user",
                                        user=Utils.clean_user(entry.user),
@@ -738,13 +738,14 @@ class ModLog(BaseCog):
                 channel = self.bot.get_channel(raw.thread.parent_id)
                 if channel is not None:
                     GearbotLogging.log_key(guild.id, "thread_deleted", channel=channel.name,
-                                           channel_id=raw.thread.parent_id, thread=raw.thread.name, thread_id=raw.thread_id,
+                                           channel_id=raw.thread.parent_id, thread=raw.thread.name,
+                                           thread_id=raw.thread_id,
                                            type=t)
             else:
                 GearbotLogging.log_key(guild.id, "thread_unknown_channel_deleted", thread_id=raw.thread_id, type=t)
 
     @commands.Cog.listener()
-    async def on_raw_thread_update(self, thread: discord.Thread):
+    async def on_raw_thread_update(self, thread: disnake.Thread):
         if hasattr(thread, "archived") and thread.archived is False:
             self.potential_unarchived.append(thread.id)
             await asyncio.sleep(0.5)
@@ -753,7 +754,7 @@ class ModLog(BaseCog):
                 await self.unarchived_thread(thread)
 
     @commands.Cog.listener()
-    async def on_thread_update(self, before: discord.Thread, after: discord.Thread):
+    async def on_thread_update(self, before: disnake.Thread, after: disnake.Thread):
         if after.id in self.potential_unarchived:
             self.potential_unarchived.remove(after.id)
 
@@ -762,7 +763,8 @@ class ModLog(BaseCog):
             await self.unarchived_thread(after)
 
         if not before.archived and after.archived:
-            planned_archive = discord.utils.snowflake_time(after.last_message_id if after.last_message_id is not None else after.id) + datetime.timedelta(
+            planned_archive = disnake.utils.snowflake_time(
+                after.last_message_id if after.last_message_id is not None else after.id) + datetime.timedelta(
                 minutes=after.auto_archive_duration) - datetime.timedelta(
                 seconds=1)  # somehow this sometimes seems to be off by a second
             if after.archive_timestamp >= planned_archive:
@@ -790,7 +792,7 @@ class ModLog(BaseCog):
                                          AuditLogAction.thread_update,
                                          ["name", "slowmode_delay", "auto_archive_duration"], timestamp)
 
-    async def unarchived_thread(self, thread: discord.Thread):
+    async def unarchived_thread(self, thread: disnake.Thread):
         t = self.convert_thread_type(thread.guild.id, thread.type)
         entry = await self.find_log(thread.guild, AuditLogAction.thread_update,
                                     lambda
@@ -806,7 +808,7 @@ class ModLog(BaseCog):
                                    channel_id=thread.parent_id)
 
     @commands.Cog.listener()
-    async def on_thread_member_join(self, thread_member: discord.ThreadMember):
+    async def on_thread_member_join(self, thread_member: disnake.ThreadMember):
         member = await Utils.get_member(self.bot, thread_member.parent.guild, thread_member.id, fetch_if_missing=True)
         if member is not None:
             GearbotLogging.log_key(thread_member.thread.guild.id, "thread_member_add", user=Utils.clean_user(member),
@@ -814,7 +816,7 @@ class ModLog(BaseCog):
                                    channel_id=thread_member.thread.parent_id)
 
     @commands.Cog.listener()
-    async def on_raw_thread_member_remove(self, thread: discord.Thread, member_id):
+    async def on_raw_thread_member_remove(self, thread: disnake.Thread, member_id):
         member = await Utils.get_member(self.bot, thread.guild, member_id, fetch_if_missing=True)
         if member is not None:
             GearbotLogging.log_key(thread.guild.id, "thread_member_remove", user=Utils.clean_user(member),
@@ -860,12 +862,12 @@ async def find_actual_log(guild, action, matcher, check_limit, retry):
                     if matcher(e):
                         if entry is None or e.id > entry.id:
                             entry = e
-            except discord.Forbidden:
+            except disnake.Forbidden:
                 pass
         if entry is None and retry:
             await asyncio.sleep(2)
             return await ModLog.find_log(guild, action, matcher, check_limit, False)
-        if entry is not None and isinstance(entry.target, discord.Object):
+        if entry is not None and isinstance(entry.target, disnake.Object):
             entry.target = await Utils.get_user(entry.target.id)
         return entry
     except (asyncio.TimeoutError, asyncio.CancelledError):

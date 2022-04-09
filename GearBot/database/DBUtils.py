@@ -1,7 +1,7 @@
 import re
 import datetime
 
-from discord import MessageType
+from disnake import MessageType
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 

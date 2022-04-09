@@ -1,5 +1,5 @@
-from discord import ButtonStyle, Interaction
-from discord.ui import Button
+from disnake import ButtonStyle, Interaction
+from disnake.ui import Button
 
 from Util import MessageUtils
 

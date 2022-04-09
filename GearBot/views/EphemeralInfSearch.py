@@ -1,7 +1,7 @@
 import json
 
-from discord import ButtonStyle, Interaction
-from discord.ui import View, Button
+from disnake import ButtonStyle, Interaction
+from disnake.ui import View, Button
 
 from Util import Emoji, Utils, MessageUtils, InfractionUtils, Translator
 from Util.InfractionUtils import fetch_infraction_pages, get_key

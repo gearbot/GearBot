@@ -1,6 +1,6 @@
-import discord
-from discord import NotFound, Forbidden, HTTPException, Interaction
-from discord.ext.commands import UserConverter, BadArgument, Converter, NoPrivateMessage, UserNotFound
+import disnake
+from disnake import NotFound, Forbidden, HTTPException, Interaction
+from disnake.ext.commands import UserConverter, BadArgument, Converter, NoPrivateMessage, UserNotFound
 
 from Bot.TheRealGearBot import PostParseError
 from Util import Utils, Configuration, Translator, MessageUtils
@@ -502,7 +502,7 @@ class EmojiName(Converter):
 
 class VerificationLevel(Converter):
     async def convert(self, ctx, argument):
-        level = discord.VerificationLevel.__members__.get(argument.lower())
+        level = disnake.VerificationLevel.__members__.get(argument.lower())
         if level is None:
             raise TranslatedBadArgument('unknown_verification_level', ctx)
         return level

@@ -1,9 +1,9 @@
 import asyncio
 
-import discord
-from discord import HTTPException, InvalidArgument, Embed, Role, Emoji
-from discord.ext import commands
-from discord.ext.commands import Greedy
+import disnake
+from disnake import HTTPException, InvalidArgument, Embed, Role, Emoji
+from disnake.ext import commands
+from disnake.ext.commands import Greedy
 
 from Cogs.BaseCog import BaseCog
 from Util import Permissioncheckers, MessageUtils, Translator, Pages, Utils
@@ -50,7 +50,7 @@ class Emoji(BaseCog):
         content, view, _ = SimplePager.get_parts(range(amount), 0, ctx.guild.id, 'emoji')
         await ctx.send(embed=self.gen_emoji_page(ctx.guild, 0), view=view)
 
-    def gen_emoji_page(self, guild: discord.Guild, page):
+    def gen_emoji_page(self, guild: disnake.Guild, page):
         se = sorted(guild.emojis, key=lambda e: e.name)
 
         embed = Embed(color=0x2db1f3)
@@ -128,7 +128,7 @@ class Emoji(BaseCog):
 
     @emoji.command(aliases=["change", "rename", "redefine"])
     @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
-    async def update(self, ctx, emote: discord.Emoji, new_name: EmojiName):
+    async def update(self, ctx, emote: disnake.Emoji, new_name: EmojiName):
         """emoji_update_help"""
         try:
             await emote.edit(name=new_name, roles=emote.roles,
@@ -145,7 +145,7 @@ class Emoji(BaseCog):
 
     @emoji.command(aliases=["remove", "nuke", "rmv", "del", "👋", "🗑"])
     @commands.bot_has_permissions(manage_emojis=True)
-    async def delete(self, ctx, emote: discord.Emoji):
+    async def delete(self, ctx, emote: disnake.Emoji):
         """emoji_delete_help"""
         try:
             await emote.delete()
@@ -161,7 +161,7 @@ class Emoji(BaseCog):
 
     @emoji_roles.command("add")
     @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
-    async def emoji_roles_add(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role] = None):
+    async def emoji_roles_add(self, ctx, emote: disnake.Emoji, roles: Greedy[disnake.Role] = None):
         if roles is None:
             return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()
@@ -185,7 +185,7 @@ class Emoji(BaseCog):
 
     @emoji_roles.command("remove")
     @commands.bot_has_permissions(manage_emojis=True, embed_links=True)
-    async def emoji_roles_remove(self, ctx, emote: discord.Emoji, roles: Greedy[discord.Role]):
+    async def emoji_roles_remove(self, ctx, emote: disnake.Emoji, roles: Greedy[disnake.Role]):
         if roles is None:
             return MessageUtils.send_to(ctx, 'NO', 'roles_no_roles')
         todo = set()

@@ -1,15 +1,15 @@
 import time
 from datetime import datetime
 
-import discord
-from discord import Interaction, ButtonStyle
+import disnake
+from disnake import Interaction, ButtonStyle
 
 from Util import MessageUtils, Translator, Utils
 from database.DatabaseConnector import Reminder
 from views.InfSearch import CallbackButton
 
 
-class ReminderView(discord.ui.View):
+class ReminderView(disnake.ui.View):
     def __init__(self, guild_id, channel_id, reminder, user_id, timeout_callback, message_id, duration):
         super().__init__(timeout=30)
         self.user_id = user_id

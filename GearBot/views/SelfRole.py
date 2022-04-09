@@ -1,19 +1,19 @@
 import math
 
-import discord
-from discord import ButtonStyle, Interaction
-from discord.ui import Button
+import disnake
+from disnake import ButtonStyle, Interaction
+from disnake.ui import Button
 
 from Util import Translator, Configuration, Utils
 
 
-class SelfRoleView(discord.ui.View):
+class SelfRoleView(disnake.ui.View):
     def __init__(self, guild, page):
         super().__init__(timeout=None)
         set_buttons(self, guild, page)
         self.stop()
 
-def set_buttons(view: discord.ui.View, guild, page):
+def set_buttons(view: disnake.ui.View, guild, page):
     view.children.clear()
     roles = [role for role in (guild.get_role(r) for r in Configuration.get_var(guild.id, "ROLES", "SELF_ROLES")) if
              role is not None]

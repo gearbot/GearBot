@@ -1,4 +1,4 @@
-from discord import Member
+from disnake import Member
 
 from Util import Translator, MessageUtils, Utils, Emoji
 

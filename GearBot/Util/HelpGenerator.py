@@ -1,6 +1,6 @@
 import collections
 
-from discord.ext.commands import GroupMixin
+from disnake.ext.commands import GroupMixin
 
 from Util import Utils, Pages, Translator, Permissioncheckers, Configuration
 

@@ -1,9 +1,9 @@
 import re
 from collections import namedtuple
 
-import discord
-from discord import Embed, Interaction
-from discord.ext import commands
+import disnake
+from disnake import Embed, Interaction
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, Emoji, Translator, MessageUtils, Utils, Permissioncheckers, Pages
@@ -102,7 +102,7 @@ class CustCommands(BaseCog):
             else:
                 message = None
 
-                async def yes(interaction: discord.Interaction):
+                async def yes(interaction: disnake.Interaction):
                     await interaction.response.edit_message(content=Translator.translate('updating', ctx.guild.id), view=None)
                     await ctx.invoke(self.update, trigger, reply=reply)
 
@@ -159,7 +159,7 @@ class CustCommands(BaseCog):
                     f"{Emoji.get_chat_emoji('YES')} {Translator.translate('custom_command_updated', ctx.guild.id, trigger=trigger)}")
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         if message.author.bot or message.webhook_id is not None:
             return
         if not hasattr(message.channel, "guild") or message.channel.guild is None:

@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import ReactionManager
@@ -8,7 +8,7 @@ from Util import ReactionManager
 class ReactionHandler(BaseCog):
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+    async def on_raw_reaction_add(self, payload: disnake.RawReactionActionEvent):
         await ReactionManager.on_reaction(self.bot, payload.message_id, payload.channel_id, payload.user_id, payload.emoji)
 
 

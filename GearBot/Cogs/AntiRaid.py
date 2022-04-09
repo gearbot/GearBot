@@ -2,8 +2,8 @@ import asyncio
 import time
 import datetime
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, MessageUtils
@@ -23,7 +23,7 @@ class AntiRaid(BaseCog):
         }
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member: disnake.Member):
         raid_settings = Configuration.get_var(member.guild.id, "RAID_HANDLING")
         if not raid_settings["ENABLED"]:
             return

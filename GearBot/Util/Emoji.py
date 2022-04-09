@@ -1,4 +1,4 @@
-from discord import utils
+from disnake import utils
 
 from Util import Configuration, GearbotLogging
 

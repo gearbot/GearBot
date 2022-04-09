@@ -3,10 +3,10 @@ from collections import namedtuple
 from urllib import parse
 from urllib.parse import urlparse
 
-import discord
+import disnake
 import emoji
-from discord import DMChannel
-from discord.ext import commands
+from disnake import DMChannel
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, GearbotLogging, Permissioncheckers, Utils, MessageUtils, Translator
@@ -23,7 +23,7 @@ class Censor(BaseCog):
         self.regexes = dict()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
         member = await Utils.get_member(self.bot, message.guild, message.author.id, fetch_if_missing=True)
@@ -36,7 +36,7 @@ class Censor(BaseCog):
         await self.check_message(member, message.content, message.channel, message.id, False, reply, message.attachments)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
+    async def on_raw_message_edit(self, event: disnake.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         m = await MessageUtils.get_message_data(self.bot, event.message_id)
         reply = None
@@ -51,7 +51,7 @@ class Censor(BaseCog):
             if (permissions.read_messages and permissions.read_message_history) or permissions.administrator:
                 try:
                     message = await channel.fetch_message(event.message_id)
-                except (discord.NotFound, discord.Forbidden): # we should never get forbidden, be we do, somehow
+                except (disnake.NotFound, disnake.Forbidden): # we should never get forbidden, be we do, somehow
                     return
                 else:
                     author_id = message.author.id
@@ -85,8 +85,8 @@ class Censor(BaseCog):
             codes = INVITE_MATCHER.findall(decoded_content)
             for code in codes:
                 try:
-                    invite: discord.Invite = await self.bot.fetch_invite(code)
-                except discord.NotFound:
+                    invite: disnake.Invite = await self.bot.fetch_invite(code)
+                except disnake.NotFound:
                     await self.censor_invite(member, message_id, channel, code, "INVALID INVITE", content, edit, reply, attachments)
                     return
                 if invite.guild is None:
@@ -163,8 +163,8 @@ class Censor(BaseCog):
         if p.manage_messages or p.administrator:
             try:
                 self.bot.deleted_messages.append(message_id)
-                await channel.delete_messages([discord.Object(message_id)])
-            except discord.NotFound as ex:
+                await channel.delete_messages([disnake.Object(message_id)])
+            except disnake.NotFound as ex:
                 pass
             else:
                 GearbotLogging.log_key(channel.guild.id, f'censored_message{key}{e}', user=member, user_id=member.id,
@@ -173,7 +173,7 @@ class Censor(BaseCog):
         else:
             GearbotLogging.log_key(channel.guild.id, f'censored_message_failed{key}{e}', user=member,
                                    user_id=member.id, message=clean_message, sequence=bad,
-                                   link='https://discord.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id),
+                                   link='https://disnake.com/channels/{0}/{1}/{2}'.format(channel.guild.id, channel.id, message_id),
                                    reply=reply_str, attachments=attachments_str)
         self.bot.dispatch("user_censored", messageholder(message_id, member, channel, channel.guild))
 
@@ -202,7 +202,7 @@ class Censor(BaseCog):
         clean_message = Utils.trim_message(clean_message, 1600 - len(attachments_str) - len(reply_str))
         try:
             if channel.permissions_for(channel.guild.me).manage_messages:
-                await channel.delete_messages([discord.Object(message_id)])
+                await channel.delete_messages([disnake.Object(message_id)])
                 GearbotLogging.log_key(member.guild.id, f'censored_invite{e}', user=clean_name, code=code, message=clean_message,
                                        server_name=server_name, user_id=member.id,
                                        channel=channel.mention, attachments=attachments_str,
@@ -214,7 +214,7 @@ class Censor(BaseCog):
                                        reply=reply_str)
                 if message_id in self.bot.deleted_messages:
                     self.bot.deleted_messages.remove(message_id)
-        except discord.NotFound:
+        except disnake.NotFound:
             # we failed? guess we lost the race, log anyways
             GearbotLogging.log_key(member.guild.id, f'invite_censor_fail{e}', user=clean_name, code=code,
                                    message=clean_message, server_name=server_name, user_id=member.id,

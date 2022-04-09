@@ -1,7 +1,7 @@
 import time
 import datetime
 
-import discord
+import disnake
 
 from Util import Translator, Emoji, Utils, Configuration
 
@@ -11,7 +11,7 @@ def server_info_embed(guild, request_guild=None):
     if guild_features == "":
         guild_features = None
     guild_made = guild.created_at.strftime("%d-%m-%Y")
-    embed = discord.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
+    embed = disnake.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
     if guild.icon is not None:
         embed.set_thumbnail(url=guild.icon.url)
     embed.add_field(name=Translator.translate('server_name', request_guild), value=guild.name, inline=True)

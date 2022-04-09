@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 import datetime
 
-from discord import Object, HTTPException, MessageType, AllowedMentions
+from disnake import Object, HTTPException, MessageType, AllowedMentions
 
 from Util import Translator, Emoji, Archive, GearbotLogging
 from database import DBUtils
@@ -89,4 +89,4 @@ def day_difference(a, b, location):
     return Translator.translate('days_ago', location, days=diff.days, date=a)
 
 def construct_jumplink(guild_id, channel_id, message_id):
-    return f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}"
+    return f"https://disnake.com/channels/{guild_id}/{channel_id}/{message_id}"

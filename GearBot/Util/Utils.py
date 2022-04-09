@@ -8,9 +8,9 @@ from json import JSONDecodeError
 from subprocess import Popen
 from pyseeyou import format
 
-import discord
+import disnake
 import math
-from discord import NotFound, DiscordException
+from disnake import NotFound, DiscordException
 
 from Util import GearbotLogging, Translator, Emoji, Configuration, MessageUtils
 from Util.Matchers import ROLE_ID_MATCHER, CHANNEL_ID_MATCHER, ID_MATCHER, EMOJI_MATCHER, URL_MATCHER, ID_NUMBER_MATCHER
@@ -77,7 +77,7 @@ def replace_lookalikes(text):
     return text
 
 
-async def clean(text, guild: discord.Guild = None, markdown=True, links=True, emoji=True, lookalikes=True):
+async def clean(text, guild: disnake.Guild = None, markdown=True, links=True, emoji=True, lookalikes=True):
     text = str(text)
 
     if guild is not None:
@@ -89,7 +89,7 @@ async def clean(text, guild: discord.Guild = None, markdown=True, links=True, em
 
         # resolve role mentions
         for uid in set(ROLE_ID_MATCHER.findall(text)):
-            role = discord.utils.get(guild.roles, id=int(uid))
+            role = disnake.utils.get(guild.roles, id=int(uid))
             if role is None:
                 name = "@UNKNOWN ROLE"
             else:
@@ -307,7 +307,7 @@ def assemble_attachment(channel, aid, name):
 
 
 def assemble_jumplink(server, channel, message):
-    return f"https://canary.discord.com/channels/{server}/{channel}/{message}"
+    return f"https://canary.disnake.com/channels/{server}/{channel}/{message}"
 
 
 async def get_member(bot, guild, user_id, fetch_if_missing=False):
@@ -348,7 +348,7 @@ async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
             wrap = not wrap
         if len(out) > 0:
             await user.send(out)
-    except (discord.HTTPException, AttributeError):
+    except (disnake.HTTPException, AttributeError):
         GearbotLogging.log_key(guild.id, f'{type}_could_not_dm', user=clean_user(user), userid=user.id)
 
 
@@ -379,7 +379,7 @@ async def get_user_ids(text):
 
 async def generate_userinfo_embed(user, member, guild, requested_by):
     now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-    embed = discord.Embed(color=member.top_role.color if member is not None else 0x00cea2,
+    embed = disnake.Embed(color=member.top_role.color if member is not None else 0x00cea2,
                           timestamp=now)
     embed.set_thumbnail(url=user.avatar.url)
     embed.set_footer(text=Translator.translate('requested_by', guild, user=requested_by.name),

@@ -1,4 +1,4 @@
-from discord.ext import commands
+from disnake.ext import commands
 
 from Bot.GearBot import GearBot
 from Util import Permissioncheckers

@@ -3,7 +3,7 @@ import os
 import re
 
 import aiohttp
-import discord
+import disnake
 import math
 
 try:
@@ -230,7 +230,7 @@ class JumboGenerator:
             result.save(f"emoji/jumbo{self.number}.png")
 
     async def send(self):
-        await self.ctx.send(file=discord.File(open(f"emoji/jumbo{self.number}.png", "rb"), filename="emoji.png"))
+        await self.ctx.send(file=disnake.File(open(f"emoji/jumbo{self.number}.png", "rb"), filename="emoji.png"))
 
     def cleanup(self):
         for eid, handler in self.e_list:

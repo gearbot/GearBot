@@ -1,6 +1,6 @@
 import asyncio
 
-from discord import Forbidden, NotFound, Embed, Colour, Object
+from disnake import Forbidden, NotFound, Embed, Colour, Object
 
 from Util import Emoji, Pages, InfractionUtils, Selfroles, Translator, Configuration, MessageUtils, Utils
 from views.SelfRole import SelfRoleView

@@ -3,10 +3,10 @@ import json
 import re
 import datetime
 
-import discord
-from discord import Interaction
-from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, BucketType
+import disnake
+from disnake import Interaction
+from disnake.ext import commands
+from disnake.ext.commands import BadArgument, Greedy, BucketType
 
 from Cogs.BaseCog import BaseCog
 from Util import InfractionUtils, Emoji, Utils, GearbotLogging, Translator, Configuration, \
@@ -207,7 +207,7 @@ class Infractions(BaseCog):
         target = await Utils.get_user(infraction.user_id)
         mod = await Utils.get_user(infraction.mod_id)
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await infraction.delete()
             await interaction.response.edit_message(
                 content=MessageUtils.assemble(ctx, "YES", "inf_delete_deleted", id=infraction.id), view=None)
@@ -249,7 +249,7 @@ class Infractions(BaseCog):
     @commands.bot_has_permissions(embed_links=True)
     async def info(self, ctx, infraction: ServerInfraction):
         """inf_info_help"""
-        embed = discord.Embed(color=0x00cea2,
+        embed = disnake.Embed(color=0x00cea2,
                               description=f"**{Translator.translate('reason', ctx)}**\n{infraction.reason}",
                               timestamp=datetime.datetime.utcfromtimestamp(infraction.start).replace(
                                   tzinfo=datetime.timezone.utc))

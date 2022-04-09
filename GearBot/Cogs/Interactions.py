@@ -1,6 +1,6 @@
-import discord
-from discord import Interaction, InteractionType, Embed, Forbidden, Member, User
-from discord.ext import commands
+import disnake
+from disnake import Interaction, InteractionType, Embed, Forbidden, Member, User
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, MessageUtils, Translator, Pages, Emoji, Utils, Permissioncheckers, InfractionUtils
@@ -49,7 +49,7 @@ class Interactions(BaseCog):
                                             Translator.translate("role_joined", interaction.guild_id,
                                                                  role_name=role.name,
                                                                  user=interaction.user), ephemeral=True)
-                                except discord.Forbidden:
+                                except disnake.Forbidden:
                                     await interaction.response.send_message(
                                         f"{Emoji.get_chat_emoji('NO')} {Translator.translate('role_too_high_add', interaction.guild_id, role=role.name)}",
                                         ephemeral=True)

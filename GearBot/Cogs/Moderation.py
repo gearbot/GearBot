@@ -7,10 +7,10 @@ import typing
 from asyncio import CancelledError
 from typing import Optional
 
-import discord
-from discord import Object, Emoji, Forbidden, NotFound, DMChannel, DiscordException, Interaction
-from discord.ext import commands
-from discord.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
+import disnake
+from disnake import Object, Emoji, Forbidden, NotFound, DMChannel, DiscordException, Interaction
+from disnake.ext import commands
+from disnake.ext.commands import BadArgument, Greedy, MemberConverter, RoleConverter, MissingPermissions
 from tortoise.exceptions import MultipleObjectsReturned
 from tortoise.transactions import in_transaction
 
@@ -45,7 +45,7 @@ class Moderation(BaseCog):
 
 
     @staticmethod
-    def gen_roles_pages(guild: discord.Guild, mode):
+    def gen_roles_pages(guild: disnake.Guild, mode):
         role_list = dict()
         longest_name = 1
         for role in guild.roles:
@@ -113,7 +113,7 @@ class Moderation(BaseCog):
 
             else:
                 await MessageUtils.send_to(ctx, "NO", message, translate=False)
-        except (discord.HTTPException, AttributeError) as ex:
+        except (disnake.HTTPException, AttributeError) as ex:
             await MessageUtils.send_to(ctx, "NO", "mod_nickname_other_error", user_id=user.id,
                                        user=Utils.clean_user(user), error=ex.text)
 
@@ -199,7 +199,7 @@ class Moderation(BaseCog):
 
     @role.command(aliases=["rmv"])
     @commands.bot_has_permissions(manage_roles=True)
-    async def remove(self, ctx, user: discord.Member, *, role: str):
+    async def remove(self, ctx, user: disnake.Member, *, role: str):
         """role_remove_help"""
         await self.role_handler(ctx, user, role, "remove")
 
@@ -238,7 +238,7 @@ class Moderation(BaseCog):
 
         message = None
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False,
@@ -315,7 +315,7 @@ class Moderation(BaseCog):
             try:
                 await ctx.guild.fetch_ban(user)
             except NotFound:
-                async def yes(interaction: discord.Interaction):
+                async def yes(interaction: disnake.Interaction):
                     await interaction.response.defer()
                     await self._interal_forceban(ctx, user=user, reason=reason, interaction=interaction)
 
@@ -360,7 +360,7 @@ class Moderation(BaseCog):
 
                 message = None
 
-                async def yes(interaction: discord.Interaction):
+                async def yes(interaction: disnake.Interaction):
                     await interaction.response.defer()
                     await self._clean_everywhere(ctx, users={user}, amount=5000, interaction=interaction)
 
@@ -474,7 +474,7 @@ class Moderation(BaseCog):
         if len(targets) > 0:
             message = None
 
-            async def yes(interaction: discord.Interaction):
+            async def yes(interaction: disnake.Interaction):
                 await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                         view=None)
                 failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False,
@@ -523,7 +523,7 @@ class Moderation(BaseCog):
 
         message = None
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             failures = await Actions.mass_action(ctx, "unban", targets, self._unban, reason=reason,
@@ -571,7 +571,7 @@ class Moderation(BaseCog):
 
         message = None
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False,
@@ -606,7 +606,7 @@ class Moderation(BaseCog):
 
         message = None
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             valid = 0
@@ -683,7 +683,7 @@ class Moderation(BaseCog):
 
     @commands.command()
     @commands.guild_only()
-    async def slowmode(self, ctx: commands.Context, channel: typing.Optional[discord.TextChannel], duration: Duration):
+    async def slowmode(self, ctx: commands.Context, channel: typing.Optional[disnake.TextChannel], duration: Duration):
         """slowmode_help"""
         if channel is None:
             channel = ctx.channel
@@ -695,7 +695,7 @@ class Moderation(BaseCog):
         else:
             try:
                 await channel.edit(slowmode_delay=duration_seconds)
-            except discord.Forbidden:
+            except disnake.Forbidden:
                 await MessageUtils.send_to(ctx, 'NO', "slowmode_no_perms", channel=channel.mention)
             else:
                 GearbotLogging.log_key(ctx.guild.id, "slowmode_log", user=Utils.escape_markdown(ctx.author),
@@ -711,7 +711,7 @@ class Moderation(BaseCog):
         if ctx.guild.verification_level != level:
             try:
                 await ctx.guild.edit(verification_level=level, reason=reason)
-            except discord.Forbidden:
+            except disnake.Forbidden:
                 await MessageUtils.send_to(ctx, 'NO', "verification_no_perms")
             else:
                 GearbotLogging.log_key(ctx.guild.id, "verification_log", user=Utils.escape_markdown(ctx.author),
@@ -835,7 +835,7 @@ class Moderation(BaseCog):
             else:
                 message = None
 
-                async def yes(interaction: discord.Interaction):
+                async def yes(interaction: disnake.Interaction):
                     await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                             view=None)
                     failures = await Actions.mass_action(ctx, "mute", targets, self._mmute, reason=reason,
@@ -1000,7 +1000,7 @@ class Moderation(BaseCog):
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('extend_mute_dm', ctx.guild.id, server=ctx.guild.name, duration=dur, guild_id=ctx.guild.id)}```{reason}```")
-                                        except (discord.HTTPException, AttributeError):
+                                        except (disnake.HTTPException, AttributeError):
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                    userid=target.id)
 
@@ -1023,7 +1023,7 @@ class Moderation(BaseCog):
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_until_dm', ctx.guild.id, server=ctx.guild.name, duration=dur, guild_id=ctx.guild.id)}```{reason}```")
-                                        except (discord.HTTPException, AttributeError):
+                                        except (disnake.HTTPException, AttributeError):
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                    userid=target.id)
 
@@ -1044,7 +1044,7 @@ class Moderation(BaseCog):
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
                                                 f"{Emoji.get_chat_emoji('MUTE')} {Translator.translate('mute_duration_change_dm', ctx.guild.id, server=ctx.guild.name, duration=dur, guild_id=ctx.guild.id)}```{reason}```")
-                                        except (discord.HTTPException, AttributeError):
+                                        except (disnake.HTTPException, AttributeError):
                                             GearbotLogging.log_key(ctx.guild.id, 'mute_could_not_dm', user=name,
                                                                    userid=target.id)
 
@@ -1070,7 +1070,7 @@ class Moderation(BaseCog):
 
         message = None
 
-        async def yes(interaction: discord.Interaction):
+        async def yes(interaction: disnake.Interaction):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason,
@@ -1203,7 +1203,7 @@ class Moderation(BaseCog):
                 f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_subcommand', ctx, prefix=ctx.prefix)}")
 
     @archive.command()
-    async def channel(self, ctx, channel: discord.TextChannel = None, amount=100):
+    async def channel(self, ctx, channel: disnake.TextChannel = None, amount=100):
         """archive_channel_help"""
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
@@ -1359,7 +1359,7 @@ class Moderation(BaseCog):
 
                 deleted = await channel.purge(limit=250, check=check, before=ctx.message)
                 total += len(deleted)
-            except discord.HTTPException:
+            except disnake.HTTPException:
                 failed.add(channel)
             finally:
                 self.bot.loop.create_task(self.finish_cleaning(channel.id, ctx.guild.id))
@@ -1393,12 +1393,12 @@ class Moderation(BaseCog):
                                                   after=after)
             except Forbidden:
                 raise MissingPermissions("manage_messages")  # no clue how we got here, but we did
-            except discord.NotFound:
+            except disnake.NotFound:
                 # sleep for a sec just in case the other bot is still purging so we don't get removed as well
                 await asyncio.sleep(1)
                 try:
                     await MessageUtils.try_edit(message, 'NO', 'purge_fail_not_found')
-                except discord.NotFound:
+                except disnake.NotFound:
                     pass  # sometimes people remove channels mid purge
             else:
                 await MessageUtils.try_edit(message, "YES", "purge_confirmation", count=len(deleted))
@@ -1414,31 +1414,31 @@ class Moderation(BaseCog):
         await MessageUtils.archive_purge(self.bot, l, guild_id)
 
     @commands.Cog.listener()
-    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+    async def on_guild_channel_create(self, channel: disnake.abc.GuildChannel):
         # sleep a little, sometimes discord sends the event too soon
         await asyncio.sleep(5)
-        guild: discord.Guild = channel.guild
+        guild: disnake.Guild = channel.guild
         roleid = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if roleid != 0:
             role = guild.get_role(roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
-                if isinstance(channel, discord.TextChannel):
+                if isinstance(channel, disnake.TextChannel):
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       send_messages=False,
                                                       add_reactions=False,
                                                       use_threads=False, use_private_threads=False)
-                    except (discord.Forbidden, discord.NotFound):
+                    except (disnake.Forbidden, disnake.NotFound):
                         pass
                 else:
                     try:
                         await channel.set_permissions(role, reason=Translator.translate('mute_setup', guild.id),
                                                       speak=False, connect=False)
-                    except (discord.Forbidden, discord.NotFound):
+                    except (disnake.Forbidden, disnake.NotFound):
                         pass
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member: disnake.Member):
         now = time.time()
         i = await Infraction.get_or_none(type="Mute", active=True, end__gt=now, guild_id=member.guild.id,
                                          user_id=member.id)
@@ -1521,7 +1521,7 @@ class Moderation(BaseCog):
 
         try:
             await member.remove_roles(role, reason="Mute expired")
-        except discord.Forbidden:
+        except disnake.Forbidden:
             GearbotLogging.log_key(guild.id, "unmute_missing_perms", **info)
         except Exception as ex:
             GearbotLogging.log_key(guild.id, 'unmute_unknown_error', **info)
@@ -1551,7 +1551,7 @@ class Moderation(BaseCog):
 
         try:
             await guild.fetch_ban(user)
-        except discord.NotFound:
+        except disnake.NotFound:
             GearbotLogging.log_key(guild.id, 'tempban_already_lifted', **info)
             return await self.end_infraction(infraction)
 
@@ -1559,7 +1559,7 @@ class Moderation(BaseCog):
         self.bot.data["unbans"].add(fid)
         try:
             await guild.unban(user)
-        except discord.Forbidden:
+        except disnake.Forbidden:
             self.bot.data["unbans"].remove(fid)
             GearbotLogging.log_key(guild.id, 'tempban_expired_missing_perms', **info)
         else:
@@ -1573,7 +1573,7 @@ class Moderation(BaseCog):
         self.handling.remove(infraction.id)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
+    async def on_member_remove(self, member: disnake.Member):
         pipeline = self.bot.redis_pool.pipeline()
         pipeline.hmset_dict(f"users:{member.id}",
                             name=member.name,
@@ -1591,7 +1591,7 @@ class Moderation(BaseCog):
         await pipeline.execute()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(
                 message.channel, DMChannel) or self.bot.user.id == message.author.id:
             return
@@ -1600,7 +1600,7 @@ class Moderation(BaseCog):
                                                message.id, message.author, edited=False)
 
     @commands.Cog.listener()
-    async def on_raw_message_edit(self, event: discord.RawMessageUpdateEvent):
+    async def on_raw_message_edit(self, event: disnake.RawMessageUpdateEvent):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         if channel is None or isinstance(channel, DMChannel) or "content" not in event.data:
             return

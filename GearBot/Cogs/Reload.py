@@ -1,6 +1,6 @@
 import os
 
-from discord.ext import commands
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Emoji, Utils, Pages, Configuration, DocUtils, Update

@@ -4,7 +4,7 @@ import json
 from collections import OrderedDict
 
 import aiohttp
-import discord
+import disnake
 
 from Cogs.BaseCog import BaseCog
 from Util import GearbotLogging, Pages, VersionInfo, Translator
@@ -138,7 +138,7 @@ class Minecraft(BaseCog):
         pages = await self.gen_cf_pages(ctx, project_name, True)
         if pages is None:
             return Translator.translate('cf_not_found', ctx), None, False, []
-        embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=project_name))
+        embed = disnake.Embed(title=Translator.translate('cf_info_title', ctx, project_name=project_name))
         embed.set_thumbnail(url=info["thumbnail"])
         for k, v in pages[0].items():
             embed.add_field(name=k, value=v)
@@ -148,7 +148,7 @@ class Minecraft(BaseCog):
         pages = await self.gen_cf_pages(ctx, data["project_name"], False)
         if pages is None:
             return Translator.translate('cf_not_found', ctx), None, False
-        embed = discord.Embed(title=Translator.translate('cf_info_title', ctx, project_name=data['project_name']))
+        embed = disnake.Embed(title=Translator.translate('cf_info_title', ctx, project_name=data['project_name']))
         page, page_num = Pages.basic_pages(pages, page_num, action)
         for k, v in page.items():
             embed.add_field(name=k, value=v)

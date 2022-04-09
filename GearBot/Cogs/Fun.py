@@ -2,8 +2,8 @@ import asyncio
 import time
 import datetime
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from Cogs.BaseCog import BaseCog
 from Util import Configuration, MessageUtils, Translator, Utils
@@ -40,7 +40,7 @@ class Fun(BaseCog):
                 return
             else:
                 responsejson = await resp.json()
-                embed = discord.Embed(colour=discord.Colour(0x00cea2), timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
+                embed = disnake.Embed(colour=disnake.Colour(0x00cea2), timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
                 embed.add_field(name=Translator.translate('apexstats_username', ctx), value=await Utils.clean(responsejson["data"]["metadata"]["platformUserHandle"]))
                 for stat_type in responsejson["data"]["stats"]:
                     type_key_name = stat_type["metadata"]["key"]
@@ -57,7 +57,7 @@ class Fun(BaseCog):
         key = Configuration.get_master_var("DOG_KEY", "")
         future_dog = self.get_json("https://api.thedogapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, dog_json = await asyncio.gather(future_fact, future_dog)
-        embed = discord.Embed(description=fact_json["content"])
+        embed = disnake.Embed(description=fact_json["content"])
         if key != "":
             embed.set_image(url=dog_json[0]["url"])
         await ctx.send(embed=embed)
@@ -71,7 +71,7 @@ class Fun(BaseCog):
         key = Configuration.get_master_var("CAT_KEY", "")
         future_cat = self.get_json("https://api.thecatapi.com/v1/images/search?limit=1&size=full", {'x-api-key': key})
         fact_json, cat_json = await asyncio.gather(future_fact, future_cat)
-        embed = discord.Embed(description=fact_json["content"])
+        embed = disnake.Embed(description=fact_json["content"])
         if key != "":
             embed.set_image(url=cat_json[0]["url"])
         await ctx.send(embed=embed)
