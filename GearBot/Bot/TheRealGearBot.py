@@ -40,7 +40,6 @@ def prefix_callable(bot, message):
 
 
 async def on_ready(bot):
-    await bot.change_presence(activity=Activity(type=3, name='the gears turn'))
     await fill_cache(bot)
 
 

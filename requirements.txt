@@ -1,4 +1,4 @@
-git+https://github.com/AEnterprise/disnake@gearbot
+git+https://github.com/AEnterprise/disnake@e8c116cfca742587da630839b9eecb6663dec52b
 tortoise-orm==0.16.17
 Pillow==7.2.0
 requests==2.24.0
