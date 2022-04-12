@@ -166,7 +166,9 @@ if __name__ == '__main__':
         "member_cache_flags": MemberCacheFlags.from_intents(intents),
         "chunk_guilds_at_startup": False,
         "monitoring_prefix": Configuration.get_master_var("MONITORING_PREFIX", "gearbot"),
-        "activity": Activity(type=3, name='the gears turn')
+        "activity": Activity(type=3, name='the gears turn'),
+        "sync_commands": False,
+        "sync_commands_on_cog_unload": False
     }
     if clargs.total_shards:
         total_shards = int(clargs.total_shards)
