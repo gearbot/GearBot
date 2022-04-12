@@ -383,7 +383,7 @@ async def generate_userinfo_embed(user, member, guild, requested_by):
                           timestamp=now)
     embed.set_thumbnail(url=user.display_avatar.url)
     embed.set_footer(text=Translator.translate('requested_by', guild, user=requested_by.name),
-                     icon_url=requested_by.avatar.url)
+                     icon_url=requested_by.display_avatar.url)
     embed.add_field(name=Translator.translate('name', guild),
                     value=escape_markdown(f"{user.name}#{user.discriminator}"), inline=True)
     embed.add_field(name=Translator.translate('id', guild), value=user.id, inline=True)
