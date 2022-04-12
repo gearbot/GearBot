@@ -501,7 +501,7 @@ async def log_task(guild_id, target):
                 Configuration.validate_config(guild_id)
                 return
 
-            permissions = channel.permissions_for(channel.guild.me)
+            permissions = channel.permissions_for(channel.guild.me, ignore_timeout=False)
             if not (permissions.send_messages and permissions.read_messages):
                 # we can't send to this channel log and abort before we get ip banned again!
                 del LOG_QUEUE[target]
