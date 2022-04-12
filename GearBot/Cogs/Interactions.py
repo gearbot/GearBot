@@ -210,7 +210,7 @@ class Interactions(BaseCog):
                         view=EphemeralInfSearch(filters=fields, pages=pages, current_page=current, guild_id=interaction.guild_id, userid=uid)
                     )
         elif interaction.type == InteractionType.application_command:
-            if interaction.name == "Extract user IDs":
+            if interaction.data.name == "Extract user IDs":
                 self.bot.metrics.uid_usage.labels(type="channel", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
                 parts = await Utils.get_user_ids(interaction.data.resolved.messages[interaction.data.target_id].content)
@@ -239,7 +239,7 @@ class Interactions(BaseCog):
                         await interaction.followup.send("Unable to send DM")
                     else:
                         await interaction.followup.send("IDs sent in DM")
-            elif interaction.data["name"] == "Userinfo":
+            elif interaction.data.name == "Userinfo":
                 if await Permissioncheckers.check_permission(self.bot.get_command("userinfo"), interaction.guild, interaction.user, self.bot):
                     t = "allowed"
                     target = interaction.data["target_id"]
@@ -256,7 +256,7 @@ class Interactions(BaseCog):
                     t = "denied"
                     await interaction.response.send_message(MessageUtils.assemble(interaction.guild, 'LOCK', 'permission_denied'), ephemeral=True)
                 self.bot.metrics.userinfo_usage.labels(type=t, cluster=self.bot.cluster).inc()
-            elif interaction.data["name"] == "Search Infractions":
+            elif interaction.data.name == "Search Infractions":
                 if await Permissioncheckers.check_permission(self.bot.get_command("inf search"), interaction.guild, interaction.user, self.bot):
                     uid = int(interaction.data["target_id"])
                     t = "allowed"
