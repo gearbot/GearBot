@@ -8,13 +8,13 @@
     "DATABASE_PORT": 3306,
     "DATABASE_USER": "gearbot",
     "APEX_KEY": "",
+    "REDIS_HOST": "localhost",
     "REDIS_PORT": 6379,
     "REDIS_SOCKET": "",
     "SENTRY_DSN": "",
     "EMOJI": {
     },
     "EMOJI_GUILD": null,
-    "REDIS_HOST": "localhost",
     "GUIDES": 0,
     "inbox": 0,
     "COGS": [
