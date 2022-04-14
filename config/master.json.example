@@ -29,6 +29,7 @@
       "ReactionHandler",
       "Censor",
       "Infractions",
+      "Interactions",
       "Minecraft",
       "DMMessages",
       "Reminders",
