@@ -219,7 +219,7 @@ class Interactions(BaseCog):
                         await interaction.followup.send(chunk)
                 else:
                     await interaction.followup.send(MessageUtils.assemble(interaction.guild, "NO", "no_uids_found"))
-            elif interaction.data["name"] == "Send user IDs to DM":
+            elif interaction.data.name == "Send user IDs to DM":
                 self.bot.metrics.uid_usage.labels(type="DM", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
                 parts = await Utils.get_user_ids(
