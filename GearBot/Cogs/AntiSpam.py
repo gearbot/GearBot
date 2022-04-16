@@ -155,7 +155,7 @@ class AntiSpam(BaseCog):
 
     async def check_duplicates(self, message: Message, bucket, per_user):
         rule = bucket["SIZE"]
-        full_content = message.content + "\n".join(str(a.filename) + str(a.content_type) for a in message.attachments)
+        full_content = message.content + "\n".join(str(a.filename) + str(a.content_type) for a in message.attachments) + "\n".join(str(sticker.id) for sticker in message.stickers)
         content_hash = f"{len(full_content)}.{hashlib.sha256(full_content.encode('utf-8')).hexdigest()}"
         if per_user:
             key = f"duplicates:{message.guild.id}:{message.author.id}:{'{}'}"
