@@ -213,7 +213,7 @@ class Interactions(BaseCog):
             if interaction.data.name == "Extract user IDs":
                 self.bot.metrics.uid_usage.labels(type="channel", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
-                parts = await Utils.get_user_ids(interaction.data.resolved.messages[interaction.data.target_id].content)
+                parts = await Utils.get_user_ids(interaction.target.content)
                 if len(parts) > 0:
                     for chunk in Pages.paginate("\n".join(parts), 200):
                         await interaction.followup.send(chunk)
@@ -222,8 +222,7 @@ class Interactions(BaseCog):
             elif interaction.data.name == "Send user IDs to DM":
                 self.bot.metrics.uid_usage.labels(type="DM", cluster=self.bot.cluster).inc()
                 await interaction.response.defer(ephemeral=True)
-                parts = await Utils.get_user_ids(
-                    interaction.data["resolved"]["messages"][interaction.data["target_id"]]["content"])
+                parts = await Utils.get_user_ids(interaction.target.content)
                 if len(parts) > 0:
                     try:
                         for chunk in Pages.paginate("\n".join(parts), 200):
@@ -242,15 +241,8 @@ class Interactions(BaseCog):
             elif interaction.data.name == "Userinfo":
                 if await Permissioncheckers.check_permission(self.bot.get_command("userinfo"), interaction.guild, interaction.user, self.bot):
                     t = "allowed"
-                    target = interaction.data["target_id"]
-                    member = None
-                    user_dict = interaction.data["resolved"]["users"][target]
-                    user = User(data=user_dict, state=interaction._state)
-                    if "members" in interaction.data["resolved"] and target in interaction.data["resolved"]["members"]:
-                        member_dict = interaction.data["resolved"]["members"][target]
-                        member_dict["user"] = user_dict
-                        member = Member(data=member_dict, guild=interaction.guild, state=interaction._state)
-                    embed = await Utils.generate_userinfo_embed(user, member, interaction.guild, interaction.user)
+                    target = interaction.data.target
+                    embed = await Utils.generate_userinfo_embed(target, target if isinstance(target, Member) else None, interaction.guild, interaction.user)
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                 else:
                     t = "denied"
@@ -258,7 +250,7 @@ class Interactions(BaseCog):
                 self.bot.metrics.userinfo_usage.labels(type=t, cluster=self.bot.cluster).inc()
             elif interaction.data.name == "Search Infractions":
                 if await Permissioncheckers.check_permission(self.bot.get_command("inf search"), interaction.guild, interaction.user, self.bot):
-                    uid = int(interaction.data["target_id"])
+                    uid = interaction.data.target.id
                     t = "allowed"
                     await interaction.response.send_message(MessageUtils.assemble(interaction.guild, 'SEARCH', 'inf_search_compiling'), ephemeral=True)
 
