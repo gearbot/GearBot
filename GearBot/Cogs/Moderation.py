@@ -1191,7 +1191,7 @@ class Moderation(BaseCog):
         guild = ctx.guild
         embed = server_info.server_info_embed(guild, ctx.guild)
         embed.set_footer(text=Translator.translate('requested_by', ctx, user=ctx.author),
-                         icon_url=ctx.author.avatar.url)
+                         icon_url=ctx.author.display_avatar.url)
         await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
