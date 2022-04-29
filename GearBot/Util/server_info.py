@@ -30,7 +30,7 @@ def server_info_embed(guild, request_guild=None):
     )
     embed.add_field(
         name=Translator.translate('created_at', request_guild),
-        value=f"{utils.format_dt(guild_made, 'F')} {utils.format_dt(guild_made, 'R')}",
+        value=f"{utils.format_dt(guild_made, 'F')} ({utils.format_dt(guild_made, 'R')})",
         inline=True
     )
     embed.add_field(
