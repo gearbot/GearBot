@@ -79,7 +79,7 @@ async def initialize(bot):
         else:
             bot.redis_pool = await aioredis.create_redis_pool(socket, encoding="utf-8", db=0, maxsize=3)
 
-        GearbotLogging.info("Cluster {bot.cluster} redis connection established")
+        GearbotLogging.info(f"Cluster {bot.cluster} redis connection established")
         await GearbotLogging.bot_log(
             f"{Emoji.get_chat_emoji('YES')} Cluster {bot.cluster} redis connection established, let's go full speed!")
 

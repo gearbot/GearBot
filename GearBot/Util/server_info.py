@@ -2,15 +2,16 @@ import time
 import datetime
 
 import disnake
+from disnake import utils
 
 from Util import Translator, Emoji, Utils, Configuration
 
 
 def server_info_embed(guild, request_guild=None):
-    guild_features = ", ".join(guild.features)
+    guild_features = ", ".join(guild.features).title().replace("_", " ")
     if guild_features == "":
         guild_features = None
-    guild_made = guild.created_at.strftime("%d-%m-%Y")
+    guild_made = guild.created_at
     embed = disnake.Embed(color=guild.roles[-1].color, timestamp=datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc))
     if guild.icon is not None:
         embed.set_thumbnail(url=guild.icon.url)
@@ -29,7 +30,7 @@ def server_info_embed(guild, request_guild=None):
     )
     embed.add_field(
         name=Translator.translate('created_at', request_guild),
-        value=f"{guild_made} ({(datetime.datetime.utcfromtimestamp(time.time()).replace(tzinfo=datetime.timezone.utc) - guild.created_at).days} days ago)",
+        value=f"{utils.format_dt(guild_made, 'F')} ({utils.format_dt(guild_made, 'R')})",
         inline=True
     )
     embed.add_field(
