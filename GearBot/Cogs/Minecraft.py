@@ -128,6 +128,7 @@ class Minecraft(BaseCog):
         pass
 
     async def info(self, ctx, project_name: str):
+        pass
 
     # @cf.command()
     # async def latest(self, ctx, project_name: str, version: str):
