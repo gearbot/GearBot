@@ -1,7 +1,12 @@
+import warnings
+
 from tortoise.models import Model
 from tortoise import fields, Tortoise
 
 from Util import Configuration, GearbotLogging
+
+# https://github.com/aio-libs/aiomysql/issues/103
+warnings.filterwarnings("ignore", module=r"aiomysql")
 
 
 class LoggedMessage(Model):
