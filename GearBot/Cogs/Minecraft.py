@@ -7,7 +7,7 @@ import aiohttp
 import disnake
 
 from Cogs.BaseCog import BaseCog
-from Util import GearbotLogging, Pages, Translator, VersionInfo
+from Util import GearbotLogging, Pages, VersionInfo, Translator
 
 
 class Minecraft(BaseCog):
