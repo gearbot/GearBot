@@ -44,7 +44,7 @@ async def cleanExit(bot, trigger):
     await GearbotLogging.bot_log(f"Shutdown triggered by {trigger}.")
     await bot.logout()
     await bot.close()
-    bot.aiosession.close()
+    await bot.aiosession.close()
 
 
 def trim_message(message, limit):
