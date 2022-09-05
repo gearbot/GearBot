@@ -892,6 +892,7 @@
   "inf_update_log": "Infraction #{inf} for {user} (`{userid}`) has been updated by {mod} (`{modid}`) to `{reason}`",
   "munmute_confirm": "Are you sure you want to unmute those people?",
   "munmute_confirmation": "Sucessfully unmuted {count} users",
+  "munmute_help": "Unmute multiple users at the same time",
   "mass_failures_unmute": "I was unable to unmute the following users: ({page_num}/{pages}):",
   "censor_emoji_messages_enabled": "Messages only containing emoji will now be censored",
   "censor_emoji_messages_disbabled": "Messages only containing emoji will no longer be censored",
