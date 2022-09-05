@@ -5,9 +5,9 @@ from collections import OrderedDict
 
 import aiohttp
 import disnake
-from Util import GearbotLogging, Pages, Translator, VersionInfo
 
 from Cogs.BaseCog import BaseCog
+from Util import GearbotLogging, Pages, Translator, VersionInfo
 
 
 class Minecraft(BaseCog):
