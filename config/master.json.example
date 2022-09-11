@@ -2,7 +2,7 @@
   "LOGIN_TOKEN": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "BOT_LOG_CHANNEL": 365908831328403456,
   "CROWDIN_KEY": null,
-  "DATABASE": "mysql://gearbot:gearbot@localhost:3306/gearbot",
+  "DATABASE": "postgres://gearbot:gearbot@localhost:5432/gearbot",
   "APEX_KEY": "",
   "REDIS_HOST": "localhost",
   "REDIS_PORT": 6379,
