@@ -174,11 +174,11 @@ class CustCommands(BaseCog):
         if not (permissions.read_messages and permissions.send_messages and permissions.embed_links):
             return
 
-        role_list = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLES")
-        role_required = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED")
-        channel_list = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS")
-        channels_ignored = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED")
-        mod_bypass = Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS")
+        role_list = await Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLES")
+        role_required = await Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "ROLE_REQUIRED")
+        channel_list = await Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS")
+        channels_ignored = await Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "CHANNELS_IGNORED")
+        mod_bypass = await Configuration.get_var(message.guild.id, "CUSTOM_COMMANDS", "MOD_BYPASS")
 
         is_mod = message.author is not None and Permissioncheckers.is_mod(message.author)
 
@@ -195,7 +195,7 @@ class CustCommands(BaseCog):
         if has_role is not role_required and not (is_mod and mod_bypass):
             return
 
-        prefix = Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
+        prefix = await Configuration.get_var(message.guild.id, "GENERAL", "PREFIX")
         if message.content.startswith(prefix, 0) and message.guild.id in self.commands:
             for trigger in self.commands[message.guild.id]:
                 if message.content.lower() == prefix + trigger or (

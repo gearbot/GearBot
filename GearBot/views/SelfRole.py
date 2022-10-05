@@ -15,7 +15,7 @@ class SelfRoleView(disnake.ui.View):
 
 def set_buttons(view: disnake.ui.View, guild, page):
     view.children.clear()
-    roles = [role for role in (guild.get_role(r) for r in Configuration.get_var(guild.id, "ROLES", "SELF_ROLES")) if
+    roles = [role for role in (guild.get_role(r) for r in Configuration.legacy_get_var(guild.id, "ROLES", "SELF_ROLES")) if
              role is not None]
     pages = [p for p in Utils.chunks(roles, 20)]
     view.pages = len(pages)

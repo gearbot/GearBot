@@ -74,7 +74,7 @@ class Basic(BaseCog):
 
         click_here = Translator.translate('click_here', ctx)
         embed.add_field(name=Translator.translate('support_server', ctx),
-                        value=f"[{click_here}](https://disnake.gg/vddW3D9)")
+                        value=f"[{click_here}](https://discord.gg/vddW3D9)")
         embed.add_field(name=Translator.translate('website', ctx), value=f"[{click_here}](https://gearbot.rocks)")
         embed.add_field(name=f"Github", value=f"[{click_here}](https://github.com/gearbot/GearBot)")
         embed.set_footer(text=self.bot.user.name, icon_url=self.bot.user.display_avatar.url)
@@ -115,7 +115,7 @@ class Basic(BaseCog):
                     if message.content is None or message.content == "":
                         if attachment is not None:
                             url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
-                            if attachment.isImage:
+                            if attachment.isimage:
                                 embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
@@ -128,7 +128,7 @@ class Basic(BaseCog):
                                         value=f"[Jump to message]({message.jump_url})")
                         if attachment is not None:
                             url = Utils.assemble_attachment(message.channel.id, attachment.id, attachment.name)
-                            if attachment.isImage:
+                            if attachment.isimage:
                                 embed.set_image(url=url)
                             else:
                                 embed.add_field(name=Translator.translate("attachment_link", ctx),
@@ -175,7 +175,7 @@ class Basic(BaseCog):
             except BadArgument as ex:
                 await ctx.send(Translator.translate("role_not_found", ctx))
             else:
-                roles = Configuration.get_var(ctx.guild.id, "ROLES", "SELF_ROLES")
+                roles = await Configuration.get_var(ctx.guild.id, "ROLES", "SELF_ROLES")
                 if role.id in roles:
                     try:
                         if role in ctx.author.roles:
@@ -214,7 +214,7 @@ class Basic(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: disnake.Role):
-        roles = Configuration.get_var(role.guild.id, "ROLES", "SELF_ROLES")
+        roles = await Configuration.get_var(role.guild.id, "ROLES", "SELF_ROLES")
         if role.id in roles:
             roles.remove(role.id)
             Configuration.save(role.guild.id)

@@ -24,7 +24,7 @@ class Censor(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: disnake.Message):
-        if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or not Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
+        if message.guild is None or message.webhook_id is not None or message.channel is None or isinstance(message.channel, DMChannel) or not await Configuration.get_var(message.channel.guild.id, "CENSORING", "ENABLED") or self.bot.user.id == message.author.id:
             return
         member = await Utils.get_member(self.bot, message.guild, message.author.id, fetch_if_missing=True)
         if member is None:
@@ -40,7 +40,7 @@ class Censor(BaseCog):
         channel = self.bot.get_channel(int(event.data["channel_id"]))
         m = await MessageUtils.get_message_data(self.bot, event.message_id)
         reply = None
-        if channel is None or isinstance(channel, DMChannel) or not Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED") or "content" not in event.data:
+        if channel is None or isinstance(channel, DMChannel) or not await Configuration.get_var(channel.guild.id, "CENSORING", "ENABLED") or "content" not in event.data:
             return
         author_id=None
         if m is not None:
@@ -63,15 +63,15 @@ class Censor(BaseCog):
             await self.check_message(member, event.data["content"], channel, event.message_id, True, reply, None)
 
     async def check_message(self, member, content, channel, message_id, edit, reply, attachments):
-        if Permissioncheckers.get_user_lvl(member.guild, member) >= 2:
+        if await Permissioncheckers.get_user_lvl(member.guild, member) >= 2:
             return
-        censorlist = Configuration.get_var(member.guild.id, "CENSORING", "TOKEN_CENSORLIST")
-        word_censorlist = Configuration.get_var(member.guild.id, "CENSORING", "WORD_CENSORLIST")
-        guilds = Configuration.get_var(member.guild.id, "CENSORING", "ALLOWED_INVITE_LIST")
-        domain_list = Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST")
-        domains_allowed = Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
-        full_message_list = Configuration.get_var(member.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
-        censor_emoji_message = Configuration.get_var(member.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES")
+        censorlist = await Configuration.get_var(member.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+        word_censorlist = await Configuration.get_var(member.guild.id, "CENSORING", "WORD_CENSORLIST")
+        guilds = await Configuration.get_var(member.guild.id, "CENSORING", "ALLOWED_INVITE_LIST")
+        domain_list = await Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST")
+        domains_allowed = await Configuration.get_var(member.guild.id, "CENSORING", "DOMAIN_LIST_ALLOWED")
+        full_message_list = await Configuration.get_var(member.guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+        censor_emoji_message = await Configuration.get_var(member.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES")
         content = content.replace('\\', '')
 
         if Configuration.get_var(member.guild.id, "CENSORING", "IGNORE_IDS"):
@@ -142,7 +142,7 @@ class Censor(BaseCog):
 
 
     async def censor_message(self, message_id, content, channel, member, bad, key="", edit=False, reply="", attachments=""):
-        if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS") and Permissioncheckers.is_trusted(member):
+        if await Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_CENSOR_BYPASS") and Permissioncheckers.is_trusted(member):
             return
         e = '_edit' if edit else ''
         clean_message = await Utils.clean(content, channel.guild, markdown=False)
@@ -179,7 +179,7 @@ class Censor(BaseCog):
 
     async def censor_invite(self, member, message_id, channel, code, server_name, content, edit, reply, attachments):
         # Allow for users with a trusted role, or trusted users, to post invite links
-        if Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(member):
+        if await Configuration.get_var(member.guild.id, "CENSORING", "ALLOW_TRUSTED_BYPASS") and Permissioncheckers.is_trusted(member):
             return
 
         e = '_edit' if edit else ''

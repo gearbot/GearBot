@@ -18,7 +18,7 @@ class LoggedMessage(Model):
 class LoggedAttachment(Model):
     id = fields.BigIntField(pk=True, generated=False)
     name = fields.CharField(max_length=100)
-    isImage = fields.BooleanField()
+    isimage = fields.BooleanField()
     message = fields.ForeignKeyField("models.LoggedMessage", related_name='attachments', source_field='message_id')
 
 
@@ -83,6 +83,12 @@ class Node(Model):
     shard = fields.IntField()
     resource_version = fields.CharField(max_length=50)
 
+class GuildConfig(Model):
+    guild_id = fields.BigIntField(pk=True)
+    guild_config = fields.JSONField()
+
+    class Meta:
+        table = "guild_config"
 
 async def init():
     GearbotLogging.info("Connecting to the database...")

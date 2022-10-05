@@ -248,11 +248,11 @@ class DashLink(BaseCog):
 
     async def send_guild_info(self, member):
         await self.send_to_dash("guild_update", user_id=member.id, guild_id=member.guild.id,
-                                info=DashUtils.assemble_guild_info(self.bot, member))
+                                info=await DashUtils.assemble_guild_info(self.bot, member))
 
     @needs_perm(DASH_PERMS.VIEW_CONFIG)
     async def get_guild_settings(self, message):
-        section = Configuration.get_var(int(message["guild_id"]), message["section"])
+        section = await Configuration.get_var(int(message["guild_id"]), message["section"])
         section = {k: [str(rid) if isinstance(rid, int) else rid for rid in v] if isinstance(v, list) else str(
             v) if isinstance(v, int) and not isinstance(v, bool) else v for k, v in section.items()}
         return section
@@ -261,7 +261,7 @@ class DashLink(BaseCog):
     async def save_guild_settings(self, message):
         guild_id, user_id = get_info(message)
         guild = self.bot.get_guild(guild_id)
-        return DashConfig.update_config_section(
+        return await DashConfig.update_config_section(
             guild,
             message["section"],
             message["modified_values"],
@@ -272,7 +272,7 @@ class DashLink(BaseCog):
     async def replace_guild_settings(self, message):
         guild_id, user_id = get_info(message)
         guild = self.bot.get_guild(guild_id)
-        return DashConfig.update_config_section(
+        return await DashConfig.update_config_section(
             guild,
             message["section"],
             message["modified_values"],

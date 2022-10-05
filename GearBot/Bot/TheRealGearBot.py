@@ -22,6 +22,7 @@ from disnake.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded, I
 
 from Util import Configuration, GearbotLogging, Emoji, Pages, Utils, Translator, InfractionUtils, MessageUtils, \
     server_info, DashConfig
+from Util.Configuration import ConfigNotLoaded
 from Util.Permissioncheckers import NotCachedException
 from Util.Utils import to_pretty_time
 from database import DatabaseConnector, DBUtils
@@ -34,7 +35,7 @@ def prefix_callable(bot, message):
     if message.guild is None:
         prefixes.append('!') #use default ! prefix in DMs
     elif bot.STARTUP_COMPLETE:
-        prefixes.append(Configuration.get_var(message.guild.id, "GENERAL", "PREFIX"))
+        prefixes.append(Configuration.legacy_get_var(message.guild.id, "GENERAL", "PREFIX"))
     return prefixes
 
 
@@ -126,6 +127,9 @@ async def on_message(bot, message:Message):
         else:
             await bot.invoke(ctx)
 
+async def on_connect(bot):
+    await Configuration.load_bulk([guild.id for guild in bot.guilds])
+
 
 async def on_guild_join(bot, guild: Guild):
     blocked = Configuration.get_persistent_var("server_blocklist", [])
@@ -145,7 +149,7 @@ async def on_guild_join(bot, guild: Guild):
         await guild.leave()
     else:
         GearbotLogging.info(f"A new guild came up: {guild.name} ({guild.id}).")
-        Configuration.load_config(guild.id)
+        await Configuration.load_config(guild.id)
         name = await Utils.clean(guild.name)
         await guild.chunk(cache=True)
         await GearbotLogging.bot_log(f"{Emoji.get_chat_emoji('JOIN')} A new guild came up: {name} ({guild.id}).", embed=server_info.server_info_embed(guild))
@@ -178,6 +182,8 @@ class PostParseError(commands.BadArgument):
 
 
 async def on_command_error(bot, ctx: commands.Context, error):
+    if isinstance(error, ConfigNotLoaded):
+        return
     if isinstance(error, NotCachedException):
         if bot.loading_task is not None:
             if bot.initial_fill_complete:
@@ -190,7 +196,7 @@ async def on_command_error(bot, ctx: commands.Context, error):
         GearbotLogging.error(f"Encountered a permission error while executing {ctx.command}: {error}")
         await send(ctx, error)
     elif isinstance(error, commands.CheckFailure):
-        if ctx.command.qualified_name != "latest" and ctx.guild is not None and Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
+        if ctx.command.qualified_name != "latest" and ctx.guild is not None and await Configuration.get_var(ctx.guild.id, "GENERAL", "PERM_DENIED_MESSAGE"):
             await MessageUtils.send_to(ctx, 'LOCK', 'permission_denied')
     elif isinstance(error, commands.CommandOnCooldown):
         await send(ctx, error)
@@ -393,7 +399,7 @@ async def handle_exception(exception_type, bot, exception, event=None, message=N
 
 
 
-        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError]:
+        for t in [ConnectionClosed, ClientOSError, ServerDisconnectedError, ConfigNotLoaded]:
             if isinstance(exception, t):
                 return
         #nice embed for info on discord

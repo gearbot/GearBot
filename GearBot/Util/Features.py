@@ -3,9 +3,9 @@ from Util import Configuration
 LOG_MAP = dict()
 
 
-def check_server(guild_id):
+async def check_server(guild_id):
     enabled = set()
-    for cid, info in Configuration.get_var(guild_id, "LOG_CHANNELS").items():
+    for cid, info in (await Configuration.get_var(guild_id, "LOG_CHANNELS")).items():
         enabled.update(info["CATEGORIES"])
     LOG_MAP[guild_id] = enabled
 

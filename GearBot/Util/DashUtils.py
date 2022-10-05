@@ -40,15 +40,15 @@ def get_guild_perms(member):
     permission = 0
     user_lvl = Permissioncheckers.user_lvl(member)
     for k, v in mappings.items():
-        if user_lvl >= Configuration.get_var(member.guild.id, "DASH_SECURITY", k):
+        if user_lvl >= Configuration.legacy_get_var(member.guild.id, "DASH_SECURITY", k):
             permission |= v
 
     return permission
 
 
-def assemble_guild_info(bot, member):
+async def assemble_guild_info(bot, member):
     return {
-        "guild_info": server_info.server_info_raw(bot, member.guild),
+        "guild_info": await server_info.server_info_raw(bot, member.guild),
         "user_perms": {
             "user_dash_perms": get_guild_perms(member),
             "user_level": Permissioncheckers.user_lvl(member)

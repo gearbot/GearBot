@@ -15,7 +15,7 @@ async def archive_purge(bot, guild_id, messages):
     archive_counter += 1
     channel = bot.get_channel(list(messages.values())[0].channel)
     timestamp = datetime.datetime.strftime(datetime.datetime.now().astimezone(
-        pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))), '%H:%M:%S')
+        pytz.timezone(await Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))), '%H:%M:%S')
     out = f"purged at {timestamp} from {channel.name}\n"
     out += await pack_messages(messages.values(), guild_id)
     buffer = io.BytesIO()
@@ -29,7 +29,7 @@ async def pack_messages(messages, guild_id):
         reply = ""
         if message.reply_to is not None:
             reply = f" | In reply to https://discord.com/channels/{message.server}/{message.channel}/{message.reply_to}"
-        timestamp = datetime.datetime.strftime(disnake.Object(message.messageid).created_at.astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),'%H:%M:%S')
+        timestamp = datetime.datetime.strftime(disnake.Object(message.messageid).created_at.astimezone(pytz.timezone(await Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),'%H:%M:%S')
         out += f"{timestamp} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content}{reply} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 

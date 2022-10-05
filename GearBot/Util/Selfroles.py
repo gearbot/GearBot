@@ -4,7 +4,7 @@ from Util import Configuration, Pages, Translator, ReactionManager, Emoji
 
 
 def validate_self_roles(bot, guild):
-    roles = Configuration.get_var(guild.id, "ROLES", "SELF_ROLES")
+    roles = Configuration.legacy_get_var(guild.id, "ROLES", "SELF_ROLES")
     to_remove = set(role for role in roles if guild.get_role(role) is None)
     if len(to_remove) > 0:
         Configuration.set_var(guild.id, "ROLES", "SELF_ROLES", set(roles) - to_remove)
@@ -13,7 +13,7 @@ def validate_self_roles(bot, guild):
 
 async def create_self_roles(bot, ctx):
     # create and send
-    pages = gen_role_pages(ctx.guild)
+    pages = await gen_role_pages(ctx.guild)
     embed = Embed(title=Translator.translate("assignable_roles", ctx, server_name=ctx.guild.name, page_num=1,
                                              page_count=len(pages)), colour=Colour(0xbffdd), description=pages[0])
     message = await ctx.send(embed=embed)
@@ -78,8 +78,8 @@ async def self_cleaner(bot, guild_id):
     return out
 
 
-def gen_role_pages(guild):
-    roles = Configuration.get_var(guild.id, "ROLES", "SELF_ROLES")
+async def gen_role_pages(guild):
+    roles = await Configuration.get_var(guild.id, "ROLES", "SELF_ROLES")
     current_roles = ""
     count = 1
     for role in roles:

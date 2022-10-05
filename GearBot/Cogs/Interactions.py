@@ -24,7 +24,7 @@ class Interactions(BaseCog):
                     rid = parts[2]
                     if rid.isnumeric():
                         rid = int(rid)
-                        roles = Configuration.get_var(interaction.guild_id, "ROLES", "SELF_ROLES")
+                        roles = await Configuration.get_var(interaction.guild_id, "ROLES", "SELF_ROLES")
                         if rid in roles:
                             role = guild.get_role(rid)
                             if role is None:
@@ -116,7 +116,7 @@ class Interactions(BaseCog):
                 elif t == 'censor_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(interaction.guild.id, "CENSORING", "TOKEN_CENSORLIST")
+                        censor_list = await Configuration.get_var(interaction.guild.id, "CENSORING", "TOKEN_CENSORLIST")
                         pages = Pages.paginate("\n".join(censor_list))
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), interaction.guild.id,
                                                                      'censor_list')
@@ -126,7 +126,7 @@ class Interactions(BaseCog):
                 elif t == 'word_censor_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(guild.id, "CENSORING", "WORD_CENSORLIST")
+                        censor_list = await Configuration.get_var(guild.id, "CENSORING", "WORD_CENSORLIST")
                         pages = Pages.paginate("\n".join(censor_list))
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                      'word_censor_list')
@@ -136,7 +136,7 @@ class Interactions(BaseCog):
                 elif t == 'full_censor_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(guild.id, "CENSORING", "FULL_MESSAGE_LIST")
+                        censor_list = await Configuration.get_var(guild.id, "CENSORING", "FULL_MESSAGE_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id,
                                                                      'full_censor_list')
@@ -146,7 +146,7 @@ class Interactions(BaseCog):
                 elif t == 'flag_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(guild.id, "FLAGGING", "TOKEN_LIST")
+                        censor_list = await Configuration.get_var(guild.id, "FLAGGING", "TOKEN_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id, 'flag_list')
                         await interaction.response.edit_message(
@@ -155,7 +155,7 @@ class Interactions(BaseCog):
                 elif t == 'word_flag_list':
                     cog = self.bot.get_cog('Moderation')
                     if cog is not None:
-                        censor_list = Configuration.get_var(guild.id, "FLAGGING", "WORD_LIST")
+                        censor_list = await Configuration.get_var(guild.id, "FLAGGING", "WORD_LIST")
                         pages = Pages.paginate("\n".join(censor_list))
                         page, view, page_num = SimplePager.get_parts(pages, int(parts[1]), guild.id, 'word_flag_list')
                         await interaction.response.edit_message(

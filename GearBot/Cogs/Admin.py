@@ -185,7 +185,7 @@ class Admin(BaseCog):
     async def thread_migration(self, ctx):
         await MessageUtils.send_to(ctx, "LOADING", "Thread migration initiated", translate=False)
         for guild in self.bot.guilds:
-            role_id = Configuration.get_var(guild.id, 'ROLES', 'MUTE_ROLE')
+            role_id = await Configuration.get_var(guild.id, 'ROLES', 'MUTE_ROLE')
             if role_id != 0:
                 role = guild.get_role(role_id)
                 if role is not None:

@@ -73,7 +73,7 @@ class DMRaider(RaidAction):
 class Mute(RaidAction):
 
     async def execute(self, bot, member, data, raid_id, raider_ids, shield):
-        role = member.guild.get_role(Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE"))
+        role = member.guild.get_role(await Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE"))
         if role is None:
             GearbotLogging.log_key(member.guild.id, 'raid_mute_failed_no_role')
         else:

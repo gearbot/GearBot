@@ -324,14 +324,14 @@ async def send_infraction(bot, user, guild, emoji, type, reason, **kwargs):
     if await get_member(bot, guild, user.id) is None:
         return
     try:
-        override = Configuration.get_var(guild.id, "INFRACTIONS", type.upper())
+        override = await Configuration.get_var(guild.id, "INFRACTIONS", type.upper())
         kwargs.update(
             reason=reason,
             server=guild.name,
             guild_id=guild.id
         )
         if override is not None:
-            message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}```{reason}```"
+            message = f"{Emoji.get_chat_emoji(emoji)} {format(override, kwargs, await Configuration.get_var(guild.id, 'GENERAL', 'LANG'))}```{reason}```"
         else:
             message = f"{Emoji.get_chat_emoji(emoji)} {Translator.translate(f'{type.lower()}_dm', guild.id, **kwargs)}```{reason}```"
         parts = message.split("```")

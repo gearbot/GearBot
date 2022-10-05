@@ -414,7 +414,7 @@ def log_raw(guild_id, key, message=None, embed=None, file=None):
 
     # determine where it should be logged so we don't need to bother assembling everything when it's just gona be voided anyways
     targets = []
-    channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+    channels = Configuration.legacy_get_var(guild_id, "LOG_CHANNELS")
     for cid, settings in channels.items():
         if info.category in settings["CATEGORIES"] and info.config_key not in settings["DISABLED_KEYS"]:
             targets.append(cid)
@@ -431,7 +431,7 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, t
 
     # determine where it should be logged so we don't need to bother assembling everything when it's just gona be voided anyways
     targets = []
-    channels = Configuration.get_var(guild_id, "LOG_CHANNELS")
+    channels = Configuration.legacy_get_var(guild_id, "LOG_CHANNELS")
     for cid, settings in channels.items():
         if info.category in settings["CATEGORIES"] and info.config_key not in settings["DISABLED_KEYS"]:
             targets.append(cid)
@@ -442,9 +442,9 @@ def log_key(guild_id, key, embed=None, file=None, can_stamp=True, tag_on=None, t
 
     message = MessageUtils.assemble(guild_id, info.emoji, key, **kwargs).replace('@', '@\u200b')
 
-    if can_stamp and Configuration.get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
+    if can_stamp and Configuration.legacy_get_var(guild_id, 'GENERAL', "TIMESTAMPS"):
         s = datetime.datetime.strftime(
-            timestamp.now().astimezone(pytz.timezone(Configuration.get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
+            timestamp.now().astimezone(pytz.timezone(Configuration.legacy_get_var(guild_id, 'GENERAL', 'TIMEZONE'))),
             '%H:%M:%S')
         stamp = f"[`{s}`] "
         message = Utils.trim_message(f'{stamp} {message}', 2000)

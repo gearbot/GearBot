@@ -29,7 +29,7 @@ class Infractions(BaseCog):
         aname = Utils.clean_user(ctx.author)
         GearbotLogging.log_key(ctx.guild.id, 'warning_added_modlog', user=name, moderator=aname, reason=reason,
                                user_id=target.id, moderator_id=ctx.author.id, inf=i.id)
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN") and dm_action:
+        if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_WARN") and dm_action:
             await Utils.send_infraction(self.bot, target, ctx.guild, 'WARNING', 'warn', reason)
 
     @commands.guild_only()

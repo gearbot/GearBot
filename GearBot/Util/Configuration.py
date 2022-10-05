@@ -1,6 +1,4 @@
 import asyncio
-from json import JSONDecodeError
-
 
 MASTER_CONFIG = dict()
 SERVER_CONFIGS = dict()
@@ -10,6 +8,8 @@ CONFIG_VERSION = 0
 PERSISTENT = dict()
 TEMPLATE = dict()
 
+class ConfigNotLoaded(Exception):
+    pass
 
 def save_master():
     global MASTER_CONFIG
@@ -47,11 +47,11 @@ def get_master_var(key, default=None):
 
 
 import json
-import os
 
 from disnake.ext import commands
 
 from Util import GearbotLogging, Utils, Features
+from database.DatabaseConnector import GuildConfig
 
 
 def initial_migration(config):
@@ -440,28 +440,33 @@ async def initialize(bot: commands.Bot):
     #     validate_config(guild.id)
 
 
-def load_config(guild):
-    from Bot.TheRealGearBot import handle_exception
+async def load_config(guild):
     global SERVER_CONFIGS
-    try:
-        config = Utils.fetch_from_disk(f'config/{guild}')
-    except JSONDecodeError as e:
-        GearbotLogging.error(f"Failed to deserialize config! {e}")
-        asyncio.create_task(handle_exception("loading config", BOT, e))
-        config = Utils.fetch_from_disk("template")
-    if len(config.keys()) != 0 and "VERSION" not in config and len(config) < 15:
+    config = await GuildConfig.get_or_none(guild_id=guild)
+    if config is None:
+        loaded = Utils.fetch_from_disk("template")
+    else:
+        loaded = config.guild_config
+    if len(loaded.keys()) != 0 and "VERSION" not in loaded and len(loaded) < 15:
         GearbotLogging.info(f"The config for {guild} is to old to migrate, resetting")
-        config = dict()
-    elif len(config.keys()) != 0:
-        if "VERSION" not in config:
-            config["VERSION"] = 0
-        SERVER_CONFIGS[guild] = update_config(guild, config)
-    if len(config.keys()) == 0:
+        loaded = dict()
+    elif len(loaded.keys()) != 0:
+        if "VERSION" not in loaded:
+            loaded["VERSION"] = 0
+        SERVER_CONFIGS[guild] = update_config(guild, loaded)
+    if len(loaded.keys()) == 0:
         GearbotLogging.info(f"No config available for {guild}, creating a blank one.")
         SERVER_CONFIGS[guild] = Utils.fetch_from_disk("template")
         save(guild)
     validate_config(guild)
-    Features.check_server(guild)
+    await Features.check_server(guild)
+
+async def load_bulk(guilds):
+    global SERVER_CONFIGS
+    configs = await GuildConfig.filter(guild_id__in=guilds)
+    for c in configs:
+        SERVER_CONFIGS[c.guild_id] = c.guild_config
+        await Features.check_server(c.guild_id)
 
 
 def validate_config(guild_id):
@@ -479,7 +484,7 @@ def validate_config(guild_id):
 def checklist(guid, key, getter):
     changed = False
     tr = list()
-    cl = get_var(guid, "PERMISSIONS", key)
+    cl = legacy_get_var(guid, "PERMISSIONS", key)
     for c in cl:
         if getter(c) is None:
             tr.append(c)
@@ -493,23 +498,33 @@ def update_config(guild, config):
     while config["VERSION"] < CONFIG_VERSION:
         v = config["VERSION"]
         GearbotLogging.info(f"Upgrading config version from version {v} to {v + 1}")
-        d = f"config/backups/v{v}"
-        if not os.path.isdir(d):
-            os.makedirs(d)
-        Utils.save_to_disk(f"{d}/{guild}", config)
+        # d = f"config/backups/v{v}"
+        # if not os.path.isdir(d):
+        #     os.makedirs(d)
+        # Utils.save_to_disk(f"{d}/{guild}", config)
         MIGRATORS[config["VERSION"]](config)
         config["VERSION"] += 1
-        Utils.save_to_disk(f"config/{guild}", config)
-
     return config
 
 
-def get_var(id, section, key=None, default=None):
+async def get_var(id, section, key=None, default=None):
     if id is None:
         raise ValueError("Where is this coming from?")
     if not id in SERVER_CONFIGS.keys():
         GearbotLogging.info(f"Config entry requested before config was loaded for guild {id}, loading config for it")
-        load_config(id)
+        await load_config(id)
+    s = SERVER_CONFIGS[id].get(section, {})
+    if key is not None:
+        s = s.get(key, default)
+    return s
+
+def legacy_get_var(id, section, key=None, default=None):
+    if id is None:
+        raise ValueError("Where is this coming from?")
+    if not id in SERVER_CONFIGS.keys():
+        GearbotLogging.info(f"Config entry requested before config was loaded for guild {id}, loading config for it")
+        asyncio.create_task(load_config(id))
+        raise ConfigNotLoaded()
     s = SERVER_CONFIGS[id].get(section, {})
     if key is not None:
         s = s.get(key, default)
@@ -519,21 +534,25 @@ def get_var(id, section, key=None, default=None):
 def set_var(id, cat, key, value):
     SERVER_CONFIGS[id].get(cat, dict())[key] = value
     save(id)
-    Features.check_server(id)
+    asyncio.create_task(Features.check_server(id))
 
 
 def set_cat(id, cat, value):
     SERVER_CONFIGS[id][cat] = value
     save(id)
-    Features.check_server(id)
+    asyncio.create_task(Features.check_server(id))
 
 
 def save(id):
-    global SERVER_CONFIGS
-    with open(f'config/{id}.json', 'w') as jsonfile:
-        jsonfile.write((json.dumps(SERVER_CONFIGS[id], indent=4, skipkeys=True, sort_keys=True)))
-    Features.check_server(id)
+    asyncio.create_task(real_save(id))
 
+async def real_save(id):
+    conf = await GuildConfig.get_or_none(guild_id=id)
+    if conf is None:
+        await GuildConfig.create(guild_id=id, guild_config=SERVER_CONFIGS[id])
+    else:
+        conf.guild_config = SERVER_CONFIGS[id]
+        await conf.save()
 
 def load_persistent():
     global PERSISTENT_LOADED, PERSISTENT

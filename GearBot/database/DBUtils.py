@@ -30,7 +30,7 @@ async def insert_message(message):
     #                           author=message.author.id,
     #                           channel=message.channel.id, server=message.guild.id,
     #                           type=message_type, pinned=message.pinned, attachments=[LoggedAttachment(id=a.id, name=a.filename,
-    #                                                                                        isImage=(a.width is not None or a.width is 0),
+    #                                                                                        isimage=(a.width is not None or a.width is 0),
     #                                                                                        message_id=message.id) for a in message.attachments])
     #     batch[message.id] = m
     #
@@ -48,7 +48,7 @@ async def insert_message(message):
                                                 reply_to=message.reference.message_id if is_reply else None)
         for a in message.attachments:
             await LoggedAttachment.create(id=a.id, name=a.filename,
-                                          isImage=(a.width is not None or a.width == 0),
+                                          isimage=(a.width is not None or a.width == 0),
                                           message=logged)
 
     except IntegrityError:

@@ -100,7 +100,7 @@ class AntiSpam(BaseCog):
     async def on_message(self, message: Message):
         if message.author.id == self.bot.user.id or message.guild is None:
             return  # Don't track anti-spam for ourselves or DMs
-        cfg = Configuration.get_var(message.guild.id, "ANTI_SPAM")
+        cfg = await Configuration.get_var(message.guild.id, "ANTI_SPAM")
         if not cfg.get("ENABLED", False) or message.id in self.processed:
             return
         self.processed.append(message.id)
@@ -108,7 +108,7 @@ class AntiSpam(BaseCog):
 
     async def process_message(self, message: Message):
         # print(f'{datetime.datetime.now().isoformat()} - Processing message')
-        if message.webhook_id is not None or self.is_exempt(message.guild.id, message.author):
+        if message.webhook_id is not None or await self.is_exempt(message.guild.id, message.author):
             return
 
         # Use the discord's message timestamp to hopefully not trigger false positives
@@ -131,7 +131,7 @@ class AntiSpam(BaseCog):
                                            b, count)))
 
         counters = dict()
-        buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
+        buckets = await Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
 
         # so if someone does 20 levels of too many mentions for some stupid reason we don't end up running the same regex 20 times for nothing
         cache = dict()
@@ -235,7 +235,9 @@ class AntiSpam(BaseCog):
         duration = v.bucket["PUNISHMENT"]["DURATION"]
         until = time.time() + duration
         reason = self.assemble_reason(v)
-        role = AntiSpam._get_mute_role(v.guild)
+        role = await AntiSpam._get_mute_role(v.guild)
+        if role is None:
+            return
         i = await Infraction.get_or_none(user_id = member.id, type = "Mute", guild_id = member.guild.id, active=True)
         if i is None:
             i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Mute', reason,
@@ -256,7 +258,7 @@ class AntiSpam(BaseCog):
                                        moderator_id=v.guild.me.id,
                                        duration=Utils.to_pretty_time(duration, v.guild.id),
                                        reason=reason, inf=i.id)
-                if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                if await Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                     await Utils.send_infraction(self.bot, member, v.guild, 'MUTE', 'mute', reason, duration=Utils.to_pretty_time(duration, v.guild.id))
         else:
             i.end += duration
@@ -282,7 +284,7 @@ class AntiSpam(BaseCog):
                                            active=False)
         await self.bot.redis_pool.psetex(f"forced_exits:{v.guild.id}-{member.id}", 8000, "1")
         try:
-            if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_KICK"):
+            if await Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_KICK"):
                 asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BOOT', 'kick', "Spam"))
             await v.guild.kick(member, reason=reason)
         except Forbidden:
@@ -302,7 +304,7 @@ class AntiSpam(BaseCog):
         await v.guild.ban(member, reason=reason, delete_message_days=0)
         i = await InfractionUtils.add_infraction(v.guild.id, member.id, self.bot.user.id, 'Tempban', reason,
                                            end=until)
-        if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
+        if await Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
             dur = Utils.to_pretty_time(duration, None)
             asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BAN', 'tempban', "Spam", duration=dur))
         GearbotLogging.log_key(v.guild.id, 'tempban_log', user=Utils.clean_user(member),
@@ -319,7 +321,7 @@ class AntiSpam(BaseCog):
         GearbotLogging.log_key(v.guild.id, 'ban_log', user=Utils.clean_user(member), user_id=member.id,
                                moderator=Utils.clean_user(v.guild.me), moderator_id=v.guild.me.id,
                                reason=reason, inf=i.id)
-        if Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_BAN"):
+        if await Configuration.get_var(v.guild.id, "INFRACTIONS", "DM_ON_BAN"):
             asyncio.create_task(Utils.send_infraction(self.bot, member, v.guild, 'BAN', 'ban', "Spam"))
 
 
@@ -335,10 +337,10 @@ class AntiSpam(BaseCog):
                     return
 
                 # make sure anti-spam is enabled
-                cfg = Configuration.get_var(message.guild.id, "ANTI_SPAM")
+                cfg = await Configuration.get_var(message.guild.id, "ANTI_SPAM")
                 if not cfg.get("ENABLED", False) or message.id in self.censor_processed:
                     continue
-                buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
+                buckets = await Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
                 count = 0
                 for b in buckets:
                     t = b["TYPE"]
@@ -372,10 +374,10 @@ class AntiSpam(BaseCog):
                     return
 
                 # make sure anti-spam is enabled
-                cfg = Configuration.get_var(member.guild.id, "ANTI_SPAM")
-                if after.channel is None or before.channel == after.channel or member is None or not cfg.get("ENABLED", False) or self.is_exempt(member.guild.id, member):
+                cfg = await Configuration.get_var(member.guild.id, "ANTI_SPAM")
+                if after.channel is None or before.channel == after.channel or member is None or not cfg.get("ENABLED", False) or await self.is_exempt(member.guild.id, member):
                     continue
-                buckets = Configuration.get_var(member.guild.id, "ANTI_SPAM", "BUCKETS", [])
+                buckets = await Configuration.get_var(member.guild.id, "ANTI_SPAM", "BUCKETS", [])
                 count = 0
                 for b in buckets:
                     t = b["TYPE"]
@@ -405,15 +407,15 @@ class AntiSpam(BaseCog):
         member = await Utils.get_member(self.bot, self.bot.get_guild(data.guild_id), message.author)
         if member is None:
             return  # user no longer present, probably already actioned
-        if self.is_exempt(data.guild_id, member):
+        if await self.is_exempt(data.guild_id, member):
             return  # don't action except users
 
-        if data.message_id in self.bot.deleted_messages and not Configuration.get_var("GENERAL", "BOT_DELETED_STILL_GHOSTS"):
+        if data.message_id in self.bot.deleted_messages and not await Configuration.get_var(data.guild_id, "GENERAL", "BOT_DELETED_STILL_GHOSTS"):
             return
 
-        ghost_message_threshold = Configuration.get_var(data.guild_id, "GENERAL", "GHOST_MESSAGE_THRESHOLD")
-        ghost_ping_threshold = Configuration.get_var(data.guild_id, "GENERAL", "GHOST_PING_THRESHOLD")
-        buckets = Configuration.get_var(data.guild_id, "ANTI_SPAM", "BUCKETS", [])
+        ghost_message_threshold = await Configuration.get_var(data.guild_id, "GENERAL", "GHOST_MESSAGE_THRESHOLD")
+        ghost_ping_threshold = await Configuration.get_var(data.guild_id, "GENERAL", "GHOST_PING_THRESHOLD")
+        buckets = await Configuration.get_var(data.guild_id, "ANTI_SPAM", "BUCKETS", [])
         mentions = len(MENTION_MATCHER.findall(message.content))
 
         msg_time = int(snowflake_time(message.messageid).timestamp())
@@ -456,9 +458,9 @@ class AntiSpam(BaseCog):
 
 
     async def handle_failed_ping(self, message: disnake.Message, amount):
-        if self.is_exempt(message.guild.id, message.author) or message.author.bot or message.webhook_id is not None:
+        if await self.is_exempt(message.guild.id, message.author) or message.author.bot or message.webhook_id is not None:
             return  # don't action except users
-        buckets = Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
+        buckets = await Configuration.get_var(message.guild.id, "ANTI_SPAM", "BUCKETS", [])
         msg_time = int(snowflake_time(message.id).timestamp())
         for b in buckets:
             t = b["TYPE"]
@@ -485,18 +487,18 @@ class AntiSpam(BaseCog):
                                     friendly=v.friendly)
 
     @staticmethod
-    def is_exempt(guild_id, member: Member):
+    async def is_exempt(guild_id, member: Member):
         if not hasattr(member, "roles"):
             return False
-        config = Configuration.get_var(guild_id, "ANTI_SPAM")
+        config = await Configuration.get_var(guild_id, "ANTI_SPAM")
         for role in member.roles:
             if role.id in config["EXEMPT_ROLES"]:
                 return True
         return member.id in config["EXEMPT_USERS"] or Permissioncheckers.is_mod(member)
 
     @staticmethod
-    def _get_mute_role(guild):
-        role_id = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
+    async def _get_mute_role(guild):
+        role_id = await Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if role_id == 0:
             return None
         role = guild.get_role(role_id)

@@ -40,8 +40,10 @@ def translate(key, location, **kwargs):
     if lid is None or lid == 0 or lid == "@me":
         lang_key = "en_US"
     else:
-        lang_key = Configuration.get_var(lid, "GENERAL", "LANG")
+        lang_key = Configuration.legacy_get_var(lid, "GENERAL", "LANG")
     translated = key
+    if lang_key not in LANGS:
+        lang_key = "en_US"
     if key not in LANGS[lang_key]:
         if key not in untranlatable:
             BOT.loop.create_task(tranlator_log('WARNING', f'Untranslatable string detected in {lang_key}: {key}\n'))

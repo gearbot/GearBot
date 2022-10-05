@@ -147,7 +147,7 @@ def log_validator(guild, key, value, preview, *_):
     channel = BOT.get_channel(int(key))
     if channel is None:
         return "Unknown channel"
-    if channel.guild != guild and channel.guild.id not in Configuration.get_var(guild.id, "SERVER_LINKS"):
+    if channel.guild != guild and channel.guild.id not in Configuration.legacy_get_var(guild.id, "SERVER_LINKS"):
         return "You can not log to this guild"
     perms = channel.permissions_for(guild.me)
     required = ["send_messages", "embed_links", "attach_files"]
@@ -462,10 +462,10 @@ def convert_back(target):
         return target
 
 
-def update_config_section(guild, section, new_values, user, replace=False):
+async def update_config_section(guild, section, new_values, user, replace=False):
     fields = VALIDATORS[section]
     errors = dict()
-    guild_config = Configuration.get_var(guild.id, section)
+    guild_config = await Configuration.get_var(guild.id, section)
 
     new_values = convert_back(new_values)
 

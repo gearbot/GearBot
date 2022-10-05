@@ -68,7 +68,7 @@ class ModLog(BaseCog):
     async def on_message(self, message: disnake.Message):
         if not hasattr(message.channel, "guild") or message.channel.guild is None:
             return
-        if Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (
+        if await Configuration.get_var(message.guild.id, "MESSAGE_LOGS", "ENABLED") and (
                 message.content != "" or len(message.attachments) > 0) and message.author.id != self.bot.user.id:
             await MessageUtils.insert_message(self.bot, message)
         else:
@@ -98,7 +98,7 @@ class ModLog(BaseCog):
             return
         c = self.bot.get_channel(data.channel_id)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (
-                not Features.is_logged(c.guild.id, "MESSAGE_LOGS")) or data.channel_id in Configuration.get_var(
+                not Features.is_logged(c.guild.id, "MESSAGE_LOGS")) or data.channel_id in await Configuration.get_var(
             c.guild.id,
             "MESSAGE_LOGS",
             "IGNORED_CHANNELS_OTHER"):
@@ -111,14 +111,14 @@ class ModLog(BaseCog):
             guild = self.bot.get_guild(message.server)
             user: disnake.User = await Utils.get_user(message.author)
             hasUser = user is not None
-            if not hasUser or user.id in Configuration.get_var(guild.id, "MESSAGE_LOGS",
+            if not hasUser or user.id in await Configuration.get_var(guild.id, "MESSAGE_LOGS",
                                                                "IGNORED_USERS") or user.id == guild.me.id:
                 return
             channel = self.bot.get_channel(message.channel)
             name = Utils.clean_user(user) if hasUser else str(message.author)
             _time = Utils.to_pretty_time((datetime.datetime.utcnow().replace(
                 tzinfo=datetime.timezone.utc) - snowflake_time(data.message_id)).total_seconds(), guild.id)
-            with_id = Configuration.get_var(guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
+            with_id = await Configuration.get_var(guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
             reply_str = ""
             if message.reply_to is not None:
                 reply_str = f"\n**{Translator.translate('in_reply_to', guild.id)}: **<{assemble_jumplink(guild.id, channel.id, message.reply_to)}>"
@@ -137,7 +137,7 @@ class ModLog(BaseCog):
                     type_string = Translator.translate('system_message_unknown', guild)
 
                 type_string = Translator.translate('system_message', guild, type=type_string)
-            if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
+            if await Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                 embed_content = type_string or message.content
 
                 if len(embed_content) == 0:
@@ -185,7 +185,7 @@ class ModLog(BaseCog):
             return
         c = self.bot.get_channel(cid)
         if c is None or isinstance(c, DMChannel) or c.guild is None or (
-                not Features.is_logged(c.guild.id, "MESSAGE_LOGS")) or cid in Configuration.get_var(c.guild.id,
+                not Features.is_logged(c.guild.id, "MESSAGE_LOGS")) or cid in await Configuration.get_var(c.guild.id,
                                                                                                     "MESSAGE_LOGS",
                                                                                                     "IGNORED_CHANNELS_OTHER"):
             return
@@ -228,19 +228,19 @@ class ModLog(BaseCog):
             after = event.data["content"]
             if after is None or after == "":
                 after = f"<{Translator.translate('no_content', channel.guild.id)}>"
-            if hasUser and user.id not in Configuration.get_var(channel.guild.id, "MESSAGE_LOGS",
+            if hasUser and user.id not in await Configuration.get_var(channel.guild.id, "MESSAGE_LOGS",
                                                                 "IGNORED_USERS") and user.id != channel.guild.me.id:
                 _time = Utils.to_pretty_time((datetime.datetime.utcnow().replace(
                     tzinfo=datetime.timezone.utc) - snowflake_time(message.messageid)).total_seconds(),
                                              channel.guild.id)
-                with_id = Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
+                with_id = await Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "MESSAGE_ID")
                 reply_str = ""
                 if message.reply_to is not None:
                     reply_str = f"\n**{Translator.translate('in_reply_to', c.guild.id)}: **<{assemble_jumplink(c.guild.id, channel.id, message.reply_to)}>"
                 GearbotLogging.log_key(channel.guild.id, 'edit_logging_with_id' if with_id else 'edit_logging',
                                        user=Utils.clean_user(user), user_id=user.id, channel=channel.mention,
                                        message_id=message.messageid, time=_time.strip(), reply=reply_str)
-                if Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
+                if await Configuration.get_var(channel.guild.id, "MESSAGE_LOGS", "EMBED"):
                     embed = disnake.Embed()
                     embed.set_author(name=user if hasUser else message.author,
                                      icon_url=user.display_avatar.url if hasUser else EmptyEmbed)
@@ -263,7 +263,7 @@ class ModLog(BaseCog):
         if Features.is_logged(member.guild.id, "TRAVEL_LOGS"):
             dif = (datetime.datetime.utcfromtimestamp(time.time()).replace(
                 tzinfo=datetime.timezone.utc) - member.created_at)
-            new_user_threshold = Configuration.get_var(member.guild.id, "GENERAL", "NEW_USER_THRESHOLD")
+            new_user_threshold = await Configuration.get_var(member.guild.id, "GENERAL", "NEW_USER_THRESHOLD")
             minutes, seconds = divmod(dif.days * 86400 + dif.seconds, 60)
             hours, minutes = divmod(minutes, 60)
             age = (Translator.translate('days', member.guild.id,
@@ -482,7 +482,7 @@ class ModLog(BaseCog):
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, event: disnake.RawBulkMessageDeleteEvent):
         if Features.is_logged(event.guild_id, "MESSAGE_LOGS"):
-            if event.channel_id in Configuration.get_var(event.guild_id, "MESSAGE_LOGS", "IGNORED_CHANNELS_OTHER"):
+            if event.channel_id in await Configuration.get_var(event.guild_id, "MESSAGE_LOGS", "IGNORED_CHANNELS_OTHER"):
                 return
             if event.channel_id in self.bot.being_cleaned:
                 for mid in event.message_ids:
@@ -531,7 +531,7 @@ class ModLog(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
-        if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES") or before.id in Configuration.get_var(
+        if not Features.is_logged(before.guild.id, "CHANNEL_CHANGES") or before.id in await Configuration.get_var(
                 before.guild.id, "MESSAGE_LOGS", "IGNORED_CHANNELS_CHANGES"): return
         timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         await self.handle_simple_changes(before, after, "channel_update_simple",

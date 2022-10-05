@@ -4,6 +4,7 @@ from collections import namedtuple
 import datetime
 
 from disnake import Object, HTTPException, MessageType, AllowedMentions
+from disnake.utils import time_snowflake
 
 from Util import Translator, Emoji, Archive, GearbotLogging
 from database import DBUtils
@@ -54,7 +55,7 @@ async def update_message(bot, message_id, content, pinned):
     if message_id in DBUtils.batch:
         old = DBUtils.batch[message_id]
         DBUtils.batch[message_id] = fakeLoggedMessage(message_id, content, old.author, old.channel, old.server, old.type, pinned, old.attachments)
-    else:
+    elif message_id > time_snowflake(datetime.datetime.utcfromtimestamp(time.time() - 60*60*24*7*6).replace(tzinfo=datetime.timezone.utc)):
         await LoggedMessage.filter(messageid=message_id).update(content=content, pinned=pinned)
 
 def assemble(destination, emoji, m, translate=True, **kwargs):

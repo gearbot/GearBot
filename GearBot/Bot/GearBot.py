@@ -52,6 +52,9 @@ class GearBot(AutoShardedBot):
 
     #### event handlers, basically bouncing everything to TheRealGearBot file so we can hotreload our listeners
 
+    async def on_connect(self):
+        await TheRealGearBot.on_connect(self)
+
     async def on_ready(self):
         await TheRealGearBot.on_ready(self)
 

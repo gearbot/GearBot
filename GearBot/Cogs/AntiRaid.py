@@ -24,7 +24,7 @@ class AntiRaid(BaseCog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: disnake.Member):
-        raid_settings = Configuration.get_var(member.guild.id, "RAID_HANDLING")
+        raid_settings = await Configuration.get_var(member.guild.id, "RAID_HANDLING")
         if not raid_settings["ENABLED"]:
             return
 
@@ -175,7 +175,7 @@ class AntiRaid(BaseCog):
             await MessageUtils.send_to(ctx, 'YES', 'raid_terminated')
 
     async def terminate_raid(self, guild):
-        raid_settings = Configuration.get_var(guild, "RAID_HANDLING")
+        raid_settings = await Configuration.get_var(guild, "RAID_HANDLING")
         for shield in raid_settings["SHIELDS"]:
             if guild in self.raid_trackers and shield["id"] in self.raid_trackers[guild]["SHIELDS"]:
                 h = self.raid_trackers[guild]["SHIELDS"][shield["id"]]
@@ -183,7 +183,7 @@ class AntiRaid(BaseCog):
 
     @raid.command('status')
     async def raid_status(self, ctx):
-        raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
+        raid_settings = await Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
         if len(raid_settings.get('SHIELDS', [])) == 0:
             await MessageUtils.send_to(ctx, 'WRENCH', 'raid_shields_not_configured')
         elif raid_settings['ENABLED']:
@@ -193,7 +193,7 @@ class AntiRaid(BaseCog):
 
     @raid.command('enable')
     async def raid_enable(self, ctx):
-        raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
+        raid_settings = await Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
         if len(raid_settings.get('SHIELDS', [])) == 0:
             await MessageUtils.send_to(ctx, 'NO', 'raid_shields_not_configured')
         else:
@@ -202,11 +202,11 @@ class AntiRaid(BaseCog):
 
     @raid.command('disable')
     async def raid_disable(self, ctx):
-        raid_settings = Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
+        raid_settings = await Configuration.get_var(ctx.guild.id, "RAID_HANDLING")
         if len(raid_settings.get('SHIELDS', [])) == 0:
             await MessageUtils.send_to(ctx, 'NO', 'raid_shields_not_configured')
         else:
-            Configuration.set_var(ctx.guild.id, 'RAID_HANDLING', 'ENABLED', False)
+            await Configuration.set_var(ctx.guild.id, 'RAID_HANDLING', 'ENABLED', False)
             await MessageUtils.send_to(ctx, 'YES', 'raid_shields_disabled')
 
 

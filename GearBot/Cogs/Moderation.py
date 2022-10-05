@@ -171,8 +171,8 @@ class Moderation(BaseCog):
                 return
 
         if Actions.can_act(f"role_{action}", ctx, user):
-            role_list = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
-            mode = Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE")
+            role_list = await Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST")
+            mode = await Configuration.get_var(ctx.guild.id, "ROLES", "ROLE_LIST_MODE")
             mode_name = "allow" if mode else "block"
             if (drole.id in role_list) is mode:
                 if drole < ctx.me.top_role:
@@ -215,7 +215,7 @@ class Moderation(BaseCog):
     async def _kick(self, ctx, user, reason, message, dm_action=True):
         await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
 
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
+        if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_KICK") and dm_action:
             await Utils.send_infraction(self.bot, user, ctx.guild, 'BOOT', 'kick', reason)
 
         await ctx.guild.kick(user,
@@ -242,7 +242,7 @@ class Moderation(BaseCog):
             await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                     view=None)
             failures = await Actions.mass_action(ctx, "kick", targets, self._kick, reason=reason, message=False,
-                                                 dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS",
+                                                 dm_action=Configuration.legacy_get_var(ctx.guild.id, "INFRACTIONS",
                                                                                  "DM_ON_KICK"))
             await interaction.edit_original_message(
                 content=MessageUtils.assemble(ctx, "YES", "mkick_confirmation", count=len(targets) - len(failures)))
@@ -402,7 +402,7 @@ class Moderation(BaseCog):
         if allowed:
             duration_seconds = duration.to_seconds(ctx)
             if duration_seconds > 0:
-                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
+                if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_TEMPBAN"):
                     dur = f'{duration.length}{duration.unit}'
                     await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'tempban', reason, duration=dur)
                 await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
@@ -428,7 +428,7 @@ class Moderation(BaseCog):
     async def _ban(self, ctx, user, reason, confirm, days=0, dm_action=True):
         await self.bot.redis_pool.psetex(f"forced_exits:{ctx.guild.id}-{user.id}", 8000, "1")
 
-        if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
+        if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_BAN") and dm_action:
             await Utils.send_infraction(self.bot, user, ctx.guild, 'BAN', 'ban', reason)
 
         await ctx.guild.ban(user, reason=Utils.trim_message(
@@ -479,7 +479,7 @@ class Moderation(BaseCog):
                                                         view=None)
                 failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False,
                                                      require_on_server=False,
-                                                     dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS",
+                                                     dm_action=Configuration.legacy_get_var(ctx.guild.id, "INFRACTIONS",
                                                                                      "DM_ON_BAN"))
                 await interaction.edit_original_message(
                     content=MessageUtils.assemble(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures)))
@@ -576,7 +576,7 @@ class Moderation(BaseCog):
                                                     view=None)
             failures = await Actions.mass_action(ctx, "ban", targets, self._ban, reason=reason, confirm=False,
                                                  require_on_server=False,
-                                                 dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS",
+                                                 dm_action=Configuration.legacy_get_var(ctx.guild.id, "INFRACTIONS",
                                                                                  "DM_ON_BAN"))
             await interaction.edit_original_message(
                 content=MessageUtils.assemble(ctx, "YES", "mban_confirmation", count=len(targets) - len(failures)))
@@ -823,7 +823,7 @@ class Moderation(BaseCog):
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
         reason = Utils.enrich_reason(ctx, reason)
-        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
+        roleid = await Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid == 0:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mmute_not_configured', ctx.guild.id)}")
@@ -839,7 +839,7 @@ class Moderation(BaseCog):
                     await interaction.response.edit_message(content=MessageUtils.assemble(ctx, "REFRESH", "processing"),
                                                             view=None)
                     failures = await Actions.mass_action(ctx, "mute", targets, self._mmute, reason=reason,
-                                                         dm_action=len(targets) < 6 and Configuration.get_var(
+                                                         dm_action=len(targets) < 6 and Configuration.legacy_get_var(
                                                              ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"), role=role,
                                                          duration=duration)
 
@@ -923,7 +923,7 @@ class Moderation(BaseCog):
             duration.unit = parts[0]
             reason = " ".join(parts[1:])
         reason = Utils.enrich_reason(ctx, reason)
-        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
+        roleid = await Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid == 0:
             await ctx.send(
                 f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate('mute_not_configured', ctx.guild.id, user=target.mention)}")
@@ -974,7 +974,7 @@ class Moderation(BaseCog):
                                                        moderator_id=ctx.author.id,
                                                        duration=f'{duration.length} {duration.unit}',
                                                        reason=reason, inf=i.id)
-                                if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                     dur = f'{duration.length}{duration.unit}'
                                     await Utils.send_infraction(self.bot, target, ctx.guild, 'MUTE', 'mute', reason,
                                                                 duration=dur)
@@ -995,7 +995,7 @@ class Moderation(BaseCog):
                                                            end=datetime.datetime.utcfromtimestamp(
                                                                infraction.end).strftime('%Y-%m-%d %H:%M:%S'))
                                     name = Utils.clean_user(target)
-                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                    if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try:
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
@@ -1018,7 +1018,7 @@ class Moderation(BaseCog):
                                                            end=datetime.datetime.utcfromtimestamp(
                                                                infraction.end).strftime('%Y-%m-%d %H:%M:%S'))
                                     name = Utils.clean_user(target)
-                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                    if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try:
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
@@ -1039,7 +1039,7 @@ class Moderation(BaseCog):
                                                            duration=f'{duration.length} {duration.unit}',
                                                            reason=reason, inf_id=infraction.id, end=infraction.end)
                                     name = Utils.clean_user(target)
-                                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
+                                    if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_MUTE"):
                                         try:
                                             dur = f'{duration.length}{duration.unit}'
                                             await target.send(
@@ -1075,7 +1075,7 @@ class Moderation(BaseCog):
                                                     view=None)
             failures = await Actions.mass_action(ctx, "unmute", targets, self._unmute, reason=reason,
                                                  require_on_server=True,
-                                                 dm_action=Configuration.get_var(ctx.guild.id, "INFRACTIONS",
+                                                 dm_action=Configuration.legacy_get_var(ctx.guild.id, "INFRACTIONS",
                                                                                  "DM_ON_UNMUTE"))
             await interaction.edit_original_message(
                 content=MessageUtils.assemble(ctx, "YES", "munmute_confirmation", count=len(targets) - len(failures)))
@@ -1118,9 +1118,9 @@ class Moderation(BaseCog):
 
     async def _unmute(self, ctx, target, *, reason, confirm=False, dm_action=None):
         if dm_action is None:
-            dm_action = Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE")
+            dm_action = await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE")
         reason = Utils.enrich_reason(ctx, reason)
-        roleid = Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
+        roleid = await Configuration.get_var(ctx.guild.id, "ROLES", "MUTE_ROLE")
         if roleid == 0:
             if confirm:
                 await MessageUtils.send_to(ctx, 'NO', 'unmute_fail_disabled')
@@ -1161,7 +1161,7 @@ class Moderation(BaseCog):
                             raise ActionFailed(Translator.translate("unmute_higher_role", ctx))
                     i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Unmute", reason)
                     name = Utils.clean_user(target)
-                    if Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
+                    if await Configuration.get_var(ctx.guild.id, "INFRACTIONS", "DM_ON_UNMUTE") and dm_action:
                         await Utils.send_infraction(self.bot, target, ctx.guild, 'INNOCENT', 'unmute', reason)
                     await Infraction.filter(user_id=target.id, type="Mute", guild_id=ctx.guild.id).update(active=False)
                     await target.remove_roles(role, reason=f"Unmuted by {ctx.author.name}, {reason}")
@@ -1215,7 +1215,7 @@ class Moderation(BaseCog):
             if not permissions.read_messages:
                 await MessageUtils.send_to(ctx, 'NO', 'archive_leak_denied')
                 return
-        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
+        if await Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = await LoggedMessage.filter(server=ctx.guild.id, channel=channel.id).order_by("-messageid").limit(
                 amount).prefetch_related("attachments")
@@ -1230,7 +1230,7 @@ class Moderation(BaseCog):
         if amount > 5000:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_too_much', ctx)}")
             return
-        if Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
+        if await Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
             await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
             messages = await LoggedMessage.filter(server=ctx.guild.id, author=user).order_by("-messageid").limit(
                 amount).prefetch_related("attachments")
@@ -1418,7 +1418,7 @@ class Moderation(BaseCog):
         # sleep a little, sometimes discord sends the event too soon
         await asyncio.sleep(5)
         guild: disnake.Guild = channel.guild
-        roleid = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
+        roleid = await Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         if roleid != 0:
             role = guild.get_role(roleid)
             if role is not None and channel.permissions_for(guild.me).manage_channels:
@@ -1443,7 +1443,7 @@ class Moderation(BaseCog):
         i = await Infraction.get_or_none(type="Mute", active=True, end__gt=now, guild_id=member.guild.id,
                                          user_id=member.id)
         if i is not None:
-            roleid = Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE")
+            roleid = await Configuration.get_var(member.guild.id, "ROLES", "MUTE_ROLE")
             if roleid != 0:
                 role = member.guild.get_role(roleid)
                 if role is not None:
@@ -1499,7 +1499,7 @@ class Moderation(BaseCog):
                 f"Got an expired mute for {infraction.guild_id} but i'm no longer in that server, marking mute as ended")
             return await self.end_infraction(infraction)
 
-        role = Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
+        role = await Configuration.get_var(guild.id, "ROLES", "MUTE_ROLE")
         member = await Utils.get_member(self.bot, guild, infraction.user_id, fetch_if_missing=True)
         role = guild.get_role(role)
         if role is None or member is None:
@@ -1611,10 +1611,10 @@ class Moderation(BaseCog):
         if content is None:
             return
         content = content.lower()
-        token_list = Configuration.get_var(guild_id, "FLAGGING", "TOKEN_LIST")
-        word_list = Configuration.get_var(guild_id, "FLAGGING", "WORD_LIST")
+        token_list = await Configuration.get_var(guild_id, "FLAGGING", "TOKEN_LIST")
+        word_list = await Configuration.get_var(guild_id, "FLAGGING", "WORD_LIST")
 
-        if Configuration.get_var(guild_id, "FLAGGING", "IGNORE_IDS"):
+        if await Configuration.get_var(guild_id, "FLAGGING", "IGNORE_IDS"):
             content = re.sub(r'(<(?:@|#|@&|@!)[0-9]{15,20}>)', '', content)
             content = re.sub(r'<a?:[^: \n]+:([0-9]{15,20})>', '', content)
             content = re.sub(r"(https://(?:canary|ptb)?\.?discord(?:app)?.com/channels/\d{15,20}/\d{15,20}/\d{15,20})",
@@ -1641,7 +1641,7 @@ class Moderation(BaseCog):
                 return
 
     async def flag_message(self, content, flagged, guild_id, channel_id, message_id, author=None, type=""):
-        if Configuration.get_var(guild_id, "FLAGGING", "TRUSTED_BYPASS") and Permissioncheckers.is_trusted(author):
+        if await Configuration.get_var(guild_id, "FLAGGING", "TRUSTED_BYPASS") and Permissioncheckers.is_trusted(author):
             return
         if author is None:
             message = await MessageUtils.get_message_data(self.bot, message_id)
@@ -1653,7 +1653,7 @@ class Moderation(BaseCog):
                     pass
             if message is not None:
                 author = await Utils.get_member(self.bot, self.bot.get_guild(guild_id), message.author)
-        if author is None or author.id == self.bot.user.id or Permissioncheckers.get_user_lvl(author.guild,
+        if author is None or author.id == self.bot.user.id or await Permissioncheckers.get_user_lvl(author.guild,
                                                                                               author) >= 2:
             return
 

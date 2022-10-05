@@ -209,7 +209,7 @@ class PotentialID(Converter):
 
 class LoggingChannel(Converter):
     async def convert(self, ctx, argument):
-        channels = Configuration.get_var(ctx.guild.id, "LOG_CHANNELS")
+        channels = Configuration.legacy_get_var(ctx.guild.id, "LOG_CHANNELS")
         match = CHANNEL_ID_MATCHER.match(argument)
         if match is not None:
             argument = match.group(1)

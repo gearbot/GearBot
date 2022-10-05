@@ -67,12 +67,12 @@ def server_info_embed(guild, request_guild=None):
     return embed
 
 
-def server_info_raw(bot, guild):
+async def server_info_raw(bot, guild):
     statuses = dict(online=0, idle=0, dnd=0, offline=0)
     for m in guild.members:
         statuses[str(m.status)] += 1
     extra = dict()
-    for g in Configuration.get_var(guild.id, "SERVER_LINKS"):
+    for g in await Configuration.get_var(guild.id, "SERVER_LINKS"):
         extra.update(**{str(k): v for k, v in get_server_channels(bot.get_guild(g)).items()})
     server_info = dict(
         name=guild.name,
