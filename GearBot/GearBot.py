@@ -194,7 +194,17 @@ if __name__ == '__main__':
             "shard_ids": [cluster * 2, (cluster * 2) + 1]
         })
 
-        GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")
+    elif 'stateful' in os.environ:
+        GearbotLogging.info(f"GearBot is deployed as stateful set, determining cluster id based on hostname {os.uname()[1]}")
+        cluster = loop.run_until_complete(node_init(0, 0))
+        num_clusters = int(os.environ["num_clusters"])
+        args.update({
+            "shard_count": num_clusters * 2,
+            "cluster": cluster,
+            "shard_ids": [cluster * 2, (cluster * 2) + 1]
+        })
+
+    GearbotLogging.info(f"Ready to go, spinning up as instance {args['cluster'] + 1}/{args['shard_count']}")
 
 
 
