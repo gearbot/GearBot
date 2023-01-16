@@ -52,7 +52,7 @@ class Minecraft(BaseCog):
     async def fetch_info(self, project_name):
         session: aiohttp.ClientSession = self.bot.aiosession
         async with session.get(f"https://api.cfwidget.com/mc-mods/minecraft/{project_name}") as reply:
-            if reply.status is 200:  # all good, we can parse it
+            if reply.status == 200:  # all good, we can parse it
                 parsed = json.loads(await reply.text())
                 p_type = parsed["type"]
                 info = {
@@ -91,13 +91,13 @@ class Minecraft(BaseCog):
                 info["versions"] = map
                 return info
 
-            elif reply.status is 202:  # New project, wait for the api to fetch it
+            elif reply.status == 202:  # New project, wait for the api to fetch it
                 GearbotLogging.info(f"Info for {project_name} not available yet, trying again in 10 seconds.")
                 await asyncio.sleep(10)
                 return await self.fetch_info(project_name)
             elif reply.status in (400, 404):
                 return None
-            elif reply.status is 500:
+            elif reply.status == 500:
                 GearbotLogging.error(f"Fetching info for {project_name} failed.")
                 return False
             else:
@@ -128,6 +128,7 @@ class Minecraft(BaseCog):
         pass
 
     async def info(self, ctx, project_name: str):
+        pass
 
     # @cf.command()
     # async def latest(self, ctx, project_name: str, version: str):

@@ -74,7 +74,7 @@ class Censor(BaseCog):
         censor_emoji_message = await Configuration.get_var(member.guild.id, "CENSORING", "CENSOR_EMOJI_ONLY_MESSAGES")
         content = content.replace('\\', '')
 
-        if Configuration.get_var(member.guild.id, "CENSORING", "IGNORE_IDS"):
+        if await Configuration.get_var(member.guild.id, "CENSORING", "IGNORE_IDS"):
             content = re.sub(r'(<(?:@|#|@&|@!)[0-9]{15,20}>)', '', content)
             content = re.sub(r'<a?:[^: \n]+:([0-9]{15,20})>', '', content)
             content = re.sub(r"(https://(?:canary|ptb)?\.?discord(?:app)?.com/channels/\d{15,20}/\d{15,20}/\d{15,20})", '', content)

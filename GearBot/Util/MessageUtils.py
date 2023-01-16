@@ -19,7 +19,7 @@ attachment = namedtuple("attachment", "id name")
 
 async def get_message_data(bot, message_id):
     message = None
-    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 5 * 60).replace(tzinfo=datetime.timezone.utc):
+    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 1 * 60).replace(tzinfo=datetime.timezone.utc):
         parts = await bot.redis_pool.hgetall(f"messages:{message_id}")
         if len(parts) == 7:
             reply = int(parts["reply"])
@@ -42,12 +42,12 @@ async def insert_message(bot, message, redis=True):
                          channel=message.channel.id, server=message.guild.id, pinned=1 if message.pinned else 0, attachments='|'.join((f"{str(a.id)}/{str(a.filename)}" for a in message.attachments)), reply=message.reference.message_id if is_reply else 0)
         if message_type is not None:
             pipe.hmset_dict(f"messages:{message.id}", type=message_type)
-        pipe.expire(f"messages:{message.id}", 5*60+2)
+        pipe.expire(f"messages:{message.id}", 1*60)
         await pipe.execute()
     await DBUtils.insert_message(message)
 
 async def update_message(bot, message_id, content, pinned):
-    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 5 * 60).replace(tzinfo=datetime.timezone.utc):
+    if not Object(message_id).created_at <= datetime.datetime.utcfromtimestamp(time.time() - 1 * 60).replace(tzinfo=datetime.timezone.utc):
         pipe = bot.redis_pool.pipeline()
         pipe.hmset_dict(f"messages:{message_id}", content=content)
         pipe.hmset_dict(f"messages:{message_id}", pinned=(1 if pinned else 0))
