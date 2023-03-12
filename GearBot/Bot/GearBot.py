@@ -76,7 +76,5 @@ class GearBot(AutoShardedBot):
     async def on_guild_update(self, before, after):
         await TheRealGearBot.on_guild_update(before, after)
 
-    async def on_thread_create(self, thread):
-        await TheRealGearBot.on_thread_create(self, thread)
 
     #### reloading
