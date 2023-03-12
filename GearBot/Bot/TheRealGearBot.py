@@ -15,7 +15,7 @@ import aioredis
 import disnake
 import sentry_sdk
 from aiohttp import ClientOSError, ServerDisconnectedError
-from disnake import Activity, Embed, Colour, Message, TextChannel, Thread, Forbidden, ConnectionClosed, Guild, NotFound
+from disnake import Activity, Embed, Colour, Message, TextChannel, Forbidden, ConnectionClosed, Guild, NotFound
 from disnake.abc import PrivateChannel
 from disnake.ext import commands
 from disnake.ext.commands import UnexpectedQuoteError, ExtensionAlreadyLoaded, InvalidEndOfQuotedStringError
@@ -102,11 +102,6 @@ async def message_flusher():
         await asyncio.sleep(60)
         await DBUtils.flush()
 
-async def on_thread_create(bot, thread: Thread):
-    if bot.user in thread.members:
-        return
-    else:
-        await thread.join()
 
 async def on_message(bot, message:Message):
     if message.author.bot:
