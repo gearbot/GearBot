@@ -1,7 +1,7 @@
 git+https://github.com/AEnterprise/disnake@083fa3c156c60d965df107bcba2dd11c7de79a66
 tortoise-orm==0.16.17
 Pillow==7.2.0
-requests==2.24.0
+requests==2.31.0
 aioredis==1.3.1
 sentry-sdk==0.19.2
 pytz==2020.4
