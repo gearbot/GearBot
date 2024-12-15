@@ -30,7 +30,7 @@ While transparency is always a good thing, when another user's data is potential
 
 ## How to report
 
-- Contact AEnterprise#4693 (userid 106354106196570112) or BlackHoleFox#1527 (userid 105076359188979712) on Discord. You can find us on the [GearBot Discord Server](https://discordapp.com/invite/vddW3D9).
+- Contact aenterprise (userid 106354106196570112) or blackholefox (userid 105076359188979712) on Discord. You can find us on the [GearBot Discord Server](https://discordapp.com/invite/vddW3D9).
 - Alternatively you can report via email at: gearbot@gearbot.rocks
 - You will receive a reply confirming we received your report within 48h. If you do not get such confirmation it means the person you tried to contact is unavailable for some reason. Please try one of the other methods instead to make sure we receive your report.
 
