@@ -1,10 +1,9 @@
-import asyncio
 import json
 import re
 import datetime
 
 import disnake
-from disnake import Interaction
+from disnake import Interaction, utils
 from disnake.ext import commands
 from disnake.ext.commands import BadArgument, Greedy, BucketType
 
@@ -20,6 +19,12 @@ from views.InfSearch import InfSearch
 
 
 class Infractions(BaseCog):
+    
+    def inf_time(self, inf_timestamp: int):
+        """Returns the infraction time as discord timestamps."""
+        long_dt_time = utils.format_dt(inf_timestamp, 'F')
+        relative_time = utils.format_dt(inf_timestamp, 'R')
+        return f"{long_dt_time} ({relative_time})"
 
     async def _warn(self, ctx, target, *, reason, message=True, dm_action=True):
         i = await InfractionUtils.add_infraction(ctx.guild.id, target.id, ctx.author.id, "Warn", reason)
@@ -117,7 +122,8 @@ class Infractions(BaseCog):
     @commands.group(aliases=["infraction", "infractions"], invoke_without_command=True)
     async def inf(self, ctx: commands.Context):
         """inf_help"""
-        pass
+        if ctx.subcommand_passed is None:
+            await ctx.invoke(self.bot.get_command("help"), query="infraction")
 
     @inf.command()
     async def search(self, ctx: commands.Context, fields: commands.Greedy[InfSearchLocation] = None, *,
@@ -272,13 +278,9 @@ class Infractions(BaseCog):
         embed.add_field(name=Translator.translate('user', ctx), value=Utils.clean_user(user))
         embed.add_field(name=Translator.translate('mod_id', ctx), value=infraction.mod_id)
         embed.add_field(name=Translator.translate('user_id', ctx), value=infraction.user_id)
-        embed.add_field(name=Translator.translate('inf_added', ctx),
-                        value=datetime.datetime.utcfromtimestamp(infraction.start).replace(
-                            tzinfo=datetime.timezone.utc))
+        embed.add_field(name=Translator.translate('inf_added', ctx), value=self.inf_time(infraction.start))
         if infraction.end is not None:
-            embed.add_field(name=Translator.translate('inf_end', ctx),
-                            value=datetime.datetime.utcfromtimestamp(infraction.end).replace(
-                                tzinfo=datetime.timezone.utc))
+            embed.add_field(name=Translator.translate('inf_end', ctx), value=self.inf_time(infraction.end))
         embed.add_field(name=Translator.translate('inf_active', ctx),
                         value=MessageUtils.assemble(ctx, 'YES' if infraction.active else 'NO',
                                                     str(infraction.active).lower()))

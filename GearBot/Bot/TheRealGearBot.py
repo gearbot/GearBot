@@ -102,6 +102,7 @@ async def message_flusher():
         await asyncio.sleep(60)
         await DBUtils.flush()
 
+
 async def on_message(bot, message:Message):
     if message.author.bot:
         if message.author.id == bot.user.id:
