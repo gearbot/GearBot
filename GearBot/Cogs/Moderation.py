@@ -1223,6 +1223,44 @@ class Moderation(BaseCog):
         else:
             await ctx.send(f"{Emoji.get_chat_emoji('NO')} {Translator.translate('archive_no_edit_logs', ctx)}")
 
+    @archive.command(aliases=['messages','range'])
+    async def message(self, ctx, first: disnake.PartialMessage, last: disnake.PartialMessage = None):
+        """archive_messages_help"""
+        if not await Configuration.get_var(ctx.guild.id, "MESSAGE_LOGS", "ENABLED"):
+            await MessageUtils.send_to(ctx, 'NO', 'archive_no_edit_logs')
+            return
+        permissions = first.channel.permissions_for(ctx.author)
+        if not permissions.read_messages:
+            await MessageUtils.send_to(ctx, 'NO', 'archive_leak_denied')
+            return
+        query = LoggedMessage.filter(server=ctx.guild.id, channel=first.channel.id) \
+            .order_by("-messageid") \
+            .prefetch_related("attachments")
+        if last is not None:
+            if first.channel.id != last.channel.id:
+                await MessageUtils.send_to(ctx, 'NO', 'archive_message_mismatched_channels', \
+                    first=first.channel.id, last=last.channel.id)
+                return
+            if last.id < first.id:
+                # Last is older than first, swap them
+                last, first = first, last
+            query = query.filter(messageid__gte=first.id, messageid__lte=last.id)
+            # COUNT to see if we are about to request more than 5000 rows
+            if await query.count() > 5000:
+                await MessageUtils.send_to(ctx, 'NO', 'archive_too_much')
+                return
+            # Even though we are not over 5000, let's be safe about it
+            query = query.limit(5000)
+        else:
+            # Not .first() because we still want to be an iterable
+            query = query.filter(messageid=first.id).limit(1)
+        await MessageUtils.send_to(ctx, 'SEARCH', 'searching_archives')
+        messages = await query
+        messages += DBUtils.get_messages_in_range(first.channel.id, first.id, last.id if last is not None else None)
+        await Archive.ship_messages(ctx, messages, "message", plural='yes' if last is not None else 'no')
+        if first.channel.id == ctx.channel.id and '/' not in ctx.message.content and '-' not in ctx.message.content:
+            await MessageUtils.send_to(ctx, 'WARNING', 'archive_message_no_channel_id')
+
     @archive.command()
     async def user(self, ctx, user: DiscordUser, amount=100):
         """archive_user_help"""

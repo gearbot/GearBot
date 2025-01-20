@@ -33,7 +33,7 @@ async def pack_messages(messages, guild_id):
         out += f"{timestamp} {message.server} - {message.channel} - {message.messageid} | {name} ({message.author}) | {message.content}{reply} | {(', '.join(Utils.assemble_attachment(message.channel, attachment.id, attachment.name) for attachment in message.attachments))}\r\n"
     return out
 
-async def ship_messages(ctx, messages, t, filename="Message archive", filtered=False):
+async def ship_messages(ctx, messages, t, filename="Message archive", filtered=False, **kwargs):
     addendum = ""
     if filtered:
         addendum = f"\n{Emoji.get_chat_emoji('WARNING')} {Translator.translate('archive_message_filtered', ctx)}"
@@ -53,4 +53,4 @@ async def ship_messages(ctx, messages, t, filename="Message archive", filtered=F
 
         await ctx.send(f"{Emoji.get_chat_emoji('YES')} {Translator.translate('archived_count', ctx, count=len(messages))} {addendum}", file=disnake.File(fp=buffer, filename=f"{filename}.txt"))
     else:
-        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx)} {addendum}")
+        await ctx.send(f"{Emoji.get_chat_emoji('WARNING')} {Translator.translate(f'archive_empty_{t}', ctx, **kwargs)} {addendum}")

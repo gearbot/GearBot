@@ -103,6 +103,12 @@ async def do_flush():
                 raise e
 
 
+def get_messages_in_range(channel_id, first_id, last_id=None):
+    if last_id is not None:
+        return [message for message in batch.values() if message.channel == channel_id and message.messageid >= first_id and message.messageid <= last_id]
+    else:
+        return [message for message in batch.values() if message.channel == channel_id and message.messageid == first_id]
+
 def get_messages_for_channel(channel_id):
     return [message for message in batch.values() if message.channel == channel_id]
 
